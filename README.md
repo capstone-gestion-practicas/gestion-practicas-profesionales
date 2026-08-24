@@ -1,51 +1,104 @@
-# Sistema de Gestión de Prácticas Profesionales
+# Sistema de Gestión y Seguimiento de Prácticas Profesionales
+
+Proyecto desarrollado como parte de CAPSTONE de la carrera de Ingeniería en Informática de DUOC UC.
 
 ## Descripción
 
-El Sistema de Gestión de Prácticas Profesionales busca apoyar la gestión y seguimiento del proceso de prácticas de los estudiantes.
+El proyecto tiene como objetivo desarrollar un sistema web para gestionar y realizar seguimiento al proceso de prácticas profesionales desde su inicio hasta su finalización.
 
-El proyecto busca mejorar la trazabilidad del proceso, permitiendo centralizar información relacionada con estudiantes, centros de práctica y el estado de las prácticas profesionales.
+La solución busca mejorar la trazabilidad del proceso, permitiendo registrar el estado de cada práctica, realizar seguimientos y mantener información relevante durante su desarrollo.
 
-El sistema estará dirigido principalmente a estudiantes, coordinadores de práctica, docentes y otros participantes involucrados en el proceso.
+De esta manera, se busca facilitar la detección temprana de posibles problemas y apoyar la gestión de las prácticas profesionales.
 
-## Tecnologías utilizadas
+## Producto Mínimo Viable (PMV)
 
-Pendiente de definición.
+El Producto Mínimo Viable contempla el flujo principal del proceso de práctica profesional:
 
-Se definirán posteriormente:
+1. Acceso de usuarios al sistema.
+2. Registro de la práctica profesional por parte del estudiante.
+3. Revisión de los antecedentes registrados.
+4. Gestión del estado de la práctica.
+5. Seguimiento durante su desarrollo.
+6. Registro e identificación de incidencias.
+7. Cierre de la práctica profesional.
 
-- Lenguaje de programación.
-- Framework de frontend.
-- Framework de backend.
-- Base de datos.
-- Servicios Cloud, si son necesarios.
+## Épicas
 
-## Instrucciones para ejecutar el proyecto localmente
+El proyecto se encuentra organizado en las siguientes épicas:
 
-Pendiente.
+| Código | Épica                                     |
+| ------ | ----------------------------------------- |
+| EP01   | Acceso y gestión de usuarios              |
+| EP02   | Registro de práctica profesional          |
+| EP03   | Revisión y validación de prácticas        |
+| EP04   | Gestión de estado de práctica profesional |
+| EP05   | Seguimiento de práctica                   |
+| EP06   | Gestión de incidencias y alertas          |
+| EP07   | Cierre de práctica profesional            |
 
-Esta sección será completada cuando exista una primera versión ejecutable del sistema.
+## Historias de Usuario
 
-## Integrantes del equipo
+El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las siete épicas.
 
-| Integrante |
-| ---------- |
+Las historias de usuario son gestionadas mediante GitHub Issues y organizadas dentro de GitHub Projects.
 
-| Freddy Neilaf gonzález
-| Carlos Seaman Garcia
+## Gestión del proyecto
 
-## Metodología de trabajo
+Para la gestión y seguimiento del desarrollo se utiliza:
 
-El equipo trabajará bajo un enfoque Agile.
+- GitHub Issues para las historias de usuario.
+- GitHub Projects para administrar el Product Backlog.
+- Git para control de versiones.
+- Pull Requests para revisión e integración de cambios.
+- Ramas de trabajo para separar el desarrollo de nuevas funcionalidades.
 
-La metodología específica y la forma de organización del trabajo serán definidas durante la planificación del proyecto.
+## Flujo de trabajo
 
-## Arquitectura de la solución
+El flujo general de desarrollo será:
 
-Pendiente de definición.
+`feature/* → develop → main`
 
-La arquitectura será establecida una vez definidos los requerimientos y las tecnologías que serán utilizadas.
+Las nuevas funcionalidades se desarrollarán en ramas independientes y posteriormente serán integradas mediante Pull Request.
+
+- `main`: versión estable del proyecto.
+- `develop`: integración de funcionalidades en desarrollo.
+- `feature/*`: desarrollo de funcionalidades o historias de usuario.
+
+## Organización del backlog
+
+Los estados utilizados en GitHub Projects son:
+
+- **Backlog:** trabajo pendiente que todavía no ha sido seleccionado para desarrollo.
+- **En Desarrollo:** trabajo que está siendo implementado actualmente.
+- **Done:** trabajo terminado que cumple sus criterios de aceptación.
+
+## Equipo
+
+| Integrante    | Rol                   |
+| ------------- | --------------------- |
+| Carlos Seaman | Integrante del equipo |
+| Freddy Neilaf | Integrante del equipo |
+
+## Repositorio
+
+Este repositorio pertenece a la organización:
+
+**capstone-gestion-practicas**
+
+Repositorio principal:
+
+**gestion-practicas-profesionales**
 
 ## Estado del proyecto
 
-Proyecto actualmente en etapa de levantamiento y análisis de requerimientos.
+Actualmente el proyecto se encuentra en etapa de planificación y definición del Producto Mínimo Viable.
+
+Se encuentran definidas:
+
+- 7 épicas.
+- 19 historias de usuario.
+- Product Backlog inicial.
+- Criterios de aceptación.
+- Flujo principal del PMV.
+
+La estimación de las historias de usuario y la planificación de los sprints serán realizadas posteriormente mediante Planning Poker.
