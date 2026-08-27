@@ -52,6 +52,65 @@ Para la gestión y seguimiento del desarrollo se utiliza:
 - Pull Requests para revisión e integración de cambios.
 - Ramas de trabajo para separar el desarrollo de nuevas funcionalidades.
 
+## Arquitectura de la solución
+
+El sistema utilizará una **arquitectura monolítica modular**.
+
+La solución será desarrollada como una única aplicación, pero estará organizada internamente en módulos que representarán las principales responsabilidades del sistema.
+
+Este enfoque permite mantener una estructura simple para el desarrollo, las pruebas y el despliegue, evitando la complejidad adicional de una arquitectura distribuida, pero manteniendo una adecuada separación de responsabilidades dentro del código.
+
+Inicialmente, la aplicación contempla los siguientes módulos:
+
+- Gestión de usuarios y autenticación.
+- Gestión de estudiantes.
+- Gestión de prácticas profesionales.
+- Gestión de centros de práctica.
+- Revisión y validación de prácticas.
+- Gestión de estados.
+- Seguimiento de prácticas.
+- Gestión de incidencias y alertas.
+- Cierre de prácticas profesionales.
+
+Los módulos formarán parte de una misma aplicación y accederán a una base de datos central.
+
+De forma general, la arquitectura puede representarse de la siguiente manera:
+
+```text
+                 Usuario
+                    │
+                    ▼
+            Aplicación Web
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+        │   Monolito Modular    │
+        │                       │
+        │  ┌─────────────────┐  │
+        │  │ Autenticación   │  │
+        │  ├─────────────────┤  │
+        │  │ Estudiantes     │  │
+        │  ├─────────────────┤  │
+        │  │ Prácticas       │  │
+        │  ├─────────────────┤  │
+        │  │ Validación      │  │
+        │  ├─────────────────┤  │
+        │  │ Seguimientos    │  │
+        │  ├─────────────────┤  │
+        │  │ Incidencias     │  │
+        │  ├─────────────────┤  │
+        │  │ Alertas         │  │
+        │  └─────────────────┘  │
+        │                       │
+        └───────────┬───────────┘
+                    │
+                    ▼
+             Base de Datos
+                Central
+```
+
+Las tecnologías específicas utilizadas para implementar esta arquitectura serán definidas posteriormente.
+
 ## Flujo de trabajo
 
 El flujo general de desarrollo será:
@@ -100,5 +159,6 @@ Se encuentran definidas:
 - Product Backlog inicial.
 - Criterios de aceptación.
 - Flujo principal del PMV.
+- Arquitectura monolítica modular.
 
 La estimación de las historias de usuario y la planificación de los sprints serán realizadas posteriormente mediante Planning Poker.
