@@ -143,7 +143,7 @@ Los estados utilizados en GitHub Projects son:
 | ---------- | --- |
 | Carlos Seaman | Integrante del equipo |
 | Freddy Neilaf | Integrante del equipo |
-| Integrante por confirmar | Integrante del equipo |
+| **Brandon Ramirez** | Integrante del equipo |
 
 ## Repositorio
 
