@@ -65,6 +65,15 @@ Las rutas están declaradas en `app.routes.ts`.
 8. La aplicación navega a `/home`.
 9. Al cerrar sesión se eliminan el token y el contexto en memoria.
 
+## Flujo de registro
+
+1. Desde `/login`, el usuario selecciona `Registrarme`.
+2. Ingresa nombre, apellido, correo, contraseña y confirmación.
+3. El frontend comprueba que ambas contraseñas coincidan y tengan al menos 8 caracteres.
+4. `AuthService.registrar()` envía `POST /auth/register`.
+5. El backend crea la cuenta con el rol `ESTUDIANTE`.
+6. Tras una respuesta exitosa, el formulario vuelve al modo de inicio de sesión y conserva el correo ingresado.
+
 No guardar contraseñas, secretos JWT ni credenciales de base de datos en el frontend.
 
 ## Contexto del usuario
@@ -109,6 +118,7 @@ http://127.0.0.1:8000
 Endpoints consumidos:
 
 - `POST /auth/login`: autentica al usuario.
+- `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
 

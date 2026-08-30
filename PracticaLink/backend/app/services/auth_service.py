@@ -1,7 +1,97 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, verify_password
+from sqlalchemy.exc import IntegrityError
+
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password
+)
+
+
+def registrar_usuario(
+    db: Session,
+    nombre: str,
+    apellido: str,
+    correo: str,
+    password: str
+):
+    correo_normalizado = correo.strip().lower()
+
+    usuario_existente = db.execute(
+        text("""
+            SELECT id_usuario
+            FROM usuario
+            WHERE LOWER(correo) = :correo
+            LIMIT 1
+        """),
+        {"correo": correo_normalizado}
+    ).scalar_one_or_none()
+
+    if usuario_existente is not None:
+        return None
+
+    id_rol = db.execute(
+        text("""
+            SELECT id_rol
+            FROM rol
+            WHERE nombre = 'ESTUDIANTE'
+              AND activo = TRUE
+            LIMIT 1
+        """)
+    ).scalar_one_or_none()
+
+    if id_rol is None:
+        raise RuntimeError("El rol ESTUDIANTE no está configurado")
+
+    try:
+        usuario = db.execute(
+            text("""
+                INSERT INTO usuario (
+                    nombre,
+                    apellido,
+                    correo,
+                    password_hash
+                )
+                VALUES (
+                    :nombre,
+                    :apellido,
+                    :correo,
+                    :password_hash
+                )
+                RETURNING id_usuario, nombre, apellido, correo
+            """),
+            {
+                "nombre": nombre.strip(),
+                "apellido": apellido.strip(),
+                "correo": correo_normalizado,
+                "password_hash": hash_password(password)
+            }
+        ).mappings().one()
+
+        db.execute(
+            text("""
+                INSERT INTO usuario_rol (id_usuario, id_rol)
+                VALUES (:id_usuario, :id_rol)
+            """),
+            {
+                "id_usuario": usuario["id_usuario"],
+                "id_rol": id_rol
+            }
+        )
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return None
+    except Exception:
+        db.rollback()
+        raise
+
+    return {
+        **dict(usuario),
+        "rol": "ESTUDIANTE"
+    }
 
 
 def autenticar_usuario(

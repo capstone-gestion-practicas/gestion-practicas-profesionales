@@ -171,6 +171,21 @@ Flujo:
 4. Genera un JWT cuyo `sub` contiene `id_usuario`.
 5. Devuelve `access_token` y `token_type`.
 
+### `POST /auth/register`
+
+Recibe nombre, apellido, correo y una contraseña de al menos 8 caracteres.
+
+Flujo:
+
+1. Normaliza el correo a minúsculas.
+2. Rechaza correos ya registrados con `409 Conflict`.
+3. Comprueba que exista el rol activo `ESTUDIANTE`.
+4. Genera un hash Bcrypt de la contraseña.
+5. Crea el usuario y su asignación de rol dentro de una transacción.
+6. Devuelve los datos públicos del usuario con `201 Created`.
+
+El registro nunca devuelve ni almacena la contraseña en texto plano.
+
 ### `GET /auth/context`
 
 Requiere el encabezado:
@@ -274,7 +289,7 @@ Desde `PracticaLink/backend`:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las pruebas actuales validan permisos concedidos y denegados, normalización de roles y configuración inválida.
+Las pruebas actuales validan permisos concedidos y denegados, normalización de roles, registro exitoso, correo duplicado y configuración de rol inválida.
 
 ## Estado actual y límites conocidos
 
