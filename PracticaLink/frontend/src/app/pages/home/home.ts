@@ -58,6 +58,9 @@ export class Home implements OnInit {
       && contexto.perfil !== null
       && contexto.practica_actual === null;
   });
+  readonly esEstudiante = computed(
+    () => this.contexto()?.roles.includes('ESTUDIANTE') === true
+  );
 
   cargando = true;
 

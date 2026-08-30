@@ -66,4 +66,11 @@ describe('Home', () => {
       'Hola, Usuario. Estás logueado como ESTUDIANTE.'
     );
   });
+
+  it('shows the registration module to students', () => {
+    expect(component.esEstudiante()).toBeTrue();
+    expect(
+      fixture.nativeElement.textContent
+    ).toContain('Registro de práctica profesional');
+  });
 });

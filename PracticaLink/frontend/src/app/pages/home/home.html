@@ -74,12 +74,51 @@
 
       }
 
-      @if (puedeRegistrarPractica()) {
-        <ion-button
-          expand="block"
-          (click)="registrarPractica()">
-          Registrar práctica profesional
-        </ion-button>
+      @if (esEstudiante()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
+            <ion-card-title>Registro de práctica profesional</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            @if (ctx.practica_actual) {
+              <p class="module-success">
+                Tu práctica ya fue registrada correctamente.
+              </p>
+
+              <div class="registration-details">
+                <span>
+                  Empresa: {{ ctx.practica_actual.centro_practica.nombre }}
+                </span>
+                <span>
+                  Estado: {{ ctx.practica_actual.estado.nombre }}
+                </span>
+              </div>
+            } @else if (ctx.perfil) {
+              <p>
+                Ingresa los antecedentes de la empresa, las fechas, las horas
+                y las funciones que realizarás durante tu práctica.
+              </p>
+
+              <div class="registration-details">
+                <span>Perfil: {{ ctx.perfil.rut }}</span>
+                <span>Estado inicial: REGISTRADA</span>
+              </div>
+
+              <ion-button
+                expand="block"
+                (click)="registrarPractica()">
+                Comenzar registro
+              </ion-button>
+            } @else {
+              <p class="module-warning" role="alert">
+                Tu usuario todavía no tiene un perfil de estudiante asociado.
+                Solicita su habilitación antes de registrar una práctica.
+              </p>
+            }
+          </ion-card-content>
+        </ion-card>
       }
 
       <ion-button
