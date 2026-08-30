@@ -113,7 +113,27 @@ De forma general, la arquitectura puede representarse de la siguiente manera:
                 Central
 ```
 
-Las tecnologías específicas utilizadas para implementar esta arquitectura serán definidas posteriormente.
+## Tecnologías utilizadas
+
+Frontend:
+
+- Angular
+- TypeScript
+
+Backend:
+
+- Python
+- FastAPI
+
+Base de datos:
+
+- Supabase
+- PostgreSQL
+
+Control de versiones y colaboración:
+
+- Git
+- GitHub
 
 ## Flujo de trabajo
 
