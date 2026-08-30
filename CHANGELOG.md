@@ -1,0 +1,38 @@
+# Changelog
+
+Todos los cambios relevantes de PracticaLink se documentarán en este archivo.
+
+El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto seguirá [Versionado Semántico](https://semver.org/lang/es/) cuando se publiquen versiones etiquetadas.
+
+## Sin publicar
+
+### Pendiente
+
+- Incorporar aquí los cambios que todavía no formen parte de una versión estable.
+
+## 0.1.0 - 2026-08-30
+
+### Agregado
+
+- Backend inicial desarrollado con FastAPI y SQLAlchemy.
+- Conexión a PostgreSQL alojado en Supabase mediante variables de entorno.
+- Autenticación de usuarios mediante correo, contraseña y tokens JWT.
+- Endpoints de inicio de sesión y consulta del contexto del usuario.
+- Comprobaciones de estado para la API y la conexión con la base de datos.
+- Frontend inicial desarrollado con Angular e Ionic.
+- Páginas de inicio de sesión y página principal.
+- Servicio, modelos y store de autenticación en el frontend.
+- Interceptor HTTP para enviar el token de acceso en solicitudes autenticadas.
+- Persistencia temporal de la sesión mediante `sessionStorage`.
+- Script SQL para la relación entre usuarios y roles.
+- Guía para instalar y ejecutar el proyecto en un entorno local.
+- Credenciales de demostración para pruebas compartidas en la rama `develop`.
+
+### Cambiado
+
+- El archivo `.env.template` ahora utiliza valores genéricos y seguros.
+- El README principal enlaza la documentación de instalación local.
+
+### Seguridad
+
+- Los archivos `.env`, entornos virtuales, dependencias instaladas, cachés y artefactos de compilación quedaron excluidos del control de versiones.

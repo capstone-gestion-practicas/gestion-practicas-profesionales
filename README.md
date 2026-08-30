@@ -1,5 +1,9 @@
 # PracticaLink
 
+## Puesta en marcha
+
+Para instalar y ejecutar el proyecto desde cero, consulta la [documentación de instalación](DOCUMENTACION_INSTALACION.md).
+
 Proyecto desarrollado como parte de la asignatura Capstone de la carrera de Ingeniería en Informática de Duoc UC.
 
 ## Descripción
