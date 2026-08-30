@@ -1,0 +1,88 @@
+<p>home works!</p>
+<ion-content class="home-content">
+  <div class="home-wrapper">
+
+    @if (cargando) {
+
+      <div class="loading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Cargando información...</p>
+      </div>
+
+    } @else if (contexto(); as ctx) {
+
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            Bienvenido, {{ ctx.usuario.nombre }}
+          </ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <p>
+            <strong>Correo:</strong>
+            {{ ctx.usuario.correo }}
+          </p>
+
+          <p>
+            <strong>Rol:</strong>
+            {{ ctx.roles.join(', ') }}
+          </p>
+
+          @if (ctx.perfil) {
+            <p>
+              <strong>Carrera:</strong>
+              {{ ctx.perfil.carrera }}
+            </p>
+
+            <p>
+              <strong>Sede:</strong>
+              {{ ctx.perfil.sede }}
+            </p>
+          }
+        </ion-card-content>
+      </ion-card>
+
+      @if (ctx.practica_actual) {
+
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Práctica actual</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <p>
+              <strong>Empresa:</strong>
+              {{ ctx.practica_actual.centro_practica.nombre }}
+            </p>
+
+            <p>
+              <strong>Estado:</strong>
+              {{ ctx.practica_actual.estado.nombre }}
+            </p>
+
+            <p>
+              <strong>Horas:</strong>
+              {{ ctx.practica_actual.horas }}
+            </p>
+
+            <p>
+              <strong>Función:</strong>
+              {{ ctx.practica_actual.cargo_funcion }}
+            </p>
+          </ion-card-content>
+        </ion-card>
+
+      }
+
+      <ion-button
+        expand="block"
+        fill="outline"
+        (click)="cerrarSesion()">
+        Cerrar sesión
+      </ion-button>
+
+    }
+
+  </div>
+</ion-content>
