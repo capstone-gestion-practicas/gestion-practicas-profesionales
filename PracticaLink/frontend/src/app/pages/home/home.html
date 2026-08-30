@@ -74,6 +74,14 @@
 
       }
 
+      @if (puedeRegistrarPractica()) {
+        <ion-button
+          expand="block"
+          (click)="registrarPractica()">
+          Registrar práctica profesional
+        </ion-button>
+      }
+
       <ion-button
         expand="block"
         fill="outline"

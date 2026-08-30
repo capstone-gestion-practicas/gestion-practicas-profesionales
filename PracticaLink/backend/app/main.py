@@ -4,6 +4,7 @@ from sqlalchemy import text
 
 from app.core.database import engine
 from app.api.routes.auth import router as auth_router
+from app.api.routes.practicas import router as practicas_router
 
 app = FastAPI(
     title="PracticaLink API",
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(practicas_router)
 
 
 @app.get("/")

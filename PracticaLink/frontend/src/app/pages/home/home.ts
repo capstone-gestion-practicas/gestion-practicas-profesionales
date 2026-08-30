@@ -52,6 +52,12 @@ export class Home implements OnInit {
 
     return `Hola, ${nombre}. Estás logueado como ${roles}.`;
   });
+  readonly puedeRegistrarPractica = computed(() => {
+    const contexto = this.contexto();
+    return contexto?.roles.includes('ESTUDIANTE') === true
+      && contexto.perfil !== null
+      && contexto.practica_actual === null;
+  });
 
   cargando = true;
 
@@ -84,5 +90,9 @@ export class Home implements OnInit {
     sessionStorage.removeItem('access_token');
     this.authStore.limpiar();
     this.router.navigate(['/login']);
+  }
+
+  registrarPractica(): void {
+    this.router.navigate(['/practicas/nueva']);
   }
 }

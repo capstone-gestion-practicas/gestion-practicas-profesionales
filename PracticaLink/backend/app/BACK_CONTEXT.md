@@ -71,13 +71,76 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 
 El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
 
-El script disponible en `scripts/BD/user_roles.sql` crea las tablas base:
+### Convención para inserciones
+
+Las inserciones que forman parte de una operación de negocio deben realizarse
+mediante funciones PostgreSQL almacenadas en la base de datos. Esto permite que
+las validaciones, los `INSERT` relacionados y el registro de trazabilidad se
+ejecuten dentro de una única transacción.
+
+La división de responsabilidades es la siguiente:
+
+- La ruta FastAPI autentica al usuario y exige los roles correspondientes.
+- Los esquemas Pydantic validan tipos, campos obligatorios y reglas de formato.
+- El servicio obtiene el identificador del usuario desde el JWT y llama a la
+  función PostgreSQL mediante SQL textual parametrizado.
+- La función PostgreSQL valida el estado persistido, ejecuta los `INSERT`
+  relacionados y retorna un objeto `JSONB` con el resultado o un código de error
+  de negocio.
+- El servicio interpreta ese resultado, confirma la transacción con `commit()`
+  o genera una excepción para que la ruta ejecute `rollback()` y responda con el
+  código HTTP correspondiente.
+
+Ejemplo de llamada desde un servicio:
+
+```python
+resultado = db.execute(
+    text("""
+        SELECT fn_operacion_negocio(
+            :id_usuario,
+            CAST(:datos AS JSONB)
+        )
+    """),
+    {
+        "id_usuario": id_usuario,
+        "datos": datos.model_dump_json(),
+    },
+).scalar_one()
+```
+
+Reglas obligatorias para nuevas inserciones:
+
+- El identificador del usuario debe obtenerse del JWT, nunca del cuerpo enviado
+  por el cliente.
+- Todos los argumentos deben enviarse como parámetros enlazados.
+- Una función de negocio debe completar toda la operación o no persistir ningún
+  cambio.
+- Los estados, perfiles y relaciones deben comprobarse nuevamente en la base de
+  datos para evitar decisiones basadas solo en datos del frontend.
+- Las funciones deben retornar códigos de error estables que el backend pueda
+  traducir a respuestas HTTP sin exponer detalles internos de PostgreSQL.
+- La definición de cada función debe quedar versionada en `scripts/BD/schema.sql`
+  o en una migración SQL antes de que el backend comience a utilizarla.
+- Los `SELECT` simples pueden permanecer en servicios; si su cantidad crece,
+  deben trasladarse a una capa `repositories`.
+
+EP02 aplica esta convención mediante
+`fn_registrar_practica(id_usuario, datos_jsonb)`, llamada desde
+`services/practica_service.py`.
+
+El esquema completo y las funciones utilizadas por el backend están versionados
+en `scripts/BD/schema.sql`. El archivo `scripts/BD/user_roles.sql` conserva el
+bloque inicial de usuarios y roles como referencia histórica.
+
+Entre las tablas base se encuentran:
 
 - `usuario`
 - `rol`
 - `usuario_rol`
 
-El contexto depende además de la función PostgreSQL `fn_contexto_usuario(id_usuario)`. Su definición no está actualmente incluida en este repositorio.
+El contexto depende de `fn_contexto_usuario(id_usuario)` y el registro de una
+práctica depende de `fn_registrar_practica(id_usuario, datos_jsonb)`. Ambas
+definiciones están incluidas en `scripts/BD/schema.sql`.
 
 ## Endpoints
 
@@ -117,6 +180,23 @@ Authorization: Bearer <token>
 ```
 
 El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y ejecuta `fn_contexto_usuario(:id_usuario)`.
+
+### `POST /practicas`
+
+Requiere autenticación y rol `ESTUDIANTE`. Registra de forma transaccional el
+centro de práctica, la práctica profesional y su primer historial con estado
+`REGISTRADA`. El estudiante se obtiene desde el usuario autenticado; nunca se
+acepta un `id_estudiante` enviado por el cliente.
+
+El endpoint rechaza el registro cuando el usuario no posee perfil de estudiante
+o ya tiene una práctica cuyo estado no es final. Si se informa el RUT de una
+empresa existente, reutiliza ese centro en lugar de duplicarlo.
+
+La operación se ejecuta en PostgreSQL mediante
+`fn_registrar_practica(id_usuario, datos_jsonb)`. El servicio envía parámetros
+enlazados, interpreta los errores de negocio retornados por la función y
+confirma la transacción. La autorización y la obtención del usuario desde el
+JWT permanecen en FastAPI.
 
 ## Contexto del usuario
 

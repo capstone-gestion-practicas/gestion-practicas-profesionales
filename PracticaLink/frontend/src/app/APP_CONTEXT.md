@@ -49,6 +49,7 @@ src/app/
 - `/`: redirige a `/login`.
 - `/login`: muestra el formulario de autenticación.
 - `/home`: muestra el contexto del usuario autenticado y exige uno de los roles conocidos.
+- `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 
 Las rutas están declaradas en `app.routes.ts`.
 
@@ -109,6 +110,7 @@ Endpoints consumidos:
 
 - `POST /auth/login`: autentica al usuario.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
+- `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
 
 El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introduce configuración por ambientes, reemplazar la URL fija de `AuthService` por una configuración centralizada.
 
