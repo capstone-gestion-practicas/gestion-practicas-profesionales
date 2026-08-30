@@ -4,6 +4,7 @@ sqlalchemy
 psycopg[binary]
 python-dotenv
 pydantic-settings
-pwdlib[argon2]
+pwdlib
+bcrypt
 PyJWT
 email-validator
