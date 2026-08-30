@@ -29,12 +29,13 @@ app/
 ├── core/
 │   ├── config.py
 │   ├── database.py
+│   ├── permissions.py
 │   └── security.py
 ├── schemas/
 │   └── auth.py
 ├── services/
 │   └── auth_service.py
-├── APP_CONTEXT.md
+├── BACK_CONTEXT.md
 └── main.py
 ```
 
@@ -115,7 +116,7 @@ Requiere el encabezado:
 Authorization: Bearer <token>
 ```
 
-El backend valida el JWT, obtiene `id_usuario` desde `sub` y ejecuta `fn_contexto_usuario(:id_usuario)`.
+El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y ejecuta `fn_contexto_usuario(:id_usuario)`.
 
 ## Contexto del usuario
 
@@ -172,6 +173,7 @@ Reglas obligatorias:
 - `schemas/auth.py`: contratos Pydantic de entrada y salida.
 - `services/auth_service.py`: consultas y lógica de autenticación/contexto.
 - `core/security.py`: hashing y JWT.
+- `core/permissions.py`: autorización reutilizable de endpoints por roles activos.
 - `core/database.py`: engine, sesiones y dependencia de base de datos.
 - `core/config.py`: configuración proveniente del entorno.
 
@@ -183,6 +185,16 @@ Reglas obligatorias:
 - Usar códigos HTTP adecuados y mensajes que no filtren detalles sensibles.
 - Añadir pruebas para autenticación, autorización y respuestas de error.
 - Actualizar este archivo cuando cambien endpoints, modelos o arquitectura.
+
+## Pruebas unitarias
+
+Desde `PracticaLink/backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Las pruebas actuales validan permisos concedidos y denegados, normalización de roles y configuración inválida.
 
 ## Estado actual y límites conocidos
 

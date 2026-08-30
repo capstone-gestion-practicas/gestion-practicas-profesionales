@@ -6,9 +6,12 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ## Sin publicar
 
-### Pendiente
+### Agregado
 
-- Incorporar aquí los cambios que todavía no formen parte de una versión estable.
+- Guards de autenticación y autorización por roles en el frontend.
+- Autorización reutilizable por roles en endpoints del backend.
+- Saludo del home basado en el nombre y los roles del contexto.
+- Pruebas unitarias para guards, store, home y permisos del backend.
 
 ## 0.1.0 - 2026-08-30
 

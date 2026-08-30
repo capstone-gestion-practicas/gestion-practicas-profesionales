@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.schemas.auth import (
     LoginRequest,
@@ -45,7 +46,14 @@ def login(
 
 @router.get(
     "/context",
-    response_model=ContextoUsuarioResponse
+    response_model=ContextoUsuarioResponse,
+    dependencies=[
+        Depends(require_roles(
+            "ESTUDIANTE",
+            "GESTOR",
+            "ADMINISTRADOR"
+        ))
+    ]
 )
 def obtener_contexto(
     id_usuario: int = Depends(get_current_user_id),

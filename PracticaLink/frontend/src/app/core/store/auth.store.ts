@@ -1,5 +1,5 @@
+//auth.store.ts
 import { Injectable, signal } from '@angular/core';
-
 import { ContextoUsuarioResponse } from '../models/auth.models';
 
 @Injectable({
@@ -13,6 +13,10 @@ export class AuthStore {
 
   setContexto(contexto: ContextoUsuarioResponse): void {
     this.contextoSignal.set(contexto);
+  }
+
+  obtenerContextoActual(): ContextoUsuarioResponse | null {
+    return this.contextoSignal();
   }
 
   limpiar(): void {

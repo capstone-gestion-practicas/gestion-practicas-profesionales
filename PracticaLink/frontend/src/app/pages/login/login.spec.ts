@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 
+import { AuthService } from '../../core/services/auth.service';
+import { AuthStore } from '../../core/store/auth.store';
 import { Login } from './login';
 
 describe('Login', () => {
@@ -7,8 +10,21 @@ describe('Login', () => {
   let fixture: ComponentFixture<Login>;
 
   beforeEach(async () => {
+    const authService = jasmine.createSpyObj<AuthService>(
+      'AuthService',
+      ['login', 'obtenerContexto']
+    );
+
     await TestBed.configureTestingModule({
-      imports: [Login]
+      imports: [Login],
+      providers: [
+        AuthStore,
+        { provide: AuthService, useValue: authService },
+        {
+          provide: Router,
+          useValue: jasmine.createSpyObj<Router>('Router', ['navigate'])
+        }
+      ]
     })
     .compileComponents();
 

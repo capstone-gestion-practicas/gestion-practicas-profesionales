@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -38,6 +38,20 @@ export class Home implements OnInit {
   private readonly router = inject(Router);
 
   readonly contexto = this.authStore.contexto;
+  readonly saludo = computed(() => {
+    const contexto = this.contexto();
+
+    if (!contexto) {
+      return '';
+    }
+
+    const nombre = contexto.usuario.nombre;
+    const roles = contexto.roles.length > 0
+      ? contexto.roles.join(', ')
+      : 'sin rol asignado';
+
+    return `Hola, ${nombre}. Estás logueado como ${roles}.`;
+  });
 
   cargando = true;
 

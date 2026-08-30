@@ -26,6 +26,9 @@ src/app/
 ├── core/
 │   ├── interceptors/
 │   │   └── auth.interceptor.ts
+│   ├── guards/
+│   │   ├── auth.guard.ts
+│   │   └── role.guard.ts
 │   ├── models/
 │   │   └── auth.models.ts
 │   ├── services/
@@ -45,7 +48,7 @@ src/app/
 
 - `/`: redirige a `/login`.
 - `/login`: muestra el formulario de autenticación.
-- `/home`: muestra el contexto del usuario autenticado.
+- `/home`: muestra el contexto del usuario autenticado y exige uno de los roles conocidos.
 
 Las rutas están declaradas en `app.routes.ts`.
 
@@ -115,6 +118,8 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - `auth.service.ts`: comunicación HTTP con el backend.
 - `auth.store.ts`: estado del contexto del usuario en memoria.
 - `auth.interceptor.ts`: incorporación del token JWT a solicitudes.
+- `auth.guard.ts`: bloqueo de rutas cuando no existe un token de acceso.
+- `role.guard.ts`: autorización de rutas según los roles presentes en el contexto.
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
@@ -131,9 +136,19 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - No versionar credenciales reales ni información sensible.
 - Ejecutar `npm run build` después de cambios relevantes.
 
+## Pruebas unitarias
+
+Desde `PracticaLink/frontend`:
+
+```powershell
+npm test -- --watch=false --browsers=ChromeHeadless
+```
+
+Las pruebas actuales cubren guards, store de autenticación, componentes base y el saludo construido desde el contexto.
+
 ## Estado actual y límites conocidos
 
-- No existe todavía un guard de rutas para bloquear `/home`; la página realiza su propia comprobación de sesión.
+- `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.
 - No existe configuración separada para desarrollo y producción.
 - El contexto no persiste fuera de la sesión del navegador.
