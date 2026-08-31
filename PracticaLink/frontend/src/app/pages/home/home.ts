@@ -52,6 +52,16 @@ export class Home implements OnInit {
 
     return `Hola, ${nombre}. Estás logueado como ${roles}.`;
   });
+  readonly esAdministrador = computed(
+    () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
+  );
+  readonly esEstudiante = computed(
+    () => this.contexto()?.roles.includes('ESTUDIANTE') === true
+  );
+  readonly puedeRevisarPracticas = computed(() => {
+    const roles = this.contexto()?.roles ?? [];
+    return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
+  });
 
   cargando = true;
 
@@ -84,5 +94,21 @@ export class Home implements OnInit {
     sessionStorage.removeItem('access_token');
     this.authStore.limpiar();
     this.router.navigate(['/login']);
+  }
+
+  gestionarUsuarios(): void {
+    this.router.navigate(['/usuarios']);
+  }
+
+  registrarPractica(): void {
+    this.router.navigate(['/practicas/nueva']);
+  }
+
+  revisarPracticas(): void {
+    this.router.navigate(['/revisiones']);
+  }
+
+  completarPerfil(): void {
+    this.router.navigate(['/home']);
   }
 }

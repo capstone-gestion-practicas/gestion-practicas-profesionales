@@ -5,7 +5,9 @@ import { Observable } from 'rxjs';
 import {
   ContextoUsuarioResponse,
   LoginRequest,
-  LoginResponse
+  LoginResponse,
+  RegistroRequest,
+  RegistroResponse
 } from '../models/auth.models';
 
 @Injectable({
@@ -19,6 +21,13 @@ export class AuthService {
   login(datos: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/auth/login`,
+      datos
+    );
+  }
+
+  registrar(datos: RegistroRequest): Observable<RegistroResponse> {
+    return this.http.post<RegistroResponse>(
+      `${this.apiUrl}/auth/register`,
       datos
     );
   }

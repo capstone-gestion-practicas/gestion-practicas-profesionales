@@ -26,6 +26,13 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'usuarios',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

@@ -1,7 +1,50 @@
+import json
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, verify_password
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password
+)
+
+
+def registrar_usuario(
+    db: Session,
+    nombre: str,
+    apellido: str,
+    correo: str,
+    password: str
+):
+    correo_normalizado = correo.strip().lower()
+    resultado = db.execute(
+        text("""
+            SELECT fn_registrar_usuario_estudiante(
+                CAST(:datos AS JSONB),
+                :password_hash
+            )
+        """),
+        {
+            "datos": json.dumps({
+                "nombre": nombre.strip(),
+                "apellido": apellido.strip(),
+                "correo": correo_normalizado,
+            }),
+            "password_hash": hash_password(password),
+        },
+    ).scalar_one()
+
+    if resultado.get("error") == "CORREO_EXISTENTE":
+        db.rollback()
+        return None
+
+    if resultado.get("error") == "ROL_ESTUDIANTE_NO_CONFIGURADO":
+        db.rollback()
+        raise RuntimeError("El rol ESTUDIANTE no está configurado")
+
+    db.commit()
+    return resultado
 
 
 def autenticar_usuario(

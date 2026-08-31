@@ -11,9 +11,31 @@
       <ion-card-content>
 
         <p class="subtitle">
-          Gestión de prácticas profesionales
+          @if (modoRegistro) {
+            Crea tu cuenta
+          } @else {
+            Gestión de prácticas profesionales
+          }
         </p>
 
+        @if (modoRegistro) {
+          <ion-item>
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input
+              [(ngModel)]="nombre"
+              autocomplete="given-name">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Apellido</ion-label>
+            <ion-input
+              [(ngModel)]="apellido"
+              autocomplete="family-name">
+            </ion-input>
+          </ion-item>
+
+        }
         <ion-item>
           <ion-label position="stacked">Correo</ion-label>
           <ion-input
@@ -40,8 +62,8 @@
         <ion-button
           expand="block"
           class="login-button"
-          [disabled]="cargando || !correo || !password"
-          (click)="iniciarSesion()">
+          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
+          (click)="modoRegistro ? registrarse() : iniciarSesion()">
 
           @if (cargando) {
             <ion-spinner name="crescent"></ion-spinner>
