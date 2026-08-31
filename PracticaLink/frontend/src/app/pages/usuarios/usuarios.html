@@ -1,0 +1,73 @@
+<ion-content class="users-content">
+  <div class="users-wrapper">
+    <header class="page-heading">
+      <div><p>EP01 · Administración</p><h1>Gestión de usuarios</h1></div>
+      <div class="heading-actions">
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+        <ion-button (click)="abrirCrear()">Crear usuario</ion-button>
+      </div>
+    </header>
+
+    @if (cargando) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error) {
+      <p class="error" role="alert">{{ error }}</p>
+    } @else if (usuarios.length === 0) {
+      <ion-card><ion-card-content>No hay usuarios registrados.</ion-card-content></ion-card>
+    } @else {
+      <div class="user-grid">
+        @for (usuario of usuarios; track usuario.id_usuario) {
+          <ion-card>
+            <ion-card-content>
+              <div class="user-title">
+                <div><h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2><p>{{ usuario.correo }}</p></div>
+                <span class="status" [class.inactive]="!usuario.activo">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+              <div class="roles">
+                @for (rol of usuario.roles; track rol) { <span>{{ rol }}</span> }
+              </div>
+              <ion-button expand="block" fill="outline" (click)="abrirEditar(usuario)">
+                Editar usuario
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        }
+      </div>
+    }
+  </div>
+
+  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <div class="user-modal">
+        <p class="module-label">{{ usuarioEditando ? 'Editar usuario' : 'Nuevo usuario' }}</p>
+        <h2>{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
+        <ion-item><ion-label position="stacked">Nombre *</ion-label><ion-input [(ngModel)]="nombre" maxlength="100"></ion-input></ion-item>
+        <ion-item><ion-label position="stacked">Apellido *</ion-label><ion-input [(ngModel)]="apellido" maxlength="100"></ion-input></ion-item>
+        <ion-item><ion-label position="stacked">Correo *</ion-label><ion-input type="email" [(ngModel)]="correo" [disabled]="!!usuarioEditando"></ion-input></ion-item>
+        @if (!usuarioEditando) {
+          <ion-item><ion-label position="stacked">Contraseña *</ion-label><ion-input type="password" [(ngModel)]="password" minlength="8"></ion-input></ion-item>
+        }
+        @if (usuarioEditando) {
+          <ion-item><ion-toggle [(ngModel)]="activo">Usuario activo</ion-toggle></ion-item>
+        }
+        <fieldset>
+          <legend>Roles *</legend>
+          @for (rol of roles; track rol.id_rol) {
+            <ion-item lines="none">
+              <ion-checkbox [checked]="tieneRol(rol.nombre)" (ionChange)="alternarRol(rol.nombre, $event.detail.checked)">{{ rol.nombre }}</ion-checkbox>
+            </ion-item>
+          }
+        </fieldset>
+        @if (errorModal) { <p class="error" role="alert">{{ errorModal }}</p> }
+        <div class="modal-actions">
+          <ion-button fill="outline" [disabled]="guardando" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando" (click)="guardar()">
+            @if (guardando) { <ion-spinner></ion-spinner> } @else { Guardar }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

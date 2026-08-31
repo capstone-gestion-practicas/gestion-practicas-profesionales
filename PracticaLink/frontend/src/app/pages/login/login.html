@@ -11,7 +11,7 @@
 
         <p class="subtitle">
           @if (modoRegistro) {
-            Crea tu cuenta de estudiante
+            Crea tu cuenta
           } @else {
             Gestión de prácticas profesionales
           }
@@ -34,30 +34,6 @@
             </ion-input>
           </ion-item>
 
-          <ion-item>
-            <ion-label position="stacked">RUT</ion-label>
-            <ion-input
-              [(ngModel)]="rut"
-              maxlength="12"
-              placeholder="12.345.678-9">
-            </ion-input>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Carrera</ion-label>
-            <ion-input
-              [(ngModel)]="carrera"
-              maxlength="150">
-            </ion-input>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Sede</ion-label>
-            <ion-input
-              [(ngModel)]="sede"
-              maxlength="100">
-            </ion-input>
-          </ion-item>
         }
 
         <ion-item>
@@ -105,7 +81,7 @@
         <ion-button
           expand="block"
           class="login-button"
-          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !rut || !carrera || !sede || !confirmarPassword))"
+          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
           (click)="modoRegistro ? registrarse() : iniciarSesion()">
 
           @if (cargando) {

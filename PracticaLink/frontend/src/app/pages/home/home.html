@@ -142,6 +142,21 @@
         </ion-card>
       }
 
+      @if (esAdministrador()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP01 · Administración</p>
+            <ion-card-title>Gestión de usuarios</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Crea cuentas, asigna roles y habilita o deshabilita usuarios.</p>
+            <ion-button expand="block" (click)="gestionarUsuarios()">
+              Administrar usuarios
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+
       <ion-button
         expand="block"
         fill="outline"
