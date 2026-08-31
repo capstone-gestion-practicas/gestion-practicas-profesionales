@@ -79,6 +79,9 @@ export class Home implements OnInit {
     const roles = this.contexto()?.roles ?? [];
     return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
   });
+  readonly esAdministrador = computed(
+    () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
+  );
 
   cargando = true;
   modalPerfilAbierto = false;
@@ -127,6 +130,10 @@ export class Home implements OnInit {
 
   revisarPracticas(): void {
     this.router.navigate(['/revisiones']);
+  }
+
+  gestionarUsuarios(): void {
+    this.router.navigate(['/usuarios']);
   }
 
   completarPerfil(): void {

@@ -44,9 +44,6 @@ export class Login {
   modoRegistro = false;
   nombre = '';
   apellido = '';
-  rut = '';
-  carrera = '';
-  sede = '';
   correo = '';
   password = '';
   confirmarPassword = '';
@@ -89,19 +86,13 @@ export class Login {
       nombre: this.nombre,
       apellido: this.apellido,
       correo: this.correo,
-      password: this.password,
-      rut: this.rut,
-      carrera: this.carrera,
-      sede: this.sede
+      password: this.password
     }).subscribe({
       next: () => {
         this.cargando = false;
         this.modoRegistro = false;
         this.nombre = '';
         this.apellido = '';
-        this.rut = '';
-        this.carrera = '';
-        this.sede = '';
         this.password = '';
         this.confirmarPassword = '';
         this.mensaje = 'Cuenta creada. Ya puedes iniciar sesión.';

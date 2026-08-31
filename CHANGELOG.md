@@ -8,11 +8,22 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Agregado
 
+- Panel administrativo de EP01 para listar, crear y editar usuarios mediante modales.
+- Asignación de roles y activación o desactivación de cuentas por administradores.
+- Endpoints protegidos `GET/POST/PATCH /usuarios` y consulta de roles activos.
+- Funciones PostgreSQL `fn_crear_usuario_admin` y `fn_actualizar_usuario_admin`.
 - Guards de autenticación y autorización por roles en el frontend.
 - Autorización reutilizable por roles en endpoints del backend.
 - Saludo del home basado en el nombre y los roles del contexto.
 - Pruebas unitarias para guards, store, home y permisos del backend.
-- Registro público de cuentas de estudiante desde la pantalla de login.
+- Registro público simplificado con nombre, apellido, correo y contraseña.
+
+### Cambiado
+
+- El perfil estudiantil ya no se crea durante el registro. RUT, carrera y sede
+  se completan posteriormente desde el modal disponible en el Home.
+- El administrador puede crear cuentas con roles `ESTUDIANTE`, `GESTOR` y
+  `ADMINISTRADOR` sin requerir datos académicos.
 
 ## 0.1.0 - 2026-08-30
 

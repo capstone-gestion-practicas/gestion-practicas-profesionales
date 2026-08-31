@@ -15,10 +15,7 @@ def registrar_usuario(
     nombre: str,
     apellido: str,
     correo: str,
-    password: str,
-    rut: str,
-    carrera: str,
-    sede: str
+    password: str
 ):
     correo_normalizado = correo.strip().lower()
     resultado = db.execute(
@@ -33,15 +30,12 @@ def registrar_usuario(
                 "nombre": nombre.strip(),
                 "apellido": apellido.strip(),
                 "correo": correo_normalizado,
-                "rut": rut.strip(),
-                "carrera": carrera.strip(),
-                "sede": sede.strip(),
             }),
             "password_hash": hash_password(password),
         },
     ).scalar_one()
 
-    if resultado.get("error") in {"CORREO_EXISTENTE", "RUT_EXISTENTE"}:
+    if resultado.get("error") == "CORREO_EXISTENTE":
         db.rollback()
         return None
 

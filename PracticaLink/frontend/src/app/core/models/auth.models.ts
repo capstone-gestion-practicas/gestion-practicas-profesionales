@@ -55,9 +55,6 @@ export interface RegistroRequest {
   apellido: string;
   correo: string;
   password: string;
-  rut: string;
-  carrera: string;
-  sede: string;
 }
 
 export interface RegistroResponse {
@@ -66,5 +63,4 @@ export interface RegistroResponse {
   apellido: string;
   correo: string;
   rol: string;
-  id_estudiante: number;
 }

@@ -241,24 +241,15 @@ SET search_path = public
 AS $$
 DECLARE
     v_id_usuario BIGINT;
-    v_id_estudiante BIGINT;
     v_id_rol BIGINT;
     v_correo VARCHAR(150);
-    v_rut VARCHAR(12);
 BEGIN
     v_correo := LOWER(BTRIM(p_datos ->> 'correo'));
-    v_rut := BTRIM(p_datos ->> 'rut');
 
     IF EXISTS (
         SELECT 1 FROM usuario u WHERE LOWER(u.correo) = v_correo
     ) THEN
         RETURN jsonb_build_object('error', 'CORREO_EXISTENTE');
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 FROM estudiante e WHERE UPPER(e.rut) = UPPER(v_rut)
-    ) THEN
-        RETURN jsonb_build_object('error', 'RUT_EXISTENTE');
     END IF;
 
     SELECT id_rol INTO v_id_rol
@@ -285,19 +276,8 @@ BEGIN
     INSERT INTO usuario_rol (id_usuario, id_rol)
     VALUES (v_id_usuario, v_id_rol);
 
-    INSERT INTO estudiante (
-        id_usuario, rut, carrera, sede
-    ) VALUES (
-        v_id_usuario,
-        v_rut,
-        BTRIM(p_datos ->> 'carrera'),
-        BTRIM(p_datos ->> 'sede')
-    )
-    RETURNING id_estudiante INTO v_id_estudiante;
-
     RETURN jsonb_build_object(
         'id_usuario', v_id_usuario,
-        'id_estudiante', v_id_estudiante,
         'nombre', BTRIM(p_datos ->> 'nombre'),
         'apellido', BTRIM(p_datos ->> 'apellido'),
         'correo', v_correo,
@@ -634,6 +614,98 @@ BEGIN
         'estado', UPPER(p_decision),
         'mensaje', 'Solicitud revisada correctamente'
     );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_crear_usuario_admin(
+    p_id_admin BIGINT, p_datos JSONB, p_password_hash VARCHAR
+) RETURNS JSONB LANGUAGE plpgsql SET search_path = public AS $$
+DECLARE
+    v_id_usuario BIGINT;
+    v_roles_solicitados INTEGER;
+    v_roles_validos INTEGER;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM usuario_rol ur
+        JOIN usuario u ON u.id_usuario = ur.id_usuario
+        JOIN rol r ON r.id_rol = ur.id_rol
+        WHERE u.id_usuario = p_id_admin AND u.activo = TRUE
+          AND r.nombre = 'ADMINISTRADOR' AND r.activo = TRUE
+    ) THEN RETURN jsonb_build_object('error', 'ADMIN_NO_VALIDO'); END IF;
+
+    IF EXISTS (SELECT 1 FROM usuario WHERE LOWER(correo) = LOWER(BTRIM(p_datos ->> 'correo'))) THEN
+        RETURN jsonb_build_object('error', 'CORREO_EXISTENTE');
+    END IF;
+
+    SELECT COUNT(DISTINCT UPPER(valor)) INTO v_roles_solicitados
+    FROM jsonb_array_elements_text(COALESCE(p_datos -> 'roles', '[]'::JSONB)) AS roles(valor);
+    SELECT COUNT(DISTINCT r.nombre) INTO v_roles_validos FROM rol r
+    WHERE r.activo = TRUE AND r.nombre IN (
+        SELECT UPPER(valor) FROM jsonb_array_elements_text(COALESCE(p_datos -> 'roles', '[]'::JSONB)) AS roles(valor)
+    );
+    IF v_roles_solicitados = 0 OR v_roles_solicitados <> v_roles_validos THEN
+        RETURN jsonb_build_object('error', 'ROLES_INVALIDOS');
+    END IF;
+
+    INSERT INTO usuario (nombre, apellido, correo, password_hash)
+    VALUES (BTRIM(p_datos ->> 'nombre'), BTRIM(p_datos ->> 'apellido'),
+            LOWER(BTRIM(p_datos ->> 'correo')), p_password_hash)
+    RETURNING id_usuario INTO v_id_usuario;
+    INSERT INTO usuario_rol (id_usuario, id_rol)
+    SELECT v_id_usuario, r.id_rol FROM rol r WHERE r.activo = TRUE AND r.nombre IN (
+        SELECT UPPER(valor) FROM jsonb_array_elements_text(p_datos -> 'roles') AS roles(valor)
+    );
+    RETURN jsonb_build_object('id_usuario', v_id_usuario, 'mensaje', 'Usuario creado correctamente');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_actualizar_usuario_admin(
+    p_id_admin BIGINT, p_id_usuario BIGINT, p_datos JSONB
+) RETURNS JSONB LANGUAGE plpgsql SET search_path = public AS $$
+DECLARE
+    v_roles_solicitados INTEGER;
+    v_roles_validos INTEGER;
+    v_conserva_admin BOOLEAN;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM usuario_rol ur
+        JOIN usuario u ON u.id_usuario = ur.id_usuario
+        JOIN rol r ON r.id_rol = ur.id_rol
+        WHERE u.id_usuario = p_id_admin AND u.activo = TRUE
+          AND r.nombre = 'ADMINISTRADOR' AND r.activo = TRUE
+    ) THEN RETURN jsonb_build_object('error', 'ADMIN_NO_VALIDO'); END IF;
+    IF NOT EXISTS (SELECT 1 FROM usuario WHERE id_usuario = p_id_usuario FOR UPDATE) THEN
+        RETURN jsonb_build_object('error', 'USUARIO_NO_ENCONTRADO');
+    END IF;
+
+    SELECT COUNT(DISTINCT UPPER(valor)) INTO v_roles_solicitados
+    FROM jsonb_array_elements_text(COALESCE(p_datos -> 'roles', '[]'::JSONB)) AS roles(valor);
+    SELECT COUNT(DISTINCT r.nombre) INTO v_roles_validos FROM rol r
+    WHERE r.activo = TRUE AND r.nombre IN (
+        SELECT UPPER(valor) FROM jsonb_array_elements_text(COALESCE(p_datos -> 'roles', '[]'::JSONB)) AS roles(valor)
+    );
+    IF v_roles_solicitados = 0 OR v_roles_solicitados <> v_roles_validos THEN
+        RETURN jsonb_build_object('error', 'ROLES_INVALIDOS');
+    END IF;
+
+    SELECT EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(p_datos -> 'roles') AS roles(valor)
+        WHERE UPPER(valor) = 'ADMINISTRADOR'
+    ) INTO v_conserva_admin;
+    IF p_id_admin = p_id_usuario
+       AND ((p_datos ->> 'activo')::BOOLEAN = FALSE OR NOT v_conserva_admin) THEN
+        RETURN jsonb_build_object('error', 'AUTOGESTION_NO_PERMITIDA');
+    END IF;
+
+    UPDATE usuario SET nombre = BTRIM(p_datos ->> 'nombre'),
+        apellido = BTRIM(p_datos ->> 'apellido'), activo = (p_datos ->> 'activo')::BOOLEAN,
+        fecha_actualizacion = NOW() WHERE id_usuario = p_id_usuario;
+    DELETE FROM usuario_rol WHERE id_usuario = p_id_usuario;
+    INSERT INTO usuario_rol (id_usuario, id_rol)
+    SELECT p_id_usuario, r.id_rol FROM rol r WHERE r.activo = TRUE AND r.nombre IN (
+        SELECT UPPER(valor) FROM jsonb_array_elements_text(p_datos -> 'roles') AS roles(valor)
+    );
+    RETURN jsonb_build_object('id_usuario', p_id_usuario, 'mensaje', 'Usuario actualizado correctamente');
 END;
 $$;
 

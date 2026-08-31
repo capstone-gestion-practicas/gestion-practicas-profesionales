@@ -18,11 +18,7 @@ class RegistroRequest(BaseModel):
     apellido: str = Field(min_length=2, max_length=100)
     correo: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    rut: str = Field(min_length=8, max_length=12)
-    carrera: str = Field(min_length=2, max_length=150)
-    sede: str = Field(min_length=2, max_length=100)
-
-    @field_validator("nombre", "apellido", "rut", "carrera", "sede", mode="before")
+    @field_validator("nombre", "apellido", mode="before")
     @classmethod
     def limpiar_nombre(cls, valor: str) -> str:
         return valor.strip()
@@ -34,7 +30,6 @@ class RegistroResponse(BaseModel):
     apellido: str
     correo: EmailStr
     rol: str
-    id_estudiante: int
 
 
 class UsuarioContext(BaseModel):

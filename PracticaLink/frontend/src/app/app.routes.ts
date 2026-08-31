@@ -36,6 +36,13 @@ export const routes: Routes = [
         .then(m => m.PracticaForm)
   },
   {
+    path: 'usuarios',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+  },
+  {
     path: 'revisiones',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
