@@ -26,6 +26,38 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'practicas/nueva',
+    canActivate: [authGuard, roleGuard],
+    data: {
+      roles: ['ESTUDIANTE']
+    },
+    loadComponent: () =>
+      import('./pages/practica-form/practica-form')
+        .then(m => m.PracticaForm)
+  },
+  {
+    path: 'usuarios',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+  },
+  {
+    path: 'revisiones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revisiones/revisiones').then(m => m.Revisiones)
+  },
+  {
+    path: 'revisiones/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revision-detalle/revision-detalle')
+        .then(m => m.RevisionDetalle)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

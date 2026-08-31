@@ -1,4 +1,3 @@
-<p>login works!</p>
 <ion-content class="login-content">
   <div class="login-wrapper">
 
@@ -11,14 +10,38 @@
       <ion-card-content>
 
         <p class="subtitle">
-          Gestión de prácticas profesionales
+          @if (modoRegistro) {
+            Crea tu cuenta
+          } @else {
+            Gestión de prácticas profesionales
+          }
         </p>
+
+        @if (modoRegistro) {
+          <ion-item>
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input
+              [(ngModel)]="nombre"
+              autocomplete="given-name">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Apellido</ion-label>
+            <ion-input
+              [(ngModel)]="apellido"
+              autocomplete="family-name">
+            </ion-input>
+          </ion-item>
+
+        }
 
         <ion-item>
           <ion-label position="stacked">Correo</ion-label>
           <ion-input
             type="email"
             [(ngModel)]="correo"
+            autocomplete="email"
             placeholder="correo@ejemplo.cl">
           </ion-input>
         </ion-item>
@@ -27,9 +50,21 @@
           <ion-label position="stacked">Contraseña</ion-label>
           <ion-input
             type="password"
-            [(ngModel)]="password">
+            [(ngModel)]="password"
+            [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
           </ion-input>
         </ion-item>
+
+        @if (modoRegistro) {
+          <ion-item>
+            <ion-label position="stacked">Confirmar contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="confirmarPassword"
+              autocomplete="new-password">
+            </ion-input>
+          </ion-item>
+        }
 
         @if (error) {
           <p class="error">
@@ -37,18 +72,34 @@
           </p>
         }
 
+        @if (mensaje) {
+          <p class="success">
+            {{ mensaje }}
+          </p>
+        }
+
         <ion-button
           expand="block"
           class="login-button"
-          [disabled]="cargando || !correo || !password"
-          (click)="iniciarSesion()">
+          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
+          (click)="modoRegistro ? registrarse() : iniciarSesion()">
 
           @if (cargando) {
             <ion-spinner name="crescent"></ion-spinner>
           } @else {
-            Iniciar sesión
+            {{ modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
           }
 
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="clear"
+          [disabled]="cargando"
+          (click)="alternarModo()">
+          {{ modoRegistro
+            ? 'Ya tengo una cuenta'
+            : 'Registrarme' }}
         </ion-button>
 
       </ion-card-content>
