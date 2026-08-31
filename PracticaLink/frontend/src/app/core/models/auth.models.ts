@@ -49,3 +49,22 @@ export interface ContextoUsuarioResponse {
   perfil: PerfilEstudianteContext | null;
   practica_actual: PracticaActualContext | null;
 }
+
+export interface RegistroRequest {
+  nombre: string;
+  apellido: string;
+  correo: string;
+  password: string;
+  rut: string;
+  carrera: string;
+  sede: string;
+}
+
+export interface RegistroResponse {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  rol: string;
+  id_estudiante: number;
+}

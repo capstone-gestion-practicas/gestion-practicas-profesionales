@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import { AuthService } from '../../core/services/auth.service';
+import { EstudianteService } from '../../core/services/estudiante.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { Home } from './home';
 
@@ -37,6 +38,13 @@ describe('Home', () => {
         AuthStore,
         { provide: AuthService, useValue: authService },
         {
+          provide: EstudianteService,
+          useValue: jasmine.createSpyObj<EstudianteService>(
+            'EstudianteService',
+            ['completarPerfil']
+          )
+        },
+        {
           provide: Router,
           useValue: jasmine.createSpyObj<Router>('Router', ['navigate'])
         }
@@ -65,5 +73,12 @@ describe('Home', () => {
     expect(component.saludo()).toBe(
       'Hola, Usuario. Estás logueado como ESTUDIANTE.'
     );
+  });
+
+  it('shows the registration module to students', () => {
+    expect(component.esEstudiante()).toBeTrue();
+    expect(
+      fixture.nativeElement.textContent
+    ).toContain('Registro de práctica profesional');
   });
 });

@@ -12,6 +12,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - Autorización reutilizable por roles en endpoints del backend.
 - Saludo del home basado en el nombre y los roles del contexto.
 - Pruebas unitarias para guards, store, home y permisos del backend.
+- Registro público de cuentas de estudiante desde la pantalla de login.
 
 ## 0.1.0 - 2026-08-30
 

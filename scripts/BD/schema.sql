@@ -310,6 +310,200 @@ BEGIN
 END;
 $$;
 
+-- Registra centro, practica e historial en una unica transaccion. El bloqueo
+-- del perfil evita dos registros activos concurrentes para el mismo estudiante.
+CREATE OR REPLACE FUNCTION fn_registrar_practica(
+    p_id_usuario BIGINT,
+    p_datos JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+    v_id_estudiante BIGINT;
+    v_id_estado BIGINT;
+    v_nombre_estado VARCHAR(50);
+    v_id_centro BIGINT;
+    v_id_practica BIGINT;
+    v_rut_empresa VARCHAR(12);
+BEGIN
+    SELECT e.id_estudiante
+    INTO v_id_estudiante
+    FROM estudiante e
+    WHERE e.id_usuario = p_id_usuario
+    FOR UPDATE;
+
+    IF v_id_estudiante IS NULL THEN
+        RETURN jsonb_build_object(
+            'error', 'PERFIL_ESTUDIANTE_NO_ENCONTRADO'
+        );
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM practica p
+        JOIN estado_practica ep
+          ON ep.id_estado = p.id_estado_actual
+        WHERE p.id_estudiante = v_id_estudiante
+          AND ep.es_final = FALSE
+    ) THEN
+        RETURN jsonb_build_object('error', 'PRACTICA_ACTIVA');
+    END IF;
+
+    SELECT ep.id_estado, ep.nombre
+    INTO v_id_estado, v_nombre_estado
+    FROM estado_practica ep
+    WHERE ep.nombre = 'REGISTRADA'
+      AND ep.activo = TRUE
+    LIMIT 1;
+
+    IF v_id_estado IS NULL THEN
+        RETURN jsonb_build_object(
+            'error', 'ESTADO_INICIAL_NO_ENCONTRADO'
+        );
+    END IF;
+
+    v_rut_empresa := NULLIF(BTRIM(p_datos #>> '{centro,rut_empresa}'), '');
+
+    IF v_rut_empresa IS NOT NULL THEN
+        SELECT cp.id_centro
+        INTO v_id_centro
+        FROM centro_practica cp
+        WHERE UPPER(cp.rut_empresa) = UPPER(v_rut_empresa)
+        LIMIT 1;
+    END IF;
+
+    IF v_id_centro IS NULL THEN
+        INSERT INTO centro_practica (
+            nombre,
+            rut_empresa,
+            direccion,
+            telefono,
+            correo,
+            contacto_nombre,
+            contacto_cargo
+        ) VALUES (
+            BTRIM(p_datos #>> '{centro,nombre}'),
+            v_rut_empresa,
+            NULLIF(BTRIM(p_datos #>> '{centro,direccion}'), ''),
+            NULLIF(BTRIM(p_datos #>> '{centro,telefono}'), ''),
+            NULLIF(BTRIM(p_datos #>> '{centro,correo}'), ''),
+            NULLIF(BTRIM(p_datos #>> '{centro,contacto_nombre}'), ''),
+            NULLIF(BTRIM(p_datos #>> '{centro,contacto_cargo}'), '')
+        )
+        RETURNING id_centro INTO v_id_centro;
+    END IF;
+
+    INSERT INTO practica (
+        id_estudiante,
+        id_centro,
+        id_estado_actual,
+        fecha_inicio,
+        fecha_termino,
+        horas,
+        cargo_funcion,
+        descripcion
+    ) VALUES (
+        v_id_estudiante,
+        v_id_centro,
+        v_id_estado,
+        NULLIF(p_datos ->> 'fecha_inicio', '')::DATE,
+        NULLIF(p_datos ->> 'fecha_termino', '')::DATE,
+        NULLIF(p_datos ->> 'horas', '')::INTEGER,
+        NULLIF(BTRIM(p_datos ->> 'cargo_funcion'), ''),
+        NULLIF(BTRIM(p_datos ->> 'descripcion'), '')
+    )
+    RETURNING id_practica INTO v_id_practica;
+
+    INSERT INTO historial_estado (
+        id_practica,
+        id_estado,
+        id_usuario,
+        observacion
+    ) VALUES (
+        v_id_practica,
+        v_id_estado,
+        p_id_usuario,
+        'Registro inicial de la práctica'
+    );
+
+    RETURN jsonb_build_object(
+        'id_practica', v_id_practica,
+        'id_centro', v_id_centro,
+        'estado', v_nombre_estado,
+        'mensaje', 'Práctica registrada correctamente'
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_completar_perfil_estudiante(
+    p_id_usuario BIGINT,
+    p_datos JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+    v_id_estudiante BIGINT;
+    v_rut VARCHAR(12);
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM usuario u
+        JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        JOIN rol r ON r.id_rol = ur.id_rol
+        WHERE u.id_usuario = p_id_usuario
+          AND u.activo = TRUE
+          AND r.nombre = 'ESTUDIANTE'
+          AND r.activo = TRUE
+    ) THEN
+        RETURN jsonb_build_object(
+            'error', 'USUARIO_ESTUDIANTE_NO_VALIDO'
+        );
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM estudiante e
+        WHERE e.id_usuario = p_id_usuario
+    ) THEN
+        RETURN jsonb_build_object('error', 'PERFIL_EXISTENTE');
+    END IF;
+
+    v_rut := BTRIM(p_datos ->> 'rut');
+
+    IF EXISTS (
+        SELECT 1 FROM estudiante e
+        WHERE UPPER(e.rut) = UPPER(v_rut)
+    ) THEN
+        RETURN jsonb_build_object('error', 'RUT_EXISTENTE');
+    END IF;
+
+    INSERT INTO estudiante (
+        id_usuario,
+        rut,
+        carrera,
+        sede,
+        telefono,
+        direccion
+    ) VALUES (
+        p_id_usuario,
+        v_rut,
+        BTRIM(p_datos ->> 'carrera'),
+        BTRIM(p_datos ->> 'sede'),
+        NULLIF(BTRIM(p_datos ->> 'telefono'), ''),
+        NULLIF(BTRIM(p_datos ->> 'direccion'), '')
+    )
+    RETURNING id_estudiante INTO v_id_estudiante;
+
+    RETURN jsonb_build_object(
+        'id_estudiante', v_id_estudiante,
+        'mensaje', 'Perfil de estudiante completado correctamente'
+    );
+END;
+$$;
+
 -- La base de origen tiene RLS habilitado, pero no posee politicas definidas.
 -- El backend se conecta directamente a PostgreSQL; el acceso mediante la API
 -- de Supabase permanecera bloqueado hasta que se creen politicas explicitas.

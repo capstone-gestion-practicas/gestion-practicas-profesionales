@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class LoginRequest(BaseModel):
@@ -11,6 +11,30 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class RegistroRequest(BaseModel):
+    nombre: str = Field(min_length=2, max_length=100)
+    apellido: str = Field(min_length=2, max_length=100)
+    correo: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    rut: str = Field(min_length=8, max_length=12)
+    carrera: str = Field(min_length=2, max_length=150)
+    sede: str = Field(min_length=2, max_length=100)
+
+    @field_validator("nombre", "apellido", "rut", "carrera", "sede", mode="before")
+    @classmethod
+    def limpiar_nombre(cls, valor: str) -> str:
+        return valor.strip()
+
+
+class RegistroResponse(BaseModel):
+    id_usuario: int
+    nombre: str
+    apellido: str
+    correo: EmailStr
+    rol: str
+    id_estudiante: int
 
 
 class UsuarioContext(BaseModel):

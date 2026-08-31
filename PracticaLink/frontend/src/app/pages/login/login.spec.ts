@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
@@ -8,11 +9,12 @@ import { Login } from './login';
 describe('Login', () => {
   let component: Login;
   let fixture: ComponentFixture<Login>;
+  let authService: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
-    const authService = jasmine.createSpyObj<AuthService>(
+    authService = jasmine.createSpyObj<AuthService>(
       'AuthService',
-      ['login', 'obtenerContexto']
+      ['login', 'registrar', 'obtenerContexto']
     );
 
     await TestBed.configureTestingModule({
@@ -35,5 +37,51 @@ describe('Login', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('does not register when passwords differ', () => {
+    component.password = '123456.abc';
+    component.confirmarPassword = 'otra-clave';
+
+    component.registrarse();
+
+    expect(component.error).toBe('Las contraseñas no coinciden.');
+    expect(authService.registrar).not.toHaveBeenCalled();
+  });
+
+  it('registers a student account and returns to login mode', () => {
+    authService.registrar.and.returnValue(of({
+      id_usuario: 10,
+      nombre: 'Ana',
+      apellido: 'Pérez',
+      correo: 'ana@practicalink.cl',
+      rol: 'ESTUDIANTE',
+      id_estudiante: 20
+    }));
+    component.modoRegistro = true;
+    component.nombre = 'Ana';
+    component.apellido = 'Pérez';
+    component.correo = 'ana@practicalink.cl';
+    component.rut = '12.345.678-9';
+    component.carrera = 'Ingeniería en Informática';
+    component.sede = 'Alameda';
+    component.password = '123456.abc';
+    component.confirmarPassword = '123456.abc';
+
+    component.registrarse();
+
+    expect(authService.registrar).toHaveBeenCalledWith({
+      nombre: 'Ana',
+      apellido: 'Pérez',
+      correo: 'ana@practicalink.cl',
+      password: '123456.abc',
+      rut: '12.345.678-9',
+      carrera: 'Ingeniería en Informática',
+      sede: 'Alameda'
+    });
+    expect(component.modoRegistro).toBeFalse();
+    expect(component.mensaje).toBe(
+      'Cuenta creada. Ya puedes iniciar sesión.'
+    );
   });
 });

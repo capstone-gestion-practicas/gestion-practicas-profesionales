@@ -26,6 +26,16 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'practicas/nueva',
+    canActivate: [authGuard, roleGuard],
+    data: {
+      roles: ['ESTUDIANTE']
+    },
+    loadComponent: () =>
+      import('./pages/practica-form/practica-form')
+        .then(m => m.PracticaForm)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }
