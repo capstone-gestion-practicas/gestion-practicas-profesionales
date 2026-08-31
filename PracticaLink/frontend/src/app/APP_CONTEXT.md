@@ -50,6 +50,8 @@ src/app/
 - `/login`: muestra el formulario de autenticación.
 - `/home`: muestra el contexto del usuario autenticado y exige uno de los roles conocidos.
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
+- `/revisiones`: lista solicitudes pendientes para gestores y administradores.
+- `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
 
 Las rutas están declaradas en `app.routes.ts`.
 

@@ -21,29 +21,16 @@ class RegisterUserTests(unittest.TestCase):
         hash_password.return_value = "hashed-password"
         db = MagicMock()
 
-        existing_result = MagicMock()
-        existing_result.scalar_one_or_none.return_value = None
-        role_result = MagicMock()
-        role_result.scalar_one_or_none.return_value = 7
-        insert_result = MagicMock()
-        insert_result.mappings.return_value.one.return_value = {
+        function_result = MagicMock()
+        function_result.scalar_one.return_value = {
             "id_usuario": 10,
+            "id_estudiante": 20,
             "nombre": "Ana",
             "apellido": "Pérez",
-            "correo": "ana@practicalink.cl"
+            "correo": "ana@practicalink.cl",
+            "rol": "ESTUDIANTE"
         }
-        assignment_result = MagicMock()
-        student_result = MagicMock()
-        student_result.mappings.return_value.one.return_value = {
-            "id_estudiante": 20
-        }
-        db.execute.side_effect = [
-            existing_result,
-            role_result,
-            insert_result,
-            assignment_result,
-            student_result
-        ]
+        db.execute.return_value = function_result
 
         result = registrar_usuario(
             db=db,
@@ -65,9 +52,11 @@ class RegisterUserTests(unittest.TestCase):
 
     def test_rejects_an_existing_email(self) -> None:
         db = MagicMock()
-        existing_result = MagicMock()
-        existing_result.scalar_one_or_none.return_value = 10
-        db.execute.return_value = existing_result
+        function_result = MagicMock()
+        function_result.scalar_one.return_value = {
+            "error": "CORREO_EXISTENTE"
+        }
+        db.execute.return_value = function_result
 
         result = registrar_usuario(
             db=db,
@@ -82,14 +71,15 @@ class RegisterUserTests(unittest.TestCase):
 
         self.assertIsNone(result)
         db.commit.assert_not_called()
+        db.rollback.assert_called_once_with()
 
     def test_fails_when_student_role_is_not_configured(self) -> None:
         db = MagicMock()
-        existing_result = MagicMock()
-        existing_result.scalar_one_or_none.return_value = None
-        role_result = MagicMock()
-        role_result.scalar_one_or_none.return_value = None
-        db.execute.side_effect = [existing_result, role_result]
+        function_result = MagicMock()
+        function_result.scalar_one.return_value = {
+            "error": "ROL_ESTUDIANTE_NO_CONFIGURADO"
+        }
+        db.execute.return_value = function_result
 
         with self.assertRaises(RuntimeError):
             registrar_usuario(

@@ -1,0 +1,7 @@
+.review-content { --background: #f4f6f9; }
+.review-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+.page-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.page-heading p { color: var(--ion-color-primary); font-weight: 700; margin: 0; }
+.page-heading h1 { margin-top: 4px; }
+.center { display: flex; justify-content: center; padding: 48px; }
+.error { color: #c62828; }

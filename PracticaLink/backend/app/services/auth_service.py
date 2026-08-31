@@ -1,7 +1,7 @@
+import json
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
-from sqlalchemy.exc import IntegrityError
 
 from app.core.security import (
     create_access_token,
@@ -21,104 +21,36 @@ def registrar_usuario(
     sede: str
 ):
     correo_normalizado = correo.strip().lower()
-
-    usuario_existente = db.execute(
+    resultado = db.execute(
         text("""
-            SELECT id_usuario
-            FROM usuario
-            WHERE LOWER(correo) = :correo
-            LIMIT 1
+            SELECT fn_registrar_usuario_estudiante(
+                CAST(:datos AS JSONB),
+                :password_hash
+            )
         """),
-        {"correo": correo_normalizado}
-    ).scalar_one_or_none()
-
-    if usuario_existente is not None:
-        return None
-
-    id_rol = db.execute(
-        text("""
-            SELECT id_rol
-            FROM rol
-            WHERE nombre = 'ESTUDIANTE'
-              AND activo = TRUE
-            LIMIT 1
-        """)
-    ).scalar_one_or_none()
-
-    if id_rol is None:
-        raise RuntimeError("El rol ESTUDIANTE no está configurado")
-
-    try:
-        usuario = db.execute(
-            text("""
-                INSERT INTO usuario (
-                    nombre,
-                    apellido,
-                    correo,
-                    password_hash
-                )
-                VALUES (
-                    :nombre,
-                    :apellido,
-                    :correo,
-                    :password_hash
-                )
-                RETURNING id_usuario, nombre, apellido, correo
-            """),
-            {
+        {
+            "datos": json.dumps({
                 "nombre": nombre.strip(),
                 "apellido": apellido.strip(),
                 "correo": correo_normalizado,
-                "password_hash": hash_password(password)
-            }
-        ).mappings().one()
-
-        db.execute(
-            text("""
-                INSERT INTO usuario_rol (id_usuario, id_rol)
-                VALUES (:id_usuario, :id_rol)
-            """),
-            {
-                "id_usuario": usuario["id_usuario"],
-                "id_rol": id_rol
-            }
-        )
-        estudiante = db.execute(
-            text("""
-                INSERT INTO estudiante (
-                    id_usuario,
-                    rut,
-                    carrera,
-                    sede
-                )
-                VALUES (
-                    :id_usuario,
-                    :rut,
-                    :carrera,
-                    :sede
-                )
-                RETURNING id_estudiante
-            """),
-            {
-                "id_usuario": usuario["id_usuario"],
                 "rut": rut.strip(),
                 "carrera": carrera.strip(),
-                "sede": sede.strip()
-            }
-        ).mappings().one()
-        db.commit()
-    except IntegrityError:
+                "sede": sede.strip(),
+            }),
+            "password_hash": hash_password(password),
+        },
+    ).scalar_one()
+
+    if resultado.get("error") in {"CORREO_EXISTENTE", "RUT_EXISTENTE"}:
         db.rollback()
         return None
-    except Exception:
-        db.rollback()
-        raise
 
-    return {
-        **dict(usuario),
-        "rol": "ESTUDIANTE",
-        "id_estudiante": estudiante["id_estudiante"]
-    }
+    if resultado.get("error") == "ROL_ESTUDIANTE_NO_CONFIGURADO":
+        db.rollback()
+        raise RuntimeError("El rol ESTUDIANTE no está configurado")
+
+    db.commit()
+    return resultado
 
 
 def autenticar_usuario(

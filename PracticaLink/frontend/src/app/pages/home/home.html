@@ -127,6 +127,21 @@
         </ion-card>
       }
 
+      @if (puedeRevisarPracticas()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP03 · Revisión</p>
+            <ion-card-title>Solicitudes de práctica</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Consulta los antecedentes y resuelve las solicitudes pendientes.</p>
+            <ion-button expand="block" (click)="revisarPracticas()">
+              Ver solicitudes
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+
       <ion-button
         expand="block"
         fill="outline"

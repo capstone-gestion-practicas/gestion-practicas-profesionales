@@ -36,6 +36,21 @@ export const routes: Routes = [
         .then(m => m.PracticaForm)
   },
   {
+    path: 'revisiones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revisiones/revisiones').then(m => m.Revisiones)
+  },
+  {
+    path: 'revisiones/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revision-detalle/revision-detalle')
+        .then(m => m.RevisionDetalle)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

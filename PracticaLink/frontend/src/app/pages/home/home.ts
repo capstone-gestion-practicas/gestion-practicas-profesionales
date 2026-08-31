@@ -75,6 +75,10 @@ export class Home implements OnInit {
   readonly esEstudiante = computed(
     () => this.contexto()?.roles.includes('ESTUDIANTE') === true
   );
+  readonly puedeRevisarPracticas = computed(() => {
+    const roles = this.contexto()?.roles ?? [];
+    return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
+  });
 
   cargando = true;
   modalPerfilAbierto = false;
@@ -119,6 +123,10 @@ export class Home implements OnInit {
 
   registrarPractica(): void {
     this.router.navigate(['/practicas/nueva']);
+  }
+
+  revisarPracticas(): void {
+    this.router.navigate(['/revisiones']);
   }
 
   completarPerfil(): void {

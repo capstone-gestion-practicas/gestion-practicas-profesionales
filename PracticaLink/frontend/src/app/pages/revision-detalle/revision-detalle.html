@@ -1,0 +1,17 @@
+<ion-content class="detail-content">
+  <div class="detail-wrapper">
+    <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+    @if (cargando) { <div class="center"><ion-spinner></ion-spinner></div> }
+    @else if (solicitud; as s) {
+      <ion-card><ion-card-header><ion-card-title>Antecedentes del estudiante</ion-card-title></ion-card-header>
+        <ion-card-content><p><strong>Nombre:</strong> {{ s.estudiante }}</p><p><strong>RUT:</strong> {{ s.rut_estudiante }}</p><p><strong>Correo:</strong> {{ s.correo_estudiante }}</p><p><strong>Carrera:</strong> {{ s.carrera }}</p><p><strong>Sede:</strong> {{ s.sede }}</p></ion-card-content></ion-card>
+      <ion-card><ion-card-header><ion-card-title>Centro y práctica</ion-card-title></ion-card-header>
+        <ion-card-content><p><strong>Centro:</strong> {{ s.centro_practica }}</p><p><strong>RUT empresa:</strong> {{ s.rut_empresa || 'No informado' }}</p><p><strong>Contacto:</strong> {{ s.contacto_nombre || 'No informado' }}</p><p><strong>Fechas:</strong> {{ s.fecha_inicio || 'Pendiente' }} — {{ s.fecha_termino || 'Pendiente' }}</p><p><strong>Horas:</strong> {{ s.horas || 'No informadas' }}</p><p><strong>Función:</strong> {{ s.cargo_funcion || 'No informada' }}</p><p><strong>Descripción:</strong> {{ s.descripcion || 'No informada' }}</p></ion-card-content></ion-card>
+      <div class="actions"><ion-button color="success" (click)="abrirDecision('APROBADA')">Aprobar</ion-button><ion-button color="warning" (click)="abrirDecision('OBSERVADA')">Observar</ion-button><ion-button color="danger" (click)="abrirDecision('RECHAZADA')">Rechazar</ion-button></div>
+    } @else { <p class="error">{{ error }}</p> }
+  </div>
+
+  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
+    <ng-template><div class="decision-modal"><h2>{{ decision }} solicitud</h2><p>Confirma la decisión para esta solicitud.</p><ion-textarea label="Observación" labelPlacement="stacked" [counter]="true" maxlength="500" [autoGrow]="true" [(ngModel)]="observacion"></ion-textarea>@if (error) { <p class="error">{{ error }}</p> }<div class="actions"><ion-button fill="outline" (click)="cerrarModal()">Cancelar</ion-button><ion-button [disabled]="guardando" (click)="confirmar()">@if (guardando) { <ion-spinner></ion-spinner> } @else { Confirmar }</ion-button></div></div></ng-template>
+  </ion-modal>
+</ion-content>

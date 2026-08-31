@@ -1,0 +1,7 @@
+.detail-content { --background: #f4f6f9; }
+.detail-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.center { display: flex; justify-content: center; padding: 48px; }
+.error { color: #c62828; }
+.decision-modal { padding: 24px; }
+ion-modal { --width: min(560px, calc(100% - 24px)); --height: auto; --border-radius: 14px; }

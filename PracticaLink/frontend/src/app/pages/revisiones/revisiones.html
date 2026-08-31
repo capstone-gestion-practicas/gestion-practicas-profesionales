@@ -1,0 +1,32 @@
+<ion-content class="review-content">
+  <div class="review-wrapper">
+    <div class="page-heading">
+      <div><p>EP03 · Revisión</p><h1>Solicitudes de práctica</h1></div>
+      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+    </div>
+
+    @if (cargando) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error) {
+      <p class="error">{{ error }}</p>
+    } @else if (solicitudes.length === 0) {
+      <ion-card><ion-card-content>No hay solicitudes pendientes.</ion-card-content></ion-card>
+    } @else {
+      @for (solicitud of solicitudes; track solicitud.id_practica) {
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ solicitud.estudiante }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>RUT:</strong> {{ solicitud.rut_estudiante }}</p>
+            <p><strong>Centro:</strong> {{ solicitud.centro_practica }}</p>
+            <p><strong>Estado:</strong> {{ solicitud.estado }}</p>
+            <ion-button expand="block" (click)="revisar(solicitud.id_practica)">
+              Revisar antecedentes
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  </div>
+</ion-content>
