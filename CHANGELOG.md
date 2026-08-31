@@ -9,6 +9,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Agregado
 
 - Proyecto Android de PracticaLink generado con Capacitor para la release 1.1.
+- Guía completa para configurar Android Studio, ejecutar en emulador o teléfono,
+  generar APK de QA y versiones firmadas, y resolver errores frecuentes.
 - Comando `npm run build-android:qa` para compilar el frontend QA, sincronizar
   Capacitor y abrir el proyecto directamente en Android Studio.
 - Configuración de ambientes Angular para usar FastAPI local durante desarrollo

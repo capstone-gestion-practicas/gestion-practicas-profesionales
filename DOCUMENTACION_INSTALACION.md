@@ -367,6 +367,10 @@ Usar únicamente para demostración y pruebas locales en la rama `develop`.
 
 ## Aplicación Android de QA
 
+La guía completa de requisitos, configuración, emulador, dispositivo físico,
+generación de APK y solución de problemas está disponible en
+[`DOCUMENTACION_ANDROID.md`](DOCUMENTACION_ANDROID.md).
+
 La rama `feature/apk-release-1.1` contiene un proyecto Capacitor en
 `PracticaLink/frontend/android`. El build Android consume el backend HTTPS:
 

@@ -2,6 +2,9 @@
 
 ## Android (release 1.1 QA)
 
+La guía completa se encuentra en
+[`DOCUMENTACION_ANDROID.md`](../../DOCUMENTACION_ANDROID.md).
+
 La aplicación Android utiliza Capacitor y consume el backend QA publicado en:
 
 ```text
