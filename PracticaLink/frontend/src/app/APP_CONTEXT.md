@@ -147,6 +147,7 @@ Endpoints consumidos:
 - `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
+- `GET /empresas/consulta/{rut}`: consulta antecedentes tributarios con caché de backend.
 - `GET /usuarios`: lista usuarios para el administrador.
 - `GET /usuarios/roles`: lista roles activos.
 - `POST /usuarios`: crea una cuenta y asigna sus roles.
@@ -165,6 +166,8 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
+- `practica-form`: modal de registro, búsqueda por RUT e ingreso manual del centro.
+- `practica.service.ts`: registro de prácticas y consulta de empresas.
 - `usuario.service.ts`: comunicación con los endpoints administrativos.
 - `usuarios.ts`: estado y acciones del panel de gestión de usuarios.
 - `app.config.ts`: registro del router, cliente HTTP, interceptor e Ionic.
