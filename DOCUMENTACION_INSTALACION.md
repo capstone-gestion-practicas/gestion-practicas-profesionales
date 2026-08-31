@@ -383,6 +383,12 @@ npm run apk:sync
 npm run android:open
 ```
 
+Para preparar QA y abrir Android Studio:
+
+```powershell
+npm run build-android:qa
+```
+
 En Android Studio seleccionar `Build > Build App Bundles or APKs > Build APKs`.
 La APK de depuración también puede generarse, con Java y el SDK configurados,
 mediante:

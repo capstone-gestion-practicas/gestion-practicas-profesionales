@@ -8,6 +8,12 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Agregado
 
+- Proyecto Android de PracticaLink generado con Capacitor para la release 1.1.
+- Comando `npm run build-android:qa` para compilar el frontend QA, sincronizar
+  Capacitor y abrir el proyecto directamente en Android Studio.
+- Configuración de ambientes Angular para usar FastAPI local durante desarrollo
+  y `https://practicalink-api-qa.onrender.com` en builds QA/Android.
+- Soporte CORS del backend para los orígenes utilizados por Capacitor Android.
 - Buscador de empresas por RUT dentro del modal de registro de práctica.
 - Integración backend con Chile RUT Empresa mediante una API key de entorno.
 - Tabla `empresa` y funciones `fn_obtener_empresa_cache` y

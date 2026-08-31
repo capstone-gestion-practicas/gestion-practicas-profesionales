@@ -19,6 +19,16 @@ Para compilar el frontend y sincronizar el proyecto nativo:
 npm run apk:sync
 ```
 
+Para preparar el build QA y abrir el proyecto en Android Studio:
+
+```powershell
+npm run build-android:qa
+```
+
+El comando usa la configuración de producción de Angular, que apunta al backend
+QA de Render, sincroniza Capacitor y abre Android Studio. La APK se genera desde
+`Build > Build App Bundles or APKs > Build APKs`.
+
 Para abrirlo en Android Studio:
 
 ```powershell
