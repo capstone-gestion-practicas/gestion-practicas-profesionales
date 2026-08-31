@@ -14,6 +14,7 @@ import {
   IonInput,
   IonItem,
   IonLabel,
+  IonList,
   IonSpinner
 } from '@ionic/angular';
 
@@ -33,6 +34,7 @@ import { AuthStore } from '../../core/store/auth.store';
     IonCardContent,
     IonItem,
     IonLabel,
+    IonList,
     IonInput,
     IonButton,
     IonSpinner
@@ -42,6 +44,12 @@ import { AuthStore } from '../../core/store/auth.store';
 })
 export class Login {
   modoRegistro = false;
+  ocultandoOjos = false;
+  mostrandoPassword = false;
+  passwordRevelada = false;
+  presionandoLogin = false;
+  private temporizadorMono: ReturnType<typeof setTimeout> | null = null;
+  private temporizadorRevelado: ReturnType<typeof setTimeout> | null = null;
   nombre = '';
   apellido = '';
   correo = '';
@@ -57,6 +65,66 @@ export class Login {
     private readonly authStore: AuthStore,
     private readonly router: Router
   ) {}
+
+  alEscribirPassword(): void {
+    this.ocultandoOjos = true;
+    if (this.temporizadorMono) {
+      clearTimeout(this.temporizadorMono);
+    }
+    this.temporizadorMono = setTimeout(() => {
+      this.ocultandoOjos = false;
+      this.temporizadorMono = null;
+    }, 650);
+  }
+
+  detenerAnimacionMono(): void {
+    if (this.temporizadorMono) {
+      clearTimeout(this.temporizadorMono);
+      this.temporizadorMono = null;
+    }
+    this.ocultandoOjos = false;
+  }
+
+  alternarVisibilidadPassword(): void {
+    this.detenerAnimacionMono();
+
+    if (this.mostrandoPassword) {
+      if (this.temporizadorRevelado) {
+        clearTimeout(this.temporizadorRevelado);
+        this.temporizadorRevelado = null;
+      }
+      this.passwordRevelada = false;
+      this.mostrandoPassword = false;
+      return;
+    }
+
+    this.mostrandoPassword = true;
+    this.passwordRevelada = false;
+    this.temporizadorRevelado = setTimeout(() => {
+      this.passwordRevelada = true;
+      this.temporizadorRevelado = null;
+    }, 1450);
+  }
+
+  ejecutarAccionPrincipal(): void {
+    if (this.modoRegistro) {
+      this.registrarse();
+      return;
+    }
+
+    if (this.presionandoLogin || !this.correo || !this.password) {
+      return;
+    }
+
+    if (this.mostrandoPassword) {
+      this.alternarVisibilidadPassword();
+    }
+    this.presionandoLogin = true;
+    setTimeout(() => {
+      this.iniciarSesion();
+      this.presionandoLogin = false;
+    }, 1800);
+  }
 
   alternarModo(): void {
     this.modoRegistro = !this.modoRegistro;

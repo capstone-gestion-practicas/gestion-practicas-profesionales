@@ -1,10 +1,25 @@
-<ion-content class="login-content">
+<ion-content
+  class="login-content"
+  [class.flashlight-mode]="mostrandoPassword"
+  [class.press-login-mode]="presionandoLogin">
   <div class="login-wrapper">
 
     <ion-card class="login-card">
 
+      <div
+        class="login-mascot"
+        [class.is-hiding]="ocultandoOjos"
+        aria-hidden="true">
+        <span class="mascot-face">🐵</span>
+        <span class="mascot-hands">🙈</span>
+        <span class="mascot-flashlight">🔦</span>
+        <span class="mascot-press-hand">👇</span>
+      </div>
+
       <ion-card-header>
-        <ion-card-title>PracticaLink</ion-card-title>
+        <ion-card-title aria-label="PracticaLink">
+          <span class="brand-practica">Practica</span><span class="brand-link">Link</span>
+        </ion-card-title>
       </ion-card-header>
 
       <ion-card-content>
@@ -17,8 +32,10 @@
           }
         </p>
 
+        <ion-list class="login-form" lines="none">
+
         @if (modoRegistro) {
-          <ion-item>
+          <ion-item class="form-field" lines="none">
             <ion-label position="stacked">Nombre</ion-label>
             <ion-input
               [(ngModel)]="nombre"
@@ -26,7 +43,7 @@
             </ion-input>
           </ion-item>
 
-          <ion-item>
+          <ion-item class="form-field" lines="none">
             <ion-label position="stacked">Apellido</ion-label>
             <ion-input
               [(ngModel)]="apellido"
@@ -36,7 +53,7 @@
 
         }
 
-        <ion-item>
+        <ion-item class="form-field" lines="none">
           <ion-label position="stacked">Correo</ion-label>
           <ion-input
             type="email"
@@ -46,25 +63,40 @@
           </ion-input>
         </ion-item>
 
-        <ion-item>
+        <ion-item class="form-field password-field" lines="none">
           <ion-label position="stacked">Contraseña</ion-label>
           <ion-input
-            type="password"
+            [type]="passwordRevelada ? 'text' : 'password'"
             [(ngModel)]="password"
+            (ionInput)="alEscribirPassword()"
+            (ionBlur)="detenerAnimacionMono()"
             [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
           </ion-input>
+          <ion-button
+            slot="end"
+            fill="clear"
+            size="small"
+            class="password-toggle"
+            [attr.aria-label]="mostrandoPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            (click)="alternarVisibilidadPassword()">
+            {{ mostrandoPassword ? 'Ocultar' : 'Mostrar' }}
+          </ion-button>
         </ion-item>
 
         @if (modoRegistro) {
-          <ion-item>
+          <ion-item class="form-field" lines="none">
             <ion-label position="stacked">Confirmar contraseña</ion-label>
             <ion-input
               type="password"
               [(ngModel)]="confirmarPassword"
+              (ionInput)="alEscribirPassword()"
+              (ionBlur)="detenerAnimacionMono()"
               autocomplete="new-password">
             </ion-input>
           </ion-item>
         }
+
+        </ion-list>
 
         @if (error) {
           <p class="error">
@@ -81,8 +113,8 @@
         <ion-button
           expand="block"
           class="login-button"
-          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
-          (click)="modoRegistro ? registrarse() : iniciarSesion()">
+          [disabled]="cargando || presionandoLogin || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
+          (click)="ejecutarAccionPrincipal()">
 
           @if (cargando) {
             <ion-spinner name="crescent"></ion-spinner>
