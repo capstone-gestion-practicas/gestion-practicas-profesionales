@@ -135,10 +135,11 @@ El store vive únicamente en memoria. Al recargar el navegador, `Home` vuelve a 
 
 ## Comunicación con el backend
 
-El servicio de autenticación usa actualmente:
+Los servicios usan una URL centralizada por ambiente:
 
 ```text
-http://127.0.0.1:8000
+Desarrollo: http://127.0.0.1:8000
+Producción/Android: https://practicalink-api-qa.onrender.com
 ```
 
 Endpoints consumidos:
@@ -153,7 +154,8 @@ Endpoints consumidos:
 - `POST /usuarios`: crea una cuenta y asigna sus roles.
 - `PATCH /usuarios/{id}`: actualiza datos, estado y roles.
 
-El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introduce configuración por ambientes, reemplazar la URL fija de `AuthService` por una configuración centralizada.
+Los archivos de `src/environments` determinan la URL usada en cada build. El
+proyecto nativo vive en `frontend/android` y se sincroniza con `npm run apk:sync`.
 
 ## Responsabilidad de cada pieza
 

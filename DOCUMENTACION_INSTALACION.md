@@ -364,3 +364,36 @@ Contraseña: 123456.abc
 ```
 
 Usar únicamente para demostración y pruebas locales en la rama `develop`.
+
+## Aplicación Android de QA
+
+La rama `feature/apk-release-1.1` contiene un proyecto Capacitor en
+`PracticaLink/frontend/android`. El build Android consume el backend HTTPS:
+
+```text
+https://practicalink-api-qa.onrender.com
+```
+
+Instalar Android Studio con el Android SDK y JDK. Luego ejecutar:
+
+```powershell
+cd PracticaLink/frontend
+npm ci
+npm run apk:sync
+npm run android:open
+```
+
+En Android Studio seleccionar `Build > Build App Bundles or APKs > Build APKs`.
+La APK de depuración también puede generarse, con Java y el SDK configurados,
+mediante:
+
+```powershell
+cd PracticaLink/frontend/android
+.\gradlew.bat assembleDebug
+```
+
+El archivo resultante queda en:
+
+```text
+PracticaLink/frontend/android/app/build/outputs/apk/debug/app-debug.apk
+```

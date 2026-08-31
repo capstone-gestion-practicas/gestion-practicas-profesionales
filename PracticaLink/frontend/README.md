@@ -1,5 +1,36 @@
 # PracticalinkFrontend
 
+## Android (release 1.1 QA)
+
+La aplicación Android utiliza Capacitor y consume el backend QA publicado en:
+
+```text
+https://practicalink-api-qa.onrender.com
+```
+
+Requisitos locales:
+
+- Node.js y dependencias instaladas con `npm ci`.
+- Android Studio con Android SDK y JDK configurados.
+
+Para compilar el frontend y sincronizar el proyecto nativo:
+
+```powershell
+npm run apk:sync
+```
+
+Para abrirlo en Android Studio:
+
+```powershell
+npm run android:open
+```
+
+Desde Android Studio se puede ejecutar en un dispositivo o generar una APK
+mediante `Build > Build App Bundles or APKs > Build APKs`.
+
+La configuración de desarrollo conserva `http://127.0.0.1:8000`; los builds de
+producción y Android utilizan la URL HTTPS de Render.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.35.
 
 ## Development server

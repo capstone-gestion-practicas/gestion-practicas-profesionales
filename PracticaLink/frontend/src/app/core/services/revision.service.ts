@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 import {
   DecisionRevision,
   DecisionRevisionResponse,
@@ -11,7 +13,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class RevisionService {
-  private readonly apiUrl = 'http://127.0.0.1:8000/revisiones';
+  private readonly apiUrl = `${environment.apiUrl}/revisiones`;
 
   constructor(private readonly http: HttpClient) {}
 

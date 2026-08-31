@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 import {
   OperacionUsuario, Rol, UsuarioActualizar, UsuarioAdministrable, UsuarioCrear
 } from '../models/usuario.models';
@@ -9,7 +11,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://127.0.0.1:8000/usuarios';
+  private readonly apiUrl = `${environment.apiUrl}/usuarios`;
 
   listar(): Observable<UsuarioAdministrable[]> {
     return this.http.get<UsuarioAdministrable[]>(this.apiUrl);

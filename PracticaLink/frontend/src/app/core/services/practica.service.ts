@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 import {
   PracticaCreate,
   PracticaCreateResponse,
@@ -10,7 +12,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class PracticaService {
-  private readonly apiUrl = 'http://127.0.0.1:8000';
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private readonly http: HttpClient) {}
 
