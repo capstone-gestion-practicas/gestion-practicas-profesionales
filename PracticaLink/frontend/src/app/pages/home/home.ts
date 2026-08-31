@@ -16,12 +16,15 @@ import {
   IonItem,
   IonLabel,
   IonModal,
-  IonSpinner
+  IonSpinner,
+  ModalController
 } from '@ionic/angular';
 
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { EstudianteService } from '../../core/services/estudiante.service';
+import { formatearRut, rutValido } from '../../core/validators/rut.validator';
+import { PracticaForm } from '../practica-form/practica-form';
 
 @Component({
   selector: 'app-home',
@@ -50,6 +53,7 @@ export class Home implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly estudianteService = inject(EstudianteService);
+  private readonly modalController = inject(ModalController);
 
   readonly contexto = this.authStore.contexto;
   readonly saludo = computed(() => {
@@ -124,8 +128,13 @@ export class Home implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  registrarPractica(): void {
-    this.router.navigate(['/practicas/nueva']);
+  async registrarPractica(): Promise<void> {
+    const modal = await this.modalController.create({
+      component: PracticaForm,
+      cssClass: 'practice-registration-modal',
+      backdropDismiss: false
+    });
+    await modal.present();
   }
 
   revisarPracticas(): void {
@@ -157,6 +166,13 @@ export class Home implements OnInit {
       this.errorPerfil = 'RUT, carrera y sede son obligatorios.';
       return;
     }
+
+    if (!rutValido(this.rutPerfil)) {
+      this.errorPerfil = 'Ingresa un RUT válido con dígito verificador.';
+      return;
+    }
+
+    this.rutPerfil = formatearRut(this.rutPerfil);
 
     this.errorPerfil = '';
     this.guardandoPerfil = true;

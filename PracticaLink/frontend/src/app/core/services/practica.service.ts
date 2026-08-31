@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 
 import {
   PracticaCreate,
-  PracticaCreateResponse
+  PracticaCreateResponse,
+  EmpresaLookup
 } from '../models/practica.models';
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +18,12 @@ export class PracticaService {
     return this.http.post<PracticaCreateResponse>(
       `${this.apiUrl}/practicas`,
       datos
+    );
+  }
+
+  consultarEmpresa(rut: string): Observable<EmpresaLookup> {
+    return this.http.get<EmpresaLookup>(
+      `${this.apiUrl}/empresas/consulta/${encodeURIComponent(rut)}`
     );
   }
 }

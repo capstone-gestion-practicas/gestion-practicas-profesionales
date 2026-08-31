@@ -8,6 +8,7 @@ from app.api.routes.practicas import router as practicas_router
 from app.api.routes.estudiantes import router as estudiantes_router
 from app.api.routes.revisiones import router as revisiones_router
 from app.api.routes.usuarios import router as usuarios_router
+from app.api.routes.empresas import router as empresas_router
 
 app = FastAPI(
     title="PracticaLink API",
@@ -31,6 +32,7 @@ app.include_router(practicas_router)
 app.include_router(estudiantes_router)
 app.include_router(revisiones_router)
 app.include_router(usuarios_router)
+app.include_router(empresas_router)
 
 
 @app.get("/")

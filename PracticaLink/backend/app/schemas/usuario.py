@@ -19,7 +19,7 @@ class UsuarioResponse(BaseModel):
 class UsuarioCrearRequest(BaseModel):
     nombre: str = Field(min_length=2, max_length=100)
     apellido: str = Field(min_length=2, max_length=100)
-    correo: EmailStr
+    correo: EmailStr = Field(max_length=150)
     password: str = Field(min_length=8, max_length=128)
     roles: list[str] = Field(min_length=1)
 
@@ -27,6 +27,11 @@ class UsuarioCrearRequest(BaseModel):
     @classmethod
     def limpiar_texto(cls, valor: str) -> str:
         return valor.strip()
+
+    @field_validator("correo", mode="before")
+    @classmethod
+    def normalizar_correo(cls, valor: str) -> str:
+        return valor.strip().lower()
 
     @field_validator("roles")
     @classmethod
