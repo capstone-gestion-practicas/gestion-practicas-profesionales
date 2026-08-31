@@ -52,6 +52,7 @@ src/app/
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
+- `/usuarios`: panel de gestión de cuentas exclusivo para el rol `ADMINISTRADOR`.
 
 Las rutas están declaradas en `app.routes.ts`.
 
@@ -74,7 +75,30 @@ Las rutas están declaradas en `app.routes.ts`.
 3. El frontend comprueba que ambas contraseñas coincidan y tengan al menos 8 caracteres.
 4. `AuthService.registrar()` envía `POST /auth/register`.
 5. El backend crea la cuenta con el rol `ESTUDIANTE`.
-6. Tras una respuesta exitosa, el formulario vuelve al modo de inicio de sesión y conserva el correo ingresado.
+6. No se crea todavía un perfil académico.
+7. Tras una respuesta exitosa, el formulario vuelve al modo de inicio de sesión y conserva el correo ingresado.
+8. Si la cuenta continúa como estudiante, completa RUT, carrera y sede desde el modal del Home.
+
+El registro público no solicita datos académicos. Esto permite que una cuenta
+pueda promoverse posteriormente a `GESTOR` o `ADMINISTRADOR` sin crear un perfil
+de estudiante innecesario.
+
+## Gestión administrativa de usuarios (EP01)
+
+El Home muestra el acceso al panel solamente cuando el contexto contiene el rol
+`ADMINISTRADOR`. La ruta `/usuarios` también está protegida por `authGuard` y
+`roleGuard`.
+
+El panel permite:
+
+- Listar usuarios, estados y roles asignados.
+- Crear cuentas mediante un modal.
+- Editar nombre, apellido, estado y roles mediante un modal.
+- Evitar que el administrador conectado se desactive o se quite su propio rol.
+
+La cuenta administradora inicial debe obtenerse promoviendo una cuenta existente
+directamente en la base de datos. Después de ese bootstrap, las demás cuentas
+administrativas pueden crearse desde el panel.
 
 No guardar contraseñas, secretos JWT ni credenciales de base de datos en el frontend.
 
@@ -123,6 +147,10 @@ Endpoints consumidos:
 - `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
+- `GET /usuarios`: lista usuarios para el administrador.
+- `GET /usuarios/roles`: lista roles activos.
+- `POST /usuarios`: crea una cuenta y asigna sus roles.
+- `PATCH /usuarios/{id}`: actualiza datos, estado y roles.
 
 El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introduce configuración por ambientes, reemplazar la URL fija de `AuthService` por una configuración centralizada.
 
@@ -137,6 +165,8 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
+- `usuario.service.ts`: comunicación con los endpoints administrativos.
+- `usuarios.ts`: estado y acciones del panel de gestión de usuarios.
 - `app.config.ts`: registro del router, cliente HTTP, interceptor e Ionic.
 
 ## Criterios para cambios futuros

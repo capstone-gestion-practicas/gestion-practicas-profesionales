@@ -249,7 +249,9 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 .\scripts\practicalink-back-test.cmd
 .\scripts\practicalink-front-test.cmd
 ```
-4. Iniciar sesión con un usuario existente en la base de datos.
+4. Iniciar sesión con un usuario existente en la base de datos o crear una
+   cuenta desde `Registrarme`. El registro solicita nombre, apellido, correo y
+   contraseña; el perfil académico se completa después desde el Home.
 5. Confirmar que se muestre la página de inicio y el contexto del usuario.
 
 ### Credenciales de prueba

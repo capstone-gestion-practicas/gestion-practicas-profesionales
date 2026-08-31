@@ -40,6 +40,28 @@ El proyecto se encuentra organizado en las siguientes épicas:
 | EP06 | Gestión de incidencias y alertas |
 | EP07 | Cierre de práctica profesional |
 
+## Funcionalidades implementadas
+
+### EP01: acceso y gestión de usuarios
+
+- Inicio de sesión con JWT y autorización por roles.
+- Registro público simplificado con nombre, apellido, correo y contraseña.
+- Perfil académico completado posteriormente por el estudiante desde el Home.
+- Panel exclusivo para administradores en `/usuarios`.
+- Creación y edición de cuentas mediante modales.
+- Asignación de roles `ESTUDIANTE`, `GESTOR` y `ADMINISTRADOR`.
+- Activación y desactivación de cuentas con protección contra el autobloqueo del administrador.
+
+### EP02: registro de práctica
+
+- Completar perfil estudiantil.
+- Registro transaccional del centro y la práctica profesional.
+
+### EP03: revisión de práctica
+
+- Listado y detalle de solicitudes para gestores y administradores.
+- Aprobación, observación o rechazo con trazabilidad de estados.
+
 ## Historias de Usuario
 
 El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las siete épicas.

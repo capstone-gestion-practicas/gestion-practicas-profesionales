@@ -211,11 +211,13 @@ Inventario actual:
 
 | Función | Servicio | Responsabilidad |
 | --- | --- | --- |
-| `fn_registrar_usuario_estudiante` | `auth_service.py` | Crear usuario, rol y perfil inicial |
+| `fn_registrar_usuario_estudiante` | `auth_service.py` | Crear la cuenta base con rol estudiante |
 | `fn_contexto_usuario` | `auth_service.py` | Obtener usuario, roles, perfil y práctica actual |
 | `fn_completar_perfil_estudiante` | `estudiante_service.py` | Crear el perfil faltante de un estudiante |
 | `fn_registrar_practica` | `practica_service.py` | Crear centro, práctica e historial inicial |
 | `fn_revisar_practica` | `revision_service.py` | Resolver una solicitud y registrar su nuevo estado |
+| `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
+| `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
 
 Reglas obligatorias para nuevas inserciones:
 
@@ -292,6 +294,8 @@ Flujo:
 5. Crea el usuario y su asignación de rol dentro de una transacción.
 6. Devuelve los datos públicos del usuario con `201 Created`.
 
+El registro no crea el perfil de estudiante. Si corresponde, RUT, carrera y
+sede se incorporan posteriormente mediante `fn_completar_perfil_estudiante`.
 El registro nunca devuelve ni almacena la contraseña en texto plano.
 
 ### `GET /auth/context`
@@ -333,6 +337,21 @@ Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:
   `historial_estado`.
 
 Las decisiones `OBSERVADA` y `RECHAZADA` requieren una observación.
+
+### Gestión de usuarios (EP01)
+
+Los endpoints bajo `/usuarios` requieren el rol `ADMINISTRADOR`:
+
+- `GET /usuarios`: lista las cuentas con su estado y roles.
+- `GET /usuarios/roles`: lista los roles activos disponibles.
+- `POST /usuarios`: crea una cuenta mediante `fn_crear_usuario_admin`.
+- `PATCH /usuarios/{id_usuario}`: actualiza nombre, apellido, estado y roles
+  mediante `fn_actualizar_usuario_admin`.
+
+El identificador del administrador proviene siempre del JWT. Las funciones
+vuelven a validar en PostgreSQL que la cuenta esté activa y posea el rol
+`ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
+quitarse su propio rol administrativo.
 
 ## Contexto del usuario
 
