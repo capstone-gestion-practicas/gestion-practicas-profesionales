@@ -1,11 +1,15 @@
 {
   "name": "practicalink-frontend",
-  "version": "0.0.0",
+  "version": "1.1.0",
+  "config": {
+    "androidVersionCode": 2
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build-android:qa": "ng build --configuration production && cap sync android && cap open android",
+    "version:sync-android": "node scripts/sync-android-version.mjs",
+    "build-android:qa": "npm run version:sync-android && ng build --configuration production && cap sync android && cap open android",
     "apk:sync": "ng build && cap sync android",
     "android:open": "cap open android",
     "watch": "ng build --watch --configuration development",

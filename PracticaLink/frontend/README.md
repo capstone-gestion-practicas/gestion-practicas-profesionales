@@ -5,6 +5,9 @@
 La guía completa se encuentra en
 [`DOCUMENTACION_ANDROID.md`](../../DOCUMENTACION_ANDROID.md).
 
+El proyecto incluye `ionic.config.json`, por lo que también puede iniciarse
+desde esta carpeta con `ionic.cmd serve` en PowerShell.
+
 La aplicación Android utiliza Capacitor y consume el backend QA publicado en:
 
 ```text

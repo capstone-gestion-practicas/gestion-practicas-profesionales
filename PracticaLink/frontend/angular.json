@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "practicalink-frontend": {
+    "app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,6 +17,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/practicalink-frontend",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
@@ -67,10 +68,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "practicalink-frontend:build:production"
+              "buildTarget": "app:build:production"
             },
             "development": {
-              "buildTarget": "practicalink-frontend:build:development"
+              "buildTarget": "app:build:development"
             }
           },
           "defaultConfiguration": "development"

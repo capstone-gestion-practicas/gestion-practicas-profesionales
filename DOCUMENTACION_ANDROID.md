@@ -10,6 +10,7 @@ El proyecto nativo se encuentra en `PracticaLink/frontend/android`.
 
 - ID Android: `cl.practicalink.app`.
 - Nombre: `PracticaLink`.
+- Versión Android: `1.1.0` (`versionCode 2`).
 - Android mínimo: API 24.
 - Android objetivo y de compilación: API 36.
 - Backend QA: `https://practicalink-api-qa.onrender.com`.
@@ -89,6 +90,21 @@ npm run build-android:qa
 El comando compila Angular con la configuración de producción/QA, sincroniza
 los archivos web con Capacitor y abre Android Studio. No genera por sí solo el
 archivo APK; la compilación final se realiza desde Android Studio o con Gradle.
+
+Antes de compilar, el comando sincroniza automáticamente la versión declarada
+en `package.json` con `android/app/build.gradle`. Para una nueva entrega sólo se
+deben actualizar estos dos valores en `package.json`:
+
+```json
+"version": "1.1.0",
+"config": {
+  "androidVersionCode": 2
+}
+```
+
+`version` usa versionado semántico y `androidVersionCode` debe incrementarse en
+cada APK publicada. La sincronización también puede ejecutarse manualmente con
+`npm run version:sync-android`.
 
 Para sincronizar sin abrir Android Studio:
 
