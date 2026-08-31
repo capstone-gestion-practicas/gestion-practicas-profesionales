@@ -6,6 +6,24 @@ Para instalar y ejecutar el proyecto desde cero, consulta la [documentación de 
 
 Proyecto desarrollado como parte de la asignatura Capstone de la carrera de Ingeniería en Informática de Duoc UC.
 
+## Primera versión
+
+La primera versión consolidada de PracticaLink se encuentra en la rama
+`release-1.1`. Esta versión reúne los desarrollos integrados de EP01, EP02 y
+EP03: gestión de usuarios, registro de práctica profesional y revisión de
+solicitudes.
+
+Para descargar esta versión:
+
+```powershell
+git fetch origin
+git switch release-1.1
+git pull --ff-only origin release-1.1
+```
+
+La rama `develop` continúa siendo la base de integración para nuevas
+funcionalidades y `main` se reserva para versiones estables.
+
 ## Descripción
 
 PracticaLink es un sistema web orientado a la gestión y seguimiento del proceso de prácticas profesionales desde su inicio hasta su finalización.

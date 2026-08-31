@@ -65,6 +65,17 @@ git switch develop
 git pull origin develop
 ```
 
+### Ejecutar la primera versión
+
+La primera versión consolidada está disponible en `release-1.1` e incluye los
+desarrollos de EP01, EP02 y EP03. Para ejecutar específicamente esa versión:
+
+```powershell
+git fetch origin
+git switch release-1.1
+git pull --ff-only origin release-1.1
+```
+
 ## 3.1. Crear una rama de funcionalidad
 
 Todas las ramas `feature/*` deben crearse desde `develop` actualizado:
