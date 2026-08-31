@@ -33,11 +33,16 @@ class RegisterUserTests(unittest.TestCase):
             "correo": "ana@practicalink.cl"
         }
         assignment_result = MagicMock()
+        student_result = MagicMock()
+        student_result.mappings.return_value.one.return_value = {
+            "id_estudiante": 20
+        }
         db.execute.side_effect = [
             existing_result,
             role_result,
             insert_result,
-            assignment_result
+            assignment_result,
+            student_result
         ]
 
         result = registrar_usuario(
@@ -45,11 +50,15 @@ class RegisterUserTests(unittest.TestCase):
             nombre=" Ana ",
             apellido=" Pérez ",
             correo="ANA@PRACTICALINK.CL",
-            password="123456.abc"
+            password="123456.abc",
+            rut="12.345.678-9",
+            carrera="Ingeniería en Informática",
+            sede="Alameda"
         )
 
         self.assertEqual(result["id_usuario"], 10)
         self.assertEqual(result["rol"], "ESTUDIANTE")
+        self.assertEqual(result["id_estudiante"], 20)
         hash_password.assert_called_once_with("123456.abc")
         db.commit.assert_called_once_with()
         db.rollback.assert_not_called()
@@ -65,7 +74,10 @@ class RegisterUserTests(unittest.TestCase):
             nombre="Ana",
             apellido="Pérez",
             correo="ana@practicalink.cl",
-            password="123456.abc"
+            password="123456.abc",
+            rut="12.345.678-9",
+            carrera="Ingeniería en Informática",
+            sede="Alameda"
         )
 
         self.assertIsNone(result)
@@ -85,7 +97,10 @@ class RegisterUserTests(unittest.TestCase):
                 nombre="Ana",
                 apellido="Pérez",
                 correo="ana@practicalink.cl",
-                password="123456.abc"
+                password="123456.abc",
+                rut="12.345.678-9",
+                carrera="Ingeniería en Informática",
+                sede="Alameda"
             )
 
 

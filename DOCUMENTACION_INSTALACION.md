@@ -173,6 +173,62 @@ Con ambas terminales abiertas:
 1. Visitar `http://127.0.0.1:8000/` y comprobar que devuelva `status: ok`.
 2. Visitar `http://127.0.0.1:8000/health/database` y comprobar la conexión.
 3. Abrir `http://localhost:4200`.
+
+## Ejecución conjunta en Windows
+
+Después de completar la instalación del backend y frontend, ambos servidores se
+pueden iniciar desde la raíz del repositorio con:
+
+```powershell
+.\scripts\start-dev.cmd
+```
+
+El script valida que existan `.env`, el entorno virtual del backend y
+`node_modules`; luego inicia FastAPI en `http://127.0.0.1:8000` y Angular en
+`http://127.0.0.1:4200`. Presionar `Ctrl+C` detiene ambos procesos.
+
+Para instalar un comando disponible desde cualquier carpeta, ejecutar una sola
+vez desde la raíz del repositorio:
+
+```powershell
+.\scripts\install-dev-command.cmd
+```
+
+Después de cerrar y abrir la terminal, iniciar el proyecto desde cualquier
+ubicación con:
+
+```powershell
+practicalink-dev
+```
+
+### Uso inmediato y solución de problemas
+
+Sin instalar el comando global, o si todavía se está usando la misma terminal,
+se puede iniciar el proyecto desde la raíz con:
+
+```powershell
+.\scripts\practicalink-dev.cmd
+```
+
+Después de ejecutar `install-dev-command.cmd`, es necesario cerrar completamente
+la terminal y abrir una nueva para que Windows cargue el `PATH` actualizado. Se
+puede comprobar que el comando esté disponible con:
+
+```powershell
+Get-Command practicalink-dev
+```
+
+Si se necesita utilizar el comando inmediatamente sin abrir otra terminal, se
+puede actualizar solo la sesión actual:
+
+```powershell
+$env:Path += ";$PWD\scripts"
+practicalink-dev
+```
+
+Si PowerShell muestra que `practicalink-dev` no se reconoce, utilizar
+`.\scripts\practicalink-dev.cmd` desde la raíz o repetir la instalación y abrir
+una terminal nueva.
 4. Iniciar sesión con un usuario existente en la base de datos.
 5. Confirmar que se muestre la página de inicio y el contexto del usuario.
 

@@ -15,7 +15,10 @@ def registrar_usuario(
     nombre: str,
     apellido: str,
     correo: str,
-    password: str
+    password: str,
+    rut: str,
+    carrera: str,
+    sede: str
 ):
     correo_normalizado = correo.strip().lower()
 
@@ -80,6 +83,29 @@ def registrar_usuario(
                 "id_rol": id_rol
             }
         )
+        estudiante = db.execute(
+            text("""
+                INSERT INTO estudiante (
+                    id_usuario,
+                    rut,
+                    carrera,
+                    sede
+                )
+                VALUES (
+                    :id_usuario,
+                    :rut,
+                    :carrera,
+                    :sede
+                )
+                RETURNING id_estudiante
+            """),
+            {
+                "id_usuario": usuario["id_usuario"],
+                "rut": rut.strip(),
+                "carrera": carrera.strip(),
+                "sede": sede.strip()
+            }
+        ).mappings().one()
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -90,7 +116,8 @@ def registrar_usuario(
 
     return {
         **dict(usuario),
-        "rol": "ESTUDIANTE"
+        "rol": "ESTUDIANTE",
+        "id_estudiante": estudiante["id_estudiante"]
     }
 
 

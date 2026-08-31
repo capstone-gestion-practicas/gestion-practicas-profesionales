@@ -114,8 +114,14 @@
             } @else {
               <p class="module-warning" role="alert">
                 Tu usuario todavía no tiene un perfil de estudiante asociado.
-                Solicita su habilitación antes de registrar una práctica.
+                Completa tus datos antes de registrar una práctica.
               </p>
+
+              <ion-button
+                expand="block"
+                (click)="completarPerfil()">
+                Completar mi perfil
+              </ion-button>
             }
           </ion-card-content>
         </ion-card>
@@ -131,4 +137,66 @@
     }
 
   </div>
+
+  <ion-modal
+    [isOpen]="modalPerfilAbierto"
+    [backdropDismiss]="!guardandoPerfil"
+    (didDismiss)="cerrarModalPerfil()">
+    <ng-template>
+      <div class="profile-modal">
+        <div class="profile-modal-header">
+          <p class="module-label">Perfil de estudiante</p>
+          <h2>Completa tus datos</h2>
+          <p>Necesitamos esta información antes de registrar tu práctica.</p>
+        </div>
+
+        <ion-item>
+          <ion-label position="stacked">RUT *</ion-label>
+          <ion-input [(ngModel)]="rutPerfil" maxlength="12"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Carrera *</ion-label>
+          <ion-input [(ngModel)]="carreraPerfil" maxlength="150"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Sede *</ion-label>
+          <ion-input [(ngModel)]="sedePerfil" maxlength="100"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Teléfono</ion-label>
+          <ion-input
+            type="tel"
+            [(ngModel)]="telefonoPerfil"
+            maxlength="20">
+          </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Dirección</ion-label>
+          <ion-input [(ngModel)]="direccionPerfil" maxlength="255"></ion-input>
+        </ion-item>
+
+        @if (errorPerfil) {
+          <p class="profile-error" role="alert">{{ errorPerfil }}</p>
+        }
+
+        <div class="profile-modal-actions">
+          <ion-button
+            fill="outline"
+            [disabled]="guardandoPerfil"
+            (click)="cerrarModalPerfil()">
+            Cancelar
+          </ion-button>
+          <ion-button
+            [disabled]="guardandoPerfil"
+            (click)="guardarPerfil()">
+            @if (guardandoPerfil) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              Guardar perfil
+            }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>

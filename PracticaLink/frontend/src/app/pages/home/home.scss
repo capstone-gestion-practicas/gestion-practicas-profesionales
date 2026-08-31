@@ -54,3 +54,36 @@ ion-card {
   color: #256029;
   font-weight: 600;
 }
+
+.profile-modal {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.profile-modal-header h2 {
+  margin: 0 0 8px;
+}
+
+.profile-modal-header > p:last-child {
+  margin: 0 0 16px;
+  color: #667085;
+}
+
+.profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.profile-error {
+  margin: 16px 0 0;
+  color: #c62828;
+}
+
+ion-modal {
+  --width: min(560px, calc(100% - 24px));
+  --height: auto;
+  --max-height: 90%;
+  --border-radius: 14px;
+}

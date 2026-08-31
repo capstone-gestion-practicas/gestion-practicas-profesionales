@@ -38,7 +38,10 @@ def registrar(
         nombre=datos.nombre,
         apellido=datos.apellido,
         correo=str(datos.correo),
-        password=datos.password
+        password=datos.password,
+        rut=datos.rut,
+        carrera=datos.carrera,
+        sede=datos.sede
     )
 
     if usuario is None:
