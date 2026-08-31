@@ -1,9 +1,9 @@
 .home-content {
-  --background: #f4f6f9;
+  --background: linear-gradient(180deg, #edf4ff 0, #f8faff 280px);
 }
 
 .home-wrapper {
-  max-width: 720px;
+  max-width: 820px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -12,9 +12,21 @@ ion-card {
   margin-bottom: 20px;
 }
 
-.registration-card {
-  border-left: 4px solid var(--ion-color-primary);
+ion-card:first-of-type {
+  background: linear-gradient(135deg, #12346b 0%, #155eef 100%);
+  color: #fff;
+  border: 0;
 }
+
+ion-card:first-of-type ion-card-title { color: #fff; }
+ion-card:first-of-type ion-card-content { color: rgba(255, 255, 255, .86); }
+
+.registration-card {
+  border-left: 5px solid var(--ion-color-primary);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.registration-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(16, 42, 86, .13); }
 
 .module-label {
   margin: 0 0 8px;
@@ -42,14 +54,14 @@ ion-card {
 
 .module-warning {
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff3e0;
   color: #8a4b08;
 }
 
 .module-success {
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #e8f5e9;
   color: #256029;
   font-weight: 600;
@@ -86,4 +98,10 @@ ion-modal {
   --height: auto;
   --max-height: 90%;
   --border-radius: 14px;
+}
+
+@media (max-width: 640px) {
+  .home-wrapper { padding: 14px; }
+  .profile-modal-actions { flex-direction: column-reverse; }
+  .profile-modal-actions ion-button { width: 100%; }
 }

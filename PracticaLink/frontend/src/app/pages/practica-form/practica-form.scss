@@ -1,5 +1,5 @@
 .form-content {
-  --background: #f4f6f9;
+  --background: linear-gradient(180deg, #edf4ff 0, #f8faff 260px);
 }
 
 .form-wrapper {
@@ -12,6 +12,8 @@ h2 {
   margin: 28px 0 8px;
   color: #243447;
   font-size: 1.1rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pl-border);
 }
 
 .form-grid {
@@ -100,6 +102,8 @@ h2 {
   gap: 12px;
   margin-top: 24px;
 }
+
+.form-wrapper > ion-card { border-top: 4px solid var(--ion-color-primary); }
 
 .error {
   color: #c62828;

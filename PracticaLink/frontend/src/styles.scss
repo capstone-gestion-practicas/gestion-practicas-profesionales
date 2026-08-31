@@ -13,10 +13,60 @@
 @import "@ionic/angular/css/display.css";
 
 :root {
+  --ion-color-primary: #155eef;
+  --ion-color-primary-rgb: 21, 94, 239;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #1253d2;
+  --ion-color-primary-tint: #2c6ef1;
+  --ion-font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --pl-navy: #102a56;
+  --pl-slate: #475467;
+  --pl-border: #e4e7ec;
+  --pl-surface: #ffffff;
+  --pl-background: #f5f8ff;
+  --pl-shadow: 0 12px 32px rgba(16, 42, 86, 0.09);
   --form-primary: #155eef;
   --form-border: #d0d5dd;
   --form-surface: #f8fafc;
   --form-error: #b42318;
+}
+
+html, body { background: var(--pl-background); }
+
+ion-content { --color: #1d2939; }
+
+ion-card {
+  --background: var(--pl-surface);
+  margin-inline: 0;
+  border: 1px solid rgba(21, 94, 239, 0.09);
+  border-radius: 18px;
+  box-shadow: var(--pl-shadow);
+}
+
+ion-card-header { padding: 22px 22px 8px; }
+ion-card-content { padding: 14px 22px 22px; }
+
+ion-button {
+  --border-radius: 10px;
+  min-height: 44px;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  text-transform: none;
+}
+
+ion-item {
+  --background: transparent;
+  --border-color: var(--pl-border);
+  --highlight-color-focused: var(--ion-color-primary);
+  --padding-start: 4px;
+  --inner-padding-end: 4px;
+}
+
+ion-input, ion-textarea { --placeholder-color: #98a2b3; }
+
+ion-modal::part(content) {
+  border: 1px solid rgba(21, 94, 239, 0.12);
+  box-shadow: 0 24px 64px rgba(16, 42, 86, 0.22);
 }
 
 .login-card ion-item,
@@ -98,4 +148,6 @@ ion-modal.practice-registration-modal {
     --height: 100%;
     --border-radius: 0;
   }
+  ion-card-header { padding: 18px 18px 6px; }
+  ion-card-content { padding: 12px 18px 18px; }
 }
