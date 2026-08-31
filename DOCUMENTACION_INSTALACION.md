@@ -229,6 +229,26 @@ practicalink-dev
 Si PowerShell muestra que `practicalink-dev` no se reconoce, utilizar
 `.\scripts\practicalink-dev.cmd` desde la raíz o repetir la instalación y abrir
 una terminal nueva.
+
+### Comandos globales de pruebas
+
+Las pruebas se ejecutan de manera independiente:
+
+```powershell
+practicalink-back-test
+practicalink-front-test
+```
+
+`practicalink-back-test` ejecuta `unittest` utilizando el entorno virtual del
+backend. `practicalink-front-test` ejecuta las pruebas Angular con
+ChromeHeadless.
+
+Sin instalar los comandos globales, se pueden utilizar desde la raíz:
+
+```powershell
+.\scripts\practicalink-back-test.cmd
+.\scripts\practicalink-front-test.cmd
+```
 4. Iniciar sesión con un usuario existente en la base de datos.
 5. Confirmar que se muestre la página de inicio y el contexto del usuario.
 
