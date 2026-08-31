@@ -231,6 +231,81 @@ INSERT INTO tipo_documento (nombre, descripcion) VALUES
     ('OTRO', 'Otro documento relacionado con la práctica');
 
 -- Funcion consumida por GET /auth/context.
+CREATE OR REPLACE FUNCTION fn_registrar_usuario_estudiante(
+    p_datos JSONB,
+    p_password_hash VARCHAR
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+    v_id_usuario BIGINT;
+    v_id_estudiante BIGINT;
+    v_id_rol BIGINT;
+    v_correo VARCHAR(150);
+    v_rut VARCHAR(12);
+BEGIN
+    v_correo := LOWER(BTRIM(p_datos ->> 'correo'));
+    v_rut := BTRIM(p_datos ->> 'rut');
+
+    IF EXISTS (
+        SELECT 1 FROM usuario u WHERE LOWER(u.correo) = v_correo
+    ) THEN
+        RETURN jsonb_build_object('error', 'CORREO_EXISTENTE');
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM estudiante e WHERE UPPER(e.rut) = UPPER(v_rut)
+    ) THEN
+        RETURN jsonb_build_object('error', 'RUT_EXISTENTE');
+    END IF;
+
+    SELECT id_rol INTO v_id_rol
+    FROM rol
+    WHERE nombre = 'ESTUDIANTE' AND activo = TRUE
+    LIMIT 1;
+
+    IF v_id_rol IS NULL THEN
+        RETURN jsonb_build_object(
+            'error', 'ROL_ESTUDIANTE_NO_CONFIGURADO'
+        );
+    END IF;
+
+    INSERT INTO usuario (
+        nombre, apellido, correo, password_hash
+    ) VALUES (
+        BTRIM(p_datos ->> 'nombre'),
+        BTRIM(p_datos ->> 'apellido'),
+        v_correo,
+        p_password_hash
+    )
+    RETURNING id_usuario INTO v_id_usuario;
+
+    INSERT INTO usuario_rol (id_usuario, id_rol)
+    VALUES (v_id_usuario, v_id_rol);
+
+    INSERT INTO estudiante (
+        id_usuario, rut, carrera, sede
+    ) VALUES (
+        v_id_usuario,
+        v_rut,
+        BTRIM(p_datos ->> 'carrera'),
+        BTRIM(p_datos ->> 'sede')
+    )
+    RETURNING id_estudiante INTO v_id_estudiante;
+
+    RETURN jsonb_build_object(
+        'id_usuario', v_id_usuario,
+        'id_estudiante', v_id_estudiante,
+        'nombre', BTRIM(p_datos ->> 'nombre'),
+        'apellido', BTRIM(p_datos ->> 'apellido'),
+        'correo', v_correo,
+        'rol', 'ESTUDIANTE'
+    );
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION fn_contexto_usuario(p_id_usuario BIGINT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -500,6 +575,64 @@ BEGIN
     RETURN jsonb_build_object(
         'id_estudiante', v_id_estudiante,
         'mensaje', 'Perfil de estudiante completado correctamente'
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_revisar_practica(
+    p_id_practica BIGINT,
+    p_id_usuario BIGINT,
+    p_decision VARCHAR,
+    p_observacion VARCHAR DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+    v_estado_actual VARCHAR(50);
+    v_id_estado BIGINT;
+BEGIN
+    SELECT ep.nombre
+    INTO v_estado_actual
+    FROM practica p
+    JOIN estado_practica ep ON ep.id_estado = p.id_estado_actual
+    WHERE p.id_practica = p_id_practica
+    FOR UPDATE OF p;
+
+    IF v_estado_actual IS NULL THEN
+        RETURN jsonb_build_object('error', 'SOLICITUD_NO_ENCONTRADA');
+    END IF;
+
+    IF v_estado_actual NOT IN ('REGISTRADA', 'EN_REVISION', 'OBSERVADA') THEN
+        RETURN jsonb_build_object('error', 'SOLICITUD_NO_REVISABLE');
+    END IF;
+
+    SELECT id_estado INTO v_id_estado
+    FROM estado_practica
+    WHERE nombre = UPPER(p_decision) AND activo = TRUE;
+
+    IF v_id_estado IS NULL OR UPPER(p_decision) NOT IN (
+        'APROBADA', 'OBSERVADA', 'RECHAZADA'
+    ) THEN
+        RETURN jsonb_build_object('error', 'DECISION_INVALIDA');
+    END IF;
+
+    UPDATE practica
+    SET id_estado_actual = v_id_estado,
+        fecha_actualizacion = NOW()
+    WHERE id_practica = p_id_practica;
+
+    INSERT INTO historial_estado (
+        id_practica, id_estado, id_usuario, observacion
+    ) VALUES (
+        p_id_practica, v_id_estado, p_id_usuario, NULLIF(BTRIM(p_observacion), '')
+    );
+
+    RETURN jsonb_build_object(
+        'id_practica', p_id_practica,
+        'estado', UPPER(p_decision),
+        'mensaje', 'Solicitud revisada correctamente'
     );
 END;
 $$;
