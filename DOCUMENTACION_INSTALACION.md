@@ -292,11 +292,19 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 Para comprobar el inicio de sesión en el entorno de desarrollo:
 
 ```text
+Estudiante:
 Correo: demo@practicalink.cl
+Contraseña: 123456.abc
+
+Administrador:
+Correo: demo.admin@practicalink.cl
 Contraseña: 123456.abc
 ```
 
-Esta cuenta es únicamente para demostración y pruebas locales sobre la rama `develop`. No debe reutilizarse en producción ni almacenar información sensible.
+Estas cuentas son únicamente para demostración y pruebas locales. La cuenta
+administradora permite acceder a `/usuarios` y validar la creación, edición,
+asignación de roles y activación de usuarios. No deben reutilizarse en producción
+ni almacenar información sensible.
 
 ## 8. Problemas frecuentes
 
@@ -358,8 +366,11 @@ npm start
 ## Credenciales de acceso rápido
 
 ```text
-Correo: demo@practicalink.cl
-Contraseña: 123456.abc
+Estudiante: demo@practicalink.cl
+Administrador: demo.admin@practicalink.cl
+Contraseña para ambas cuentas: 123456.abc
 ```
 
-Usar únicamente para demostración y pruebas locales en la rama `develop`.
+Usar únicamente para demostración y pruebas locales. Para comprobar el panel
+administrativo, iniciar sesión con `demo.admin@practicalink.cl` y entrar a
+`http://localhost:4200/usuarios`.

@@ -16,6 +16,7 @@ Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
 
 ### Agregado
 
+- Cuenta administradora de demostración documentada para validar el panel de usuarios.
 - Panel administrativo de EP01 para listar, crear y editar usuarios mediante modales.
 - Asignación de roles y activación o desactivación de cuentas por administradores.
 - Endpoints protegidos `GET/POST/PATCH /usuarios` y consulta de roles activos.
