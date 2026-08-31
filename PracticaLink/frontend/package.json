@@ -1,8 +1,8 @@
 {
   "name": "practicalink-frontend",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "config": {
-    "androidVersionCode": 2
+    "androidVersionCode": 3
   },
   "scripts": {
     "ng": "ng",
@@ -36,6 +36,7 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.5.0",
     "@ionic/angular": "^9.0.1",
     "rxjs": "~7.8.0",

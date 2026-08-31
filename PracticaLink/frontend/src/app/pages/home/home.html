@@ -175,8 +175,20 @@
     <ng-template>
       <div class="profile-modal">
         <div class="profile-modal-header">
-          <p class="module-label">Perfil de estudiante</p>
-          <h2>Completa tus datos</h2>
+          <div class="modal-title-row">
+            <div>
+              <p class="module-label">Perfil de estudiante</p>
+              <h2>Completa tus datos</h2>
+            </div>
+            <ion-button
+              fill="clear"
+              size="small"
+              [disabled]="guardandoPerfil"
+              aria-label="Cerrar modal de perfil"
+              (click)="cerrarModalPerfil()">
+              Cerrar
+            </ion-button>
+          </div>
           <p>Necesitamos esta información antes de registrar tu práctica.</p>
         </div>
 

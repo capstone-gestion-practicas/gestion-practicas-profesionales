@@ -8,6 +8,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Agregado
 
+- Build Android `1.1.1` (`versionCode 3`) con correcciones de navegación y
+  cierre de modales.
 - Proyecto Android de PracticaLink generado con Capacitor para la release 1.1.
 - Guía completa para configurar Android Studio, ejecutar en emulador o teléfono,
   generar APK de QA y versiones firmadas, y resolver errores frecuentes.
@@ -39,6 +41,10 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Cambiado
 
+- El botón Atrás de Android ahora cierra primero los modales, navega por el
+  historial interno y evita cerrar accidentalmente la aplicación en Home/Login.
+- Los modales de perfil, usuarios, revisión y registro de práctica incorporan
+  un botón de cierre visible y accesible.
 - El registro de práctica se presenta como modal, utiliza toasts para errores y
   mantiene habilitado el ingreso manual cuando no se encuentra una empresa.
 - `practicalink-dev` detecta entornos virtuales rotos antes de iniciar servicios.

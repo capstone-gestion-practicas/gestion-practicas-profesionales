@@ -41,8 +41,20 @@
   <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
     <ng-template>
       <div class="user-modal">
-        <p class="module-label">{{ usuarioEditando ? 'Editar usuario' : 'Nuevo usuario' }}</p>
-        <h2>{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
+        <div class="modal-title-row">
+          <div>
+            <p class="module-label">{{ usuarioEditando ? 'Editar usuario' : 'Nuevo usuario' }}</p>
+            <h2>{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
+          </div>
+          <ion-button
+            fill="clear"
+            size="small"
+            [disabled]="guardando"
+            aria-label="Cerrar modal de usuario"
+            (click)="cerrarModal()">
+            Cerrar
+          </ion-button>
+        </div>
         <ion-item><ion-label position="stacked">Nombre *</ion-label><ion-input [(ngModel)]="nombre" maxlength="100"></ion-input></ion-item>
         <ion-item><ion-label position="stacked">Apellido *</ion-label><ion-input [(ngModel)]="apellido" maxlength="100"></ion-input></ion-item>
         <ion-item><ion-label position="stacked">Correo *</ion-label><ion-input type="email" maxlength="150" inputmode="email" autocapitalize="off" spellcheck="false" [(ngModel)]="correo" [disabled]="!!usuarioEditando"></ion-input></ion-item>

@@ -2,7 +2,17 @@
   <div class="form-wrapper">
     <ion-card>
       <ion-card-header>
-        <ion-card-title>Registrar práctica profesional</ion-card-title>
+        <div class="modal-title-row">
+          <ion-card-title>Registrar práctica profesional</ion-card-title>
+          <ion-button
+            fill="clear"
+            size="small"
+            [disabled]="enviando"
+            aria-label="Cerrar registro de práctica"
+            (click)="cancelar()">
+            Cerrar
+          </ion-button>
+        </div>
       </ion-card-header>
 
       <ion-card-content>

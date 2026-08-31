@@ -10,7 +10,7 @@ El proyecto nativo se encuentra en `PracticaLink/frontend/android`.
 
 - ID Android: `cl.practicalink.app`.
 - Nombre: `PracticaLink`.
-- Versión Android: `1.1.0` (`versionCode 2`).
+- Versión Android: `1.1.1` (`versionCode 3`).
 - Android mínimo: API 24.
 - Android objetivo y de compilación: API 36.
 - Backend QA: `https://practicalink-api-qa.onrender.com`.
@@ -96,9 +96,9 @@ en `package.json` con `android/app/build.gradle`. Para una nueva entrega sólo s
 deben actualizar estos dos valores en `package.json`:
 
 ```json
-"version": "1.1.0",
+"version": "1.1.1",
 "config": {
-  "androidVersionCode": 2
+  "androidVersionCode": 3
 }
 ```
 

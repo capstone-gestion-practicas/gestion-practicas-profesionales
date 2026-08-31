@@ -12,6 +12,29 @@
   </div>
 
   <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
-    <ng-template><div class="decision-modal"><h2>{{ decision }} solicitud</h2><p>Confirma la decisión para esta solicitud.</p><ion-textarea label="Observación" labelPlacement="stacked" [counter]="true" maxlength="500" [autoGrow]="true" [(ngModel)]="observacion"></ion-textarea>@if (error) { <p class="error">{{ error }}</p> }<div class="actions"><ion-button fill="outline" (click)="cerrarModal()">Cancelar</ion-button><ion-button [disabled]="guardando" (click)="confirmar()">@if (guardando) { <ion-spinner></ion-spinner> } @else { Confirmar }</ion-button></div></div></ng-template>
+    <ng-template>
+      <div class="decision-modal">
+        <div class="modal-title-row">
+          <h2>{{ decision }} solicitud</h2>
+          <ion-button
+            fill="clear"
+            size="small"
+            [disabled]="guardando"
+            aria-label="Cerrar modal de decisión"
+            (click)="cerrarModal()">
+            Cerrar
+          </ion-button>
+        </div>
+        <p>Confirma la decisión para esta solicitud.</p>
+        <ion-textarea label="Observación" labelPlacement="stacked" [counter]="true" maxlength="500" [autoGrow]="true" [(ngModel)]="observacion"></ion-textarea>
+        @if (error) { <p class="error">{{ error }}</p> }
+        <div class="actions">
+          <ion-button fill="outline" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando" (click)="confirmar()">
+            @if (guardando) { <ion-spinner></ion-spinner> } @else { Confirmar }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
   </ion-modal>
 </ion-content>
