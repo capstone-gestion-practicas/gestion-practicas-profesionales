@@ -6,8 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ## Sin publicar
 
+Sin cambios pendientes.
+
+## 1.1.0 - 2026-08-31
+
+Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
+(acceso y gestión de usuarios), EP02 (registro de práctica profesional) y EP03
+(revisión y validación de prácticas).
+
 ### Agregado
 
+- Cuenta administradora de demostración documentada para validar el panel de usuarios.
 - Panel administrativo de EP01 para listar, crear y editar usuarios mediante modales.
 - Asignación de roles y activación o desactivación de cuentas por administradores.
 - Endpoints protegidos `GET/POST/PATCH /usuarios` y consulta de roles activos.
