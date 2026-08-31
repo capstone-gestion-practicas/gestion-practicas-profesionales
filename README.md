@@ -40,6 +40,28 @@ El proyecto se encuentra organizado en las siguientes épicas:
 | EP06 | Gestión de incidencias y alertas |
 | EP07 | Cierre de práctica profesional |
 
+## Funcionalidades implementadas
+
+### EP01: acceso y gestión de usuarios
+
+- Inicio de sesión con JWT y autorización por roles.
+- Registro público simplificado con nombre, apellido, correo y contraseña.
+- Perfil académico completado posteriormente por el estudiante desde el Home.
+- Panel exclusivo para administradores en `/usuarios`.
+- Creación y edición de cuentas mediante modales.
+- Asignación de roles `ESTUDIANTE`, `GESTOR` y `ADMINISTRADOR`.
+- Activación y desactivación de cuentas con protección contra el autobloqueo del administrador.
+
+### EP02: registro de práctica
+
+- Completar perfil estudiantil.
+- Registro transaccional del centro y la práctica profesional.
+
+### EP03: revisión de práctica
+
+- Listado y detalle de solicitudes para gestores y administradores.
+- Aprobación, observación o rechazo con trazabilidad de estados.
+
 ## Historias de Usuario
 
 El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las siete épicas.
@@ -152,6 +174,30 @@ Las nuevas funcionalidades se desarrollarán en ramas independientes y posterior
 - main: versión estable del proyecto.
 - develop: integración de funcionalidades en desarrollo.
 - feature/*: desarrollo de funcionalidades o historias de usuario.
+
+### Reglas obligatorias para ramas feature
+
+Toda rama `feature/*` debe crearse desde `develop` actualizado y debe integrarse
+nuevamente en `develop` mediante Pull Request. Las features no se crean desde
+`main` ni abren Pull Requests directamente hacia `main`.
+
+Para iniciar una feature:
+
+```powershell
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/nombre-de-la-feature
+```
+
+Para publicarla y abrir el Pull Request:
+
+```powershell
+git push -u origin feature/nombre-de-la-feature
+gh pr create --base develop --head feature/nombre-de-la-feature
+```
+
+La promoción de `develop` hacia `main` se realiza en un Pull Request separado
+cuando el conjunto integrado esté validado como versión estable.
 
 ## Organización del backlog
 
