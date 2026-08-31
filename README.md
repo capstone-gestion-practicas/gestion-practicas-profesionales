@@ -175,6 +175,30 @@ Las nuevas funcionalidades se desarrollarán en ramas independientes y posterior
 - develop: integración de funcionalidades en desarrollo.
 - feature/*: desarrollo de funcionalidades o historias de usuario.
 
+### Reglas obligatorias para ramas feature
+
+Toda rama `feature/*` debe crearse desde `develop` actualizado y debe integrarse
+nuevamente en `develop` mediante Pull Request. Las features no se crean desde
+`main` ni abren Pull Requests directamente hacia `main`.
+
+Para iniciar una feature:
+
+```powershell
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/nombre-de-la-feature
+```
+
+Para publicarla y abrir el Pull Request:
+
+```powershell
+git push -u origin feature/nombre-de-la-feature
+gh pr create --base develop --head feature/nombre-de-la-feature
+```
+
+La promoción de `develop` hacia `main` se realiza en un Pull Request separado
+cuando el conjunto integrado esté validado como versión estable.
+
 ## Organización del backlog
 
 Los estados utilizados en GitHub Projects son:

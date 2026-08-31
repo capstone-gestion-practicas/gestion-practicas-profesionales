@@ -65,6 +65,28 @@ git switch develop
 git pull origin develop
 ```
 
+## 3.1. Crear una rama de funcionalidad
+
+Todas las ramas `feature/*` deben crearse desde `develop` actualizado:
+
+```powershell
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/nombre-de-la-feature
+```
+
+Al finalizar, la rama se publica y se abre un Pull Request cuyo destino es
+obligatoriamente `develop`:
+
+```powershell
+git push -u origin feature/nombre-de-la-feature
+gh pr create --base develop --head feature/nombre-de-la-feature
+```
+
+No se deben crear features desde `main` ni abrir Pull Requests de features
+directamente hacia `main`. La integración de `develop` hacia `main` corresponde
+a un proceso separado de publicación de una versión estable.
+
 ## 4. Configurar el backend
 
 Entrar en el backend:
