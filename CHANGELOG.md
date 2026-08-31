@@ -20,6 +20,9 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Cambiado
 
+- Se documentó como política obligatoria que las ramas `feature/*` nacen desde
+  `develop` y que sus Pull Requests tienen `develop` como destino.
+
 - El perfil estudiantil ya no se crea durante el registro. RUT, carrera y sede
   se completan posteriormente desde el modal disponible en el Home.
 - El administrador puede crear cuentas con roles `ESTUDIANTE`, `GESTOR` y
