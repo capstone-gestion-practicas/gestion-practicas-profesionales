@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.core.database import engine
-from app.api.routes.auth import router as auth_router
+from app.auth.routes import router as auth_router
 from app.api.routes.practicas import router as practicas_router
 from app.api.routes.estudiantes import router as estudiantes_router
 from app.api.routes.revisiones import router as revisiones_router
