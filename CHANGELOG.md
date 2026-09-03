@@ -6,13 +6,36 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ## Sin publicar
 
+Sin cambios pendientes.
+
+## 1.1.0 - 2026-08-31
+
+Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
+(acceso y gestión de usuarios), EP02 (registro de práctica profesional) y EP03
+(revisión y validación de prácticas).
+
 ### Agregado
 
+- Cuenta administradora de demostración documentada para validar el panel de usuarios.
+- Panel administrativo de EP01 para listar, crear y editar usuarios mediante modales.
+- Asignación de roles y activación o desactivación de cuentas por administradores.
+- Endpoints protegidos `GET/POST/PATCH /usuarios` y consulta de roles activos.
+- Funciones PostgreSQL `fn_crear_usuario_admin` y `fn_actualizar_usuario_admin`.
 - Guards de autenticación y autorización por roles en el frontend.
 - Autorización reutilizable por roles en endpoints del backend.
 - Saludo del home basado en el nombre y los roles del contexto.
 - Pruebas unitarias para guards, store, home y permisos del backend.
-- Registro público de cuentas de estudiante desde la pantalla de login.
+- Registro público simplificado con nombre, apellido, correo y contraseña.
+
+### Cambiado
+
+- Se documentó como política obligatoria que las ramas `feature/*` nacen desde
+  `develop` y que sus Pull Requests tienen `develop` como destino.
+
+- El perfil estudiantil ya no se crea durante el registro. RUT, carrera y sede
+  se completan posteriormente desde el modal disponible en el Home.
+- El administrador puede crear cuentas con roles `ESTUDIANTE`, `GESTOR` y
+  `ADMINISTRADOR` sin requerir datos académicos.
 
 ## 0.1.0 - 2026-08-30
 

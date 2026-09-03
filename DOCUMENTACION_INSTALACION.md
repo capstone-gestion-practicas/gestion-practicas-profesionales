@@ -65,6 +65,39 @@ git switch develop
 git pull origin develop
 ```
 
+### Ejecutar la primera versión
+
+La primera versión consolidada está disponible en `release-1.1` e incluye los
+desarrollos de EP01, EP02 y EP03. Para ejecutar específicamente esa versión:
+
+```powershell
+git fetch origin
+git switch release-1.1
+git pull --ff-only origin release-1.1
+```
+
+## 3.1. Crear una rama de funcionalidad
+
+Todas las ramas `feature/*` deben crearse desde `develop` actualizado:
+
+```powershell
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/nombre-de-la-feature
+```
+
+Al finalizar, la rama se publica y se abre un Pull Request cuyo destino es
+obligatoriamente `develop`:
+
+```powershell
+git push -u origin feature/nombre-de-la-feature
+gh pr create --base develop --head feature/nombre-de-la-feature
+```
+
+No se deben crear features desde `main` ni abrir Pull Requests de features
+directamente hacia `main`. La integración de `develop` hacia `main` corresponde
+a un proceso separado de publicación de una versión estable.
+
 ## 4. Configurar el backend
 
 Entrar en el backend:
@@ -249,7 +282,9 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 .\scripts\practicalink-back-test.cmd
 .\scripts\practicalink-front-test.cmd
 ```
-4. Iniciar sesión con un usuario existente en la base de datos.
+4. Iniciar sesión con un usuario existente en la base de datos o crear una
+   cuenta desde `Registrarme`. El registro solicita nombre, apellido, correo y
+   contraseña; el perfil académico se completa después desde el Home.
 5. Confirmar que se muestre la página de inicio y el contexto del usuario.
 
 ### Credenciales de prueba
@@ -257,11 +292,19 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 Para comprobar el inicio de sesión en el entorno de desarrollo:
 
 ```text
+Estudiante:
 Correo: demo@practicalink.cl
+Contraseña: 123456.abc
+
+Administrador:
+Correo: demo.admin@practicalink.cl
 Contraseña: 123456.abc
 ```
 
-Esta cuenta es únicamente para demostración y pruebas locales sobre la rama `develop`. No debe reutilizarse en producción ni almacenar información sensible.
+Estas cuentas son únicamente para demostración y pruebas locales. La cuenta
+administradora permite acceder a `/usuarios` y validar la creación, edición,
+asignación de roles y activación de usuarios. No deben reutilizarse en producción
+ni almacenar información sensible.
 
 ## 8. Problemas frecuentes
 
@@ -323,8 +366,11 @@ npm start
 ## Credenciales de acceso rápido
 
 ```text
-Correo: demo@practicalink.cl
-Contraseña: 123456.abc
+Estudiante: demo@practicalink.cl
+Administrador: demo.admin@practicalink.cl
+Contraseña para ambas cuentas: 123456.abc
 ```
 
-Usar únicamente para demostración y pruebas locales en la rama `develop`.
+Usar únicamente para demostración y pruebas locales. Para comprobar el panel
+administrativo, iniciar sesión con `demo.admin@practicalink.cl` y entrar a
+`http://localhost:4200/usuarios`.
