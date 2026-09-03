@@ -1,0 +1,102 @@
+<ion-content class="form-content">
+  <div class="form-wrapper">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Registrar práctica profesional</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="registrar()">
+          <h2>Centro de práctica</h2>
+
+          <ion-item>
+            <ion-label position="stacked">Nombre de la empresa *</ion-label>
+            <ion-input formControlName="centroNombre" maxlength="150"></ion-input>
+          </ion-item>
+
+          <div class="form-grid">
+            <ion-item>
+              <ion-label position="stacked">RUT de la empresa</ion-label>
+              <ion-input formControlName="rutEmpresa" maxlength="12"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Correo</ion-label>
+              <ion-input type="email" formControlName="correo" maxlength="150"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Teléfono</ion-label>
+              <ion-input type="tel" formControlName="telefono" maxlength="20"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Dirección</ion-label>
+              <ion-input formControlName="direccion" maxlength="255"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Nombre del contacto</ion-label>
+              <ion-input formControlName="contactoNombre" maxlength="100"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Cargo del contacto</ion-label>
+              <ion-input formControlName="contactoCargo" maxlength="100"></ion-input>
+            </ion-item>
+          </div>
+
+          <h2>Antecedentes de la práctica</h2>
+
+          <div class="form-grid">
+            <ion-item>
+              <ion-label position="stacked">Fecha de inicio</ion-label>
+              <ion-input type="date" formControlName="fechaInicio"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Fecha de término</ion-label>
+              <ion-input type="date" formControlName="fechaTermino"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Horas</ion-label>
+              <ion-input type="number" min="1" formControlName="horas"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Cargo o función</ion-label>
+              <ion-input formControlName="cargoFuncion" maxlength="150"></ion-input>
+            </ion-item>
+          </div>
+
+          <ion-item>
+            <ion-label position="stacked">Descripción de funciones</ion-label>
+            <ion-textarea
+              formControlName="descripcion"
+              [autoGrow]="true"
+              rows="4">
+            </ion-textarea>
+          </ion-item>
+
+          @if (error) {
+            <p class="error" role="alert">{{ error }}</p>
+          }
+
+          <div class="actions">
+            <ion-button type="button" fill="outline" (click)="cancelar()">
+              Cancelar
+            </ion-button>
+            <ion-button type="submit" [disabled]="enviando">
+              @if (enviando) {
+                <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+                Registrar práctica
+              }
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

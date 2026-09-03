@@ -74,6 +74,59 @@
 
       }
 
+      @if (esEstudiante()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
+            <ion-card-title>Registro de práctica profesional</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            @if (ctx.practica_actual) {
+              <p class="module-success">
+                Tu práctica ya fue registrada correctamente.
+              </p>
+
+              <div class="registration-details">
+                <span>
+                  Empresa: {{ ctx.practica_actual.centro_practica.nombre }}
+                </span>
+                <span>
+                  Estado: {{ ctx.practica_actual.estado.nombre }}
+                </span>
+              </div>
+            } @else if (ctx.perfil) {
+              <p>
+                Ingresa los antecedentes de la empresa, las fechas, las horas
+                y las funciones que realizarás durante tu práctica.
+              </p>
+
+              <div class="registration-details">
+                <span>Perfil: {{ ctx.perfil.rut }}</span>
+                <span>Estado inicial: REGISTRADA</span>
+              </div>
+
+              <ion-button
+                expand="block"
+                (click)="registrarPractica()">
+                Comenzar registro
+              </ion-button>
+            } @else {
+              <p class="module-warning" role="alert">
+                Tu usuario todavía no tiene un perfil de estudiante asociado.
+                Completa tus datos antes de registrar una práctica.
+              </p>
+
+              <ion-button
+                expand="block"
+                (click)="completarPerfil()">
+                Completar mi perfil
+              </ion-button>
+            }
+          </ion-card-content>
+        </ion-card>
+      }
+
       <ion-button
         expand="block"
         fill="outline"
@@ -84,4 +137,66 @@
     }
 
   </div>
+
+  <ion-modal
+    [isOpen]="modalPerfilAbierto"
+    [backdropDismiss]="!guardandoPerfil"
+    (didDismiss)="cerrarModalPerfil()">
+    <ng-template>
+      <div class="profile-modal">
+        <div class="profile-modal-header">
+          <p class="module-label">Perfil de estudiante</p>
+          <h2>Completa tus datos</h2>
+          <p>Necesitamos esta información antes de registrar tu práctica.</p>
+        </div>
+
+        <ion-item>
+          <ion-label position="stacked">RUT *</ion-label>
+          <ion-input [(ngModel)]="rutPerfil" maxlength="12"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Carrera *</ion-label>
+          <ion-input [(ngModel)]="carreraPerfil" maxlength="150"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Sede *</ion-label>
+          <ion-input [(ngModel)]="sedePerfil" maxlength="100"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Teléfono</ion-label>
+          <ion-input
+            type="tel"
+            [(ngModel)]="telefonoPerfil"
+            maxlength="20">
+          </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Dirección</ion-label>
+          <ion-input [(ngModel)]="direccionPerfil" maxlength="255"></ion-input>
+        </ion-item>
+
+        @if (errorPerfil) {
+          <p class="profile-error" role="alert">{{ errorPerfil }}</p>
+        }
+
+        <div class="profile-modal-actions">
+          <ion-button
+            fill="outline"
+            [disabled]="guardandoPerfil"
+            (click)="cerrarModalPerfil()">
+            Cancelar
+          </ion-button>
+          <ion-button
+            [disabled]="guardandoPerfil"
+            (click)="guardarPerfil()">
+            @if (guardandoPerfil) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              Guardar perfil
+            }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>

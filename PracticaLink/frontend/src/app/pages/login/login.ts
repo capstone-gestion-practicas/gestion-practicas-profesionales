@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import {
   IonButton,
@@ -40,11 +41,19 @@ import { AuthStore } from '../../core/store/auth.store';
   styleUrl: './login.scss'
 })
 export class Login {
+  modoRegistro = false;
+  nombre = '';
+  apellido = '';
+  rut = '';
+  carrera = '';
+  sede = '';
   correo = '';
   password = '';
+  confirmarPassword = '';
 
   cargando = false;
   error = '';
+  mensaje = '';
 
   constructor(
     private readonly authService: AuthService,
@@ -52,8 +61,63 @@ export class Login {
     private readonly router: Router
   ) {}
 
+  alternarModo(): void {
+    this.modoRegistro = !this.modoRegistro;
+    this.password = '';
+    this.confirmarPassword = '';
+    this.error = '';
+    this.mensaje = '';
+  }
+
+  registrarse(): void {
+    this.error = '';
+    this.mensaje = '';
+
+    if (this.password !== this.confirmarPassword) {
+      this.error = 'Las contraseñas no coinciden.';
+      return;
+    }
+
+    if (this.password.length < 8) {
+      this.error = 'La contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
+    this.cargando = true;
+
+    this.authService.registrar({
+      nombre: this.nombre,
+      apellido: this.apellido,
+      correo: this.correo,
+      password: this.password,
+      rut: this.rut,
+      carrera: this.carrera,
+      sede: this.sede
+    }).subscribe({
+      next: () => {
+        this.cargando = false;
+        this.modoRegistro = false;
+        this.nombre = '';
+        this.apellido = '';
+        this.rut = '';
+        this.carrera = '';
+        this.sede = '';
+        this.password = '';
+        this.confirmarPassword = '';
+        this.mensaje = 'Cuenta creada. Ya puedes iniciar sesión.';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.cargando = false;
+        this.error = error.status === 409
+          ? 'El correo ya está registrado.'
+          : 'No fue posible crear la cuenta.';
+      }
+    });
+  }
+
   iniciarSesion(): void {
     this.error = '';
+    this.mensaje = '';
     this.cargando = true;
 
     this.authService.login({

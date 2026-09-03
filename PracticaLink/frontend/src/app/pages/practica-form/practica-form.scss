@@ -1,0 +1,47 @@
+.form-content {
+  --background: #f4f6f9;
+}
+
+.form-wrapper {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h2 {
+  margin: 28px 0 8px;
+  color: #243447;
+  font-size: 1.1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.error {
+  color: #c62828;
+  margin: 16px 0 0;
+}
+
+@media (max-width: 640px) {
+  .form-wrapper {
+    padding: 12px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+}

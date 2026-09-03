@@ -11,3 +11,79 @@
 ion-card {
   margin-bottom: 20px;
 }
+
+.registration-card {
+  border-left: 4px solid var(--ion-color-primary);
+}
+
+.module-label {
+  margin: 0 0 8px;
+  color: var(--ion-color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.registration-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.registration-details span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e9f2ff;
+  color: #174a7e;
+  font-size: 0.82rem;
+}
+
+.module-warning {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff3e0;
+  color: #8a4b08;
+}
+
+.module-success {
+  padding: 12px;
+  border-radius: 8px;
+  background: #e8f5e9;
+  color: #256029;
+  font-weight: 600;
+}
+
+.profile-modal {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.profile-modal-header h2 {
+  margin: 0 0 8px;
+}
+
+.profile-modal-header > p:last-child {
+  margin: 0 0 16px;
+  color: #667085;
+}
+
+.profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.profile-error {
+  margin: 16px 0 0;
+  color: #c62828;
+}
+
+ion-modal {
+  --width: min(560px, calc(100% - 24px));
+  --height: auto;
+  --max-height: 90%;
+  --border-radius: 14px;
+}
