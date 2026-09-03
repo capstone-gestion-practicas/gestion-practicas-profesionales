@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, patch
 os.environ.setdefault("SUPABASE_DATABASE_URL", "postgresql+psycopg://user:password@localhost:5432/test")
 os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
-from app.services.auth_service import registrar_usuario  # noqa: E402
+from app.auth.service import registrar_usuario  # noqa: E402
 
 
 class RegisterUserTests(unittest.TestCase):
-    @patch("app.services.auth_service.hash_password")
+    @patch("app.auth.service.hash_password")
     def test_registers_account_without_profile(self, hash_password: MagicMock) -> None:
         hash_password.return_value = "hashed-password"
         db = MagicMock()
