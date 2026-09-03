@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { ModalController } from '@ionic/angular';
 import { of } from 'rxjs';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
@@ -47,6 +48,13 @@ describe('Home', () => {
         {
           provide: Router,
           useValue: jasmine.createSpyObj<Router>('Router', ['navigate'])
+        },
+        {
+          provide: ModalController,
+          useValue: jasmine.createSpyObj<ModalController>(
+            'ModalController',
+            ['create']
+          )
         }
       ]
     })

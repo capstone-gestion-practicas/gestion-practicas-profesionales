@@ -107,6 +107,10 @@ export class Usuarios implements OnInit {
       this.errorModal = 'Ingresa un correo y una contraseña de al menos 8 caracteres.';
       return;
     }
+    if (!this.usuarioEditando && !this.correoValido(this.correo)) {
+      this.errorModal = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
 
     this.guardando = true;
     this.errorModal = '';
@@ -117,7 +121,7 @@ export class Usuarios implements OnInit {
         })
       : this.usuarioService.crear({
           nombre: this.nombre.trim(), apellido: this.apellido.trim(),
-          correo: this.correo.trim(), password: this.password,
+          correo: this.correo.trim().toLowerCase(), password: this.password,
           roles: this.rolesSeleccionados
         });
 
@@ -136,4 +140,10 @@ export class Usuarios implements OnInit {
   }
 
   volver(): void { this.router.navigate(['/home']); }
+
+  private correoValido(correo: string): boolean {
+    const limpio = correo.trim();
+    return limpio.length <= 150
+      && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(limpio);
+  }
 }

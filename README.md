@@ -55,7 +55,11 @@ El proyecto se encuentra organizado en las siguientes épicas:
 ### EP02: registro de práctica
 
 - Completar perfil estudiantil.
-- Registro transaccional del centro y la práctica profesional.
+- Registro transaccional del centro y la práctica profesional mediante modal.
+- Validación de correos y RUT chilenos en frontend y backend.
+- Consulta de antecedentes tributarios de empresas por RUT desde el backend.
+- Caché persistente de empresas por 30 días para reducir llamadas externas.
+- Ingreso manual de los datos del centro cuando la empresa no está disponible.
 
 ### EP03: revisión de práctica
 

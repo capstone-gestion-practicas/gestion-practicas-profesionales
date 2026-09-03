@@ -22,6 +22,7 @@
             <ion-label position="stacked">Nombre</ion-label>
             <ion-input
               [(ngModel)]="nombre"
+              maxlength="100"
               autocomplete="given-name">
             </ion-input>
           </ion-item>
@@ -30,6 +31,7 @@
             <ion-label position="stacked">Apellido</ion-label>
             <ion-input
               [(ngModel)]="apellido"
+              maxlength="100"
               autocomplete="family-name">
             </ion-input>
           </ion-item>
@@ -41,6 +43,10 @@
           <ion-input
             type="email"
             [(ngModel)]="correo"
+            maxlength="150"
+            inputmode="email"
+            autocapitalize="off"
+            spellcheck="false"
             autocomplete="email"
             placeholder="correo@ejemplo.cl">
           </ion-input>
@@ -51,6 +57,7 @@
           <ion-input
             type="password"
             [(ngModel)]="password"
+            maxlength="128"
             [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
           </ion-input>
         </ion-item>
@@ -61,6 +68,7 @@
             <ion-input
               type="password"
               [(ngModel)]="confirmarPassword"
+              maxlength="128"
               autocomplete="new-password">
             </ion-input>
           </ion-item>

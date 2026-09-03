@@ -4,8 +4,13 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class LoginRequest(BaseModel):
-    correo: EmailStr
+    correo: EmailStr = Field(max_length=150)
     password: str
+
+    @field_validator("correo", mode="before")
+    @classmethod
+    def normalizar_correo(cls, valor: str) -> str:
+        return valor.strip().lower()
 
 
 class LoginResponse(BaseModel):
@@ -16,12 +21,17 @@ class LoginResponse(BaseModel):
 class RegistroRequest(BaseModel):
     nombre: str = Field(min_length=2, max_length=100)
     apellido: str = Field(min_length=2, max_length=100)
-    correo: EmailStr
+    correo: EmailStr = Field(max_length=150)
     password: str = Field(min_length=8, max_length=128)
     @field_validator("nombre", "apellido", mode="before")
     @classmethod
     def limpiar_nombre(cls, valor: str) -> str:
         return valor.strip()
+
+    @field_validator("correo", mode="before")
+    @classmethod
+    def normalizar_correo(cls, valor: str) -> str:
+        return valor.strip().lower()
 
 
 class RegistroResponse(BaseModel):

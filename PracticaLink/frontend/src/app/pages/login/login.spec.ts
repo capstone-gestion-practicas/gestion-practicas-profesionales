@@ -28,6 +28,7 @@ describe('Login', () => {
   it('should create', () => expect(component).toBeTruthy());
 
   it('does not register when passwords differ', () => {
+    component.correo = 'usuario@practicalink.cl';
     component.password = '123456.abc';
     component.confirmarPassword = 'otra-clave';
     component.registrarse();

@@ -62,6 +62,8 @@ Ejecución local desde `PracticaLink/backend`:
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
+- `CHILE_RUT_EMPRESA_API_KEY`
+- `CHILE_RUT_EMPRESA_API_URL`
 
 El archivo `.env` es local y está ignorado por Git. La plantilla pública es `PracticaLink/backend/.env.template`.
 
@@ -218,6 +220,8 @@ Inventario actual:
 | `fn_revisar_practica` | `revision_service.py` | Resolver una solicitud y registrar su nuevo estado |
 | `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
 | `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
+| `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |
+| `fn_guardar_empresa_cache` | `empresa_service.py` | Insertar o actualizar antecedentes tributarios por RUT |
 
 Reglas obligatorias para nuevas inserciones:
 
@@ -248,6 +252,11 @@ Entre las tablas base se encuentran:
 - `usuario`
 - `rol`
 - `usuario_rol`
+- `empresa`
+
+La consulta `GET /empresas/consulta/{rut}` implementa una estrategia cache-aside:
+usa registros con menos de 30 días, consulta Chile RUT Empresa cuando no existen
+o están vencidos y conserva datos antiguos como respaldo si el proveedor falla.
 
 Las funciones de autenticación, contexto, perfil, registro y revisión están
 versionadas en `scripts/BD/schema.sql`.

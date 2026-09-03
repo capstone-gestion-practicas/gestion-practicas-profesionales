@@ -8,3 +8,4 @@ pwdlib
 bcrypt
 PyJWT
 email-validator
+httpx

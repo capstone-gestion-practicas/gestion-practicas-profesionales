@@ -182,7 +182,7 @@
 
         <ion-item>
           <ion-label position="stacked">RUT *</ion-label>
-          <ion-input [(ngModel)]="rutPerfil" maxlength="12"></ion-input>
+          <ion-input [(ngModel)]="rutPerfil" maxlength="12" autocapitalize="characters" placeholder="12.345.678-5"></ion-input>
         </ion-item>
         <ion-item>
           <ion-label position="stacked">Carrera *</ion-label>
@@ -196,6 +196,7 @@
           <ion-label position="stacked">Teléfono</ion-label>
           <ion-input
             type="tel"
+            inputmode="tel"
             [(ngModel)]="telefonoPerfil"
             maxlength="20">
           </ion-input>
