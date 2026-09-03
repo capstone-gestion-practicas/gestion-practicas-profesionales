@@ -1,6 +1,8 @@
 from datetime import date
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+
+from app.schemas.validators import normalizar_rut
 
 
 class CentroPracticaCreate(BaseModel):
@@ -8,9 +10,24 @@ class CentroPracticaCreate(BaseModel):
     rut_empresa: str | None = Field(default=None, max_length=12)
     direccion: str | None = Field(default=None, max_length=255)
     telefono: str | None = Field(default=None, max_length=20)
-    correo: EmailStr | None = None
+    correo: EmailStr | None = Field(default=None, max_length=150)
     contacto_nombre: str | None = Field(default=None, max_length=100)
     contacto_cargo: str | None = Field(default=None, max_length=100)
+
+    @field_validator("correo", mode="before")
+    @classmethod
+    def normalizar_correo(cls, valor: str | None) -> str | None:
+        if valor is None:
+            return None
+        limpio = valor.strip().lower()
+        return limpio or None
+
+    @field_validator("rut_empresa", mode="before")
+    @classmethod
+    def validar_rut_empresa(cls, valor: str | None) -> str | None:
+        if valor is None or not valor.strip():
+            return None
+        return normalizar_rut(valor)
 
 
 class PracticaCreate(BaseModel):

@@ -45,9 +45,9 @@
         <h2>{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
         <ion-item><ion-label position="stacked">Nombre *</ion-label><ion-input [(ngModel)]="nombre" maxlength="100"></ion-input></ion-item>
         <ion-item><ion-label position="stacked">Apellido *</ion-label><ion-input [(ngModel)]="apellido" maxlength="100"></ion-input></ion-item>
-        <ion-item><ion-label position="stacked">Correo *</ion-label><ion-input type="email" [(ngModel)]="correo" [disabled]="!!usuarioEditando"></ion-input></ion-item>
+        <ion-item><ion-label position="stacked">Correo *</ion-label><ion-input type="email" maxlength="150" inputmode="email" autocapitalize="off" spellcheck="false" [(ngModel)]="correo" [disabled]="!!usuarioEditando"></ion-input></ion-item>
         @if (!usuarioEditando) {
-          <ion-item><ion-label position="stacked">Contraseña *</ion-label><ion-input type="password" [(ngModel)]="password" minlength="8"></ion-input></ion-item>
+          <ion-item><ion-label position="stacked">Contraseña *</ion-label><ion-input type="password" [(ngModel)]="password" minlength="8" maxlength="128" autocomplete="new-password"></ion-input></ion-item>
         }
         @if (usuarioEditando) {
           <ion-item><ion-toggle [(ngModel)]="activo">Usuario activo</ion-toggle></ion-item>

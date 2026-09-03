@@ -65,7 +65,7 @@ def autenticar_usuario(
 
     usuario = db.execute(
         query,
-        {"correo": correo}
+        {"correo": correo.strip().lower()}
     ).mappings().first()
 
     if usuario is None:

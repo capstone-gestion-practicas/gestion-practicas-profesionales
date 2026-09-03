@@ -136,6 +136,10 @@ SUPABASE_DATABASE_URL=postgresql+psycopg://USUARIO:CONTRASENA_CODIFICADA@HOST:54
 JWT_SECRET_KEY=CLAVE_ALEATORIA_LARGA
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+# Integraciones externas - Chile RUT Empresa
+CHILE_RUT_EMPRESA_API_KEY=API_KEY_DEL_AMBIENTE
+CHILE_RUT_EMPRESA_API_URL=https://chilerutempresa.cl/api
 ```
 
 Consideraciones:
@@ -148,7 +152,15 @@ Consideraciones:
 
 ### Base de datos
 
-Actualmente el repositorio no incluye migraciones ni un script SQL para construir el esquema. Para que autenticación y contexto funcionen, la URL debe apuntar a la base Supabase del equipo, con sus tablas y datos ya creados.
+El esquema reproducible se encuentra en `scripts/BD/schema.sql`. Para actualizar
+una base existente con el caché de empresas, ejecutar en Supabase SQL Editor:
+
+```text
+scripts/BD/fixes/release-1.1-cache-empresas.sql
+```
+
+El script crea la tabla `empresa`, habilita RLS y registra las funciones
+`fn_obtener_empresa_cache` y `fn_guardar_empresa_cache` utilizadas por el backend.
 
 ## 5. Ejecutar el backend
 
