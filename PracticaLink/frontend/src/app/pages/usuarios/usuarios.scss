@@ -1,4 +1,4 @@
-.users-content { --background: #f4f6f9; }
+.users-content { --background: #ffffff; }
 .users-wrapper { max-width: 1000px; margin: 0 auto; padding: 24px; }
 .page-heading, .user-title, .heading-actions, .modal-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .page-heading > div:first-child p, .module-label { margin: 0; color: var(--ion-color-primary); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -7,16 +7,16 @@
 .user-grid ion-card { margin: 0; }
 .user-title { align-items: flex-start; }
 .user-title h2 { margin: 0; font-size: 1.1rem; }
-.user-title p { margin: 5px 0; color: #667085; }
-.status { padding: 5px 9px; border-radius: 999px; background: #e8f5e9; color: #256029; font-size: .75rem; font-weight: 700; }
+.user-title p { margin: 5px 0; color: #52717d; }
+.status { padding: 5px 9px; border-radius: 999px; background: #ecfdf5; color: #047857; font-size: .75rem; font-weight: 700; }
 .status.inactive { background: #fbe9e7; color: #a62920; }
 .roles { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
-.roles span { padding: 5px 9px; border-radius: 999px; background: #e9f2ff; color: #174a7e; font-size: .75rem; }
+.roles span { padding: 5px 9px; border-radius: 999px; background: #ecfeff; color: #155e75; font-size: .75rem; }
 .center { display: flex; justify-content: center; padding: 48px; }
 .error { color: #c62828; }
 .user-modal { padding: 24px; overflow-y: auto; }
 .user-modal h2 { margin: 5px 0 16px; }
-fieldset { margin: 16px 0 0; border: 1px solid #d0d5dd; border-radius: 8px; }
+fieldset { margin: 16px 0 0; border: 1px solid #a5dbe5; border-radius: 8px; }
 legend { padding: 0 7px; font-weight: 600; }
 .modal-actions { justify-content: flex-end; margin-top: 24px; }
 ion-modal { --width: min(580px, calc(100% - 24px)); --height: auto; --max-height: 90%; --border-radius: 14px; }

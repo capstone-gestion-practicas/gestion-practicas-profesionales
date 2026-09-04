@@ -13,10 +13,31 @@
 @import "@ionic/angular/css/display.css";
 
 :root {
-  --form-primary: #155eef;
-  --form-border: #d0d5dd;
-  --form-surface: #f8fafc;
+  color-scheme: light;
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #164e63;
+  --ion-color-primary: #0891b2;
+  --ion-color-primary-rgb: 8, 145, 178;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #077f9d;
+  --ion-color-primary-tint: #219bb9;
+  --ion-color-success: #059669;
+  --ion-color-success-rgb: 5, 150, 105;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #05845c;
+  --ion-color-success-tint: #1fa278;
+  --form-primary: #0891b2;
+  --form-border: #a5dbe5;
+  --form-surface: #ffffff;
   --form-error: #b42318;
+}
+
+html,
+body {
+  background: #ffffff;
 }
 
 .login-card ion-item,
@@ -44,7 +65,7 @@
 .user-modal > ion-item:focus-within {
   --background: #fff;
   border-color: var(--form-primary);
-  box-shadow: 0 0 0 3px rgba(21, 94, 239, .12);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, .14);
 }
 
 .login-card ion-label,
@@ -52,7 +73,7 @@
 .form-wrapper ion-label,
 .user-modal > ion-item ion-label {
   margin-top: 4px;
-  color: #475467;
+  color: #155e75;
   font-size: .82rem;
   font-weight: 600;
   overflow: visible;
@@ -67,7 +88,7 @@
   font-size: 1rem;
 }
 
-.field-help { margin: -5px 4px 12px; color: #667085; font-size: .78rem; }
+.field-help { margin: -5px 4px 12px; color: #52717d; font-size: .78rem; }
 
 .field-error,
 .error,
