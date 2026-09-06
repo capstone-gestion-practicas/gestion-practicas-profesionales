@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.practica import PracticaCreate
+from app.practicas.schemas import PracticaCreate
 
 
 class PerfilEstudianteNoEncontradoError(Exception):
