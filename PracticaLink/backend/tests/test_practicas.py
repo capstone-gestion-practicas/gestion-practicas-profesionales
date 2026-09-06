@@ -18,9 +18,16 @@ from app.core.database import get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
 from app.practicas.routes import router as practicas_router  # noqa: E402
-from app.practicas.schemas import PracticaCreate, PracticaCreateResponse  # noqa: E402
+from app.practicas.schemas import (  # noqa: E402
+    PracticaCreate,
+    PracticaCreateResponse,
+    PracticaDetalleResponse,
+)
 from app.practicas.service import (  # noqa: E402
     PracticaActivaError,
+    PracticaNoEncontradaError,
+    PerfilEstudianteNoEncontradoError,
+    obtener_practica_del_estudiante,
     registrar_practica,
 )
 
@@ -116,6 +123,19 @@ class RegistrarPracticaTests(unittest.TestCase):
 
 
 class PracticasRouteTests(unittest.TestCase):
+    def _get_practicas_get_route(self) -> APIRoute:
+        for route in practicas_router.routes:
+            if not isinstance(route, APIRoute):
+                continue
+
+            if "GET" not in route.methods:
+                continue
+
+            if route.endpoint.__name__ == "obtener_mi_practica":
+                return route
+
+        raise AssertionError("No se encontro el endpoint GET /practicas/me en practicas_router")
+
     def _get_practicas_post_route(self) -> APIRoute:
         for route in practicas_router.routes:
             if not isinstance(route, APIRoute):
@@ -154,6 +174,36 @@ class PracticasRouteTests(unittest.TestCase):
         self.assertEqual(route.path.rstrip("/") or "/", "/practicas")
         self.assertEqual(route.endpoint.__name__, "crear_practica")
         self.assertIs(route.response_model, PracticaCreateResponse)
+
+        dependency_calls = []
+
+        def collect(dependant):
+            for child in dependant.dependencies:
+                dependency_calls.append(child.call)
+                collect(child)
+
+        collect(route.dependant)
+
+        self.assertIn(get_current_user_id, dependency_calls)
+
+        roles_dependency = next(
+            dep.call
+            for dep in route.dependant.dependencies
+            if getattr(dep.call, "__name__", "") == "verificar_roles"
+        )
+        closure_values = [
+            cell.cell_contents
+            for cell in (roles_dependency.__closure__ or ())
+        ]
+        self.assertIn({"ESTUDIANTE"}, closure_values)
+
+    def test_get_my_practice_route_is_registered_with_expected_contract(self) -> None:
+        route = self._get_practicas_get_route()
+
+        self.assertIn("GET", route.methods)
+        self.assertEqual(route.path.rstrip("/") or "/", "/practicas/me")
+        self.assertEqual(route.endpoint.__name__, "obtener_mi_practica")
+        self.assertIs(route.response_model, PracticaDetalleResponse)
 
         dependency_calls = []
 
@@ -231,6 +281,179 @@ class PracticasRouteTests(unittest.TestCase):
 
                 self.assertEqual(response.status_code, 403)
                 registrar_mock.assert_not_called()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_success_with_overrides_and_mocks(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 777,
+            "fecha_registro": "2026-09-01T10:30:00",
+            "estado": {
+                "id_estado": 1,
+                "nombre": "REGISTRADA",
+                "es_final": False,
+            },
+            "centro_practica": {
+                "id_centro": 888,
+                "nombre": "Centro de prueba",
+                "rut_empresa": "12.345.678-5",
+                "direccion": "Av. Siempre Viva 123",
+                "telefono": "+56 9 1234 5678",
+                "correo": "contacto@empresa.cl",
+                "contacto_nombre": "Maria Perez",
+                "contacto_cargo": "Jefa de practica",
+            },
+            "fecha_inicio": "2026-03-02",
+            "fecha_termino": "2026-06-30",
+            "horas": 360,
+            "cargo_funcion": "Desarrollador",
+            "descripcion": "Practica de caracterizacion",
+        }
+
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ) as obtener_contexto_usuario, patch(
+                "app.practicas.routes.obtener_practica_del_estudiante",
+                return_value=expected_response,
+            ) as obtener_mock:
+                with TestClient(app) as client:
+                    response = client.get(
+                        "/practicas/me?id_practica=999",
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), expected_response)
+                obtener_mock.assert_called_once_with(db, 123)
+                obtener_contexto_usuario.assert_called()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_rejects_missing_student_profile(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ), patch(
+                "app.practicas.routes.obtener_practica_del_estudiante",
+                side_effect=PerfilEstudianteNoEncontradoError,
+            ):
+                with TestClient(app) as client:
+                    response = client.get("/practicas/me")
+
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(
+                    response.json()["detail"],
+                    "El usuario no tiene un perfil de estudiante",
+                )
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_rejects_missing_practice(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ), patch(
+                "app.practicas.routes.obtener_practica_del_estudiante",
+                side_effect=PracticaNoEncontradaError,
+            ):
+                with TestClient(app) as client:
+                    response = client.get("/practicas/me")
+
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(
+                    response.json()["detail"],
+                    "El estudiante no tiene una práctica registrada",
+                )
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_rejects_non_student_role(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ADMINISTRADOR"]},
+            ), patch(
+                "app.practicas.routes.obtener_practica_del_estudiante"
+            ) as obtener_mock:
+                with TestClient(app) as client:
+                    response = client.get("/practicas/me")
+
+                self.assertEqual(response.status_code, 403)
+                obtener_mock.assert_not_called()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_does_not_accept_external_practice_id(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ), patch(
+                "app.practicas.routes.obtener_practica_del_estudiante",
+                return_value={
+                    "id_practica": 777,
+                    "fecha_registro": "2026-09-01T10:30:00",
+                    "estado": {
+                        "id_estado": 1,
+                        "nombre": "REGISTRADA",
+                        "es_final": False,
+                    },
+                    "centro_practica": {
+                        "id_centro": 888,
+                        "nombre": "Centro de prueba",
+                        "rut_empresa": "12.345.678-5",
+                        "direccion": "Av. Siempre Viva 123",
+                        "telefono": "+56 9 1234 5678",
+                        "correo": "contacto@empresa.cl",
+                        "contacto_nombre": "Maria Perez",
+                        "contacto_cargo": "Jefa de practica",
+                    },
+                    "fecha_inicio": "2026-03-02",
+                    "fecha_termino": "2026-06-30",
+                    "horas": 360,
+                    "cargo_funcion": "Desarrollador",
+                    "descripcion": "Practica de caracterizacion",
+                },
+            ) as obtener_mock:
+                with TestClient(app) as client:
+                    response = client.get("/practicas/me?id_practica=999")
+
+                self.assertEqual(response.status_code, 200)
+                obtener_mock.assert_called_once_with(db, 123)
+                self.assertEqual(response.json()["id_practica"], 777)
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)

@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +21,10 @@ import {
 } from '@ionic/angular';
 
 import { AuthService } from '../../core/services/auth.service';
+import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { ContextoUsuarioResponse } from '../../core/models/auth.models';
+import { PracticaDetalleResponse } from '../../core/models/practica.models';
 import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 import { PracticaForm } from '../practica-form/practica-form';
@@ -50,6 +53,7 @@ import { PracticaForm } from '../practica-form/practica-form';
 export class Home implements OnInit {
 
   private readonly authService = inject(AuthService);
+  private readonly practicaService = inject(PracticaService);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly estudianteService = inject(EstudianteService);
@@ -88,6 +92,8 @@ export class Home implements OnInit {
   );
 
   cargando = true;
+  errorPractica = '';
+  practicaDetalle: PracticaDetalleResponse | null = null;
   modalPerfilAbierto = false;
   guardandoPerfil = false;
   errorPerfil = '';
@@ -96,6 +102,17 @@ export class Home implements OnInit {
   sedePerfil = '';
   telefonoPerfil = '';
   direccionPerfil = '';
+  private firmaContextoPracticaProcesada = '';
+
+  private readonly sincronizarPracticaConContexto = effect(() => {
+    const contexto = this.contexto();
+
+    if (!contexto) {
+      return;
+    }
+
+    this.cargarPracticaRegistrada(contexto);
+  });
 
   ngOnInit(): void {
     const token = sessionStorage.getItem('access_token');
@@ -108,6 +125,7 @@ export class Home implements OnInit {
 
     if (this.contexto()) {
       this.cargando = false;
+      this.cargarPracticaRegistrada(this.contexto() as ContextoUsuarioResponse);
       return;
     }
 
@@ -115,6 +133,7 @@ export class Home implements OnInit {
       next: (contexto) => {
         this.authStore.setContexto(contexto);
         this.cargando = false;
+        this.cargarPracticaRegistrada(contexto);
       },
       error: () => {
         this.cerrarSesion();
@@ -201,5 +220,54 @@ export class Home implements OnInit {
 
   private opcional(valor: string): string | null {
     return valor.trim() || null;
+  }
+
+  private cargarPracticaRegistrada(contexto: ContextoUsuarioResponse): void {
+    const firmaContexto = this.firmaContexto(contexto);
+
+    if (firmaContexto === this.firmaContextoPracticaProcesada) {
+      return;
+    }
+
+    this.firmaContextoPracticaProcesada = firmaContexto;
+    this.errorPractica = '';
+
+    if (
+      contexto.roles.includes('ESTUDIANTE') !== true
+      || contexto.practica_actual === null
+    ) {
+      this.practicaDetalle = null;
+      return;
+    }
+
+    this.practicaService.obtenerMiPractica().subscribe({
+      next: (practica) => {
+        this.practicaDetalle = practica;
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          this.practicaDetalle = null;
+          return;
+        }
+
+        this.practicaDetalle = null;
+        this.errorPractica = 'No fue posible cargar los antecedentes de tu práctica.';
+      }
+    });
+  }
+
+  private firmaContexto(contexto: ContextoUsuarioResponse): string {
+    const idPractica = contexto.practica_actual?.id_practica ?? 'sin-practica';
+    const roles = contexto.roles.join('|');
+
+    return `${contexto.usuario.id_usuario}:${roles}:${idPractica}`;
+  }
+
+  formatearCampo(valor: string | number | null | undefined): string {
+    if (valor === null || valor === undefined || valor === '') {
+      return 'No informado';
+    }
+
+    return String(valor);
   }
 }

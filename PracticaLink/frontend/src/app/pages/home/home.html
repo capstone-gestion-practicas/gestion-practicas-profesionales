@@ -42,36 +42,97 @@
         </ion-card-content>
       </ion-card>
 
-      @if (ctx.practica_actual) {
-
+      @if (practicaDetalle) {
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Práctica actual</ion-card-title>
+            <ion-card-title>Antecedentes de tu práctica</ion-card-title>
           </ion-card-header>
 
           <ion-card-content>
             <p>
-              <strong>Empresa:</strong>
-              {{ ctx.practica_actual.centro_practica.nombre }}
+              <strong>Fecha de registro:</strong>
+              {{ formatearCampo(practicaDetalle.fecha_registro) }}
             </p>
 
             <p>
-              <strong>Estado:</strong>
-              {{ ctx.practica_actual.estado.nombre }}
+              <strong>Fecha de inicio:</strong>
+              {{ formatearCampo(practicaDetalle.fecha_inicio) }}
+            </p>
+
+            <p>
+              <strong>Fecha de término:</strong>
+              {{ formatearCampo(practicaDetalle.fecha_termino) }}
             </p>
 
             <p>
               <strong>Horas:</strong>
-              {{ ctx.practica_actual.horas }}
+              {{ formatearCampo(practicaDetalle.horas) }}
             </p>
 
             <p>
               <strong>Función:</strong>
-              {{ ctx.practica_actual.cargo_funcion }}
+              {{ formatearCampo(practicaDetalle.cargo_funcion) }}
+            </p>
+
+            <p>
+              <strong>Descripción:</strong>
+              {{ formatearCampo(practicaDetalle.descripcion) }}
+            </p>
+
+            <p>
+              <strong>Estado:</strong>
+              {{ practicaDetalle.estado.nombre }}
+            </p>
+
+            <p>
+              <strong>Estado final:</strong>
+              {{ practicaDetalle.estado.es_final ? 'Sí' : 'No' }}
+            </p>
+
+            <p>
+              <strong>Centro de práctica:</strong>
+              {{ practicaDetalle.centro_practica.nombre }}
+            </p>
+
+            <p>
+              <strong>RUT empresa:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.rut_empresa) }}
+            </p>
+
+            <p>
+              <strong>Dirección:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.direccion) }}
+            </p>
+
+            <p>
+              <strong>Teléfono:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.telefono) }}
+            </p>
+
+            <p>
+              <strong>Correo:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.correo) }}
+            </p>
+
+            <p>
+              <strong>Contacto:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.contacto_nombre) }}
+            </p>
+
+            <p>
+              <strong>Cargo de contacto:</strong>
+              {{ formatearCampo(practicaDetalle.centro_practica.contacto_cargo) }}
             </p>
           </ion-card-content>
         </ion-card>
-
+      } @else if (errorPractica) {
+        <ion-card>
+          <ion-card-content>
+            <p class="module-warning" role="alert">
+              {{ errorPractica }}
+            </p>
+          </ion-card-content>
+        </ion-card>
       }
 
       @if (esEstudiante()) {
@@ -86,15 +147,6 @@
               <p class="module-success">
                 Tu práctica ya fue registrada correctamente.
               </p>
-
-              <div class="registration-details">
-                <span>
-                  Empresa: {{ ctx.practica_actual.centro_practica.nombre }}
-                </span>
-                <span>
-                  Estado: {{ ctx.practica_actual.estado.nombre }}
-                </span>
-              </div>
             } @else if (ctx.perfil) {
               <p>
                 Ingresa los antecedentes de la empresa, las fechas, las horas
