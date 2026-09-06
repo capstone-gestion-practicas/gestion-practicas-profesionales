@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
-from app.schemas.practica import PracticaCreate, PracticaCreateResponse
-from app.services.practica_service import (
+from app.practicas.schemas import PracticaCreate, PracticaCreateResponse
+from app.practicas.service import (
     EstadoInicialNoEncontradoError,
     PerfilEstudianteNoEncontradoError,
     PracticaActivaError,
