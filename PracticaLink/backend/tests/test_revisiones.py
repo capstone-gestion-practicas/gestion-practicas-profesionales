@@ -13,10 +13,19 @@ os.environ.setdefault(
 os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
 from app.services.revision_service import listar_solicitudes, obtener_solicitud  # noqa: E402
+from app.services.revision_service import (  # noqa: E402
+    SolicitudNoEncontradaError,
+    SolicitudNoRevisableError,
+    resolver_solicitud,
+)
 from app.core.database import get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.revision import SolicitudRevisionDetalle  # noqa: E402
+from app.schemas.revision import (  # noqa: E402
+    DecisionRevisionRequest,
+    DecisionRevisionResponse,
+    SolicitudRevisionDetalle,
+)
 
 
 class ListarSolicitudesTests(unittest.TestCase):
@@ -461,6 +470,289 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                         "centro_practica",
                     },
                 )
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+
+class ResolverSolicitudTests(unittest.TestCase):
+    def test_resolver_aprobada_commits_and_uses_current_contract(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "id_practica": 101,
+            "estado": "APROBADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+        datos = DecisionRevisionRequest(decision="APROBADA")
+
+        resultado = resolver_solicitud(db, 101, 55, datos)
+
+        self.assertEqual(resultado["estado"], "APROBADA")
+        db.execute.assert_called_once()
+        sql = str(db.execute.call_args.args[0])
+        params = db.execute.call_args.args[1]
+        self.assertIn("fn_revisar_practica", sql)
+        self.assertEqual(params["id_practica"], 101)
+        self.assertEqual(params["id_usuario"], 55)
+        self.assertEqual(params["decision"], "APROBADA")
+        self.assertIsNone(params["observacion"])
+        db.commit.assert_called_once_with()
+
+    def test_resolver_observada_requires_observation_in_request(self) -> None:
+        with self.assertRaises(ValueError):
+            DecisionRevisionRequest(decision="OBSERVADA")
+
+    def test_resolver_rechazada_requires_observation_in_request(self) -> None:
+        with self.assertRaises(ValueError):
+            DecisionRevisionRequest(decision="RECHAZADA")
+
+    def test_resolver_observada_commits_with_observation(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "id_practica": 202,
+            "estado": "OBSERVADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+        datos = DecisionRevisionRequest(
+            decision="OBSERVADA",
+            observacion="Faltan antecedentes"
+        )
+
+        resultado = resolver_solicitud(db, 202, 77, datos)
+
+        self.assertEqual(resultado["estado"], "OBSERVADA")
+        params = db.execute.call_args.args[1]
+        self.assertEqual(params["decision"], "OBSERVADA")
+        self.assertEqual(params["observacion"], "Faltan antecedentes")
+        db.commit.assert_called_once_with()
+
+    def test_resolver_rechazada_commits_with_observation(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "id_practica": 303,
+            "estado": "RECHAZADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+        datos = DecisionRevisionRequest(
+            decision="RECHAZADA",
+            observacion="No cumple requisitos"
+        )
+
+        resultado = resolver_solicitud(db, 303, 88, datos)
+
+        self.assertEqual(resultado["estado"], "RECHAZADA")
+        params = db.execute.call_args.args[1]
+        self.assertEqual(params["decision"], "RECHAZADA")
+        self.assertEqual(params["observacion"], "No cumple requisitos")
+        db.commit.assert_called_once_with()
+
+    def test_resolver_raises_when_request_does_not_exist(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "error": "SOLICITUD_NO_ENCONTRADA"
+        }
+        datos = DecisionRevisionRequest(decision="APROBADA")
+
+        with self.assertRaises(SolicitudNoEncontradaError):
+            resolver_solicitud(db, 999, 55, datos)
+
+        db.commit.assert_not_called()
+
+    def test_resolver_raises_when_request_is_not_revisable(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "error": "SOLICITUD_NO_REVISABLE"
+        }
+        datos = DecisionRevisionRequest(decision="APROBADA")
+
+        with self.assertRaises(SolicitudNoRevisableError):
+            resolver_solicitud(db, 999, 55, datos)
+
+        db.commit.assert_not_called()
+
+
+class ResolverSolicitudRouteTests(unittest.TestCase):
+    def _override_dependencies(self, db: MagicMock, user_id: int) -> dict:
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: user_id
+        return original_overrides
+
+    def test_allows_gestor_to_resolve(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 101,
+            "estado": "APROBADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+
+        original_overrides = self._override_dependencies(db, user_id=55)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ) as contexto_mock, patch(
+                "app.api.routes.revisiones.resolver_solicitud",
+                return_value=expected_response,
+            ) as resolver_mock:
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/101",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), expected_response)
+                contexto_mock.assert_called_once_with(db=db, id_usuario=55)
+                resolver_mock.assert_called_once()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_allows_administrador_to_resolve(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 202,
+            "estado": "OBSERVADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+
+        original_overrides = self._override_dependencies(db, user_id=77)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ADMINISTRADOR"]},
+            ) as contexto_mock, patch(
+                "app.api.routes.revisiones.resolver_solicitud",
+                return_value=expected_response,
+            ) as resolver_mock:
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/202",
+                        json={
+                            "decision": "OBSERVADA",
+                            "observacion": "Faltan antecedentes",
+                        },
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), expected_response)
+                contexto_mock.assert_called_once_with(db=db, id_usuario=77)
+                resolver_mock.assert_called_once()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_rejects_unauthorized_role(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = self._override_dependencies(db, user_id=99)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ) as contexto_mock, patch(
+                "app.api.routes.revisiones.resolver_solicitud"
+            ) as resolver_mock:
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/101",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 403)
+                resolver_mock.assert_not_called()
+                contexto_mock.assert_called_once_with(db=db, id_usuario=99)
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_returns_404_for_missing_request(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = self._override_dependencies(db, user_id=55)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ), patch(
+                "app.api.routes.revisiones.resolver_solicitud",
+                side_effect=SolicitudNoEncontradaError,
+            ):
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/999",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(response.json()["detail"], "La solicitud no existe")
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_returns_409_for_not_revisable_request(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = self._override_dependencies(db, user_id=55)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ), patch(
+                "app.api.routes.revisiones.resolver_solicitud",
+                side_effect=SolicitudNoRevisableError,
+            ):
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/999",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 409)
+                self.assertEqual(
+                    response.json()["detail"],
+                    "La solicitud ya no se encuentra en revisión",
+                )
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_response_keeps_expected_contract(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 303,
+            "estado": "RECHAZADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+
+        original_overrides = self._override_dependencies(db, user_id=88)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ), patch(
+                "app.api.routes.revisiones.resolver_solicitud",
+                return_value=expected_response,
+            ):
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/303",
+                        json={
+                            "decision": "RECHAZADA",
+                            "observacion": "No cumple requisitos",
+                        },
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), expected_response)
+                model = DecisionRevisionResponse(**response.json())
+                self.assertEqual(model.id_practica, 303)
+                self.assertEqual(model.estado, "RECHAZADA")
+                self.assertEqual(model.mensaje, "Solicitud revisada correctamente")
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
