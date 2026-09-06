@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -56,3 +56,32 @@ class PracticaCreateResponse(BaseModel):
     id_centro: int
     estado: str
     mensaje: str
+
+
+class EstadoPracticaLectura(BaseModel):
+    id_estado: int
+    nombre: str
+    es_final: bool
+
+
+class CentroPracticaLectura(BaseModel):
+    id_centro: int
+    nombre: str
+    rut_empresa: str | None = None
+    direccion: str | None = None
+    telefono: str | None = None
+    correo: EmailStr | None = None
+    contacto_nombre: str | None = None
+    contacto_cargo: str | None = None
+
+
+class PracticaDetalleResponse(BaseModel):
+    id_practica: int
+    fecha_registro: datetime
+    estado: EstadoPracticaLectura
+    centro_practica: CentroPracticaLectura
+    fecha_inicio: date | None = None
+    fecha_termino: date | None = None
+    horas: int | None = None
+    cargo_funcion: str | None = None
+    descripcion: str | None = None

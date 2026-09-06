@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  PracticaDetalleResponse,
   PracticaCreate,
   PracticaCreateResponse,
   EmpresaLookup
@@ -25,5 +26,9 @@ export class PracticaService {
     return this.http.get<EmpresaLookup>(
       `${this.apiUrl}/empresas/consulta/${encodeURIComponent(rut)}`
     );
+  }
+
+  obtenerMiPractica(): Observable<PracticaDetalleResponse> {
+    return this.http.get<PracticaDetalleResponse>(`${this.apiUrl}/practicas/me`);
   }
 }
