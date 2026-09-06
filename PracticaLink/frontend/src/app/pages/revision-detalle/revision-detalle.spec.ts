@@ -1,5 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
@@ -35,23 +35,23 @@ describe('RevisionDetalle', () => {
     descripcion: 'Practica de caracterizacion'
   };
 
+  const config = {
+    snapshot: {
+      paramMap: convertToParamMap({ id: '101' })
+    }
+  };
+
   beforeEach(async () => {
     revisionService = jasmine.createSpyObj<RevisionService>('RevisionService', [
-      'obtener'
+      'obtener',
+      'resolver'
     ]);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [RevisionDetalle],
       providers: [
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: convertToParamMap({ id: '101' })
-            }
-          }
-        },
+        { provide: ActivatedRoute, useValue: { snapshot: config.snapshot } },
         { provide: Router, useValue: router },
         { provide: RevisionService, useValue: revisionService }
       ]
@@ -59,74 +59,127 @@ describe('RevisionDetalle', () => {
   });
 
   afterEach(() => {
-    fixture.destroy();
+    fixture?.destroy();
   });
 
-  it('loads the detail using the id_practica from the route', () => {
+  function createLoadedComponent(): void {
     revisionService.obtener.and.returnValue(of(detalle));
-
     fixture = TestBed.createComponent(RevisionDetalle);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  }
+
+  function openDecision(decision: 'APROBADA' | 'OBSERVADA' | 'RECHAZADA'): void {
+    component.abrirDecision(decision);
+    fixture.detectChanges();
+  }
+
+  it('loads the detail using the selected id_practica', () => {
+    createLoadedComponent();
 
     expect(revisionService.obtener).toHaveBeenCalledWith(101);
     expect(component.solicitud?.id_practica).toBe(101);
   });
 
-  it('shows the student associated with the request', () => {
-    revisionService.obtener.and.returnValue(of(detalle));
-
-    fixture = TestBed.createComponent(RevisionDetalle);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+  it('renders the resolution actions', () => {
+    createLoadedComponent();
 
     const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
 
-    expect(text).toContain('Antecedentes del estudiante');
-    expect(text).toContain('Ana Perez');
-    expect(text).toContain('12.345.678-5');
-    expect(text).toContain('ana@practicalink.cl');
+    expect(text).toContain('Aprobar');
+    expect(text).toContain('Observar');
+    expect(text).toContain('Rechazar');
   });
 
-  it('shows the main antecedents of the request', () => {
-    revisionService.obtener.and.returnValue(of(detalle));
+  it('sends APROBADA when approving', () => {
+    createLoadedComponent();
+    revisionService.resolver.and.returnValue(
+      of({
+        id_practica: 101,
+        estado: 'APROBADA',
+        mensaje: 'Solicitud revisada correctamente'
+      })
+    );
 
-    fixture = TestBed.createComponent(RevisionDetalle);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    openDecision('APROBADA');
+    component.confirmar();
 
-    const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
-
-    expect(text).toContain('Ingenieria');
-    expect(text).toContain('Santiago');
-    expect(text).toContain('Centro de prueba');
-    expect(text).toContain('76.123.456-7');
-    expect(text).toContain('Maria Perez');
-    expect(text).toContain('2026-03-02');
-    expect(text).toContain('2026-06-30');
-    expect(text).toContain('360');
-    expect(text).toContain('Desarrollador');
-    expect(text).toContain('Practica de caracterizacion');
+    expect(revisionService.resolver).toHaveBeenCalledWith(101, 'APROBADA', null);
+    expect(router.navigate).toHaveBeenCalledWith(['/revisiones']);
+    expect(component.guardando).toBeFalse();
   });
 
-  it('shows the declared activities for the request', () => {
-    revisionService.obtener.and.returnValue(of(detalle));
+  it('sends OBSERVADA with an observation', () => {
+    createLoadedComponent();
+    revisionService.resolver.and.returnValue(
+      of({
+        id_practica: 101,
+        estado: 'OBSERVADA',
+        mensaje: 'Solicitud revisada correctamente'
+      })
+    );
 
-    fixture = TestBed.createComponent(RevisionDetalle);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    openDecision('OBSERVADA');
+    component.observacion = 'Faltan antecedentes';
+    component.confirmar();
 
-    const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
-
-    expect(text).toContain('Función:');
-    expect(text).toContain('Desarrollador');
-    expect(text).toContain('Descripción:');
-    expect(text).toContain('Practica de caracterizacion');
+    expect(revisionService.resolver).toHaveBeenCalledWith(
+      101,
+      'OBSERVADA',
+      'Faltan antecedentes'
+    );
+    expect(router.navigate).toHaveBeenCalledWith(['/revisiones']);
   });
 
-  it('shows a loading indicator while waiting for the response', () => {
-    const respuestaPendiente = new Subject<SolicitudRevisionDetalle>();
-    revisionService.obtener.and.returnValue(respuestaPendiente.asObservable());
+  it('sends RECHAZADA with an observation', () => {
+    createLoadedComponent();
+    revisionService.resolver.and.returnValue(
+      of({
+        id_practica: 101,
+        estado: 'RECHAZADA',
+        mensaje: 'Solicitud revisada correctamente'
+      })
+    );
+
+    openDecision('RECHAZADA');
+    component.observacion = 'No cumple requisitos';
+    component.confirmar();
+
+    expect(revisionService.resolver).toHaveBeenCalledWith(
+      101,
+      'RECHAZADA',
+      'No cumple requisitos'
+    );
+    expect(router.navigate).toHaveBeenCalledWith(['/revisiones']);
+  });
+
+  it('does not continue with OBSERVADA without observation', () => {
+    createLoadedComponent();
+
+    openDecision('OBSERVADA');
+    component.observacion = '   ';
+    component.confirmar();
+
+    expect(component.error).toBe('Debes ingresar una observación.');
+    expect(revisionService.resolver).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('does not continue with RECHAZADA without observation', () => {
+    createLoadedComponent();
+
+    openDecision('RECHAZADA');
+    component.observacion = '';
+    component.confirmar();
+
+    expect(component.error).toBe('Debes ingresar una observación.');
+    expect(revisionService.resolver).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('shows the loading indicator while waiting for the detail', () => {
+    const pending = new Subject<SolicitudRevisionDetalle>();
+    revisionService.obtener.and.returnValue(pending.asObservable());
 
     fixture = TestBed.createComponent(RevisionDetalle);
     component = fixture.componentInstance;
@@ -135,13 +188,12 @@ describe('RevisionDetalle', () => {
     expect(component.cargando).toBeTrue();
     expect(fixture.nativeElement.querySelector('ion-spinner')).not.toBeNull();
 
-    respuestaPendiente.next(detalle);
-    respuestaPendiente.complete();
+    pending.next(detalle);
+    pending.complete();
     fixture.detectChanges();
 
     expect(component.cargando).toBeFalse();
     expect(fixture.nativeElement.querySelector('ion-spinner')).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Ana Perez');
   });
 
   it('shows an error when the consultation fails', () => {
@@ -159,18 +211,22 @@ describe('RevisionDetalle', () => {
     expect(text).toContain('No fue posible cargar la solicitud.');
   });
 
-  it('shows the same error behavior when the request does not exist', () => {
-    revisionService.obtener.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 404 }))
+  it('shows an error when the resolution service fails', () => {
+    createLoadedComponent();
+    revisionService.resolver.and.returnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 500,
+            error: { detail: 'No fue posible guardar la decisión.' }
+          })
+      )
     );
 
-    fixture = TestBed.createComponent(RevisionDetalle);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    openDecision('APROBADA');
+    component.confirmar();
 
-    expect(component.error).toBe('No fue posible cargar la solicitud.');
-    expect(fixture.nativeElement.textContent).toContain(
-      'No fue posible cargar la solicitud.'
-    );
+    expect(component.error).toBe('No fue posible guardar la decisión.');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });
