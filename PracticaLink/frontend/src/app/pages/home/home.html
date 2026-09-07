@@ -10,123 +10,129 @@
 
     } @else if (contexto(); as ctx) {
 
-      <ion-card>
+      <ion-card class="welcome-card">
         <ion-card-header>
-          <ion-card-title>
-            {{ saludo() }}
-          </ion-card-title>
+          <p class="module-label">Inicio</p>
+          <ion-card-title>{{ saludo() }}</ion-card-title>
+          <p class="welcome-subtitle">
+            Revisa tu información de perfil, el estado de tu práctica y los
+            accesos disponibles según tu rol.
+          </p>
         </ion-card-header>
 
         <ion-card-content>
-          <p>
-            <strong>Correo:</strong>
-            {{ ctx.usuario.correo }}
-          </p>
-
-          <p>
-            <strong>Rol:</strong>
-            {{ ctx.roles.join(', ') }}
-          </p>
-
-          @if (ctx.perfil) {
+          <div class="identity-grid">
             <p>
-              <strong>Carrera:</strong>
-              {{ ctx.perfil.carrera }}
+              <span>Correo</span>
+              <strong>{{ ctx.usuario.correo }}</strong>
             </p>
 
             <p>
-              <strong>Sede:</strong>
-              {{ ctx.perfil.sede }}
+              <span>Rol</span>
+              <strong>{{ ctx.roles.join(', ') }}</strong>
             </p>
-          }
+
+            @if (ctx.perfil) {
+              <p>
+                <span>Carrera</span>
+                <strong>{{ ctx.perfil.carrera }}</strong>
+              </p>
+
+              <p>
+                <span>Sede</span>
+                <strong>{{ ctx.perfil.sede }}</strong>
+              </p>
+            }
+          </div>
         </ion-card-content>
       </ion-card>
 
       @if (practicaDetalle) {
-        <ion-card>
+        <ion-card class="practice-card">
           <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
             <ion-card-title>Antecedentes de tu práctica</ion-card-title>
+            <p class="practice-subtitle">
+              Información general, estado actual y datos del centro de práctica.
+            </p>
           </ion-card-header>
 
           <ion-card-content>
-            <p>
-              <strong>Fecha de registro:</strong>
-              {{ formatearCampo(practicaDetalle.fecha_registro) }}
-            </p>
+            <div class="practice-section practice-status">
+              <p class="section-label">Estado de la práctica</p>
+              <div class="status-pill">
+                <strong>{{ practicaDetalle.estado.nombre }}</strong>
+                <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
+              </div>
+            </div>
 
-            <p>
-              <strong>Fecha de inicio:</strong>
-              {{ formatearCampo(practicaDetalle.fecha_inicio) }}
-            </p>
+            <div class="practice-section">
+              <p class="section-label">Datos generales</p>
+              <div class="detail-grid detail-grid-general">
+                <p>
+                  <span>Fecha de registro</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_registro) }}</strong>
+                </p>
+                <p>
+                  <span>Fecha de inicio</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_inicio) }}</strong>
+                </p>
+                <p>
+                  <span>Fecha de término</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_termino) }}</strong>
+                </p>
+                <p>
+                  <span>Horas</span>
+                  <strong>{{ formatearCampo(practicaDetalle.horas) }}</strong>
+                </p>
+                <p>
+                  <span>Función</span>
+                  <strong>{{ formatearCampo(practicaDetalle.cargo_funcion) }}</strong>
+                </p>
+                <p class="full-width">
+                  <span>Descripción</span>
+                  <strong>{{ formatearCampo(practicaDetalle.descripcion) }}</strong>
+                </p>
+              </div>
+            </div>
 
-            <p>
-              <strong>Fecha de término:</strong>
-              {{ formatearCampo(practicaDetalle.fecha_termino) }}
-            </p>
-
-            <p>
-              <strong>Horas:</strong>
-              {{ formatearCampo(practicaDetalle.horas) }}
-            </p>
-
-            <p>
-              <strong>Función:</strong>
-              {{ formatearCampo(practicaDetalle.cargo_funcion) }}
-            </p>
-
-            <p>
-              <strong>Descripción:</strong>
-              {{ formatearCampo(practicaDetalle.descripcion) }}
-            </p>
-
-            <p>
-              <strong>Estado:</strong>
-              {{ practicaDetalle.estado.nombre }}
-            </p>
-
-            <p>
-              <strong>Estado final:</strong>
-              {{ practicaDetalle.estado.es_final ? 'Sí' : 'No' }}
-            </p>
-
-            <p>
-              <strong>Centro de práctica:</strong>
-              {{ practicaDetalle.centro_practica.nombre }}
-            </p>
-
-            <p>
-              <strong>RUT empresa:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.rut_empresa) }}
-            </p>
-
-            <p>
-              <strong>Dirección:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.direccion) }}
-            </p>
-
-            <p>
-              <strong>Teléfono:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.telefono) }}
-            </p>
-
-            <p>
-              <strong>Correo:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.correo) }}
-            </p>
-
-            <p>
-              <strong>Contacto:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.contacto_nombre) }}
-            </p>
-
-            <p>
-              <strong>Cargo de contacto:</strong>
-              {{ formatearCampo(practicaDetalle.centro_practica.contacto_cargo) }}
-            </p>
+            <div class="practice-section">
+              <p class="section-label">Centro de práctica</p>
+              <div class="detail-grid detail-grid-center">
+                <p class="full-width">
+                  <span>Centro</span>
+                  <strong>{{ practicaDetalle.centro_practica.nombre }}</strong>
+                </p>
+                <p>
+                  <span>RUT empresa</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.rut_empresa) }}</strong>
+                </p>
+                <p>
+                  <span>Dirección</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.direccion) }}</strong>
+                </p>
+                <p>
+                  <span>Teléfono</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.telefono) }}</strong>
+                </p>
+                <p>
+                  <span>Correo</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.correo) }}</strong>
+                </p>
+                <p>
+                  <span>Contacto</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.contacto_nombre) }}</strong>
+                </p>
+                <p>
+                  <span>Cargo de contacto</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.contacto_cargo) }}</strong>
+                </p>
+              </div>
+            </div>
           </ion-card-content>
         </ion-card>
       } @else if (errorPractica) {
-        <ion-card>
+        <ion-card class="state-card state-card-warning">
           <ion-card-content>
             <p class="module-warning" role="alert">
               {{ errorPractica }}
@@ -209,12 +215,14 @@
         </ion-card>
       }
 
-      <ion-button
-        expand="block"
-        fill="outline"
-        (click)="cerrarSesion()">
-        Cerrar sesión
-      </ion-button>
+      <div class="secondary-action">
+        <ion-button
+          expand="block"
+          fill="outline"
+          (click)="cerrarSesion()">
+          Cerrar sesión
+        </ion-button>
+      </div>
 
     }
 
