@@ -1,17 +1,119 @@
 <ion-content class="detail-content">
   <div class="detail-wrapper">
-    <ion-button fill="outline" (click)="volver()">Volver</ion-button>
-    @if (cargando) { <div class="center"><ion-spinner></ion-spinner></div> }
-    @else if (solicitud; as s) {
-      <ion-card><ion-card-header><ion-card-title>Antecedentes del estudiante</ion-card-title></ion-card-header>
-        <ion-card-content><p><strong>Nombre:</strong> {{ s.estudiante }}</p><p><strong>RUT:</strong> {{ s.rut_estudiante }}</p><p><strong>Correo:</strong> {{ s.correo_estudiante }}</p><p><strong>Carrera:</strong> {{ s.carrera }}</p><p><strong>Sede:</strong> {{ s.sede }}</p></ion-card-content></ion-card>
-      <ion-card><ion-card-header><ion-card-title>Centro y práctica</ion-card-title></ion-card-header>
-        <ion-card-content><p><strong>Centro:</strong> {{ s.centro_practica }}</p><p><strong>RUT empresa:</strong> {{ s.rut_empresa || 'No informado' }}</p><p><strong>Contacto:</strong> {{ s.contacto_nombre || 'No informado' }}</p><p><strong>Fechas:</strong> {{ s.fecha_inicio || 'Pendiente' }} — {{ s.fecha_termino || 'Pendiente' }}</p><p><strong>Horas:</strong> {{ s.horas || 'No informadas' }}</p><p><strong>Función:</strong> {{ s.cargo_funcion || 'No informada' }}</p><p><strong>Descripción:</strong> {{ s.descripcion || 'No informada' }}</p></ion-card-content></ion-card>
-      <div class="actions"><ion-button color="success" (click)="abrirDecision('APROBADA')">Aprobar</ion-button><ion-button color="warning" (click)="abrirDecision('OBSERVADA')">Observar</ion-button><ion-button color="danger" (click)="abrirDecision('RECHAZADA')">Rechazar</ion-button></div>
-    } @else { <p class="error">{{ error }}</p> }
+    <div class="page-heading">
+      <div class="heading-copy">
+        <p class="module-label">EP03 · Revisión</p>
+        <h1>Detalle de solicitud</h1>
+        <p class="heading-subtitle">
+          Revisa los antecedentes de la solicitud seleccionada antes de tomar
+          una decisión.
+        </p>
+      </div>
+      <ion-button fill="outline" class="back-button" (click)="volver()">
+        Volver
+      </ion-button>
+    </div>
+
+    @if (cargando) {
+      <ion-card class="state-card">
+        <ion-card-content class="state-card-content">
+          <ion-spinner name="crescent"></ion-spinner>
+          <p>Cargando antecedentes...</p>
+        </ion-card-content>
+      </ion-card>
+    } @else if (solicitud; as s) {
+      <ion-card class="detail-card">
+        <ion-card-header>
+          <ion-card-title>Antecedentes del estudiante</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="detail-grid">
+            <p><span>Nombre</span><strong>{{ s.estudiante }}</strong></p>
+            <p><span>RUT</span><strong>{{ s.rut_estudiante }}</strong></p>
+            <p><span>Correo</span><strong>{{ s.correo_estudiante }}</strong></p>
+            <p><span>Carrera</span><strong>{{ s.carrera }}</strong></p>
+            <p><span>Sede</span><strong>{{ s.sede }}</strong></p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="detail-card">
+        <ion-card-header>
+          <ion-card-title>Centro y práctica</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="detail-grid detail-grid-practice">
+            <p><span>Centro</span><strong>{{ s.centro_practica }}</strong></p>
+            <p><span>RUT empresa</span><strong>{{ s.rut_empresa || 'No informado' }}</strong></p>
+            <p><span>Contacto</span><strong>{{ s.contacto_nombre || 'No informado' }}</strong></p>
+            <p><span>Fechas</span><strong>{{ s.fecha_inicio || 'Pendiente' }} — {{ s.fecha_termino || 'Pendiente' }}</strong></p>
+            <p><span>Horas</span><strong>{{ s.horas || 'No informadas' }}</strong></p>
+            <p><span>Función</span><strong>{{ s.cargo_funcion || 'No informada' }}</strong></p>
+            <p class="detail-full"><span>Descripción</span><strong>{{ s.descripcion || 'No informada' }}</strong></p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="detail-card detail-actions-card">
+        <ion-card-header>
+          <ion-card-title>Acciones de revisión</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="actions-helper">
+            Selecciona una decisión para continuar con la revisión de esta
+            solicitud.
+          </p>
+          <div class="actions">
+            <ion-button color="success" (click)="abrirDecision('APROBADA')">
+              Aprobar
+            </ion-button>
+            <ion-button color="warning" (click)="abrirDecision('OBSERVADA')">
+              Observar
+            </ion-button>
+            <ion-button color="danger" (click)="abrirDecision('RECHAZADA')">
+              Rechazar
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    } @else {
+      <ion-card class="state-card state-card-error">
+        <ion-card-content>
+          <p class="error" role="alert">{{ error }}</p>
+        </ion-card-content>
+      </ion-card>
+    }
   </div>
 
-  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
-    <ng-template><div class="decision-modal"><h2>{{ decision }} solicitud</h2><p>Confirma la decisión para esta solicitud.</p><ion-textarea label="Observación" labelPlacement="stacked" [counter]="true" maxlength="500" [autoGrow]="true" [(ngModel)]="observacion"></ion-textarea>@if (error) { <p class="error">{{ error }}</p> }<div class="actions"><ion-button fill="outline" (click)="cerrarModal()">Cancelar</ion-button><ion-button [disabled]="guardando" (click)="confirmar()">@if (guardando) { <ion-spinner></ion-spinner> } @else { Confirmar }</ion-button></div></div></ng-template>
+  <ion-modal
+    [isOpen]="modalAbierto"
+    [backdropDismiss]="!guardando"
+    (didDismiss)="cerrarModal()">
+    <ng-template>
+      <div class="decision-modal">
+        <p class="module-label">EP03 · Revisión</p>
+        <h2>{{ decision }} solicitud</h2>
+        <p class="heading-subtitle">
+          Confirma la decisión para esta solicitud.
+        </p>
+        <ion-textarea
+          label="Observación"
+          labelPlacement="stacked"
+          [counter]="true"
+          maxlength="500"
+          [autoGrow]="true"
+          [(ngModel)]="observacion">
+        </ion-textarea>
+        @if (error) {
+          <p class="error">{{ error }}</p>
+        }
+        <div class="actions decision-actions">
+          <ion-button fill="outline" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando" (click)="confirmar()">
+            @if (guardando) { <ion-spinner></ion-spinner> } @else { Confirmar }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
   </ion-modal>
 </ion-content>
