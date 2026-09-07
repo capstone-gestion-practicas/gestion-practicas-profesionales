@@ -12,6 +12,26 @@ ion-card {
   margin-bottom: 20px;
 }
 
+.welcome-card ion-card-header,
+.practice-card ion-card-header,
+.registration-card ion-card-header {
+  padding-bottom: 12px;
+}
+
+.welcome-card ion-card-title,
+.practice-card ion-card-title,
+.registration-card ion-card-title {
+  font-size: 1.8rem;
+  line-height: 1.15;
+}
+
+.welcome-subtitle,
+.practice-subtitle {
+  margin: 8px 0 0;
+  color: #667085;
+  line-height: 1.5;
+}
+
 .registration-card {
   border-left: 4px solid var(--ion-color-primary);
 }
@@ -23,6 +43,110 @@ ion-card {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.welcome-card {
+  border-left: 4px solid var(--ion-color-primary);
+}
+
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.identity-grid p,
+.detail-grid p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.identity-grid span,
+.detail-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.identity-grid strong,
+.detail-grid strong {
+  display: block;
+  color: #101828;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.practice-card ion-card-content {
+  padding-top: 4px;
+}
+
+.practice-section + .practice-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eaecf0;
+}
+
+.section-label {
+  margin: 0 0 12px;
+  color: var(--ion-color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-pill {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #e9f2ff;
+  color: #174a7e;
+}
+
+.status-pill strong {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.status-pill span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.detail-grid-general {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-grid-center {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.state-card {
+  margin-bottom: 20px;
+}
+
+.state-card-warning {
+  --background: #fff8e7;
 }
 
 .registration-details {
@@ -81,9 +205,32 @@ ion-card {
   color: #c62828;
 }
 
+.secondary-action {
+  margin-top: 4px;
+  opacity: 0.95;
+}
+
 ion-modal {
   --width: min(560px, calc(100% - 24px));
   --height: auto;
   --max-height: 90%;
   --border-radius: 14px;
+}
+
+@media (max-width: 720px) {
+  .identity-grid,
+  .detail-grid-general,
+  .detail-grid-center {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-card ion-card-title,
+  .practice-card ion-card-title,
+  .registration-card ion-card-title {
+    font-size: 1.55rem;
+  }
+
+  .home-wrapper {
+    padding: 20px;
+  }
 }
