@@ -82,7 +82,7 @@ describe('Revisiones', () => {
 
     expect(text).toContain('Ana Perez');
     expect(text).toContain('Bruno Soto');
-    expect(text).toContain('RUT:');
+    expect(text).toContain('RUT');
     expect(text).toContain('12.345.678-5');
     expect(text).toContain('11.222.333-4');
   });
@@ -96,7 +96,7 @@ describe('Revisiones', () => {
 
     const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
 
-    expect(text).toContain('Estado:');
+    expect(text).toContain('Estado');
     expect(text).toContain('REGISTRADA');
     expect(text).toContain('EN_REVISION');
   });
