@@ -12,8 +12,8 @@ os.environ.setdefault(
 )
 os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
-from app.services.revision_service import listar_solicitudes, obtener_solicitud  # noqa: E402
-from app.services.revision_service import (  # noqa: E402
+from app.revisiones.service import listar_solicitudes, obtener_solicitud  # noqa: E402
+from app.revisiones.service import (  # noqa: E402
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
     resolver_solicitud,
@@ -21,7 +21,7 @@ from app.services.revision_service import (  # noqa: E402
 from app.core.database import get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.revision import (  # noqa: E402
+from app.revisiones.schemas import (  # noqa: E402
     DecisionRevisionRequest,
     DecisionRevisionResponse,
     SolicitudRevisionDetalle,
@@ -118,7 +118,7 @@ class ListarSolicitudesRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.listar_solicitudes",
+                "app.revisiones.routes.listar_solicitudes",
                 return_value=expected_response,
             ) as listar_mock:
                 with TestClient(app) as client:
@@ -216,7 +216,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.obtener_solicitud",
+                "app.revisiones.routes.obtener_solicitud",
                 return_value=expected_response,
             ) as obtener_mock:
                 with TestClient(app) as client:
@@ -261,7 +261,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.obtener_solicitud",
+                "app.revisiones.routes.obtener_solicitud",
                 return_value=expected_response,
             ) as obtener_mock:
                 with TestClient(app) as client:
@@ -284,7 +284,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ESTUDIANTE"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.obtener_solicitud"
+                "app.revisiones.routes.obtener_solicitud"
             ) as obtener_mock:
                 with TestClient(app) as client:
                     response = client.get("/revisiones/solicitudes/101")
@@ -305,7 +305,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.obtener_solicitud",
+                "app.revisiones.routes.obtener_solicitud",
                 return_value=None,
             ) as obtener_mock:
                 with TestClient(app) as client:
@@ -349,7 +349,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.obtener_solicitud",
+                "app.revisiones.routes.obtener_solicitud",
                 return_value=payload,
             ):
                 with TestClient(app) as client:
@@ -387,7 +387,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.listar_solicitudes",
+                "app.revisiones.routes.listar_solicitudes",
                 return_value=expected_response,
             ) as listar_mock:
                 with TestClient(app) as client:
@@ -410,7 +410,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ESTUDIANTE"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.listar_solicitudes"
+                "app.revisiones.routes.listar_solicitudes"
             ) as listar_mock:
                 with TestClient(app) as client:
                     response = client.get("/revisiones/solicitudes")
@@ -450,7 +450,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.listar_solicitudes",
+                "app.revisiones.routes.listar_solicitudes",
                 return_value=expected_response,
             ):
                 with TestClient(app) as client:
@@ -593,7 +593,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.resolver_solicitud",
+                "app.revisiones.routes.resolver_solicitud",
                 return_value=expected_response,
             ) as resolver_mock:
                 with TestClient(app) as client:
@@ -625,7 +625,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.resolver_solicitud",
+                "app.revisiones.routes.resolver_solicitud",
                 return_value=expected_response,
             ) as resolver_mock:
                 with TestClient(app) as client:
@@ -654,7 +654,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["ESTUDIANTE"]},
             ) as contexto_mock, patch(
-                "app.api.routes.revisiones.resolver_solicitud"
+                "app.revisiones.routes.resolver_solicitud"
             ) as resolver_mock:
                 with TestClient(app) as client:
                     response = client.patch(
@@ -678,7 +678,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.resolver_solicitud",
+                "app.revisiones.routes.resolver_solicitud",
                 side_effect=SolicitudNoEncontradaError,
             ):
                 with TestClient(app) as client:
@@ -702,7 +702,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.resolver_solicitud",
+                "app.revisiones.routes.resolver_solicitud",
                 side_effect=SolicitudNoRevisableError,
             ):
                 with TestClient(app) as client:
@@ -735,7 +735,7 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 "app.core.permissions.obtener_contexto_usuario",
                 return_value={"roles": ["GESTOR"]},
             ), patch(
-                "app.api.routes.revisiones.resolver_solicitud",
+                "app.revisiones.routes.resolver_solicitud",
                 return_value=expected_response,
             ):
                 with TestClient(app) as client:

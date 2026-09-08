@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.revision import DecisionRevisionRequest
+from app.revisiones.schemas import DecisionRevisionRequest
 
 
 class SolicitudNoEncontradaError(Exception):

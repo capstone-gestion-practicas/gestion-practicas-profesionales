@@ -217,7 +217,7 @@ Inventario actual:
 | `fn_contexto_usuario` | `auth_service.py` | Obtener usuario, roles, perfil y práctica actual |
 | `fn_completar_perfil_estudiante` | `estudiante_service.py` | Crear el perfil faltante de un estudiante |
 | `fn_registrar_practica` | `practica_service.py` | Crear centro, práctica e historial inicial |
-| `fn_revisar_practica` | `revision_service.py` | Resolver una solicitud y registrar su nuevo estado |
+| `fn_revisar_practica` | `revisiones/service.py` | Resolver una solicitud y registrar su nuevo estado |
 | `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
 | `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
 | `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |

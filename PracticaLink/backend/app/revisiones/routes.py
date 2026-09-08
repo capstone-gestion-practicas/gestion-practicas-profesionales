@@ -4,13 +4,13 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
-from app.schemas.revision import (
+from app.revisiones.schemas import (
     DecisionRevisionRequest,
     DecisionRevisionResponse,
     SolicitudRevisionDetalle,
     SolicitudRevisionResumen,
 )
-from app.services.revision_service import (
+from app.revisiones.service import (
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
     listar_solicitudes,
