@@ -12,8 +12,8 @@ os.environ.setdefault(
 )
 os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
-from app.services.revision_service import listar_solicitudes, obtener_solicitud  # noqa: E402
-from app.services.revision_service import (  # noqa: E402
+from app.revisiones.service import listar_solicitudes, obtener_solicitud  # noqa: E402
+from app.revisiones.service import (  # noqa: E402
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
     resolver_solicitud,

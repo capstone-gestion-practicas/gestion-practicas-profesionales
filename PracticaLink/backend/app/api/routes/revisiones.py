@@ -10,7 +10,7 @@ from app.revisiones.schemas import (
     SolicitudRevisionDetalle,
     SolicitudRevisionResumen,
 )
-from app.services.revision_service import (
+from app.revisiones.service import (
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
     listar_solicitudes,
