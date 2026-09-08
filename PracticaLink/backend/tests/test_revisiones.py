@@ -21,7 +21,7 @@ from app.services.revision_service import (  # noqa: E402
 from app.core.database import get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.revision import (  # noqa: E402
+from app.revisiones.schemas import (  # noqa: E402
     DecisionRevisionRequest,
     DecisionRevisionResponse,
     SolicitudRevisionDetalle,
