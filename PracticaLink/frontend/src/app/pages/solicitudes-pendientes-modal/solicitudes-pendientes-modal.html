@@ -1,0 +1,31 @@
+<ion-content class="requests-content">
+  <section class="requests-modal-content">
+    <div class="requests-modal-heading">
+      <div>
+        <p class="module-label">Administración</p>
+        <h2>Solicitudes pendientes</h2>
+        <p>Prácticas que requieren revisión o seguimiento.</p>
+      </div>
+      <ion-button fill="clear" (click)="cerrar()">Cerrar</ion-button>
+    </div>
+
+    @if (solicitudes.length) {
+      <ion-list lines="full">
+        @for (solicitud of solicitudes; track solicitud.id_practica) {
+          <ion-item button detail="true" (click)="irARevisiones()">
+            <ion-label>
+              <h3>{{ solicitud.estudiante }}</h3>
+              <p>{{ solicitud.centro_practica }}</p>
+              <p>Registrada: {{ solicitud.fecha_registro }}</p>
+            </ion-label>
+            <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
+          </ion-item>
+        }
+      </ion-list>
+    } @else {
+      <p class="empty-state">No hay solicitudes pendientes.</p>
+    }
+
+    <ion-button expand="block" (click)="irARevisiones()">Ir a revisiones</ion-button>
+  </section>
+</ion-content>

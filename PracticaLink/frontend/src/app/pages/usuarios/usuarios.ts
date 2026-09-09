@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
-  IonItem, IonLabel, IonModal, IonSpinner, IonToggle
+  IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
 } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 
@@ -17,7 +17,7 @@ import { UsuarioService } from '../../core/services/usuario.service';
   standalone: true,
   imports: [
     CommonModule, FormsModule, IonButton, IonCard, IonCardContent, IonCheckbox,
-    IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle
+    IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
   ],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss'

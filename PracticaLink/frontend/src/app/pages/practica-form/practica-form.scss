@@ -1,16 +1,18 @@
 .form-content {
-  --background: #f4f6f9;
+  --background: var(--cream);
 }
 
 .form-wrapper {
   width: min(920px, 100%);
   margin: 0 auto;
   padding: 24px;
+  --ion-grid-padding: 0;
+  --ion-grid-column-padding: 0;
 }
 
 h2 {
   margin: 28px 0 8px;
-  color: #243447;
+  color: var(--ink);
   font-size: 1.1rem;
 }
 
@@ -40,11 +42,11 @@ h2 {
 .company-result {
   margin-top: 12px;
   padding: 16px;
-  border: 1px solid #9bc7a5;
-  border-left: 4px solid #2f855a;
+  border: 1px solid #a8c5ad;
+  border-left: 4px solid var(--ion-color-primary);
   border-radius: 10px;
-  background: #f0fff4;
-  color: #1f3d2b;
+  background: #eaf3eb;
+  color: #214936;
 }
 
 .company-result dl {
@@ -70,7 +72,7 @@ h2 {
 .company-activities {
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #b7d9bf;
+  border-top: 1px solid #bdd3bf;
 }
 
 .company-activities > span {
@@ -90,7 +92,7 @@ h2 {
 
 .company-source {
   margin: 14px 0 0;
-  color: #52675a;
+  color: var(--ink-muted);
   font-size: 0.8rem;
 }
 
@@ -102,7 +104,7 @@ h2 {
 }
 
 .error {
-  color: #c62828;
+  color: var(--form-error);
   margin: 16px 0 0;
 }
 

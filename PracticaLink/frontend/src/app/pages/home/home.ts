@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 
 import {
   IonButton,
@@ -12,10 +12,15 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonGrid,
   IonInput,
   IonItem,
   IonLabel,
+  IonList,
   IonModal,
+  IonNote,
+  IonCol,
+  IonRow,
   IonSpinner,
   ModalController
 } from '@ionic/angular';
@@ -28,6 +33,12 @@ import { PracticaDetalleResponse } from '../../core/models/practica.models';
 import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 import { PracticaForm } from '../practica-form/practica-form';
+import { UsuarioService } from '../../core/services/usuario.service';
+import { RevisionService } from '../../core/services/revision.service';
+import { UsuarioAdministrable } from '../../core/models/usuario.models';
+import { SolicitudRevisionResumen } from '../../core/models/revision.models';
+import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/solicitudes-pendientes-modal';
+import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
 
 @Component({
   selector: 'app-home',
@@ -36,6 +47,9 @@ import { PracticaForm } from '../practica-form/practica-form';
     CommonModule,
     FormsModule,
     IonContent,
+    IonGrid,
+    IonRow,
+    IonCol,
     IonCard,
     IonCardHeader,
     IonCardTitle,
@@ -44,7 +58,9 @@ import { PracticaForm } from '../practica-form/practica-form';
     IonInput,
     IonItem,
     IonLabel,
+    IonList,
     IonModal,
+    IonNote,
     IonSpinner
   ],
   templateUrl: './home.html',
@@ -58,6 +74,8 @@ export class Home implements OnInit {
   private readonly router = inject(Router);
   private readonly estudianteService = inject(EstudianteService);
   private readonly modalController = inject(ModalController);
+  private readonly usuarioService = inject(UsuarioService);
+  private readonly revisionService = inject(RevisionService);
 
   readonly contexto = this.authStore.contexto;
   readonly saludo = computed(() => {
@@ -102,6 +120,10 @@ export class Home implements OnInit {
   sedePerfil = '';
   telefonoPerfil = '';
   direccionPerfil = '';
+  usuariosAdmin: UsuarioAdministrable[] = [];
+  solicitudesAdmin: SolicitudRevisionResumen[] = [];
+  errorDashboardAdmin = '';
+  mensajeInteraccion = '';
   private firmaContextoPracticaProcesada = '';
 
   private readonly sincronizarPracticaConContexto = effect(() => {
@@ -126,6 +148,7 @@ export class Home implements OnInit {
     if (this.contexto()) {
       this.cargando = false;
       this.cargarPracticaRegistrada(this.contexto() as ContextoUsuarioResponse);
+      this.cargarDashboardAdmin();
       return;
     }
 
@@ -134,6 +157,7 @@ export class Home implements OnInit {
         this.authStore.setContexto(contexto);
         this.cargando = false;
         this.cargarPracticaRegistrada(contexto);
+        this.cargarDashboardAdmin();
       },
       error: () => {
         this.cerrarSesion();
@@ -162,6 +186,66 @@ export class Home implements OnInit {
 
   gestionarUsuarios(): void {
     this.router.navigate(['/usuarios']);
+  }
+
+  async abrirSolicitudesPendientes(): Promise<void> {
+    const modal = await this.modalController.create({
+      component: SolicitudesPendientesModal,
+      componentProps: { solicitudes: this.solicitudesPendientesLista() },
+      cssClass: 'requests-modal'
+    });
+    await modal.present();
+  }
+
+  async abrirDetalleSolicitud(idPractica: number): Promise<void> {
+    const modal = await this.modalController.create({
+      component: SolicitudDetalleModal,
+      componentProps: { idPractica },
+      cssClass: 'request-detail-modal'
+    });
+    await modal.present();
+  }
+
+  copiarCorreo(correo: string): void {
+    if (!navigator.clipboard) {
+      this.mostrarMensaje('Tu navegador no permite copiar el correo automáticamente.');
+      return;
+    }
+
+    navigator.clipboard.writeText(correo).then(
+      () => this.mostrarMensaje('Correo copiado al portapapeles.'),
+      () => this.mostrarMensaje('No fue posible copiar el correo.')
+    );
+  }
+
+  irAPractica(): void {
+    document.getElementById('antecedentes-practica')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  solicitudesPendientes(): number {
+    return this.solicitudesPendientesLista().length;
+  }
+
+  solicitudesPendientesLista(): SolicitudRevisionResumen[] {
+    return this.solicitudesAdmin.filter(solicitud =>
+      !['APROBADA', 'RECHAZADA'].includes(solicitud.estado.toUpperCase())
+    );
+  }
+
+  usuariosActivos(): number {
+    return this.usuariosAdmin.filter(usuario => usuario.activo).length;
+  }
+
+  gestoresActivos(): number {
+    return this.usuariosAdmin.filter(usuario =>
+      usuario.activo && usuario.roles.includes('GESTOR')
+    ).length;
+  }
+
+  solicitudesRecientes(): SolicitudRevisionResumen[] {
+    return [...this.solicitudesAdmin]
+      .sort((a, b) => b.fecha_registro.localeCompare(a.fecha_registro))
+      .slice(0, 5);
   }
 
   completarPerfil(): void {
@@ -220,6 +304,35 @@ export class Home implements OnInit {
 
   private opcional(valor: string): string | null {
     return valor.trim() || null;
+  }
+
+  private mostrarMensaje(mensaje: string): void {
+    this.mensajeInteraccion = mensaje;
+    window.setTimeout(() => {
+      if (this.mensajeInteraccion === mensaje) {
+        this.mensajeInteraccion = '';
+      }
+    }, 3000);
+  }
+
+  private cargarDashboardAdmin(): void {
+    if (!this.esAdministrador()) {
+      return;
+    }
+
+    this.errorDashboardAdmin = '';
+    forkJoin({
+      usuarios: this.usuarioService.listar(),
+      solicitudes: this.revisionService.listar()
+    }).subscribe({
+      next: ({ usuarios, solicitudes }) => {
+        this.usuariosAdmin = usuarios;
+        this.solicitudesAdmin = solicitudes;
+      },
+      error: () => {
+        this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
+      }
+    });
   }
 
   private cargarPracticaRegistrada(contexto: ContextoUsuarioResponse): void {
