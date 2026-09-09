@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
 
+    chile_rut_empresa_api_key: str | None = None
+    chile_rut_empresa_api_url: str = "https://chilerutempresa.cl/api"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

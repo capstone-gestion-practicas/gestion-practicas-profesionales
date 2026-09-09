@@ -26,14 +26,26 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
-    path: 'practicas/nueva',
+    path: 'usuarios',
     canActivate: [authGuard, roleGuard],
-    data: {
-      roles: ['ESTUDIANTE']
-    },
+    data: { roles: ['ADMINISTRADOR'] },
     loadComponent: () =>
-      import('./pages/practica-form/practica-form')
-        .then(m => m.PracticaForm)
+      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+  },
+  {
+    path: 'revisiones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revisiones/revisiones').then(m => m.Revisiones)
+  },
+  {
+    path: 'revisiones/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revision-detalle/revision-detalle')
+        .then(m => m.RevisionDetalle)
   },
   {
     path: '**',

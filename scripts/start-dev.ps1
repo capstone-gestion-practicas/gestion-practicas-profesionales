@@ -14,6 +14,24 @@ if (-not (Test-Path -LiteralPath $pythonExecutable)) {
     throw 'No se encontró PracticaLink\backend\.venv\Scripts\python.exe. Crea el entorno virtual e instala requirements.txt.'
 }
 
+# Un entorno virtual puede conservar python.exe aunque la instalación de
+# Python usada para crearlo ya no exista. Validamos que realmente ejecute.
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+& $pythonExecutable --version *> $null
+$pythonExitCode = $LASTEXITCODE
+$ErrorActionPreference = $previousErrorActionPreference
+if ($pythonExitCode -ne 0) {
+    throw @'
+El entorno virtual de backend está roto o apunta a una instalación de Python que ya no existe.
+Instala Python y recrea el entorno con:
+  cd PracticaLink\backend
+  Remove-Item .venv -Recurse
+  python -m venv .venv
+  .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+'@
+}
+
 if (-not (Test-Path -LiteralPath $backendEnvFile)) {
     throw 'No se encontró PracticaLink\backend\.env. Créalo desde .env.template antes de iniciar.'
 }
@@ -38,6 +56,12 @@ try {
         -WorkingDirectory $backendDirectory `
         -NoNewWindow `
         -PassThru
+
+    Start-Sleep -Milliseconds 750
+    $backendProcess.Refresh()
+    if ($backendProcess.HasExited) {
+        throw "El backend no pudo iniciar (código $($backendProcess.ExitCode)). Revisa el error mostrado arriba."
+    }
 
     $frontendProcess = Start-Process `
         -FilePath 'npm.cmd' `
@@ -69,7 +93,13 @@ finally {
     foreach ($process in @($frontendProcess, $backendProcess)) {
         if ($null -ne $process -and -not $process.HasExited) {
             # /T detiene también los procesos hijo creados por Angular y Uvicorn.
-            & taskkill.exe /PID $process.Id /T /F 2>$null | Out-Null
+            try {
+                & taskkill.exe /PID $process.Id /T /F 2>$null | Out-Null
+            }
+            catch {
+                # El error de limpieza no debe ocultar la causa del fallo inicial.
+                Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            }
         }
     }
 }

@@ -1,0 +1,68 @@
+<ion-content class="review-content">
+  <div class="review-wrapper">
+    <div class="page-heading">
+      <div class="heading-copy">
+        <p class="module-label">EP03 · Revisión</p>
+        <h1>Solicitudes de práctica</h1>
+        <p class="heading-subtitle">
+          Revisa las solicitudes registradas, su estado actual y los datos
+          principales de cada estudiante.
+        </p>
+      </div>
+      <ion-button fill="outline" class="back-button" (click)="volver()">
+        Volver
+      </ion-button>
+    </div>
+
+    @if (cargando) {
+      <ion-card class="state-card">
+        <ion-card-content class="state-card-content">
+          <ion-spinner name="crescent"></ion-spinner>
+          <p>Cargando solicitudes...</p>
+        </ion-card-content>
+      </ion-card>
+    } @else if (error) {
+      <ion-card class="state-card state-card-error">
+        <ion-card-content>
+          <p class="error" role="alert">{{ error }}</p>
+        </ion-card-content>
+      </ion-card>
+    } @else if (solicitudes.length === 0) {
+      <ion-card class="state-card">
+        <ion-card-content>
+          <p class="empty-state">No hay solicitudes pendientes.</p>
+        </ion-card-content>
+      </ion-card>
+    } @else {
+      @for (solicitud of solicitudes; track solicitud.id_practica) {
+        <ion-card class="request-card">
+          <ion-card-header>
+            <ion-card-title>{{ solicitud.estudiante }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="request-meta">
+              <p>
+                <span>RUT</span>
+                <strong>{{ solicitud.rut_estudiante }}</strong>
+              </p>
+              <p>
+                <span>Centro</span>
+                <strong>{{ solicitud.centro_practica }}</strong>
+              </p>
+              <p class="request-status">
+                <span>Estado</span>
+                <strong>{{ solicitud.estado }}</strong>
+              </p>
+            </div>
+            <ion-button
+              expand="block"
+              class="request-action"
+              (click)="revisar(solicitud.id_practica)">
+              Revisar antecedentes
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  </div>
+</ion-content>

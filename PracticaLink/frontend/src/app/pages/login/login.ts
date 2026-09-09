@@ -44,9 +44,6 @@ export class Login {
   modoRegistro = false;
   nombre = '';
   apellido = '';
-  rut = '';
-  carrera = '';
-  sede = '';
   correo = '';
   password = '';
   confirmarPassword = '';
@@ -73,6 +70,11 @@ export class Login {
     this.error = '';
     this.mensaje = '';
 
+    if (!this.correoValido(this.correo)) {
+      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
+
     if (this.password !== this.confirmarPassword) {
       this.error = 'Las contraseñas no coinciden.';
       return;
@@ -88,20 +90,14 @@ export class Login {
     this.authService.registrar({
       nombre: this.nombre,
       apellido: this.apellido,
-      correo: this.correo,
-      password: this.password,
-      rut: this.rut,
-      carrera: this.carrera,
-      sede: this.sede
+      correo: this.normalizarCorreo(this.correo),
+      password: this.password
     }).subscribe({
       next: () => {
         this.cargando = false;
         this.modoRegistro = false;
         this.nombre = '';
         this.apellido = '';
-        this.rut = '';
-        this.carrera = '';
-        this.sede = '';
         this.password = '';
         this.confirmarPassword = '';
         this.mensaje = 'Cuenta creada. Ya puedes iniciar sesión.';
@@ -118,10 +114,15 @@ export class Login {
   iniciarSesion(): void {
     this.error = '';
     this.mensaje = '';
+
+    if (!this.correoValido(this.correo)) {
+      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
     this.cargando = true;
 
     this.authService.login({
-      correo: this.correo,
+      correo: this.normalizarCorreo(this.correo),
       password: this.password
     }).subscribe({
       next: (loginResponse) => {
@@ -147,5 +148,15 @@ export class Login {
         this.error = 'Correo o contraseña incorrectos.';
       }
     });
+  }
+
+  private correoValido(correo: string): boolean {
+    const limpio = correo.trim();
+    return limpio.length <= 150
+      && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(limpio);
+  }
+
+  private normalizarCorreo(correo: string): string {
+    return correo.trim().toLowerCase();
   }
 }

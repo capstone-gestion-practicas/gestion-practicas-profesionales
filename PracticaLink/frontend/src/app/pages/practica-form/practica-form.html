@@ -9,6 +9,90 @@
         <form [formGroup]="formulario" (ngSubmit)="registrar()">
           <h2>Centro de práctica</h2>
 
+          <div class="rut-search">
+            <ion-item>
+              <ion-label position="stacked">RUT de la empresa</ion-label>
+              <ion-input
+                formControlName="rutEmpresa"
+                maxlength="12"
+                autocapitalize="characters"
+                placeholder="12.345.678-5"
+                [disabled]="consultandoEmpresa"
+                (ionInput)="cambiarRutEmpresa()">
+              </ion-input>
+            </ion-item>
+
+            <ion-button
+              type="button"
+              class="search-button"
+              [disabled]="!puedeBuscarEmpresa"
+              (click)="buscarEmpresa()">
+              @if (consultandoEmpresa) {
+                <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+                Buscar empresa
+              }
+            </ion-button>
+          </div>
+
+          @if (empresaEncontrada) {
+            <section class="company-result" aria-live="polite">
+              <strong>Empresa encontrada</strong>
+              <dl>
+                <div><dt>Razón social</dt><dd>{{ empresaEncontrada.razon_social }}</dd></div>
+                @if (empresaEncontrada.fecha_inicio_actividades) {
+                  <div><dt>Inicio de actividades</dt><dd>{{ empresaEncontrada.fecha_inicio_actividades }}</dd></div>
+                }
+                @if (empresaEncontrada.giro) {
+                  <div><dt>Giro</dt><dd>{{ empresaEncontrada.giro }}</dd></div>
+                }
+                @if (empresaEncontrada.rubro) {
+                  <div><dt>Rubro</dt><dd>{{ empresaEncontrada.rubro }}</dd></div>
+                }
+                @if (empresaEncontrada.subrubro) {
+                  <div><dt>Subrubro</dt><dd>{{ empresaEncontrada.subrubro }}</dd></div>
+                }
+                @if (empresaEncontrada.categoria_tributaria) {
+                  <div><dt>Categoría tributaria</dt><dd>{{ empresaEncontrada.categoria_tributaria }}</dd></div>
+                }
+                @if (empresaEncontrada.afecta_iva) {
+                  <div><dt>Afecta IVA</dt><dd>{{ empresaEncontrada.afecta_iva === 'S' ? 'Sí' : 'No' }}</dd></div>
+                }
+                @if (empresaEncontrada.num_trabajadores) {
+                  <div><dt>Trabajadores</dt><dd>{{ empresaEncontrada.num_trabajadores }}</dd></div>
+                }
+                @if (empresaEncontrada.comuna || empresaEncontrada.region) {
+                  <div><dt>Ubicación</dt><dd>{{ empresaEncontrada.comuna }}{{ empresaEncontrada.comuna && empresaEncontrada.region ? ', ' : '' }}{{ empresaEncontrada.region }}</dd></div>
+                }
+              </dl>
+
+              @if (empresaEncontrada.actividades.length) {
+                <div class="company-activities">
+                  <span>Actividades económicas</span>
+                  <ul>
+                    @for (actividad of empresaEncontrada.actividades; track actividad.codigo) {
+                      <li>
+                        <strong>{{ actividad.codigo }}</strong>
+                        {{ actividad.descripcion }}
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <p class="company-source">
+                Fuente: {{ empresaEncontrada.fuente }}.
+                @if (!empresaEncontrada.cache_vigente) {
+                  Datos almacenados; no fue posible actualizarlos ahora.
+                }
+              </p>
+            </section>
+          }
+
+          <p class="field-help company-help">
+            Busca el RUT para completar los datos. Si no hay resultados, ingrésalos manualmente.
+          </p>
+
           <ion-item>
             <ion-label position="stacked">Nombre de la empresa *</ion-label>
             <ion-input formControlName="centroNombre" maxlength="150"></ion-input>
@@ -16,18 +100,13 @@
 
           <div class="form-grid">
             <ion-item>
-              <ion-label position="stacked">RUT de la empresa</ion-label>
-              <ion-input formControlName="rutEmpresa" maxlength="12"></ion-input>
-            </ion-item>
-
-            <ion-item>
               <ion-label position="stacked">Correo</ion-label>
-              <ion-input type="email" formControlName="correo" maxlength="150"></ion-input>
+              <ion-input type="email" formControlName="correo" maxlength="150" inputmode="email" autocapitalize="off" spellcheck="false" (ionBlur)="validarCorreo()"></ion-input>
             </ion-item>
 
             <ion-item>
               <ion-label position="stacked">Teléfono</ion-label>
-              <ion-input type="tel" formControlName="telefono" maxlength="20"></ion-input>
+              <ion-input type="tel" inputmode="tel" formControlName="telefono" maxlength="20"></ion-input>
             </ion-item>
 
             <ion-item>
@@ -74,20 +153,20 @@
             <ion-label position="stacked">Descripción de funciones</ion-label>
             <ion-textarea
               formControlName="descripcion"
+              maxlength="2000"
               [autoGrow]="true"
               rows="4">
             </ion-textarea>
           </ion-item>
-
-          @if (error) {
-            <p class="error" role="alert">{{ error }}</p>
-          }
+          <p class="field-help">Máximo 2.000 caracteres.</p>
 
           <div class="actions">
             <ion-button type="button" fill="outline" (click)="cancelar()">
               Cancelar
             </ion-button>
-            <ion-button type="submit" [disabled]="enviando">
+            <ion-button
+              type="submit"
+              [disabled]="enviando || !formularioListo">
               @if (enviando) {
                 <ion-spinner name="crescent"></ion-spinner>
               } @else {
@@ -99,4 +178,14 @@
       </ion-card-content>
     </ion-card>
   </div>
+
+  <ion-toast
+    [isOpen]="!!error"
+    [message]="error"
+    color="danger"
+    position="top"
+    [duration]="3500"
+    [buttons]="[{ text: 'Cerrar', role: 'cancel' }]"
+    (didDismiss)="cerrarToast()">
+  </ion-toast>
 </ion-content>

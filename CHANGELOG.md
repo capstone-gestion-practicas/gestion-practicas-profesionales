@@ -16,6 +16,13 @@ Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
 
 ### Agregado
 
+- Buscador de empresas por RUT dentro del modal de registro de práctica.
+- Integración backend con Chile RUT Empresa mediante una API key de entorno.
+- Tabla `empresa` y funciones `fn_obtener_empresa_cache` y
+  `fn_guardar_empresa_cache` para mantener un caché tributario de 30 días.
+- Visualización de razón social, actividades, giro, rubro, ubicación y otros
+  antecedentes tributarios devueltos por la integración.
+- Validación del formato y dígito verificador de RUT en frontend y backend.
 - Cuenta administradora de demostración documentada para validar el panel de usuarios.
 - Panel administrativo de EP01 para listar, crear y editar usuarios mediante modales.
 - Asignación de roles y activación o desactivación de cuentas por administradores.
@@ -29,6 +36,9 @@ Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
 
 ### Cambiado
 
+- El registro de práctica se presenta como modal, utiliza toasts para errores y
+  mantiene habilitado el ingreso manual cuando no se encuentra una empresa.
+- `practicalink-dev` detecta entornos virtuales rotos antes de iniciar servicios.
 - Se documentó como política obligatoria que las ramas `feature/*` nacen desde
   `develop` y que sus Pull Requests tienen `develop` como destino.
 

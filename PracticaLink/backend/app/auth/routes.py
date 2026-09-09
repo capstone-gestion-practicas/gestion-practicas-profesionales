@@ -4,14 +4,14 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
-from app.schemas.auth import (
+from app.auth.schemas import (
     LoginRequest,
     LoginResponse,
     RegistroRequest,
     RegistroResponse,
     ContextoUsuarioResponse
 )
-from app.services.auth_service import (
+from app.auth.service import (
     autenticar_usuario,
     obtener_contexto_usuario,
     registrar_usuario
@@ -38,10 +38,7 @@ def registrar(
         nombre=datos.nombre,
         apellido=datos.apellido,
         correo=str(datos.correo),
-        password=datos.password,
-        rut=datos.rut,
-        carrera=datos.carrera,
-        sede=datos.sede
+        password=datos.password
     )
 
     if usuario is None:

@@ -1,0 +1,188 @@
+.detail-content {
+  --background: #f4f6f9;
+}
+
+.detail-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.heading-copy {
+  max-width: 640px;
+}
+
+.module-label {
+  margin: 0;
+  color: var(--ion-color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-heading h1 {
+  margin: 6px 0 10px;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+.heading-subtitle {
+  margin: 0;
+  color: #667085;
+  line-height: 1.5;
+}
+
+.back-button {
+  flex-shrink: 0;
+}
+
+.state-card,
+.detail-card {
+  margin: 0 0 16px;
+}
+
+.state-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 140px;
+  text-align: center;
+}
+
+.state-card-content p {
+  margin: 0;
+  color: #475467;
+  font-weight: 500;
+}
+
+.state-card-error {
+  --background: #fff5f5;
+}
+
+.state-card-error .error {
+  margin: 0;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.detail-card ion-card-header {
+  padding-bottom: 0;
+}
+
+.detail-card ion-card-title {
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.detail-card ion-card-content {
+  padding-top: 12px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-grid p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.detail-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-grid strong {
+  display: block;
+  color: #101828;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.detail-grid-practice {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-full {
+  grid-column: 1 / -1;
+}
+
+.detail-actions-card .actions-helper {
+  margin: 0 0 16px;
+  color: #667085;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detail-actions-card .actions ion-button {
+  min-width: 120px;
+}
+
+.decision-modal {
+  padding: 24px;
+}
+
+.decision-modal h2 {
+  margin: 6px 0 10px;
+  font-size: 1.5rem;
+}
+
+.decision-actions {
+  margin-top: 20px;
+}
+
+ion-modal {
+  --width: min(560px, calc(100% - 24px));
+  --height: auto;
+  --border-radius: 14px;
+}
+
+@media (max-width: 720px) {
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .heading-copy {
+    max-width: none;
+  }
+
+  .detail-grid,
+  .detail-grid-practice {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .detail-actions-card .actions ion-button {
+    width: 100%;
+  }
+}

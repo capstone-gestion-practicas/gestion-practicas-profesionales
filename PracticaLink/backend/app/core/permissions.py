@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
-from app.services.auth_service import obtener_contexto_usuario
+from app.auth.service import obtener_contexto_usuario
 
 
 def require_roles(*roles_permitidos: str) -> Callable:

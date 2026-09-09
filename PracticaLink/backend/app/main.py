@@ -3,9 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.core.database import engine
-from app.api.routes.auth import router as auth_router
-from app.api.routes.practicas import router as practicas_router
+from app.auth.routes import router as auth_router
+from app.practicas.routes import router as practicas_router
 from app.api.routes.estudiantes import router as estudiantes_router
+from app.revisiones.routes import router as revisiones_router
+from app.api.routes.usuarios import router as usuarios_router
+from app.api.routes.empresas import router as empresas_router
 
 app = FastAPI(
     title="PracticaLink API",
@@ -27,6 +30,9 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(practicas_router)
 app.include_router(estudiantes_router)
+app.include_router(revisiones_router)
+app.include_router(usuarios_router)
+app.include_router(empresas_router)
 
 
 @app.get("/")

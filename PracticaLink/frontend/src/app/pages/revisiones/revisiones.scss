@@ -1,0 +1,97 @@
+.review-content { --background: #f4f6f9; }
+.review-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.heading-copy { max-width: 620px; }
+.module-label {
+  margin: 0;
+  color: var(--ion-color-primary);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.page-heading h1 {
+  margin: 6px 0 10px;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+.heading-subtitle {
+  margin: 0;
+  color: #667085;
+  line-height: 1.5;
+}
+.back-button { flex-shrink: 0; }
+.state-card, .request-card { margin: 0 0 16px; }
+.state-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 140px;
+  text-align: center;
+}
+.state-card-content p,
+.empty-state { margin: 0; color: #475467; font-weight: 500; }
+.state-card-error { --background: #fff5f5; }
+.state-card-error .error { margin: 0; color: #b42318; font-weight: 600; }
+.request-card ion-card-header { padding-bottom: 0; }
+.request-card ion-card-title {
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+.request-card ion-card-content { padding-top: 12px; }
+.request-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 4px 0 16px;
+}
+.request-meta p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.request-meta span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.request-meta strong {
+  display: block;
+  color: #101828;
+  font-size: .95rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.request-status strong {
+  color: var(--ion-color-primary);
+}
+.request-action {
+  margin-top: 8px;
+}
+
+@media (max-width: 720px) {
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .heading-copy {
+    max-width: none;
+  }
+
+  .request-meta {
+    grid-template-columns: 1fr;
+  }
+}
