@@ -1,0 +1,12 @@
+.detail-modal-content { --background: var(--cream-surface); }
+.detail-modal { padding: 24px; }
+.detail-modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.detail-modal-heading h2 { margin: 4px 0 0; color: var(--ink); }
+.modal-loading { display: grid; min-height: 220px; place-items: center; }
+.detail-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 20px; padding: 0; }
+.detail-list ion-item { --background: var(--cream-muted); --padding-start: 12px; --inner-padding-end: 12px; --min-height: 72px; border-radius: 10px; overflow: hidden; }
+.detail-list span, .detail-list strong { display: block; }
+.detail-list span { margin-bottom: 4px; color: var(--ink-muted); font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.detail-list strong { color: var(--ink); font-size: .9rem; line-height: 1.35; word-break: break-word; }
+.modal-error { padding: 12px; border-radius: 8px; background: #fbebe8; color: var(--form-error); }
+@media (max-width: 560px) { .detail-modal { padding: 20px; } .detail-list { grid-template-columns: 1fr; } }

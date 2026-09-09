@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
-  IonContent, IonSpinner
+  IonContent, IonSpinner, IonGrid, IonRow, IonCol
 } from '@ionic/angular';
 
 import { SolicitudRevisionResumen } from '../../core/models/revision.models';
@@ -13,7 +13,7 @@ import { RevisionService } from '../../core/services/revision.service';
   selector: 'app-revisiones',
   standalone: true,
   imports: [CommonModule, IonContent, IonCard, IonCardHeader, IonCardTitle,
-    IonCardContent, IonButton, IonSpinner],
+    IonCardContent, IonButton, IonSpinner, IonGrid, IonRow, IonCol],
   templateUrl: './revisiones.html',
   styleUrl: './revisiones.scss'
 })
