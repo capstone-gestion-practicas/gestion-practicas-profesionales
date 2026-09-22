@@ -21,6 +21,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:4200",
         "http://127.0.0.1:4200",
+        "http://localhost:8100",
+        "http://127.0.0.1:8100",
         "http://localhost",
         "https://localhost",
         "capacitor://localhost",
