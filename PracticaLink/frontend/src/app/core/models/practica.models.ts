@@ -24,6 +24,35 @@ export interface PracticaCreateResponse {
   mensaje: string;
 }
 
+export interface EstadoPracticaDetalle {
+  id_estado: number;
+  nombre: string;
+  es_final: boolean;
+}
+
+export interface CentroPracticaDetalle {
+  id_centro: number;
+  nombre: string;
+  rut_empresa: string | null;
+  direccion: string | null;
+  telefono: string | null;
+  correo: string | null;
+  contacto_nombre: string | null;
+  contacto_cargo: string | null;
+}
+
+export interface PracticaDetalleResponse {
+  id_practica: number;
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  centro_practica: CentroPracticaDetalle;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  horas: number | null;
+  cargo_funcion: string | null;
+  descripcion: string | null;
+}
+
 export interface EmpresaLookup {
   found: boolean;
   rut: string;
