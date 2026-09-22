@@ -22,6 +22,7 @@ import {
 
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -47,6 +48,8 @@ import { AuthStore } from '../../core/store/auth.store';
   styleUrl: './login.scss'
 })
 export class Login {
+  readonly appVersion = environment.appVersion;
+  readonly androidVersionCode = environment.androidVersionCode;
   modoRegistro = false;
   nombre = '';
   apellido = '';
