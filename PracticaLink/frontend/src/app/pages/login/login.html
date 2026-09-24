@@ -1,10 +1,25 @@
-<p>login works!</p>
 <ion-content class="login-content">
-  <div class="login-wrapper">
+  <ion-grid class="login-wrapper"><ion-row><ion-col size="12">
+
+    <main class="login-shell">
+      <section class="login-brand-panel" aria-label="PracticaLink">
+        <span class="brand-mark">PL</span>
+        <p class="brand-eyebrow">Plataforma académica</p>
+        <h1>Gestiona tu práctica con claridad.</h1>
+        <p class="brand-description">
+          Centraliza tus antecedentes, seguimientos y comunicaciones en un solo lugar.
+        </p>
+        <ul class="brand-benefits">
+          <li>Seguimiento de tu práctica</li>
+          <li>Información siempre disponible</li>
+          <li>Acceso según tu rol</li>
+        </ul>
+      </section>
 
     <ion-card class="login-card">
 
       <ion-card-header>
+        <p class="login-eyebrow">Bienvenido a</p>
         <ion-card-title>PracticaLink</ion-card-title>
       </ion-card-header>
 
@@ -23,6 +38,7 @@
             <ion-label position="stacked">Nombre</ion-label>
             <ion-input
               [(ngModel)]="nombre"
+              maxlength="100"
               autocomplete="given-name">
             </ion-input>
           </ion-item>
@@ -31,16 +47,23 @@
             <ion-label position="stacked">Apellido</ion-label>
             <ion-input
               [(ngModel)]="apellido"
+              maxlength="100"
               autocomplete="family-name">
             </ion-input>
           </ion-item>
 
         }
+
         <ion-item>
           <ion-label position="stacked">Correo</ion-label>
           <ion-input
             type="email"
             [(ngModel)]="correo"
+            maxlength="150"
+            inputmode="email"
+            autocapitalize="off"
+            spellcheck="false"
+            autocomplete="email"
             placeholder="correo@ejemplo.cl">
           </ion-input>
         </ion-item>
@@ -49,13 +72,33 @@
           <ion-label position="stacked">Contraseña</ion-label>
           <ion-input
             type="password"
-            [(ngModel)]="password">
+            [(ngModel)]="password"
+            maxlength="128"
+            [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
           </ion-input>
         </ion-item>
+
+        @if (modoRegistro) {
+          <ion-item>
+            <ion-label position="stacked">Confirmar contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="confirmarPassword"
+              maxlength="128"
+              autocomplete="new-password">
+            </ion-input>
+          </ion-item>
+        }
 
         @if (error) {
           <p class="error">
             {{ error }}
+          </p>
+        }
+
+        @if (mensaje) {
+          <p class="success">
+            {{ mensaje }}
           </p>
         }
 
@@ -68,14 +111,25 @@
           @if (cargando) {
             <ion-spinner name="crescent"></ion-spinner>
           } @else {
-            Iniciar sesión
+            {{ modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
           }
 
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="clear"
+          [disabled]="cargando"
+          (click)="alternarModo()">
+          {{ modoRegistro
+            ? 'Ya tengo una cuenta'
+            : 'Registrarme' }}
         </ion-button>
 
       </ion-card-content>
 
     </ion-card>
+    </main>
 
-  </div>
+  </ion-col></ion-row></ion-grid>
 </ion-content>

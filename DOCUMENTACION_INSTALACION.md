@@ -130,6 +130,14 @@ Actualmente el repositorio no incluye migraciones ni un script SQL para construi
 
 ## 5. Ejecutar el backend
 
+Para levantar backend y frontend en dos ventanas de PowerShell desde la raíz del repositorio:
+
+```powershell
+.\scripts\levantar.ps1
+```
+
+El script usa `PracticaLink/backend/.venv/Scripts/python.exe` si existe y ejecuta el frontend con `npm start`.
+
 Desde `PracticaLink/backend`, con el entorno virtual activo:
 
 ```powershell

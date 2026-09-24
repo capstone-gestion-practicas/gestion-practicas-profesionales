@@ -1,8 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import {
   IonButton,
@@ -11,9 +11,12 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonGrid,
   IonInput,
   IonItem,
   IonLabel,
+  IonCol,
+  IonRow,
   IonSpinner
 } from '@ionic/angular';
 
@@ -27,6 +30,9 @@ import { AuthStore } from '../../core/store/auth.store';
     CommonModule,
     FormsModule,
     IonContent,
+    IonGrid,
+    IonRow,
+    IonCol,
     IonCard,
     IonCardHeader,
     IonCardTitle,
@@ -70,6 +76,11 @@ export class Login {
     this.error = '';
     this.mensaje = '';
 
+    if (!this.correoValido(this.correo)) {
+      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
+
     if (this.password !== this.confirmarPassword) {
       this.error = 'Las contraseñas no coinciden.';
       return;
@@ -85,7 +96,7 @@ export class Login {
     this.authService.registrar({
       nombre: this.nombre,
       apellido: this.apellido,
-      correo: this.correo,
+      correo: this.normalizarCorreo(this.correo),
       password: this.password
     }).subscribe({
       next: () => {
@@ -108,10 +119,16 @@ export class Login {
 
   iniciarSesion(): void {
     this.error = '';
+    this.mensaje = '';
+
+    if (!this.correoValido(this.correo)) {
+      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
     this.cargando = true;
 
     this.authService.login({
-      correo: this.correo,
+      correo: this.normalizarCorreo(this.correo),
       password: this.password
     }).subscribe({
       next: (loginResponse) => {
@@ -137,5 +154,15 @@ export class Login {
         this.error = 'Correo o contraseña incorrectos.';
       }
     });
+  }
+
+  private correoValido(correo: string): boolean {
+    const limpio = correo.trim();
+    return limpio.length <= 150
+      && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(limpio);
+  }
+
+  private normalizarCorreo(correo: string): string {
+    return correo.trim().toLowerCase();
   }
 }
