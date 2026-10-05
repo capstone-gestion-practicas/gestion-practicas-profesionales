@@ -294,6 +294,7 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 .\scripts\practicalink-back-test.cmd
 .\scripts\practicalink-front-test.cmd
 ```
+
 4. Iniciar sesión con un usuario existente en la base de datos o crear una
    cuenta desde `Registrarme`. El registro solicita nombre, apellido, correo y
    contraseña; el perfil académico se completa después desde el Home.
@@ -381,6 +382,8 @@ npm start
 Estudiante: demo@practicalink.cl
 Administrador: demo.admin@practicalink.cl
 Contraseña para ambas cuentas: 123456.abc
+Gestor o coordinador: gestor.prueba@practicalink.cl
+Contraseña gestor: Prueba123!
 ```
 
 Usar únicamente para demostración y pruebas locales. Para comprobar el panel
