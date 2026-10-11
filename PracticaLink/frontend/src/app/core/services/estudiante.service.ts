@@ -9,7 +9,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class EstudianteService {
-  private readonly apiUrl = 'http://127.0.0.1:8000';
+  private readonly apiUrl = 'https://practicalink-api-qa.onrender.com';
 
   constructor(private readonly http: HttpClient) {}
 

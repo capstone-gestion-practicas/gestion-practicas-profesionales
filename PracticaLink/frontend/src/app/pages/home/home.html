@@ -1,5 +1,16 @@
 <ion-content class="home-content">
   <div class="home-wrapper">
+    <header class="brand-header" aria-label="PracticaLink">
+      <span class="brand-symbol" aria-hidden="true">⌁</span>
+      <span class="brand-name">PracticaLink</span>
+      <span class="brand-spacer"></span>
+      @if (contexto(); as ctx) {
+        <span class="account-summary">
+          <span class="account-avatar">{{ ctx.usuario.nombre[0] }}</span>
+          <span class="account-name">{{ ctx.usuario.nombre }}</span>
+        </span>
+      }
+    </header>
 
     @if (cargando) {
 
@@ -10,7 +21,7 @@
 
     } @else if (contexto(); as ctx) {
 
-      <ion-card>
+      <ion-card class="welcome-card">
         <ion-card-header>
           <ion-card-title>
             {{ saludo() }}
@@ -44,7 +55,7 @@
 
       @if (ctx.practica_actual) {
 
-        <ion-card>
+        <ion-card class="practice-card">
           <ion-card-header>
             <ion-card-title>Práctica actual</ion-card-title>
           </ion-card-header>
