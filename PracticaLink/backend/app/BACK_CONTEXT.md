@@ -220,8 +220,8 @@ Inventario actual:
 | `fn_revisar_practica` | `revisiones/service.py` | Resolver una solicitud y registrar su nuevo estado |
 | `fn_crear_usuario_admin` | `usuarios/service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
 | `fn_actualizar_usuario_admin` | `usuarios/service.py` | Actualizar datos, estado y roles de una cuenta |
-| `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |
-| `fn_guardar_empresa_cache` | `empresa_service.py` | Insertar o actualizar antecedentes tributarios por RUT |
+| `fn_obtener_empresa_cache` | `empresas/service.py` | Obtener antecedentes guardados y determinar su vigencia |
+| `fn_guardar_empresa_cache` | `empresas/service.py` | Insertar o actualizar antecedentes tributarios por RUT |
 
 Reglas obligatorias para nuevas inserciones:
 

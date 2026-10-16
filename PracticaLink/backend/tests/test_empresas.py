@@ -18,8 +18,8 @@ os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 from app.core.database import engine, get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.empresa import EmpresaLookupResponse  # noqa: E402
-from app.services.empresa_service import (  # noqa: E402
+from app.empresas.schemas import EmpresaLookupResponse  # noqa: E402
+from app.empresas.service import (  # noqa: E402
     EmpresaApiNoConfiguradaError, EmpresaApiNoDisponibleError,
     EmpresaNoEncontradaError, _consultar_api, consultar_empresa,
 )
@@ -69,7 +69,7 @@ class EmpresasAisladasTests(unittest.TestCase):
             self.addCleanup(barrera.stop)
             self.addCleanup(mock.assert_not_called)
         config_patch = patch(
-            "app.services.empresa_service.settings",
+            "app.empresas.service.settings",
             SimpleNamespace(
                 chile_rut_empresa_api_key="synthetic-key",
                 chile_rut_empresa_api_url="https://provider.example/api///",
@@ -77,7 +77,7 @@ class EmpresasAisladasTests(unittest.TestCase):
         )
         self.settings = config_patch.start()
         self.addCleanup(config_patch.stop)
-        http_patch = patch("app.services.empresa_service.httpx.get", return_value=respuesta())
+        http_patch = patch("app.empresas.service.httpx.get", return_value=respuesta())
         self.http_mock = http_patch.start()
         self.addCleanup(http_patch.stop)
 
