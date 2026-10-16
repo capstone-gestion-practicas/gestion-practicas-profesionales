@@ -16,10 +16,10 @@ os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 from app.core.database import engine, get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.usuario import (  # noqa: E402
+from app.usuarios.schemas import (  # noqa: E402
     UsuarioActualizarRequest, UsuarioCrearRequest,
 )
-from app.services.usuario_service import (  # noqa: E402
+from app.usuarios.service import (  # noqa: E402
     AutogestionNoPermitidaError, RolesInvalidosError, UsuarioDuplicadoError,
     UsuarioNoEncontradoError, actualizar_usuario, crear_usuario, listar_roles,
     listar_usuarios,
@@ -63,7 +63,7 @@ class UsuariosAisladosTests(unittest.TestCase):
         self.addCleanup(conexion_patch.stop)
         self.addCleanup(self.conexion_mock.assert_not_called)
         hash_patch = patch(
-            "app.services.usuario_service.hash_password", return_value="synthetic-hash"
+            "app.usuarios.service.hash_password", return_value="synthetic-hash"
         )
         self.hash_mock = hash_patch.start()
         self.addCleanup(hash_patch.stop)

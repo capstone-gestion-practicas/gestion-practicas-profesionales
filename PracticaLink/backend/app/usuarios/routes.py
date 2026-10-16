@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
-from app.schemas.usuario import (
+from app.usuarios.schemas import (
     OperacionUsuarioResponse, RolResponse, UsuarioActualizarRequest,
     UsuarioCrearRequest, UsuarioResponse,
 )
-from app.services.usuario_service import (
+from app.usuarios.service import (
     AutogestionNoPermitidaError, RolesInvalidosError, UsuarioDuplicadoError,
     UsuarioNoEncontradoError, actualizar_usuario, crear_usuario, listar_roles,
     listar_usuarios,

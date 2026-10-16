@@ -218,8 +218,8 @@ Inventario actual:
 | `fn_completar_perfil_estudiante` | `estudiantes/service.py` | Crear el perfil faltante de un estudiante |
 | `fn_registrar_practica` | `practica_service.py` | Crear centro, práctica e historial inicial |
 | `fn_revisar_practica` | `revisiones/service.py` | Resolver una solicitud y registrar su nuevo estado |
-| `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
-| `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
+| `fn_crear_usuario_admin` | `usuarios/service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
+| `fn_actualizar_usuario_admin` | `usuarios/service.py` | Actualizar datos, estado y roles de una cuenta |
 | `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |
 | `fn_guardar_empresa_cache` | `empresa_service.py` | Insertar o actualizar antecedentes tributarios por RUT |
 
@@ -361,6 +361,12 @@ El identificador del administrador proviene siempre del JWT. Las funciones
 vuelven a validar en PostgreSQL que la cuenta esté activa y posea el rol
 `ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
 quitarse su propio rol administrativo.
+
+El módulo se organiza en `usuarios/routes.py`, `usuarios/schemas.py` y
+`usuarios/service.py`. Deuda técnica conservada: el resultado SQL
+`ADMIN_NO_VALIDO` no tiene traducción explícita en el servicio; actualmente se
+ejecuta commit y la validación de la respuesta produce HTTP 500. Las pruebas de
+caracterización protegen este comportamiento hasta una corrección autorizada.
 
 ## Contexto del usuario
 
