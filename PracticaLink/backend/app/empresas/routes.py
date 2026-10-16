@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.permissions import require_roles
-from app.schemas.empresa import EmpresaLookupResponse
-from app.services.empresa_service import (
+from app.empresas.schemas import EmpresaLookupResponse
+from app.empresas.service import (
     EmpresaApiNoConfiguradaError,
     EmpresaApiNoDisponibleError,
     EmpresaNoEncontradaError,
