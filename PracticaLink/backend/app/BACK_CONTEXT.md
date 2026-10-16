@@ -215,7 +215,7 @@ Inventario actual:
 | --- | --- | --- |
 | `fn_registrar_usuario_estudiante` | `auth_service.py` | Crear la cuenta base con rol estudiante |
 | `fn_contexto_usuario` | `auth_service.py` | Obtener usuario, roles, perfil y práctica actual |
-| `fn_completar_perfil_estudiante` | `estudiante_service.py` | Crear el perfil faltante de un estudiante |
+| `fn_completar_perfil_estudiante` | `estudiantes/service.py` | Crear el perfil faltante de un estudiante |
 | `fn_registrar_practica` | `practica_service.py` | Crear centro, práctica e historial inicial |
 | `fn_revisar_practica` | `revisiones/service.py` | Resolver una solicitud y registrar su nuevo estado |
 | `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |

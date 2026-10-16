@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.estudiante import PerfilEstudianteCreate
+from app.estudiantes.schemas import PerfilEstudianteCreate
 
 
 class PerfilEstudianteExistenteError(Exception):
