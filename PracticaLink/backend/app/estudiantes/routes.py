@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
-from app.schemas.estudiante import (
+from app.estudiantes.schemas import (
     PerfilEstudianteCreate,
     PerfilEstudianteResponse,
 )
-from app.services.estudiante_service import (
+from app.estudiantes.service import (
     PerfilEstudianteExistenteError,
     RutEstudianteExistenteError,
     UsuarioEstudianteNoValidoError,

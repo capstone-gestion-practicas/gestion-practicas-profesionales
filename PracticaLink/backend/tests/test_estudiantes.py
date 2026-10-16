@@ -15,8 +15,8 @@ os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 from app.core.database import get_db  # noqa: E402
 from app.core.security import get_current_user_id  # noqa: E402
 from app.main import app  # noqa: E402
-from app.schemas.estudiante import PerfilEstudianteCreate  # noqa: E402
-from app.services.estudiante_service import (  # noqa: E402
+from app.estudiantes.schemas import PerfilEstudianteCreate  # noqa: E402
+from app.estudiantes.service import (  # noqa: E402
     PerfilEstudianteExistenteError,
     RutEstudianteExistenteError,
     UsuarioEstudianteNoValidoError,
