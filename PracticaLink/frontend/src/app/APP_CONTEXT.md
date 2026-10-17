@@ -218,9 +218,24 @@ sin reproducir entradas personales. El filtro y la paginación viven únicamente
 en el componente; no se guardan en almacenamiento ni en la navegación Angular.
 El parámetro rut solo se envía al backend cuando existe un filtro. Las consultas
 anteriores se cancelan al iniciar otra y al destruir el componente.
-No usa RevisionService ni ofrece detalle o acciones de revisión/cambio de estado.
+El listado no usa RevisionService ni ofrece acciones de revisión/cambio de estado.
 
 El listado indica discretamente si hay un filtro aplicado sin mostrar el RUT.
 Reintentar repite la consulta HTTP fallida con el filtro aplicado y el offset
 conservado, independientemente del texto editado en el buscador. Los errores
 locales de formato no ofrecen reintento HTTP.
+
+
+### Detalle general de gestión
+
+Ver antecedentes abre `/practicas/:id`, protegido por authGuard y roleGuard para
+GESTOR y ADMINISTRADOR. El componente standalone practica-detalle consume
+PracticaService.obtenerDetalle(id) y el contrato PracticaDetalleGestionResponse.
+No expone RUT, correo, teléfono ni contactos. Muestra estado actual/final,
+fechas, horas, cargo y descripción. No modifica el flujo de revisión EP03.
+
+Listado y detalle comparten core/utils/fechas.ts: timestamps en America/Santiago
+con horario de verano; fechas DATE por partes de calendario sin cambio de zona.
+Existen estados de carga, 404, acceso denegado 401/403 y error general con
+reintento. Se cancelan consultas anteriores al cambiar id o destruir la vista.
+Volver navega al listado completo sin restaurar filtro ni paginación.

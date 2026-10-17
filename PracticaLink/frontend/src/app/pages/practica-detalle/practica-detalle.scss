@@ -1,0 +1,11 @@
+.detail-wrapper { max-width: 1000px; margin: auto; padding: 24px 16px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.module-label { color: var(--ion-color-primary); font-weight: 600; }
+ion-card { margin: 16px 0; }
+h2 { font-size: 1.3rem; font-weight: 600; }
+dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+dt { font-weight: 600; } dd { margin: 4px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.full { grid-column: 1 / -1; }
+.loading { display: flex; align-items: center; gap: 12px; }
+[role='alert'] { color: var(--ion-color-danger); }
+@media (max-width: 600px) { dl { grid-template-columns: 1fr; } }

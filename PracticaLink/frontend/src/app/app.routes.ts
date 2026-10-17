@@ -55,6 +55,13 @@ export const routes: Routes = [
       import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
   },
   {
+    path: 'practicas/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practica-detalle/practica-detalle').then(m => m.PracticaDetalle)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

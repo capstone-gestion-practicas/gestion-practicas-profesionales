@@ -38,6 +38,10 @@
               <div><dt>Fecha de registro</dt><dd>{{ formatearFecha(practica.fecha_registro) }}</dd></div>
               <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
             </dl>
+            <ion-button expand="block" (click)="verAntecedentes(practica.id_practica)"
+              [attr.aria-label]="'Ver antecedentes de la práctica ' + practica.id_practica">
+              Ver antecedentes
+            </ion-button>
           </ion-card-content></ion-card>
         }
       }

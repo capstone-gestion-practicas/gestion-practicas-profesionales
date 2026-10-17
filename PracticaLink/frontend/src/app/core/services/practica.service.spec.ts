@@ -166,4 +166,18 @@ describe('PracticaService', () => {
     expect(request.request.params.get('offset')).toBe('100');
     request.flush({ items: [], limit: 50, offset: 100, hay_mas: false });
   });
+  it('obtains management detail using the selected identifier', () => {
+    const detalle = {
+      id_practica: 101, estudiante: { id_estudiante: 1, nombre: 'Estudiante sintético' },
+      centro_practica: { id_centro: 22, nombre: 'Centro sintético' },
+      fecha_registro: '2026-10-17T12:30:00Z', estado: { id_estado: 6, nombre: 'FINALIZADA', es_final: true },
+      fecha_ultimo_cambio_estado: null, fecha_inicio: null, fecha_termino: null,
+      horas: null, cargo_funcion: null, descripcion: null
+    };
+    service.obtenerDetalle('101').subscribe(respuesta => expect(respuesta).toEqual(detalle));
+    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas/101');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush(detalle);
+  });
 });

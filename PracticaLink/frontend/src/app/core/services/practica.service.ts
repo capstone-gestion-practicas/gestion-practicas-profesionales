@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import {
   PracticaDetalleResponse,
+  PracticaDetalleGestionResponse,
   PracticasListadoResponse,
   PracticaCreate,
   PracticaCreateResponse,
@@ -22,6 +23,12 @@ export class PracticaService {
       params = params.set('rut', rut);
     }
     return this.http.get<PracticasListadoResponse>(`${this.apiUrl}/practicas`, { params });
+  }
+
+  obtenerDetalle(idPractica: string): Observable<PracticaDetalleGestionResponse> {
+    return this.http.get<PracticaDetalleGestionResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}`
+    );
   }
 
   registrar(datos: PracticaCreate): Observable<PracticaCreateResponse> {

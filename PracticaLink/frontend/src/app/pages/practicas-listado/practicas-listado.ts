@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonButton, IonCard, IonCardContent, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { formatearFechaHoraChile } from '../../core/utils/fechas';
 
 import { PracticaResumen } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
@@ -97,14 +98,11 @@ export class PracticasListado implements OnInit, OnDestroy {
   }
 
   formatearFecha(fecha: string | null): string {
-    if (fecha === null) return 'Fecha no disponible';
-    const partes = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-    }).formatToParts(new Date(fecha));
-    const valor = (tipo: Intl.DateTimeFormatPartTypes): string =>
-      partes.find(parte => parte.type === tipo)?.value ?? '';
-    return `${valor('day')}/${valor('month')}/${valor('year')}, ${valor('hour')}:${valor('minute')}`;
+    return formatearFechaHoraChile(fecha);
+  }
+
+  verAntecedentes(idPractica: number): void {
+    this.router.navigate(['/practicas', idPractica]);
   }
 
   volver(): void { this.router.navigate(['/home']); }

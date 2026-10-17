@@ -97,3 +97,18 @@ export interface PracticasListadoResponse {
   offset: number;
   hay_mas: boolean;
 }
+
+
+export interface PracticaDetalleGestionResponse {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: { id_centro: number; nombre: string };
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  horas: number | null;
+  cargo_funcion: string | null;
+  descripcion: string | null;
+}

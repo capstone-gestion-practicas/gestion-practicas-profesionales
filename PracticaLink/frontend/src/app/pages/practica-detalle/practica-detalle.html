@@ -1,0 +1,35 @@
+<ion-content>
+  <main class="detail-wrapper">
+    <header>
+      <div><p class="module-label">EP04 · Consulta</p><h1>Antecedentes de práctica</h1></div>
+      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+    </header>
+    <section aria-live="polite" [attr.aria-busy]="cargando">
+      @if (cargando) {
+        <div class="loading"><ion-spinner></ion-spinner><p>Cargando práctica...</p></div>
+      } @else if (error) {
+        <p role="alert">{{ error }}</p>
+        @if (permiteReintentar) {
+          <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
+        }
+      } @else if (detalle; as p) {
+        <ion-card><ion-card-content>
+          <h2>Práctica {{ p.id_practica }}</h2>
+          <dl>
+            <div><dt>Estudiante</dt><dd>{{ p.estudiante.nombre }}</dd></div>
+            <div><dt>Centro de práctica</dt><dd>{{ p.centro_practica.nombre }}</dd></div>
+            <div><dt>Estado actual</dt><dd>{{ p.estado.nombre }}</dd></div>
+            <div><dt>Estado final</dt><dd>{{ p.estado.es_final ? 'Sí' : 'No' }}</dd></div>
+            <div><dt>Fecha de registro</dt><dd>{{ formatearFechaHora(p.fecha_registro) }}</dd></div>
+            <div><dt>Último cambio de estado</dt><dd>{{ formatearFechaHora(p.fecha_ultimo_cambio_estado) }}</dd></div>
+            <div><dt>Fecha de inicio</dt><dd>{{ formatearFecha(p.fecha_inicio) }}</dd></div>
+            <div><dt>Fecha de término</dt><dd>{{ formatearFecha(p.fecha_termino) }}</dd></div>
+            <div><dt>Horas registradas</dt><dd>{{ p.horas ?? 'No disponible' }}</dd></div>
+            <div><dt>Cargo o función</dt><dd>{{ p.cargo_funcion ?? 'No disponible' }}</dd></div>
+            <div class="full"><dt>Descripción</dt><dd>{{ p.descripcion ?? 'No disponible' }}</dd></div>
+          </dl>
+        </ion-card-content></ion-card>
+      }
+    </section>
+  </main>
+</ion-content>
