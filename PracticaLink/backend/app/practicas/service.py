@@ -1,7 +1,8 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 
-from app.practicas.schemas import PracticaCreate
+from app.practicas.schemas import PracticaCreate, IniciarPracticaRequest, IniciarPracticaResponse
 
 
 class PerfilEstudianteNoEncontradoError(Exception):
@@ -18,6 +19,44 @@ class EstadoInicialNoEncontradoError(Exception):
 
 class PracticaNoEncontradaError(Exception):
     pass
+
+
+class InicioPracticaError(Exception):
+    def __init__(self, codigo: str):
+        self.codigo = codigo
+
+
+def iniciar_practica(
+    db: Session, id_practica: int, id_usuario: int, datos: IniciarPracticaRequest,
+) -> IniciarPracticaResponse:
+    try:
+        resultado = db.execute(text("""
+            SELECT practicas_privadas.fn_iniciar_practica(
+                :id_practica, :id_usuario, :observacion
+            )
+        """), {
+            "id_practica": id_practica,
+            "id_usuario": id_usuario,
+            "observacion": datos.observacion,
+        }).scalar_one()
+        if isinstance(resultado, dict) and "error" in resultado:
+            raise InicioPracticaError(resultado["error"])
+        # Validar antes de confirmar: una respuesta inesperada nunca es éxito.
+        respuesta = IniciarPracticaResponse.model_validate({
+            **resultado, "mensaje": "La práctica se inició correctamente",
+        })
+        db.commit()
+        return respuesta
+    except Exception as error:
+        try:
+            db.rollback()
+        except SQLAlchemyError:
+            pass  # No sustituir el fallo original por un fallo de limpieza.
+        if isinstance(error, InicioPracticaError):
+            raise
+        if isinstance(error, DBAPIError) and error.connection_invalidated:
+            raise InicioPracticaError("CONEXION_NO_DISPONIBLE") from None
+        raise InicioPracticaError("FALLO_INESPERADO") from None
 
 
 def registrar_practica(

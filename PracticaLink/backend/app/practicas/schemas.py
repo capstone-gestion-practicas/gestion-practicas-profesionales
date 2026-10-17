@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.schemas.validators import normalizar_rut
 
@@ -153,3 +154,25 @@ class HistorialPracticaResponse(BaseModel):
     limit: int
     offset: int
     hay_mas: bool
+
+
+class IniciarPracticaRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    estado: Literal["EN_CURSO"]
+    observacion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("observacion", mode="before")
+    @classmethod
+    def normalizar_observacion(cls, valor):
+        # Mismo btrim de espacios que la función PostgreSQL versionada.
+        return (valor.strip(" ") or None) if isinstance(valor, str) else valor
+
+
+class IniciarPracticaResponse(BaseModel):
+    id_practica: int
+    estado_anterior: EstadoHistorial
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime
+    id_historial: int
+    mensaje: str

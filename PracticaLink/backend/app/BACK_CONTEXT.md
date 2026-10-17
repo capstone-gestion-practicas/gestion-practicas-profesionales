@@ -82,8 +82,25 @@ base y usuario distinto del principal. Solo admite los parámetros de URL
 `sslmode`, `sslrootcert` y `connect_timeout`; la conexión usa timeout de 10 segundos.
 La ausencia/configuración inválida o fallo de apertura devuelve HTTP 503 genérico,
 sin URLs ni credenciales. La sesión se cierra siempre y no se confirma automáticamente.
-Todavía no está integrada con endpoints. El login dedicado y sus privilegios reales
+Se utiliza en `PATCH /practicas/{id_practica}/estado`. El login dedicado y sus privilegios reales
 deben aprovisionarse y verificarse por separado; una URL distinta no acredita permisos.
+
+### Inicio de práctica (HU04.2)
+
+`PATCH /practicas/{id_practica}/estado` admite únicamente `estado: "EN_CURSO"`
+y `observacion` opcional (nula/vacía o hasta 500 caracteres después de quitar
+espacios en los extremos, igual que el SQL). Rechaza campos adicionales.
+GESTOR y ADMINISTRADOR se autorizan mediante el mecanismo existente, que consulta
+el contexto en la conexión principal. La escritura usa exclusivamente la sesión
+restringida y llama a `practicas_privadas.fn_iniciar_practica` con parámetros
+vinculados y el identificador autenticado; no ejecuta escrituras directas.
+El servicio valida el resultado antes del commit, hace rollback ante errores y
+no reintenta. La función aplica APROBADA → EN_CURSO y la segunda barrera de roles.
+La respuesta incluye práctica, estados anterior/nuevo, fecha, evento y mensaje.
+Errores de negocio: 403/404/409/422; catálogo inválido o fallo inesperado: 500;
+conexión restringida ausente o indisponible: 503. No se exponen errores SQL.
+La integración desde FastAPI con PostgreSQL y el despliegue siguen pendientes;
+las pruebas backend con mocks no acreditan privilegios ni atomicidad reales.
 
 ### Convención para inserciones
 

@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.inicio_practica_database import get_inicio_practica_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.practicas.schemas import (
@@ -12,6 +13,8 @@ from app.practicas.schemas import (
     PracticaDetalleGestionResponse,
     PracticasListadoResponse,
     HistorialPracticaResponse,
+    IniciarPracticaRequest,
+    IniciarPracticaResponse,
 )
 from app.practicas.service import (
     EstadoInicialNoEncontradoError,
@@ -23,11 +26,41 @@ from app.practicas.service import (
     obtener_practica_del_estudiante,
     obtener_detalle_practica,
     registrar_practica,
+    iniciar_practica,
+    InicioPracticaError,
 )
 from app.schemas.validators import normalizar_rut
 
 
 router = APIRouter(prefix="/practicas", tags=["Prácticas"])
+
+
+@router.patch(
+    "/{id_practica}/estado",
+    response_model=IniciarPracticaResponse,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def iniciar_estado_practica(
+    datos: IniciarPracticaRequest,
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_inicio_practica_db),
+):
+    try:
+        return iniciar_practica(db, id_practica, id_usuario, datos)
+    except InicioPracticaError as error:
+        errores = {
+            "USUARIO_NO_AUTORIZADO": (403, "No tiene permisos para iniciar la práctica"),
+            "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
+            "ESTADO_FINAL": (409, "La práctica está en un estado final"),
+            "TRANSICION_NO_PERMITIDA": (409, "La transición de estado no está permitida"),
+            "HISTORIAL_INCONSISTENTE": (409, "El historial de estados es inconsistente"),
+            "OBSERVACION_INVALIDA": (422, "La observación no es válida"),
+            "ESTADO_DESTINO_NO_VALIDO": (500, "El estado de destino no está configurado correctamente"),
+            "CONEXION_NO_DISPONIBLE": (503, "La conexión de inicio de práctica no está disponible"),
+        }
+        codigo, mensaje = errores.get(error.codigo, (500, "No se pudo iniciar la práctica"))
+        raise HTTPException(status_code=codigo, detail=mensaje) from None
 
 
 @router.post(
