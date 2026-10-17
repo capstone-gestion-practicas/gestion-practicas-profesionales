@@ -186,6 +186,45 @@ describe('Home', () => {
     expect(practicaService.obtenerMiPractica).not.toHaveBeenCalled();
   });
 
+  it('shows gestor review access without student registration or profile actions', () => {
+    authStore.setContexto({ ...contextoSinPractica, roles: ['GESTOR'] });
+    fixture.detectChanges();
+    const panel: HTMLElement = fixture.nativeElement.querySelector('.student-dashboard');
+    expect(panel.textContent).toContain('Solicitudes de práctica');
+    expect(panel.textContent).not.toContain('Registro de práctica profesional');
+    expect(panel.textContent).not.toContain('Completar mi perfil');
+    expect(panel.textContent).not.toContain('Ver práctica');
+    const reviewCard = panel.querySelector(':scope > ion-card');
+    expect(reviewCard?.textContent).toContain('Solicitudes de práctica');
+    const button = reviewCard?.querySelector('ion-button') as HTMLElement;
+    button.click();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/revisiones']);
+    expect(practicaService.obtenerMiPractica).not.toHaveBeenCalled();
+  });
+
+  it('uses all available columns when only the student sidebar is present', () => {
+    expect(fixture.nativeElement.querySelector('.student-dashboard.single-panel')).not.toBeNull();
+    authStore.setContexto(contextoConPractica);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.student-dashboard.single-panel')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.practice-card')).not.toBeNull();
+  });
+
+  it('preserves student registration for an account with student and gestor roles', () => {
+    authStore.setContexto({ ...contextoSinPractica, roles: ['ESTUDIANTE', 'GESTOR'] });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Registro de práctica profesional');
+    expect(fixture.nativeElement.textContent).toContain('Solicitudes de práctica');
+  });
+
+  it('keeps the administrator dashboard without student registration', () => {
+    authStore.setContexto({ ...contextoSinPractica, roles: ['ADMINISTRADOR'] });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.admin-dashboard')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.student-dashboard')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Registro de práctica profesional');
+  });
+
   it('loads and shows the full practice detail when the student has one', () => {
     authStore.setContexto(contextoConPractica);
     practicaService.obtenerMiPractica.and.returnValue(of(practicaDetalleCompleta));

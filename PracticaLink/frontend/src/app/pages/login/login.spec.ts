@@ -29,7 +29,7 @@ describe('Login', () => {
 
   it('does not register when passwords differ', () => {
     component.correo = 'usuario@practicalink.cl';
-    component.password = '123456.abc';
+    component.password = 'synthetic-login-test-only';
     component.confirmarPassword = 'otra-clave';
     component.registrarse();
     expect(component.error).toBe('Las contraseñas no coinciden.');
@@ -45,11 +45,11 @@ describe('Login', () => {
     component.nombre = 'Ana';
     component.apellido = 'Pérez';
     component.correo = 'ana@practicalink.cl';
-    component.password = '123456.abc';
-    component.confirmarPassword = '123456.abc';
+    component.password = 'synthetic-login-test-only';
+    component.confirmarPassword = 'synthetic-login-test-only';
     component.registrarse();
     expect(authService.registrar).toHaveBeenCalledWith({
-      nombre: 'Ana', apellido: 'Pérez', correo: 'ana@practicalink.cl', password: '123456.abc'
+      nombre: 'Ana', apellido: 'Pérez', correo: 'ana@practicalink.cl', password: 'synthetic-login-test-only'
     });
     expect(component.modoRegistro).toBeFalse();
   });

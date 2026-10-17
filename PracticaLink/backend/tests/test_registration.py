@@ -17,15 +17,15 @@ class RegisterUserTests(unittest.TestCase):
             "id_usuario": 10, "nombre": "Ana", "apellido": "Pérez",
             "correo": "ana@practicalink.cl", "rol": "ESTUDIANTE",
         }
-        result = registrar_usuario(db, " Ana ", " Pérez ", "ANA@PRACTICALINK.CL", "123456.abc")
+        result = registrar_usuario(db, " Ana ", " Pérez ", "ANA@PRACTICALINK.CL", "synthetic-registration-test-only")
         self.assertEqual(result["id_usuario"], 10)
-        hash_password.assert_called_once_with("123456.abc")
+        hash_password.assert_called_once_with("synthetic-registration-test-only")
         db.commit.assert_called_once_with()
 
     def test_rejects_an_existing_email(self) -> None:
         db = MagicMock()
         db.execute.return_value.scalar_one.return_value = {"error": "CORREO_EXISTENTE"}
-        result = registrar_usuario(db, "Ana", "Pérez", "ana@practicalink.cl", "123456.abc")
+        result = registrar_usuario(db, "Ana", "Pérez", "ana@practicalink.cl", "synthetic-registration-test-only")
         self.assertIsNone(result)
         db.rollback.assert_called_once_with()
 
@@ -33,7 +33,7 @@ class RegisterUserTests(unittest.TestCase):
         db = MagicMock()
         db.execute.return_value.scalar_one.return_value = {"error": "ROL_ESTUDIANTE_NO_CONFIGURADO"}
         with self.assertRaises(RuntimeError):
-            registrar_usuario(db, "Ana", "Pérez", "ana@practicalink.cl", "123456.abc")
+            registrar_usuario(db, "Ana", "Pérez", "ana@practicalink.cl", "synthetic-registration-test-only")
 
 
 if __name__ == "__main__":

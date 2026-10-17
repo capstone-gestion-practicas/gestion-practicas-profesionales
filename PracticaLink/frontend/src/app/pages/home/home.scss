@@ -1,5 +1,5 @@
 .home-content {
-  --background: var(--cream);
+  --background: var(--ion-background-color);
 }
 
 .home-wrapper {
@@ -35,11 +35,14 @@
 }
 
 .student-dashboard > ion-card {
+  grid-column: span 8;
+  min-width: 0;
   margin: 0;
 }
 
 .student-sidebar {
   grid-column: span 4;
+  min-width: 0;
   display: grid;
   gap: 16px;
   align-content: start;
@@ -49,9 +52,8 @@
   margin: 0;
 }
 
-.student-dashboard > .practice-card,
-.student-dashboard > .state-card {
-  grid-column: span 8;
+.student-dashboard.single-panel > .student-sidebar {
+  grid-column: 1 / -1;
 }
 
 .student-dashboard .welcome-card ion-card-content {
@@ -463,8 +465,8 @@ ion-card {
 .registration-details span {
   padding: 6px 10px;
   border-radius: 999px;
-  background: #e4efe5;
-  color: #245a45;
+  background: var(--cream-muted);
+  color: var(--ion-color-primary);
   font-size: 0.82rem;
 }
 
@@ -478,8 +480,8 @@ ion-card {
 .module-success {
   padding: 12px;
   border-radius: 8px;
-  background: #e4efe5;
-  color: #245a45;
+  background: #ecfdf5;
+  color: #047857;
   font-weight: 600;
 }
 
@@ -521,6 +523,17 @@ ion-modal {
   --border-radius: 14px;
 }
 
+@media (max-width: 960px) {
+  .student-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-sidebar,
+  .student-dashboard > ion-card {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 720px) {
   .admin-heading {
     align-items: flex-start;
@@ -534,16 +547,6 @@ ion-modal {
 
   .admin-heading-actions ion-button {
     flex: 1;
-  }
-
-  .student-dashboard {
-    grid-template-columns: 1fr;
-  }
-
-  .student-sidebar,
-  .student-dashboard > .practice-card,
-  .student-dashboard > .state-card {
-    grid-column: 1;
   }
 
   .identity-list,
