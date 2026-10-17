@@ -16,9 +16,21 @@ describe('PracticaService', () => {
   let service: PracticaService;
   let httpMock: HttpTestingController;
 
+  it('starts a practice with PATCH, exact body and no automatic retry', () => {
+    service.iniciar('15', { estado: 'EN_CURSO', observacion: null }).subscribe({
+      error: error => expect(error.status).toBe(503)
+    });
+    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas/15/estado');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ estado: 'EN_CURSO', observacion: null });
+    request.flush({}, { status: 503, statusText: 'Unavailable' });
+    httpMock.expectNone('http://127.0.0.1:8000/practicas/15/estado');
+  });
+
   const practicaDetalle: PracticaDetalleResponse = {
     id_practica: 101,
     fecha_registro: '2026-09-01T10:30:00',
+    fecha_ultimo_cambio_estado: null,
     estado: {
       id_estado: 1,
       nombre: 'REGISTRADA',
@@ -147,5 +159,53 @@ describe('PracticaService', () => {
     request.flush(empresa);
 
     expect(respuesta).toEqual(empresa);
+  });
+  it('lists practices with pagination and omits an absent RUT', () => {
+    service.listar(50, 0).subscribe();
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual(['limit', 'offset']);
+    expect(request.request.params.get('limit')).toBe('50');
+    expect(request.request.params.get('offset')).toBe('0');
+    request.flush({ items: [], limit: 50, offset: 0, hay_mas: false });
+  });
+
+  it('sends an exact RUT only as an HTTP query parameter', () => {
+    service.listar(50, 100, '12345678-5').subscribe();
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas');
+    expect(request.request.params.get('rut')).toBe('12345678-5');
+    expect(request.request.params.get('offset')).toBe('100');
+    request.flush({ items: [], limit: 50, offset: 100, hay_mas: false });
+  });
+  it('obtains management detail using the selected identifier', () => {
+    const detalle = {
+      id_practica: 101, estudiante: { id_estudiante: 1, nombre: 'Estudiante sintético' },
+      centro_practica: { id_centro: 22, nombre: 'Centro sintético' },
+      fecha_registro: '2026-10-17T12:30:00Z', estado: { id_estado: 6, nombre: 'FINALIZADA', es_final: true },
+      fecha_ultimo_cambio_estado: null, fecha_inicio: null, fecha_termino: null,
+      horas: null, cargo_funcion: null, descripcion: null
+    };
+    service.obtenerDetalle('101').subscribe(respuesta => expect(respuesta).toEqual(detalle));
+    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas/101');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush(detalle);
+  });
+  it('requests history with the selected identifier and default pagination', () => {
+    service.obtenerHistorial('15').subscribe(data => expect(data.items).toEqual([]));
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas/15/historial');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual(['limit', 'offset']);
+    expect(request.request.params.get('limit')).toBe('50');
+    expect(request.request.params.get('offset')).toBe('0');
+    request.flush({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false });
+  });
+
+  it('sends history pagination without changing detail requests', () => {
+    service.obtenerHistorial('15', 10, 20).subscribe();
+    const request = httpMock.expectOne(req => req.url.endsWith('/practicas/15/historial'));
+    expect(request.request.params.get('limit')).toBe('10');
+    expect(request.request.params.get('offset')).toBe('20');
+    request.flush({ id_practica: 15, items: [], limit: 10, offset: 20, hay_mas: false });
   });
 });

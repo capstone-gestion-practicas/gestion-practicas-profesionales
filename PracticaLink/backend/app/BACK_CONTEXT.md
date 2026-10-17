@@ -59,6 +59,8 @@ Ejecución local desde `PracticaLink/backend`:
 `core/config.py` carga las siguientes variables desde `PracticaLink/backend/.env`:
 
 - `SUPABASE_DATABASE_URL`
+- `INICIO_PRACTICA_DATABASE_URL` (opcional al iniciar la aplicación; obligatoria
+  al usar la conexión restringida de HU04.2)
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
@@ -72,6 +74,33 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 `core/database.py` crea el engine de SQLAlchemy y `SessionLocal`. La dependencia `get_db()` entrega una sesión por solicitud y garantiza su cierre.
 
 El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
+
+`core/inicio_practica_database.py` ofrece `get_inicio_practica_db()` para HU04.2.
+Su engine y fábrica de sesiones se inicializan al primer uso, de forma independiente
+y sin fallback a `SessionLocal`. Requiere una URL `postgresql+psycopg` con host,
+base y usuario distinto del principal. Solo admite los parámetros de URL
+`sslmode`, `sslrootcert` y `connect_timeout`; la conexión usa timeout de 10 segundos.
+La ausencia/configuración inválida o fallo de apertura devuelve HTTP 503 genérico,
+sin URLs ni credenciales. La sesión se cierra siempre y no se confirma automáticamente.
+Se utiliza en `PATCH /practicas/{id_practica}/estado`. El login dedicado y sus privilegios reales
+deben aprovisionarse y verificarse por separado; una URL distinta no acredita permisos.
+
+### Inicio de práctica (HU04.2)
+
+`PATCH /practicas/{id_practica}/estado` admite únicamente `estado: "EN_CURSO"`
+y `observacion` opcional (nula/vacía o hasta 500 caracteres después de quitar
+espacios en los extremos, igual que el SQL). Rechaza campos adicionales.
+GESTOR y ADMINISTRADOR se autorizan mediante el mecanismo existente, que consulta
+el contexto en la conexión principal. La escritura usa exclusivamente la sesión
+restringida y llama a `practicas_privadas.fn_iniciar_practica` con parámetros
+vinculados y el identificador autenticado; no ejecuta escrituras directas.
+El servicio valida el resultado antes del commit, hace rollback ante errores y
+no reintenta. La función aplica APROBADA → EN_CURSO y la segunda barrera de roles.
+La respuesta incluye práctica, estados anterior/nuevo, fecha, evento y mensaje.
+Errores de negocio: 403/404/409/422; catálogo inválido o fallo inesperado: 500;
+conexión restringida ausente o indisponible: 503. No se exponen errores SQL.
+La integración desde FastAPI con PostgreSQL y el despliegue siguen pendientes;
+las pruebas backend con mocks no acreditan privilegios ni atomicidad reales.
 
 ### Convención para inserciones
 
@@ -454,3 +483,99 @@ Las pruebas actuales validan permisos concedidos y denegados, normalización de 
 - No existe revocación ni lista de tokens invalidados.
 - CORS está configurado solamente para el frontend local.
 - La lógica actual cubre autenticación y consulta de contexto; los demás módulos del dominio aún deben implementarse.
+
+### Fecha del último cambio de estado (HU04.1)
+
+`GET /practicas/me` incluye `fecha_ultimo_cambio_estado`: fecha ISO 8601 o
+`null` si no existe historial. La lectura obtiene el último evento de la práctica
+propia por `fecha_cambio DESC, id_historial DESC`, sin usar `fecha_actualizacion`.
+El frontend presenta `dd/MM/yyyy, HH:mm` en la zona `America/Santiago`,
+respetando el horario de verano, y muestra «Fecha no disponible» para `null`.
+El valor ISO de la API permanece sin cambios. No modifica `/auth/context` ni las transiciones de estados.
+
+
+### EP04 / HU04.1: listado general de prácticas
+
+`GET /practicas` permite a GESTOR y ADMINISTRADOR consultar prácticas de
+cualquier estado, incluidas las históricas y finales. No modifica EP03 ni
+`GET /practicas/me`.
+
+Parámetros: `rut` opcional, `limit` (1–100, por defecto 50) y `offset`
+(>= 0, por defecto 0). El RUT debe tener 7–8 dígitos, guion y verificador
+numérico o K/k, sin puntos. Se reutiliza `normalizar_rut` para validar módulo 11
+y convertir al formato con puntos y K mayúscula que guarda el alta de estudiantes.
+La comparación parametrizada `e.rut = :rut` conserva la columna sin funciones
+para permitir el índice único. No se verificaron formatos de datos cargados por
+fuera del alta actual ni los datos de Supabase.
+
+La respuesta contiene `items`, `limit`, `offset` y `hay_mas`. Cada item incluye
+`id_practica`, `estudiante` (`id_estudiante`, `nombre`), `centro_practica` (nombre),
+`fecha_registro`, `estado` (`id_estado`, `nombre`, `es_final`) y
+`fecha_ultimo_cambio_estado` (ISO 8601 o null). No expone RUT ni correo.
+
+La consulta ordena por `fecha_registro DESC, id_practica DESC`, solicita una fila
+extra y obtiene la última fecha de historial mediante una subconsulta ordenada
+por `fecha_cambio DESC, id_historial DESC`. No hace consultas por item desde
+Python ni escrituras. Un filtro válido sin coincidencias devuelve 200 y lista
+vacía; formato, verificador o paginación inválidos devuelven 422.
+
+El endpoint no registra el RUT. Antes del despliegue debe verificarse que los
+logs de acceso, proxy y observabilidad omitan o redacten el parámetro `rut`:
+la URL contiene el dato por el contrato GET aprobado. La paginación offset puede
+desplazarse ante inserciones concurrentes; no garantiza una instantánea entre
+peticiones. Las pruebas con mocks no acreditan rendimiento o ejecución SQL real.
+
+
+### EP04 / HU04.1: detalle general de gestión
+
+`GET /practicas/{id_practica}` permite consultar una práctica seleccionada en
+cualquier estado, incluidas históricas y finales, a GESTOR y ADMINISTRADOR.
+La ruta dinámica se registra después de `/practicas/me`, cuyo contrato no cambia.
+Usa `PracticaDetalleGestionResponse`, independiente del detalle del estudiante.
+
+La respuesta contiene id_practica, estudiante (id_estudiante y nombre),
+centro_practica (id_centro y nombre), fecha_registro, estado (id_estado, nombre y
+es_final), fecha_ultimo_cambio_estado y los antecedentes nullable fecha_inicio,
+fecha_termino, horas, cargo_funcion y descripcion. No incorpora RUT, correo,
+teléfono ni contactos. Fechas y timestamps conservan serialización ISO 8601.
+
+El identificador debe estar entre 1 y 9223372036854775807; valores inválidos
+producen 422. Un usuario autenticado sin rol permitido recibe 403 antes de la
+consulta de datos. Una práctica inexistente devuelve 404 con detalle
+"La práctica no existe". Se conserva la autenticación existente.
+
+El servicio ejecuta un SELECT parametrizado por id_practica, lee el estado de
+practica.id_estado_actual y obtiene la fecha de historial ordenando por
+fecha_cambio DESC, id_historial DESC; sin historial devuelve null. No escribe,
+no corrige inconsistencias ni invoca funciones SQL de escritura. Las pruebas
+con mocks no validan la ejecución SQL ni la consistencia de datos reales.
+
+
+### EP04 / HU04.3: historial de estados para gestión
+
+`GET /practicas/{id_practica}/historial` permite lectura a GESTOR y ADMINISTRADOR;
+ESTUDIANTE recibe 403. No cambia permisos ni contratos de otros endpoints.
+El identificador debe estar entre 1 y 9223372036854775807. Acepta limit de 1 a
+100 (50 predeterminado), y offset >= 0 (0 predeterminado). Entradas inválidas:
+422. Práctica inexistente: 404, "La práctica no existe". Práctica existente sin
+eventos: 200 con items vacío. La autenticación conserva el comportamiento actual.
+
+HistorialPracticaResponse contiene id_practica, items, limit, offset y hay_mas.
+Cada evento incluye id_historial, estado_anterior nullable y estado_nuevo
+(id_estado, nombre), fecha_cambio ISO 8601, responsable (id_usuario, nombre)
+y observacion nullable. No añade RUT, correo, teléfono ni roles del responsable.
+Las observaciones se devuelven tal como están registradas, sin fabricar textos.
+
+El servicio hace dos SELECT parametrizados: existencia de la práctica y eventos.
+LAG(id_estado) se calcula sobre todos los eventos de la práctica en una CTE,
+ordenados por fecha_cambio ASC, id_historial ASC, antes de paginar con limit + 1.
+El primer evento disponible tiene estado_anterior null; no se interpreta como
+registro inicial ni se infieren eventos faltantes. Se preservan estados repetidos.
+Se muestran nombres actuales del catálogo y del usuario, incluso si están inactivos.
+
+La consulta no escribe ni corrige discrepancias con el estado actual. Los mocks
+no acreditan ejecución SQL real, integridad o rendimiento de PostgreSQL. No se
+verificaron datos reales ni índices. La comprobación de existencia y la lectura
+del historial son dos sentencias: no garantizan una instantánea conjunta bajo
+el aislamiento predeterminado si hay cambios concurrentes. Las observaciones
+pueden contener información sensible preexistente; no deben registrarse en logs.

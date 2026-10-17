@@ -1,0 +1,13 @@
+.practicas-wrapper { max-width: 1000px; margin: auto; padding: 24px 16px; }
+header, .controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.module-label { color: var(--ion-color-primary); font-weight: 600; }
+form { margin: 24px 0; padding: 16px; border: 1px solid var(--ion-color-medium); border-radius: 12px; }
+label { display: block; margin-bottom: 8px; font-weight: 600; }
+input { width: 100%; max-width: 360px; padding: 12px; color: inherit; background: transparent; border: 1px solid var(--ion-color-medium); border-radius: 8px; }
+ion-card { margin: 16px 0; }
+h2 { font-size: 1.2rem; font-weight: 600; }
+dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+dt { font-weight: 600; } dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.loading { display: flex; align-items: center; gap: 12px; }
+[role='alert'] { color: var(--ion-color-danger); }
+@media (max-width: 600px) { dl { grid-template-columns: 1fr; } .controls { justify-content: center; } }

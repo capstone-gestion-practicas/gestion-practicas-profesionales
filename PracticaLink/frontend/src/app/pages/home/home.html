@@ -25,6 +25,12 @@
 
     } @else if (contexto(); as ctx) {
 
+      @if (puedeRevisarPracticas()) {
+        <ion-button class="practicas-access" expand="block" (click)="consultarPracticas()">
+          Consultar prácticas
+        </ion-button>
+      }
+
       @if (esAdministrador()) {
         <section class="admin-dashboard" aria-label="Dashboard administrativo">
           <div class="admin-heading">
@@ -83,7 +89,7 @@
                           <ion-item button detail="true" (click)="abrirDetalleSolicitud(solicitud.id_practica)">
                             <ion-label>
                               <h3>{{ solicitud.estudiante }}</h3>
-                              <p>{{ solicitud.centro_practica }} · {{ solicitud.fecha_registro }}</p>
+                              <p>{{ solicitud.centro_practica }} · {{ formatearFechaUltimoCambio(solicitud.fecha_registro) }}</p>
                             </ion-label>
                             <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
                           </ion-item>
@@ -188,6 +194,7 @@
               <div class="status-pill">
                 <strong>{{ practicaDetalle.estado.nombre }}</strong>
                 <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
+                <span>Último cambio de estado: {{ formatearFechaUltimoCambio(practicaDetalle.fecha_ultimo_cambio_estado) }}</span>
               </div>
             </div>
 
@@ -447,7 +454,7 @@
                 <ion-label>
                   <h3>{{ solicitud.estudiante }}</h3>
                   <p>{{ solicitud.centro_practica }}</p>
-                  <p>Registrada: {{ solicitud.fecha_registro }}</p>
+                  <p>Registrada: {{ formatearFechaUltimoCambio(solicitud.fecha_registro) }}</p>
                 </ion-label>
                 <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
               </ion-item>

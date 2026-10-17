@@ -1,0 +1,55 @@
+<ion-content>
+  <main class="practicas-wrapper">
+    <header>
+      <div><p class="module-label">EP04 · Consulta</p><h1>Prácticas profesionales</h1></div>
+      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+    </header>
+    <p>Consulta prácticas de todos los estados, incluidas las finalizadas.</p>
+    <form (ngSubmit)="buscar()" autocomplete="off">
+      <label for="rut-busqueda">RUT del estudiante</label>
+      <input id="rut-busqueda" name="rutBusqueda" type="text" [(ngModel)]="rutBusqueda"
+        autocomplete="off" spellcheck="false" aria-describedby="rut-ayuda" />
+      <p id="rut-ayuda">Sin puntos, con guion y dígito verificador.</p>
+      <div class="controls">
+        <ion-button type="submit">Buscar</ion-button>
+        <ion-button type="button" fill="outline" (click)="limpiar()">Limpiar filtro</ion-button>
+      </div>
+    </form>
+    @if (filtroAplicado) {
+      <p class="module-label" role="status">Filtro por estudiante aplicado</p>
+    }
+    <section aria-label="Resultados" aria-live="polite" [attr.aria-busy]="cargando">
+      @if (cargando) {
+        <div class="loading"><ion-spinner></ion-spinner><p>Cargando prácticas...</p></div>
+      } @else if (error) {
+        <p role="alert">{{ error }}</p>
+        @if (errorConsulta) {
+          <ion-button fill="outline" (click)="reintentar()">Reintentar</ion-button>
+        }
+      } @else if (items.length === 0) {
+        <p>No se encontraron prácticas.</p>
+      } @else {
+        @for (practica of items; track practica.id_practica) {
+          <ion-card><ion-card-content>
+            <h2>{{ practica.estudiante.nombre }}</h2>
+            <dl>
+              <div><dt>Centro de práctica</dt><dd>{{ practica.centro_practica }}</dd></div>
+              <div><dt>Estado</dt><dd>{{ practica.estado.nombre }}</dd></div>
+              <div><dt>Fecha de registro</dt><dd>{{ formatearFecha(practica.fecha_registro) }}</dd></div>
+              <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
+            </dl>
+            <ion-button expand="block" (click)="verAntecedentes(practica.id_practica)"
+              [attr.aria-label]="'Ver antecedentes de la práctica ' + practica.id_practica">
+              Ver antecedentes
+            </ion-button>
+          </ion-card-content></ion-card>
+        }
+      }
+    </section>
+    <nav class="controls" aria-label="Paginación">
+      <ion-button fill="outline" [disabled]="cargando || offset === 0" (click)="anterior()">Anterior</ion-button>
+      <span>Página {{ offset / limit + 1 }}</span>
+      <ion-button fill="outline" [disabled]="cargando || !hayMas" (click)="siguiente()">Siguiente</ion-button>
+    </nav>
+  </main>
+</ion-content>
