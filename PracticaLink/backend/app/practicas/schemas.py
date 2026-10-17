@@ -107,3 +107,22 @@ class PracticasListadoResponse(BaseModel):
     limit: int
     offset: int
     hay_mas: bool
+
+
+class CentroPracticaResumen(BaseModel):
+    id_centro: int
+    nombre: str
+
+
+class PracticaDetalleGestionResponse(BaseModel):
+    id_practica: int
+    estudiante: EstudiantePracticaResumen
+    centro_practica: CentroPracticaResumen
+    fecha_registro: datetime
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime | None
+    fecha_inicio: date | None
+    fecha_termino: date | None
+    horas: int | None
+    cargo_funcion: str | None
+    descripcion: str | None

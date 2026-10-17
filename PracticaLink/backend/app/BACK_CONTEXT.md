@@ -495,3 +495,28 @@ logs de acceso, proxy y observabilidad omitan o redacten el parámetro `rut`:
 la URL contiene el dato por el contrato GET aprobado. La paginación offset puede
 desplazarse ante inserciones concurrentes; no garantiza una instantánea entre
 peticiones. Las pruebas con mocks no acreditan rendimiento o ejecución SQL real.
+
+
+### EP04 / HU04.1: detalle general de gestión
+
+`GET /practicas/{id_practica}` permite consultar una práctica seleccionada en
+cualquier estado, incluidas históricas y finales, a GESTOR y ADMINISTRADOR.
+La ruta dinámica se registra después de `/practicas/me`, cuyo contrato no cambia.
+Usa `PracticaDetalleGestionResponse`, independiente del detalle del estudiante.
+
+La respuesta contiene id_practica, estudiante (id_estudiante y nombre),
+centro_practica (id_centro y nombre), fecha_registro, estado (id_estado, nombre y
+es_final), fecha_ultimo_cambio_estado y los antecedentes nullable fecha_inicio,
+fecha_termino, horas, cargo_funcion y descripcion. No incorpora RUT, correo,
+teléfono ni contactos. Fechas y timestamps conservan serialización ISO 8601.
+
+El identificador debe estar entre 1 y 9223372036854775807; valores inválidos
+producen 422. Un usuario autenticado sin rol permitido recibe 403 antes de la
+consulta de datos. Una práctica inexistente devuelve 404 con detalle
+"La práctica no existe". Se conserva la autenticación existente.
+
+El servicio ejecuta un SELECT parametrizado por id_practica, lee el estado de
+practica.id_estado_actual y obtiene la fecha de historial ordenando por
+fecha_cambio DESC, id_historial DESC; sin historial devuelve null. No escribe,
+no corrige inconsistencias ni invoca funciones SQL de escritura. Las pruebas
+con mocks no validan la ejecución SQL ni la consistencia de datos reales.

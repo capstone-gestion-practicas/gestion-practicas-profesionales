@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,7 @@ from app.practicas.schemas import (
     PracticaCreate,
     PracticaCreateResponse,
     PracticaDetalleResponse,
+    PracticaDetalleGestionResponse,
     PracticasListadoResponse,
 )
 from app.practicas.service import (
@@ -18,6 +19,7 @@ from app.practicas.service import (
     PracticaNoEncontradaError,
     listar_practicas,
     obtener_practica_del_estudiante,
+    obtener_detalle_practica,
     registrar_practica,
 )
 from app.schemas.validators import normalizar_rut
@@ -108,3 +110,21 @@ def consultar_practicas(
                 detail="El RUT no es válido",
             ) from error
     return listar_practicas(db, rut=rut, limit=limit, offset=offset)
+
+
+@router.get(
+    "/{id_practica}",
+    response_model=PracticaDetalleGestionResponse,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def consultar_detalle_practica(
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    db: Session = Depends(get_db),
+):
+    practica = obtener_detalle_practica(db, id_practica)
+    if practica is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La práctica no existe",
+        )
+    return practica
