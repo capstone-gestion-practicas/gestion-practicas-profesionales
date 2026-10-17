@@ -126,3 +126,30 @@ class PracticaDetalleGestionResponse(BaseModel):
     horas: int | None
     cargo_funcion: str | None
     descripcion: str | None
+
+
+class EstadoHistorial(BaseModel):
+    id_estado: int
+    nombre: str
+
+
+class ResponsableHistorial(BaseModel):
+    id_usuario: int
+    nombre: str
+
+
+class EventoHistorial(BaseModel):
+    id_historial: int
+    estado_anterior: EstadoHistorial | None
+    estado_nuevo: EstadoHistorial
+    fecha_cambio: datetime
+    responsable: ResponsableHistorial
+    observacion: str | None
+
+
+class HistorialPracticaResponse(BaseModel):
+    id_practica: int
+    items: list[EventoHistorial]
+    limit: int
+    offset: int
+    hay_mas: bool

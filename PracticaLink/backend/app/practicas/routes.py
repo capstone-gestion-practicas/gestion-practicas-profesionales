@@ -11,6 +11,7 @@ from app.practicas.schemas import (
     PracticaDetalleResponse,
     PracticaDetalleGestionResponse,
     PracticasListadoResponse,
+    HistorialPracticaResponse,
 )
 from app.practicas.service import (
     EstadoInicialNoEncontradoError,
@@ -18,6 +19,7 @@ from app.practicas.service import (
     PracticaActivaError,
     PracticaNoEncontradaError,
     listar_practicas,
+    obtener_historial_practica,
     obtener_practica_del_estudiante,
     obtener_detalle_practica,
     registrar_practica,
@@ -110,6 +112,26 @@ def consultar_practicas(
                 detail="El RUT no es válido",
             ) from error
     return listar_practicas(db, rut=rut, limit=limit, offset=offset)
+
+
+@router.get(
+    "/{id_practica}/historial",
+    response_model=HistorialPracticaResponse,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def consultar_historial_practica(
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    historial = obtener_historial_practica(db, id_practica, limit=limit, offset=offset)
+    if historial is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La práctica no existe",
+        )
+    return historial
 
 
 @router.get(

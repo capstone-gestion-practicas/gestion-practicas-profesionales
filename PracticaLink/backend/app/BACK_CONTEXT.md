@@ -520,3 +520,33 @@ practica.id_estado_actual y obtiene la fecha de historial ordenando por
 fecha_cambio DESC, id_historial DESC; sin historial devuelve null. No escribe,
 no corrige inconsistencias ni invoca funciones SQL de escritura. Las pruebas
 con mocks no validan la ejecución SQL ni la consistencia de datos reales.
+
+
+### EP04 / HU04.3: historial de estados para gestión
+
+`GET /practicas/{id_practica}/historial` permite lectura a GESTOR y ADMINISTRADOR;
+ESTUDIANTE recibe 403. No cambia permisos ni contratos de otros endpoints.
+El identificador debe estar entre 1 y 9223372036854775807. Acepta limit de 1 a
+100 (50 predeterminado), y offset >= 0 (0 predeterminado). Entradas inválidas:
+422. Práctica inexistente: 404, "La práctica no existe". Práctica existente sin
+eventos: 200 con items vacío. La autenticación conserva el comportamiento actual.
+
+HistorialPracticaResponse contiene id_practica, items, limit, offset y hay_mas.
+Cada evento incluye id_historial, estado_anterior nullable y estado_nuevo
+(id_estado, nombre), fecha_cambio ISO 8601, responsable (id_usuario, nombre)
+y observacion nullable. No añade RUT, correo, teléfono ni roles del responsable.
+Las observaciones se devuelven tal como están registradas, sin fabricar textos.
+
+El servicio hace dos SELECT parametrizados: existencia de la práctica y eventos.
+LAG(id_estado) se calcula sobre todos los eventos de la práctica en una CTE,
+ordenados por fecha_cambio ASC, id_historial ASC, antes de paginar con limit + 1.
+El primer evento disponible tiene estado_anterior null; no se interpreta como
+registro inicial ni se infieren eventos faltantes. Se preservan estados repetidos.
+Se muestran nombres actuales del catálogo y del usuario, incluso si están inactivos.
+
+La consulta no escribe ni corrige discrepancias con el estado actual. Los mocks
+no acreditan ejecución SQL real, integridad o rendimiento de PostgreSQL. No se
+verificaron datos reales ni índices. La comprobación de existencia y la lectura
+del historial son dos sentencias: no garantizan una instantánea conjunta bajo
+el aislamiento predeterminado si hay cambios concurrentes. Las observaciones
+pueden contener información sensible preexistente; no deben registrarse en logs.

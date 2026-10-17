@@ -241,3 +241,68 @@ def obtener_detalle_practica(db: Session, id_practica: int) -> dict | None:
         "cargo_funcion": practica["cargo_funcion"],
         "descripcion": practica["descripcion"],
     }
+
+
+def obtener_historial_practica(
+    db: Session,
+    id_practica: int,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict | None:
+    existe = db.execute(text("""
+        SELECT p.id_practica
+        FROM practica p
+        WHERE p.id_practica = :id_practica
+    """), {"id_practica": id_practica}).mappings().first()
+    if existe is None:
+        return None
+
+    filas = db.execute(text("""
+        WITH secuencia AS (
+            SELECT h.id_historial, h.id_estado, h.id_usuario,
+                   h.fecha_cambio, h.observacion,
+                   LAG(h.id_estado) OVER (
+                       PARTITION BY h.id_practica
+                       ORDER BY h.fecha_cambio ASC, h.id_historial ASC
+                   ) AS id_estado_anterior
+            FROM historial_estado h
+            WHERE h.id_practica = :id_practica
+        )
+        SELECT s.id_historial, s.fecha_cambio, s.observacion,
+               s.id_estado_anterior, anterior.nombre AS estado_anterior_nombre,
+               s.id_estado, nuevo.nombre AS estado_nuevo_nombre,
+               u.id_usuario, CONCAT(u.nombre, ' ', u.apellido) AS responsable_nombre
+        FROM secuencia s
+        JOIN estado_practica nuevo ON nuevo.id_estado = s.id_estado
+        LEFT JOIN estado_practica anterior ON anterior.id_estado = s.id_estado_anterior
+        JOIN usuario u ON u.id_usuario = s.id_usuario
+        ORDER BY s.fecha_cambio ASC, s.id_historial ASC
+        LIMIT :limit OFFSET :offset
+    """), {"id_practica": id_practica, "limit": limit + 1, "offset": offset}).mappings().all()
+
+    return {
+        "id_practica": id_practica,
+        "items": [
+            {
+                "id_historial": fila["id_historial"],
+                "estado_anterior": None if fila["id_estado_anterior"] is None else {
+                    "id_estado": fila["id_estado_anterior"],
+                    "nombre": fila["estado_anterior_nombre"],
+                },
+                "estado_nuevo": {
+                    "id_estado": fila["id_estado"],
+                    "nombre": fila["estado_nuevo_nombre"],
+                },
+                "fecha_cambio": fila["fecha_cambio"],
+                "responsable": {
+                    "id_usuario": fila["id_usuario"],
+                    "nombre": fila["responsable_nombre"],
+                },
+                "observacion": fila["observacion"],
+            }
+            for fila in filas[:limit]
+        ],
+        "limit": limit,
+        "offset": offset,
+        "hay_mas": len(filas) > limit,
+    }
