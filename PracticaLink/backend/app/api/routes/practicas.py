@@ -15,9 +15,11 @@ from app.schemas.practica import (
     PracticaCreateResponse,
     PracticaDetalleResponse,
     PracticaEstadoResumen,
+    ResponderObservacionPracticaRequest,
 )
 from app.services.estado_practica_service import (
     EstadoPracticaNoDisponibleError,
+    PracticaNoObservadaError,
     PracticaEstadoNoEncontradaError,
     actualizar_estado_practica,
     listar_estados_activos,
@@ -25,6 +27,7 @@ from app.services.estado_practica_service import (
     obtener_estado_actual,
     obtener_historial_estados,
     obtener_practica_estudiante,
+    responder_observacion_practica,
 )
 from app.services.practica_service import (
     EstadoInicialNoEncontradoError,
@@ -35,6 +38,38 @@ from app.services.practica_service import (
 
 
 router = APIRouter(prefix="/practicas", tags=["Prácticas"])
+
+
+@router.patch(
+    "/{id_practica}/respuesta-observacion",
+    response_model=ActualizarEstadoPracticaResponse,
+    dependencies=[Depends(require_roles("ESTUDIANTE"))],
+)
+def responder_observacion(
+    id_practica: int,
+    datos: ResponderObservacionPracticaRequest,
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        return responder_observacion_practica(
+            db, id_practica, id_usuario, datos.respuesta
+        )
+    except PracticaEstadoNoEncontradaError as error:
+        db.rollback()
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "La práctica no existe") from error
+    except PracticaNoObservadaError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Solo puedes responder cuando la práctica está observada",
+        ) from error
+    except EstadoPracticaNoDisponibleError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "No está configurado el estado EN_REVISION",
+        ) from error
 
 
 @router.get(

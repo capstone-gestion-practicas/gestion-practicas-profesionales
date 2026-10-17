@@ -62,4 +62,11 @@ export class PracticaService {
       { id_estado: idEstado, observacion }
     );
   }
+
+  responderObservacion(idPractica: number, respuesta: string): Observable<ActualizarEstadoPracticaResponse> {
+    return this.http.patch<ActualizarEstadoPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/respuesta-observacion`,
+      { respuesta }
+    );
+  }
 }

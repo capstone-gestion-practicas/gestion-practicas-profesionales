@@ -22,6 +22,7 @@ import {
   IonCol,
   IonRow,
   IonSpinner,
+  IonTextarea,
   ModalController
 } from '@ionic/angular';
 
@@ -67,7 +68,8 @@ import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
     IonList,
     IonModal,
     IonNote,
-    IonSpinner
+    IonSpinner,
+    IonTextarea
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss'
@@ -123,6 +125,10 @@ export class Home implements OnInit {
   historialEstados: HistorialEstadoPractica[] = [];
   cargandoHistorialEstados = false;
   errorHistorialEstados = '';
+  respuestaObservacion = '';
+  enviandoRespuestaObservacion = false;
+  errorRespuestaObservacion = '';
+  mensajeRespuestaObservacion = '';
   modalPerfilAbierto = false;
   guardandoPerfil = false;
   errorPerfil = '';
@@ -231,6 +237,12 @@ export class Home implements OnInit {
       cssClass: 'requests-modal'
     });
     await modal.present();
+    const { data } = await modal.onDidDismiss<{ irARevisiones?: boolean; idPractica?: number }>();
+    if (data?.idPractica) {
+      await this.router.navigate(['/revisiones', data.idPractica]);
+    } else if (data?.irARevisiones) {
+      await this.router.navigate(['/revisiones']);
+    }
   }
 
   async abrirDetalleSolicitud(idPractica: number): Promise<void> {
@@ -457,6 +469,42 @@ export class Home implements OnInit {
         this.historialEstados = [];
         this.errorHistorialEstados = 'No fue posible cargar el historial de estados.';
         this.cargandoHistorialEstados = false;
+      }
+    });
+  }
+
+  responderObservacionEstudiante(): void {
+    const practica = this.practicaDetalle;
+    const respuesta = this.respuestaObservacion.trim();
+    if (!practica || practica.estado.nombre.toUpperCase() !== 'OBSERVADA' || !respuesta) {
+      this.errorRespuestaObservacion = 'Escribe una respuesta antes de enviarla.';
+      return;
+    }
+
+    this.enviandoRespuestaObservacion = true;
+    this.errorRespuestaObservacion = '';
+    this.mensajeRespuestaObservacion = '';
+    this.practicaService.responderObservacion(practica.id_practica, respuesta).subscribe({
+      next: resultado => {
+        this.enviandoRespuestaObservacion = false;
+        this.respuestaObservacion = '';
+        this.mensajeRespuestaObservacion = resultado.mensaje;
+        this.practicaService.obtenerMiPractica().subscribe({
+          next: actualizada => {
+            this.practicaDetalle = actualizada;
+            this.cargarHistorialEstados(actualizada.id_practica);
+            this.authService.obtenerContexto().subscribe({
+              next: contexto => {
+                this.firmaContextoPracticaProcesada = '';
+                this.authStore.setContexto(contexto);
+              }
+            });
+          }
+        });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.enviandoRespuestaObservacion = false;
+        this.errorRespuestaObservacion = error.error?.detail ?? 'No fue posible enviar tu respuesta.';
       }
     });
   }

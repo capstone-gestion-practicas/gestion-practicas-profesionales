@@ -163,6 +163,13 @@ Cada práctica nueva avisa a los gestores y administradores activos; cada cambio
 de estado avisa al estudiante. La tabla persistente se crea con la migración
 `supabase/migrations/20261017010000_create_notificacion.sql`.
 
+Cuando una práctica está `OBSERVADA`, el estudiante puede responder mediante
+`PATCH /practicas/{id_practica}/respuesta-observacion`. La función
+`fn_responder_observacion_practica` verifica que sea su práctica, la devuelve a
+`EN_REVISION`, agrega la respuesta en `historial_estado.observacion` y notifica a
+gestores y administradores en la misma transacción. Se incorpora con la migración
+`20261017040000_respuesta_observacion_estudiante.sql`.
+
 ### Revisión de prácticas (EP03)
 
 Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:

@@ -120,6 +120,20 @@ class ActualizarEstadoPracticaRequest(BaseModel):
         return limpio or None
 
 
+class ResponderObservacionPracticaRequest(BaseModel):
+    respuesta: str = Field(min_length=1, max_length=500)
+
+    @field_validator("respuesta", mode="before")
+    @classmethod
+    def limpiar_respuesta(cls, valor: str) -> str:
+        if not isinstance(valor, str):
+            raise ValueError("Debe ingresar una respuesta")
+        limpio = valor.strip()
+        if not limpio:
+            raise ValueError("Debe ingresar una respuesta")
+        return limpio
+
+
 class ActualizarEstadoPracticaResponse(BaseModel):
     id_practica: int
     id_estado: int

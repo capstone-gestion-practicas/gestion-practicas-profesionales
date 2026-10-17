@@ -215,6 +215,22 @@
               </div>
             </div>
 
+            @if (practicaDetalle.estado.nombre.toUpperCase() === 'OBSERVADA' && esEstudiante()) {
+              <div class="practice-section observation-response">
+                <p class="section-label">Responder observación · EP04</p>
+                <p>Indica qué corregiste o responde a lo solicitado. Al enviarlo, la práctica volverá a revisión.</p>
+                <ion-item>
+                  <ion-label position="stacked">Tu respuesta</ion-label>
+                  <ion-textarea [(ngModel)]="respuestaObservacion" maxlength="500" [counter]="true" [autoGrow]="true" rows="3"></ion-textarea>
+                </ion-item>
+                @if (errorRespuestaObservacion) { <p class="module-warning" role="alert">{{ errorRespuestaObservacion }}</p> }
+                @if (mensajeRespuestaObservacion) { <p class="success-message" role="status">{{ mensajeRespuestaObservacion }}</p> }
+                <ion-button [disabled]="enviandoRespuestaObservacion || !respuestaObservacion.trim()" (click)="responderObservacionEstudiante()">
+                  @if (enviandoRespuestaObservacion) { <ion-spinner name="crescent"></ion-spinner> } @else { Enviar respuesta y volver a revisión }
+                </ion-button>
+              </div>
+            }
+
             <div class="practice-section state-history">
               <p class="section-label">EP04 · Historial de estados</p>
               @if (cargandoHistorialEstados) {

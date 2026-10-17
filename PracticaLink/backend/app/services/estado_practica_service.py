@@ -12,6 +12,10 @@ class EstadoPracticaNoDisponibleError(Exception):
     pass
 
 
+class PracticaNoObservadaError(Exception):
+    pass
+
+
 def obtener_practica_estudiante(db: Session, id_usuario: int) -> dict | None:
     return db.execute(text("""
         SELECT public.fn_practica_estudiante(:id_usuario)
@@ -85,6 +89,32 @@ def actualizar_estado_practica(
     if error == "PRACTICA_NO_ENCONTRADA":
         raise PracticaEstadoNoEncontradaError
     if error == "ESTADO_NO_DISPONIBLE":
+        raise EstadoPracticaNoDisponibleError
+    db.commit()
+    return resultado
+
+
+def responder_observacion_practica(
+    db: Session,
+    id_practica: int,
+    id_usuario: int,
+    respuesta: str,
+) -> dict:
+    resultado = db.execute(text("""
+        SELECT public.fn_responder_observacion_practica(
+            :id_practica, :id_usuario, :respuesta
+        )
+    """), {
+        "id_practica": id_practica,
+        "id_usuario": id_usuario,
+        "respuesta": respuesta,
+    }).scalar_one()
+    error = resultado.get("error")
+    if error == "PRACTICA_NO_ENCONTRADA":
+        raise PracticaEstadoNoEncontradaError
+    if error == "PRACTICA_NO_OBSERVADA":
+        raise PracticaNoObservadaError
+    if error == "ESTADO_REVISION_NO_DISPONIBLE":
         raise EstadoPracticaNoDisponibleError
     db.commit()
     return resultado

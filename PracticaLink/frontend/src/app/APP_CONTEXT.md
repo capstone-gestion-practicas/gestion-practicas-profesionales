@@ -61,6 +61,9 @@ Al registrar una práctica, se puede informar la jornada semanal (1 a 45 horas).
 La estimación de horas transcurridas usa esa jornada y se detiene en la fecha de
 término cuando ya pasó; si no se informó, la estimación lo indica.
 
+Si el estado es `OBSERVADA`, el estudiante puede enviar una respuesta que queda
+en el historial junto al cambio del estado a `EN_REVISION`.
+
 ## Flujo de autenticación
 
 1. `Login` captura correo y contraseña.
