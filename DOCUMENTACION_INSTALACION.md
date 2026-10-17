@@ -8,7 +8,8 @@ El proyecto se ejecuta como dos procesos:
 
 - Backend: FastAPI en `http://127.0.0.1:8000`.
 - Frontend: Angular/Ionic en `http://localhost:4200`.
-- Base de datos: PostgreSQL alojado en Supabase.
+- Base de datos: Supabase local (PostgreSQL en Docker); los cambios de esquema se
+  publican en Supabase alojado mediante migraciones revisadas.
 
 La estructura relevante del repositorio es:
 
@@ -34,6 +35,7 @@ Antes de comenzar, instalar:
 - Python 3.12.
 - Node.js 20 LTS o una versión compatible con Angular 20.
 - npm (incluido con Node.js).
+- Docker Desktop con el motor Linux iniciado.
 - Acceso autorizado a la base de datos Supabase del equipo.
 
 Comprobar las instalaciones:
@@ -152,8 +154,93 @@ Consideraciones:
 
 ### Base de datos
 
-El esquema reproducible se encuentra en `scripts/BD/schema.sql`. Para actualizar
-una base existente con el caché de empresas, ejecutar en Supabase SQL Editor:
+El esquema reproducible de Supabase local está en
+`PracticaLink/supabase/migrations`. Para instalar las dependencias de la CLI y
+del frontend desde la raíz del repositorio:
+
+```powershell
+cd PracticaLink
+npm ci
+cd frontend
+npm ci
+cd ..
+```
+
+Iniciar Supabase local y la aplicación:
+
+```powershell
+.\start-local.cmd
+```
+
+El script local inicia Supabase en Docker y ejecuta el backend con la base local,
+sin cambiar el `.env` ni conectarse a la base alojada. La primera inicialización
+usa la migración inicial y crea el esquema, pero no copia datos de la nube. Para
+recrear la base local desde cero y aplicar todas las migraciones:
+
+```powershell
+npx.cmd supabase db reset --local
+```
+
+Este comando **borra los datos de la base local**. No usar `--linked` ni una URL
+de la base alojada para este reinicio.
+
+Para un cambio de esquema, crear una migración, editar el SQL generado y probar
+la secuencia completa localmente:
+
+```powershell
+npx.cmd supabase migration new nombre_del_cambio
+npx.cmd supabase db reset --local
+```
+
+El trabajo diario y la validación de migraciones se hacen en Supabase local; no
+se requiere un branch remoto de Supabase. Los branches remotos no están
+disponibles en el plan Free del proyecto.
+
+Para preparar el envío de migraciones al proyecto alojado, enlazar la CLI al
+proyecto y revisar primero su historial y esquema:
+
+```powershell
+npx.cmd supabase link --project-ref <PROJECT_REF>
+npx.cmd supabase migration list --linked
+npx.cmd supabase db diff --linked
+```
+
+La migración inicial de este repositorio describe un esquema que ya existe en
+la base alojada. **No aplicar `db push` hasta confirmar que el esquema remoto
+coincide con esa migración y que no hay una migración inicial registrada.** Si
+coincide y el historial remoto no tiene ese baseline, registrar la migración
+inicial como ya aplicada (esto solo actualiza el historial):
+
+```powershell
+npx.cmd supabase migration repair --status applied --linked 20261017000000
+```
+
+Para migraciones nuevas, probarlas localmente y revisar el plan que se aplicará
+al proyecto enlazado:
+
+```powershell
+npx.cmd supabase db push --dry-run --linked
+```
+
+No ejecutar `db push` si el plan incluye la migración inicial contra tablas que
+ya existen. Las migraciones versionan cambios de esquema; no copian datos de
+usuarios ni reemplazan una copia de seguridad.
+
+Como el destino es producción y no hay un branch remoto de preview disponible,
+confirmar el plan, coordinar el cambio con el equipo y tener una copia de
+seguridad antes de ejecutar `npx.cmd supabase db push --linked`. Si el proyecto
+usa la integración de GitHub para desplegar migraciones automáticamente,
+seguir ese flujo y no ejecutar `db push` manualmente sobre el mismo proyecto.
+
+Si se necesita ejecutar la aplicación directamente contra la base alojada, se
+puede crear `PracticaLink/backend/.env.cloud` a partir de
+`.env.cloud.template` y ejecutar `.\start-cloud.cmd`. En ese modo, las
+operaciones del backend se hacen contra la base remota; para el trabajo diario
+local se debe usar `.\start-local.cmd`.
+
+El esquema histórico adicional del proyecto está en `scripts/BD/schema.sql`.
+Para actualizar una base existente con el caché de empresas, ejecutar en
+Supabase SQL Editor:
 
 ```text
 scripts/BD/fixes/release-1.1-cache-empresas.sql
