@@ -1,4 +1,4 @@
-# Contexto de la aplicación backend
+﻿# Contexto de la aplicación backend
 
 Este archivo entrega contexto técnico y funcional a desarrolladores y asistentes de IA que trabajen dentro de `backend/app`.
 
@@ -73,194 +73,11 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 
 El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
 
-### Convención para inserciones
+### Operaciones transaccionales
 
-Las inserciones que forman parte de una operación de negocio deben realizarse
-mediante funciones PostgreSQL almacenadas en la base de datos. Esto permite que
-las validaciones, los `INSERT` relacionados y el registro de trazabilidad se
-ejecuten dentro de una única transacción.
+Las rutas autentican y autorizan; Pydantic valida la entrada; los servicios de Python ejecutan SQL textual parametrizado mediante SQLAlchemy y gestionan `commit()`/`rollback()`. El backend no debe invocar funciones almacenadas de PostgreSQL. Una operación con varias escrituras debe ejecutarse en una sola transacción, validar nuevamente los datos persistidos y bloquear con `SELECT ... FOR UPDATE` cuando puedan ocurrir cambios concurrentes.
 
-La división de responsabilidades es la siguiente:
-
-- La ruta FastAPI autentica al usuario y exige los roles correspondientes.
-- Los esquemas Pydantic validan tipos, campos obligatorios y reglas de formato.
-- El servicio obtiene el identificador del usuario desde el JWT y llama a la
-  función PostgreSQL mediante SQL textual parametrizado.
-- La función PostgreSQL valida el estado persistido, ejecuta los `INSERT`
-  relacionados y retorna un objeto `JSONB` con el resultado o un código de error
-  de negocio.
-- El servicio interpreta ese resultado, confirma la transacción con `commit()`
-  o genera una excepción para que la ruta ejecute `rollback()` y responda con el
-  código HTTP correspondiente.
-
-Ejemplo de llamada desde un servicio:
-
-```python
-resultado = db.execute(
-    text("""
-        SELECT fn_operacion_negocio(
-            :id_usuario,
-            CAST(:datos AS JSONB)
-        )
-    """),
-    {
-        "id_usuario": id_usuario,
-        "datos": datos.model_dump_json(),
-    },
-).scalar_one()
-```
-
-### Contrato de funciones PostgreSQL
-
-Las funciones de negocio llamadas desde el backend deben respetar este formato:
-
-```sql
-CREATE OR REPLACE FUNCTION fn_nombre_operacion(
-    p_id_usuario BIGINT,
-    p_datos JSONB
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-DECLARE
-    v_id_resultado BIGINT;
-BEGIN
-    -- Validar nuevamente usuarios, roles, estados y relaciones persistidas.
-
-    IF condicion_de_error THEN
-        RETURN jsonb_build_object(
-            'error', 'CODIGO_ERROR_ESTABLE'
-        );
-    END IF;
-
-    -- Ejecutar todas las escrituras relacionadas dentro de la función.
-
-    RETURN jsonb_build_object(
-        'id_resultado', v_id_resultado,
-        'mensaje', 'Operación realizada correctamente'
-    );
-END;
-$$;
-```
-
-Convenciones del contrato:
-
-- Los nombres comienzan con `fn_` y describen una operación de negocio.
-- Los parámetros comienzan con `p_`; los valores internos comienzan con `v_`.
-- Cuando existen varios datos de entrada se agrupan en un parámetro `JSONB`.
-- Los identificadores de seguridad, como `p_id_usuario`, se envían por separado
-  y siempre provienen del JWT validado por FastAPI.
-- El tipo de retorno es `JSONB`, tanto para resultados correctos como para
-  errores esperados de negocio.
-- Un resultado correcto contiene los identificadores creados o modificados y
-  puede incluir un `mensaje`.
-- Un error esperado contiene `{"error": "CODIGO_ESTABLE"}` y no incluye
-  mensajes internos de PostgreSQL.
-- Los códigos de error se escriben en mayúsculas con guiones bajos y no deben
-  cambiar una vez que el servicio dependa de ellos.
-- Las restricciones de integridad inesperadas pueden propagarse como errores de
-  PostgreSQL; la ruta debe ejecutar `rollback()` y responder sin filtrar detalles
-  técnicos.
-- `SET search_path = public` evita que la resolución de tablas dependa del
-  contexto de conexión.
-- Para evitar condiciones de carrera se debe bloquear la fila relevante con
-  `SELECT ... FOR UPDATE` cuando dos solicitudes concurrentes puedan modificar
-  el mismo proceso.
-
-El servicio traduce el contrato de la función a excepciones de dominio:
-
-```python
-resultado = db.execute(
-    text("""
-        SELECT fn_nombre_operacion(
-            :id_usuario,
-            CAST(:datos AS JSONB)
-        )
-    """),
-    {
-        "id_usuario": id_usuario,
-        "datos": datos.model_dump_json(),
-    },
-).scalar_one()
-
-if resultado.get("error") == "CODIGO_ERROR_ESTABLE":
-    raise OperacionNoPermitidaError
-
-db.commit()
-return resultado
-```
-
-La ruta captura la excepción de dominio, revierte la sesión y la convierte en
-una respuesta HTTP:
-
-```python
-try:
-    return ejecutar_operacion(db, id_usuario, datos)
-except OperacionNoPermitidaError as error:
-    db.rollback()
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="La operación no está permitida",
-    ) from error
-```
-
-Las funciones no reemplazan las validaciones Pydantic ni la autorización de
-FastAPI. La aplicación valida primero la solicitud y la base de datos vuelve a
-validar las reglas que dependen del estado persistido.
-
-Inventario actual:
-
-| Función | Servicio | Responsabilidad |
-| --- | --- | --- |
-| `fn_registrar_usuario_estudiante` | `auth_service.py` | Crear la cuenta base con rol estudiante |
-| `fn_contexto_usuario` | `auth_service.py` | Obtener usuario, roles, perfil y práctica actual |
-| `fn_completar_perfil_estudiante` | `estudiante_service.py` | Crear el perfil faltante de un estudiante |
-| `fn_registrar_practica` | `practica_service.py` | Crear centro, práctica e historial inicial |
-| `fn_revisar_practica` | `revision_service.py` | Resolver una solicitud y registrar su nuevo estado |
-| `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
-| `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
-| `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |
-| `fn_guardar_empresa_cache` | `empresa_service.py` | Insertar o actualizar antecedentes tributarios por RUT |
-
-Reglas obligatorias para nuevas inserciones:
-
-- El identificador del usuario debe obtenerse del JWT, nunca del cuerpo enviado
-  por el cliente.
-- Todos los argumentos deben enviarse como parámetros enlazados.
-- Una función de negocio debe completar toda la operación o no persistir ningún
-  cambio.
-- Los estados, perfiles y relaciones deben comprobarse nuevamente en la base de
-  datos para evitar decisiones basadas solo en datos del frontend.
-- Las funciones deben retornar códigos de error estables que el backend pueda
-  traducir a respuestas HTTP sin exponer detalles internos de PostgreSQL.
-- La definición de cada función debe quedar versionada en `scripts/BD/schema.sql`
-  o en una migración SQL antes de que el backend comience a utilizarla.
-- Los `SELECT` simples pueden permanecer en servicios; si su cantidad crece,
-  deben trasladarse a una capa `repositories`.
-
-Esta convención se aplica mediante servicios que llaman funciones como
-`fn_registrar_usuario_estudiante`, `fn_completar_perfil_estudiante`,
-`fn_registrar_practica` y `fn_revisar_practica`.
-
-El esquema completo y las funciones utilizadas por el backend están versionados
-en `scripts/BD/schema.sql`. El archivo `scripts/BD/user_roles.sql` conserva el
-bloque inicial de usuarios y roles como referencia histórica.
-
-Entre las tablas base se encuentran:
-
-- `usuario`
-- `rol`
-- `usuario_rol`
-- `empresa`
-
-La consulta `GET /empresas/consulta/{rut}` implementa una estrategia cache-aside:
-usa registros con menos de 30 días, consulta Chile RUT Empresa cuando no existen
-o están vencidos y conserva datos antiguos como respaldo si el proveedor falla.
-
-Las funciones de autenticación, contexto, perfil, registro y revisión están
-versionadas en `scripts/BD/schema.sql`.
-
+Las restricciones, claves foráneas e índices de la base siguen protegiendo la integridad. Las excepciones de dominio se traducen a respuestas HTTP sin exponer errores internos del motor. Los `SELECT` pueden permanecer en servicios o moverse a repositorios cuando el módulo lo justifique.
 ## Endpoints
 
 ### `GET /`
@@ -304,7 +121,7 @@ Flujo:
 6. Devuelve los datos públicos del usuario con `201 Created`.
 
 El registro no crea el perfil de estudiante. Si corresponde, RUT, carrera y
-sede se incorporan posteriormente mediante `fn_completar_perfil_estudiante`.
+sede se incorporan posteriormente mediante una transacción SQL del backend.
 El registro nunca devuelve ni almacena la contraseña en texto plano.
 
 ### `GET /auth/context`
@@ -315,7 +132,7 @@ Requiere el encabezado:
 Authorization: Bearer <token>
 ```
 
-El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y ejecuta `fn_contexto_usuario(:id_usuario)`.
+El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y consulta usuario, roles, perfil y práctica actual mediante SQL parametrizado.
 
 ### `POST /practicas`
 
@@ -328,11 +145,18 @@ El endpoint rechaza el registro cuando el usuario no posee perfil de estudiante
 o ya tiene una práctica cuyo estado no es final. Si se informa el RUT de una
 empresa existente, reutiliza ese centro en lugar de duplicarlo.
 
-La operación se ejecuta en PostgreSQL mediante
-`fn_registrar_practica(id_usuario, datos_jsonb)`. El servicio envía parámetros
-enlazados, interpreta los errores de negocio retornados por la función y
-confirma la transacción. La autorización y la obtención del usuario desde el
-JWT permanecen en FastAPI.
+El servicio ejecuta las consultas SQL parametrizadas y confirma la transacción solo cuando el centro, la práctica y el historial inicial se guardan correctamente. La autorización y la obtención del usuario desde el JWT permanecen en FastAPI.
+
+### Centro de notificaciones
+
+- `GET /notificaciones`: devuelve las notificaciones del usuario autenticado y
+  el total de avisos sin leer.
+- `PATCH /notificaciones/{id_notificacion}/leida` y
+  `PATCH /notificaciones/leidas`: marcan avisos como leídos.
+
+Cada práctica nueva avisa a los gestores y administradores activos; cada cambio
+de estado avisa al estudiante. La tabla persistente se crea con la migración
+`supabase/migrations/20261017010000_create_notificacion.sql`.
 
 ### Revisión de prácticas (EP03)
 
@@ -342,7 +166,7 @@ Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:
 - `GET /revisiones/solicitudes/{id_practica}`: entrega los antecedentes del
   estudiante, centro y práctica.
 - `PATCH /revisiones/solicitudes/{id_practica}`: aprueba, observa o rechaza la
-  solicitud mediante `fn_revisar_practica` y registra la trazabilidad en
+  solicitud con consultas SQL transaccionales y registra la trazabilidad en
   `historial_estado`.
 
 Las decisiones `OBSERVADA` y `RECHAZADA` requieren una observación.
@@ -353,13 +177,11 @@ Los endpoints bajo `/usuarios` requieren el rol `ADMINISTRADOR`:
 
 - `GET /usuarios`: lista las cuentas con su estado y roles.
 - `GET /usuarios/roles`: lista los roles activos disponibles.
-- `POST /usuarios`: crea una cuenta mediante `fn_crear_usuario_admin`.
+- `POST /usuarios`: crea una cuenta y asigna roles mediante SQL transaccional.
 - `PATCH /usuarios/{id_usuario}`: actualiza nombre, apellido, estado y roles
-  mediante `fn_actualizar_usuario_admin`.
+  mediante SQL transaccional.
 
-El identificador del administrador proviene siempre del JWT. Las funciones
-vuelven a validar en PostgreSQL que la cuenta esté activa y posea el rol
-`ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
+El identificador del administrador proviene siempre del JWT. El backend valida que el administrador esté activo y posea el rol `ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
 quitarse su propio rol administrativo.
 
 ## Contexto del usuario
@@ -443,7 +265,7 @@ Las pruebas actuales validan permisos concedidos y denegados, normalización de 
 ## Estado actual y límites conocidos
 
 - No hay migraciones versionadas ni un mecanismo automático para crear todo el esquema.
-- La función `fn_contexto_usuario` debe existir previamente en Supabase.
+- Las funciones almacenadas históricas del esquema no son llamadas por el backend.
 - No existe renovación de tokens.
 - No existe revocación ni lista de tokens invalidados.
 - CORS está configurado solamente para el frontend local.

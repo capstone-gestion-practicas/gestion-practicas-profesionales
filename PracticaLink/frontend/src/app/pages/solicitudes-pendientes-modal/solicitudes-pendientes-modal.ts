@@ -30,8 +30,8 @@ export class SolicitudesPendientesModal {
     this.modalController.dismiss();
   }
 
-  irARevisiones(): void {
-    this.modalController.dismiss();
-    this.router.navigate(['/revisiones']);
+  async irARevisiones(): Promise<void> {
+    await this.modalController.dismiss();
+    await this.router.navigateByUrl('/revisiones');
   }
 }

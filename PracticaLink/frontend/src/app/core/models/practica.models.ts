@@ -27,6 +27,7 @@ export interface PracticaCreateResponse {
 export interface EstadoPracticaDetalle {
   id_estado: number;
   nombre: string;
+  descripcion?: string | null;
   es_final: boolean;
 }
 
@@ -44,6 +45,7 @@ export interface CentroPracticaDetalle {
 export interface PracticaDetalleResponse {
   id_practica: number;
   fecha_registro: string;
+  fecha_actualizacion: string;
   estado: EstadoPracticaDetalle;
   centro_practica: CentroPracticaDetalle;
   fecha_inicio: string | null;
@@ -51,6 +53,40 @@ export interface PracticaDetalleResponse {
   horas: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
+}
+
+export interface PracticaEstadoResumen {
+  id_practica: number;
+  fecha_registro: string;
+  fecha_actualizacion: string;
+  id_estado: number;
+  estado: string;
+  descripcion_estado: string | null;
+  es_final: boolean;
+  estudiante: string;
+  rut_estudiante: string;
+  centro_practica: string;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+}
+
+export interface HistorialEstadoPractica {
+  id_historial: number;
+  id_practica: number;
+  id_estado: number;
+  estado: string;
+  es_final: boolean;
+  id_usuario: number;
+  usuario: string;
+  fecha_cambio: string;
+  observacion: string | null;
+}
+
+export interface ActualizarEstadoPracticaResponse {
+  id_practica: number;
+  id_estado: number;
+  estado: string;
+  mensaje: string;
 }
 
 export interface EmpresaLookup {

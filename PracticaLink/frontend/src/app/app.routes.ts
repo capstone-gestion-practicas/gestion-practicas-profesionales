@@ -26,6 +26,13 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/notificaciones/notificaciones').then(m => m.Notificaciones)
+  },
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },
@@ -46,6 +53,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/revision-detalle/revision-detalle')
         .then(m => m.RevisionDetalle)
+  },
+  {
+    path: 'gestion-estados',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/gestion-estados/gestion-estados')
+        .then(m => m.GestionEstados)
   },
   {
     path: '**',

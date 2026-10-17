@@ -1,0 +1,127 @@
+<ion-content class="states-content">
+  <ion-grid class="states-wrapper"><ion-row><ion-col size="12">
+    <header class="page-heading">
+      <div>
+        <p class="module-label">EP04 · Gestión de estados</p>
+        <h1>Estado de prácticas</h1>
+        <p class="heading-subtitle">Consulta el avance, actualiza el estado y revisa la trazabilidad de cada práctica.</p>
+      </div>
+      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+    </header>
+
+    @if (mensaje) {
+      <p class="success-message" role="status">{{ mensaje }}</p>
+    }
+
+    <ion-searchbar
+      class="practice-search"
+      placeholder="Buscar por estudiante, RUT, centro o estado"
+      [debounce]="150"
+      (ionInput)="busqueda = $any($event).detail.value ?? ''">
+    </ion-searchbar>
+
+    @if (cargando) {
+      <ion-card class="state-card"><ion-card-content class="center-state">
+        <ion-spinner name="crescent"></ion-spinner><p>Cargando prácticas...</p>
+      </ion-card-content></ion-card>
+    } @else if (error) {
+      <ion-card class="state-card error-card"><ion-card-content><p role="alert">{{ error }}</p></ion-card-content></ion-card>
+    } @else if (practicasFiltradas().length === 0) {
+      <ion-card class="state-card"><ion-card-content>No hay prácticas que coincidan con la búsqueda.</ion-card-content></ion-card>
+    } @else {
+      <section class="practice-list" aria-label="Prácticas y estados">
+        @for (practica of practicasFiltradas(); track practica.id_practica) {
+          <ion-card class="practice-card">
+            <ion-card-header>
+              <div class="practice-heading">
+                <div>
+                  <p class="practice-id">Práctica #{{ practica.id_practica }}</p>
+                  <ion-card-title>{{ practica.estudiante }}</ion-card-title>
+                </div>
+                <ion-badge [color]="practica.es_final ? 'medium' : 'success'">{{ practica.estado }}</ion-badge>
+              </div>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="practice-data">
+                <p><span>RUT</span><strong>{{ practica.rut_estudiante }}</strong></p>
+                <p><span>Centro</span><strong>{{ practica.centro_practica }}</strong></p>
+                <p><span>Última actualización</span><strong>{{ practica.fecha_actualizacion | date:'dd/MM/yyyy HH:mm' }}</strong></p>
+                <p><span>Periodo</span><strong>{{ practica.fecha_inicio ? (practica.fecha_inicio | date:'dd/MM/yyyy') : 'Pendiente' }} – {{ practica.fecha_termino ? (practica.fecha_termino | date:'dd/MM/yyyy') : 'Pendiente' }}</strong></p>
+              </div>
+              @if (practica.descripcion_estado) {
+                <p class="state-description">{{ practica.descripcion_estado }}</p>
+              }
+              <div class="practice-actions">
+                <ion-button (click)="abrirCambio(practica)">Actualizar estado</ion-button>
+                <ion-button fill="outline" (click)="alternarHistorial(practica)">
+                  {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
+                </ion-button>
+              </div>
+
+              @if (historialAbiertoId === practica.id_practica) {
+                <section class="history-panel" aria-label="Historial de estados">
+                  <h2>Historial de cambios</h2>
+                  @if (cargandoHistorialId === practica.id_practica) {
+                    <div class="center-state"><ion-spinner name="crescent"></ion-spinner></div>
+                  } @else if (errorHistorial) {
+                    <p class="error-text" role="alert">{{ errorHistorial }}</p>
+                  } @else if (historialDe(practica.id_practica).length === 0) {
+                    <p class="empty-history">Aún no hay cambios de estado registrados.</p>
+                  } @else {
+                    <ol class="history-list">
+                      @for (evento of historialDe(practica.id_practica); track evento.id_historial) {
+                        <li class="history-item">
+                          <span class="history-marker" aria-hidden="true"></span>
+                          <div>
+                            <strong>{{ evento.estado }}</strong>
+                            <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.usuario }}</p>
+                            @if (evento.observacion) { <p class="history-note">{{ evento.observacion }}</p> }
+                          </div>
+                        </li>
+                      }
+                    </ol>
+                  }
+                </section>
+              }
+            </ion-card-content>
+          </ion-card>
+        }
+      </section>
+    }
+  </ion-col></ion-row></ion-grid>
+
+  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <div class="state-modal">
+        <p class="module-label">EP04 · Actualizar estado</p>
+        <h2>Práctica #{{ practicaSeleccionada?.id_practica }}</h2>
+        <p class="modal-student">{{ practicaSeleccionada?.estudiante }} · {{ practicaSeleccionada?.centro_practica }}</p>
+
+        <ion-item class="state-select-item">
+          <ion-label position="stacked">Nuevo estado</ion-label>
+          <ion-select [(ngModel)]="idEstadoSeleccionado" interface="popover" placeholder="Selecciona un estado">
+            @for (estado of estados; track estado.id_estado) {
+              <ion-select-option [value]="estado.id_estado">{{ estado.nombre }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+        <ion-textarea
+          label="Observación (opcional)"
+          labelPlacement="stacked"
+          [counter]="true"
+          maxlength="500"
+          [autoGrow]="true"
+          [(ngModel)]="observacion">
+        </ion-textarea>
+
+        @if (error) { <p class="error-text" role="alert">{{ error }}</p> }
+        <div class="modal-actions">
+          <ion-button fill="outline" [disabled]="guardando" (click)="cerrarModal()">Cancelar</ion-button>
+          <ion-button [disabled]="guardando || idEstadoSeleccionado === null" (click)="guardarCambio()">
+            @if (guardando) { <ion-spinner name="crescent"></ion-spinner> } @else { Guardar cambio }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

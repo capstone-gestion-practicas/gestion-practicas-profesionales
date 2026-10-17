@@ -1,0 +1,45 @@
+<ion-content class="notifications-content">
+  <ion-grid class="notifications-wrapper"><ion-row><ion-col size="12">
+    <header class="page-heading">
+      <div>
+        <p class="module-label">Centro de notificaciones</p>
+        <h1>Notificaciones</h1>
+        @if (servicio.noLeidas(); as cantidad) {
+          <p>{{ cantidad }} sin leer</p>
+        }
+      </div>
+      <div class="heading-actions">
+        <ion-button fill="outline" [disabled]="servicio.noLeidas() === 0 || actualizando" (click)="marcarTodas()">
+          Marcar todas como leídas
+        </ion-button>
+        <ion-button fill="clear" (click)="volver()">Volver</ion-button>
+      </div>
+    </header>
+
+    @if (cargando) {
+      <div class="center"><ion-spinner name="crescent"></ion-spinner></div>
+    } @else if (error) {
+      <ion-card><ion-card-content><p class="error-text">{{ error }}</p><ion-button (click)="cargar()">Reintentar</ion-button></ion-card-content></ion-card>
+    } @else if (notificaciones.length === 0) {
+      <ion-card><ion-card-content>No tienes notificaciones todavía.</ion-card-content></ion-card>
+    } @else {
+      @for (notificacion of notificaciones; track notificacion.id_notificacion) {
+        <ion-card button (click)="abrir(notificacion)" [class.unread]="!notificacion.fecha_leida">
+          <ion-card-content>
+            <div class="notification-row">
+              <div>
+                <div class="notification-title">
+                  <h2>{{ notificacion.titulo }}</h2>
+                  @if (!notificacion.fecha_leida) { <ion-badge color="primary">Nueva</ion-badge> }
+                </div>
+                <p>{{ notificacion.mensaje }}</p>
+                <time>{{ notificacion.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</time>
+              </div>
+              <span class="arrow" aria-hidden="true">›</span>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  </ion-col></ion-row></ion-grid>
+</ion-content>

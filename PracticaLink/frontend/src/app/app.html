@@ -1,3 +1,12 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
+  @if (notificacionEmergente(); as notificacion) {
+    <aside class="app-notification-toast" role="status" aria-live="polite">
+      <div>
+        <strong>{{ notificacion.titulo }}</strong>
+        <p>{{ notificacion.mensaje }}</p>
+      </div>
+      <button type="button" (click)="verNotificacion()">Ver</button>
+    </aside>
+  }
 </ion-app>

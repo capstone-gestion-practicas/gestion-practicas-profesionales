@@ -167,3 +167,30 @@ ion-modal.request-detail-modal {
     --border-radius: 0;
   }
 }
+button.notification-mark {
+  position: relative;
+  margin-right: 12px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: #fffdf7;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.notification-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  place-items: center;
+  border-radius: 999px;
+  background: #b42318;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 800;
+}

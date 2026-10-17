@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -56,3 +56,87 @@ class PracticaCreateResponse(BaseModel):
     id_centro: int
     estado: str
     mensaje: str
+
+
+class EstadoPracticaDetalle(BaseModel):
+    id_estado: int
+    nombre: str
+    descripcion: str | None = None
+    es_final: bool
+
+
+class CentroPracticaDetalle(BaseModel):
+    id_centro: int
+    nombre: str
+    rut_empresa: str | None = None
+    direccion: str | None = None
+    telefono: str | None = None
+    correo: str | None = None
+    contacto_nombre: str | None = None
+    contacto_cargo: str | None = None
+
+
+class PracticaDetalleResponse(BaseModel):
+    id_practica: int
+    fecha_registro: datetime
+    fecha_actualizacion: datetime
+    estado: EstadoPracticaDetalle
+    centro_practica: CentroPracticaDetalle
+    fecha_inicio: date | None = None
+    fecha_termino: date | None = None
+    horas: int | None = None
+    cargo_funcion: str | None = None
+    descripcion: str | None = None
+
+
+class PracticaEstadoResumen(BaseModel):
+    id_practica: int
+    fecha_registro: datetime
+    fecha_actualizacion: datetime
+    id_estado: int
+    estado: str
+    descripcion_estado: str | None = None
+    es_final: bool
+    estudiante: str
+    rut_estudiante: str
+    centro_practica: str
+    fecha_inicio: date | None = None
+    fecha_termino: date | None = None
+
+
+class ActualizarEstadoPracticaRequest(BaseModel):
+    id_estado: int = Field(gt=0)
+    observacion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("observacion", mode="before")
+    @classmethod
+    def limpiar_observacion(cls, valor: str | None) -> str | None:
+        if valor is None:
+            return None
+        limpio = valor.strip()
+        return limpio or None
+
+
+class ActualizarEstadoPracticaResponse(BaseModel):
+    id_practica: int
+    id_estado: int
+    estado: str
+    mensaje: str
+
+
+class HistorialEstadoPractica(BaseModel):
+    id_historial: int
+    id_practica: int
+    id_estado: int
+    estado: str
+    es_final: bool
+    id_usuario: int
+    usuario: str
+    fecha_cambio: datetime
+    observacion: str | None = None
+
+
+class EstadoPracticaActualResponse(BaseModel):
+    id_practica: int
+    fecha_actualizacion: datetime
+    estado: EstadoPracticaDetalle

@@ -52,6 +52,7 @@ src/app/
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
+- `/notificaciones`: muestra la bandeja persistente del usuario autenticado.
 - `/usuarios`: panel de gestión de cuentas exclusivo para el rol `ADMINISTRADOR`.
 
 Las rutas están declaradas en `app.routes.ts`.
@@ -196,6 +197,10 @@ npm test -- --watch=false --browsers=ChromeHeadless
 Las pruebas actuales cubren guards, store de autenticación, componentes base y el saludo construido desde el contexto.
 
 ## Estado actual y límites conocidos
+
+El centro de notificaciones consulta los avisos persistidos cada 20 segundos y
+actualiza el contador y los avisos emergentes mientras la aplicación está
+abierta. No envía notificaciones push cuando la aplicación está cerrada.
 
 - `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.

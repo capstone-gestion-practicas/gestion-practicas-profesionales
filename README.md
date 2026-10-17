@@ -39,6 +39,7 @@ El proyecto se encuentra organizado en las siguientes épicas:
 | EP05 | Seguimiento de práctica |
 | EP06 | Gestión de incidencias y alertas |
 | EP07 | Cierre de práctica profesional |
+| EP08 | Centro de notificaciones |
 
 ## Funcionalidades implementadas
 
@@ -66,9 +67,23 @@ El proyecto se encuentra organizado en las siguientes épicas:
 - Listado y detalle de solicitudes para gestores y administradores.
 - Aprobación, observación o rechazo con trazabilidad de estados.
 
+### EP04: gestión de estado de práctica
+
+- Consulta del estado actual y su historial por parte del estudiante.
+- Gestión del estado por gestores y administradores, con trazabilidad.
+- Centro persistente de notificaciones: avisa de nuevas prácticas a gestores y
+  administradores, y de cambios de estado al estudiante.
+
+### EP08: centro de notificaciones
+
+- Bandeja personal con contador de notificaciones no leídas.
+- Avisos por prácticas nuevas para gestores y administradores.
+- Avisos al estudiante cuando cambia el estado de su práctica.
+- Aviso emergente durante el uso de la app y persistencia para consultarlo después.
+
 ## Historias de Usuario
 
-El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las siete épicas.
+El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las épicas. La épica EP08 se incorporó después como extensión del backlog.
 
 Las historias de usuario son gestionadas mediante GitHub Issues y organizadas dentro de GitHub Projects.
 

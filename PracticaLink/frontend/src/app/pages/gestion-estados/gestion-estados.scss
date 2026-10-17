@@ -1,0 +1,73 @@
+.states-content { --background: var(--cream); }
+
+.states-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  --ion-grid-padding: 0;
+  --ion-grid-column-padding: 0;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.module-label {
+  margin: 0 0 6px;
+  color: var(--ion-color-primary);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.page-heading h1 { margin: 0 0 8px; color: var(--ink); font-size: 2rem; }
+.heading-subtitle { margin: 0; color: var(--ink-muted); line-height: 1.5; }
+.practice-search { --background: #fff; --border-radius: 12px; padding: 0 0 14px; }
+.practice-list { display: grid; gap: 14px; }
+.practice-card { margin: 0; }
+.practice-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.practice-heading ion-card-title { color: var(--ink); font-size: 1.2rem; }
+.practice-id { margin: 0 0 5px; color: var(--ink-muted); font-size: .78rem; font-weight: 700; }
+.practice-heading ion-badge { padding: 7px 10px; border-radius: 999px; font-size: .72rem; }
+.practice-data { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.practice-data p { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--cream-muted); }
+.practice-data span { display: block; margin-bottom: 4px; color: var(--ink-muted); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.practice-data strong { color: var(--ink); font-size: .9rem; }
+.state-description { margin: 12px 0 0; color: var(--ink-muted); font-size: .88rem; }
+.practice-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.history-panel { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(27, 54, 44, .12); }
+.history-panel h2 { margin: 0 0 14px; color: var(--ink); font-size: 1.05rem; }
+.history-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.history-item { position: relative; display: grid; grid-template-columns: 16px 1fr; gap: 10px; padding-bottom: 16px; }
+.history-item:not(:last-child)::after { position: absolute; top: 12px; bottom: 0; left: 5px; width: 2px; background: #d7e5dc; content: ''; }
+.history-marker { z-index: 1; width: 12px; height: 12px; margin-top: 3px; border: 2px solid #fff; border-radius: 50%; background: var(--ion-color-primary); box-shadow: 0 0 0 1px var(--ion-color-primary); }
+.history-item strong { color: var(--ink); }
+.history-item p { margin: 4px 0 0; color: var(--ink-muted); font-size: .84rem; }
+.history-item .history-note { color: var(--ink); }
+.empty-history { margin: 0; color: var(--ink-muted); }
+.state-card { margin: 0 0 14px; }
+.center-state { display: flex; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: var(--ink-muted); }
+.center-state p { margin: 0; }
+.error-card { --background: #fff5f5; color: #b42318; }
+.error-text { color: #b42318; }
+.success-message { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: #e4efe5; color: var(--ion-color-primary); font-weight: 600; }
+.state-modal { padding: 24px; overflow-y: auto; }
+.state-modal h2 { margin: 4px 0 6px; color: var(--ink); }
+.modal-student { margin: 0 0 18px; color: var(--ink-muted); }
+.state-select-item { margin: 0 0 14px; --background: var(--cream-muted); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+ion-modal { --width: min(520px, calc(100% - 28px)); --height: auto; --max-height: 85vh; --border-radius: 16px; }
+
+@media (max-width: 620px) {
+  .states-wrapper { padding: 16px; }
+  .page-heading { align-items: flex-start; }
+  .page-heading h1 { font-size: 1.55rem; }
+  .practice-data { grid-template-columns: 1fr; }
+  .practice-actions ion-button { flex: 1 1 150px; }
+}

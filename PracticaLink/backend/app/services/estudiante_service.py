@@ -21,26 +21,23 @@ def completar_perfil_estudiante(
     id_usuario: int,
     datos: PerfilEstudianteCreate,
 ) -> dict:
-    resultado = db.execute(
-        text("""
-            SELECT fn_completar_perfil_estudiante(
-                :id_usuario,
-                CAST(:datos AS JSONB)
-            )
-        """),
-        {
-            "id_usuario": id_usuario,
-            "datos": datos.model_dump_json(),
-        },
-    ).scalar_one()
-
-    error = resultado.get("error")
-    if error == "PERFIL_EXISTENTE":
-        raise PerfilEstudianteExistenteError
-    if error == "USUARIO_ESTUDIANTE_NO_VALIDO":
+    valido = db.execute(text("""
+        SELECT 1 FROM usuario u
+        JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+        JOIN rol r ON r.id_rol = ur.id_rol
+        WHERE u.id_usuario = :id_usuario AND u.activo = TRUE
+          AND r.nombre = 'ESTUDIANTE' AND r.activo = TRUE
+    """), {"id_usuario": id_usuario}).first()
+    if not valido:
         raise UsuarioEstudianteNoValidoError
-    if error == "RUT_EXISTENTE":
+    if db.execute(text("SELECT 1 FROM estudiante WHERE id_usuario = :id_usuario"), {"id_usuario": id_usuario}).first():
+        raise PerfilEstudianteExistenteError
+    if db.execute(text("SELECT 1 FROM estudiante WHERE UPPER(rut) = UPPER(:rut)"), {"rut": datos.rut}).first():
         raise RutEstudianteExistenteError
-
+    fila = db.execute(text("""
+        INSERT INTO estudiante (id_usuario, rut, carrera, sede, telefono, direccion)
+        VALUES (:id_usuario, :rut, :carrera, :sede, :telefono, :direccion)
+        RETURNING id_estudiante
+    """), {"id_usuario": id_usuario, **datos.model_dump()}).mappings().one()
     db.commit()
-    return resultado
+    return {"id_estudiante": fila["id_estudiante"], "mensaje": "Perfil de estudiante completado correctamente"}

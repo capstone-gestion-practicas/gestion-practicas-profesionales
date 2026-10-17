@@ -29,7 +29,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
-import { PracticaDetalleResponse } from '../../core/models/practica.models';
+import {
+  HistorialEstadoPractica,
+  PracticaDetalleResponse
+} from '../../core/models/practica.models';
 import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 import { PracticaForm } from '../practica-form/practica-form';
@@ -39,6 +42,7 @@ import { UsuarioAdministrable } from '../../core/models/usuario.models';
 import { SolicitudRevisionResumen } from '../../core/models/revision.models';
 import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/solicitudes-pendientes-modal';
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
+import { NotificacionService } from '../../core/services/notificacion.service';
 
 @Component({
   selector: 'app-home',
@@ -74,10 +78,12 @@ export class Home implements OnInit {
   private readonly router = inject(Router);
   private readonly estudianteService = inject(EstudianteService);
   private readonly modalController = inject(ModalController);
+  private readonly notificacionService = inject(NotificacionService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly revisionService = inject(RevisionService);
 
   readonly contexto = this.authStore.contexto;
+  readonly notificacionesNoLeidas = this.notificacionService.noLeidas;
   readonly saludo = computed(() => {
     const contexto = this.contexto();
 
@@ -112,6 +118,9 @@ export class Home implements OnInit {
   cargando = true;
   errorPractica = '';
   practicaDetalle: PracticaDetalleResponse | null = null;
+  historialEstados: HistorialEstadoPractica[] = [];
+  cargandoHistorialEstados = false;
+  errorHistorialEstados = '';
   modalPerfilAbierto = false;
   guardandoPerfil = false;
   errorPerfil = '';
@@ -184,8 +193,16 @@ export class Home implements OnInit {
     this.router.navigate(['/revisiones']);
   }
 
+  gestionarEstados(): void {
+    this.router.navigate(['/gestion-estados']);
+  }
+
   gestionarUsuarios(): void {
     this.router.navigate(['/usuarios']);
+  }
+
+  abrirCentroNotificaciones(): void {
+    this.router.navigate(['/notificaciones']);
   }
 
   async abrirSolicitudesPendientes(): Promise<void> {
@@ -350,12 +367,14 @@ export class Home implements OnInit {
       || contexto.practica_actual === null
     ) {
       this.practicaDetalle = null;
+      this.historialEstados = [];
       return;
     }
 
     this.practicaService.obtenerMiPractica().subscribe({
       next: (practica) => {
         this.practicaDetalle = practica;
+        this.cargarHistorialEstados(practica.id_practica);
       },
       error: (error: HttpErrorResponse) => {
         if (error.status === 404) {
@@ -365,6 +384,22 @@ export class Home implements OnInit {
 
         this.practicaDetalle = null;
         this.errorPractica = 'No fue posible cargar los antecedentes de tu práctica.';
+      }
+    });
+  }
+
+  private cargarHistorialEstados(idPractica: number): void {
+    this.cargandoHistorialEstados = true;
+    this.errorHistorialEstados = '';
+    this.practicaService.obtenerHistorialEstados(idPractica).subscribe({
+      next: historial => {
+        this.historialEstados = historial;
+        this.cargandoHistorialEstados = false;
+      },
+      error: () => {
+        this.historialEstados = [];
+        this.errorHistorialEstados = 'No fue posible cargar el historial de estados.';
+        this.cargandoHistorialEstados = false;
       }
     });
   }

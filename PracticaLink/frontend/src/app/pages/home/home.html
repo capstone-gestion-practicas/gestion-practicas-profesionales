@@ -8,7 +8,12 @@
       <span class="brand-name">PracticaLink</span>
       <span class="brand-spacer"></span>
       @if (contexto(); as ctx) {
-        <span class="notification-mark" aria-label="Notificaciones">♧</span>
+        <button class="notification-mark" type="button" aria-label="Abrir notificaciones" (click)="abrirCentroNotificaciones()">
+          ♧
+          @if (notificacionesNoLeidas() > 0) {
+            <span class="notification-count">{{ notificacionesNoLeidas() }}</span>
+          }
+        </button>
         <span class="account-summary">
           <span class="account-avatar">{{ ctx.usuario.nombre[0] }}</span>
           <span class="account-name">{{ ctx.usuario.nombre }}</span>
@@ -101,6 +106,7 @@
                   <ion-card-content>
                     <ion-button expand="block" (click)="gestionarUsuarios()">Usuarios y roles</ion-button>
                     <ion-button expand="block" fill="outline" (click)="revisarPracticas()">Revisar prácticas</ion-button>
+                    <ion-button expand="block" fill="outline" (click)="gestionarEstados()">Gestionar estados · EP04</ion-button>
                   </ion-card-content>
                 </ion-card>
               </ion-col>
@@ -184,11 +190,35 @@
 
           <ion-card-content>
             <div class="practice-section practice-status">
-              <p class="section-label">Estado de la práctica</p>
+              <p class="section-label">EP04 · Estado actual</p>
               <div class="status-pill">
                 <strong>{{ practicaDetalle.estado.nombre }}</strong>
                 <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
               </div>
+            </div>
+
+            <div class="practice-section state-history">
+              <p class="section-label">EP04 · Historial de estados</p>
+              @if (cargandoHistorialEstados) {
+                <div class="history-loading"><ion-spinner name="crescent"></ion-spinner><span>Cargando historial...</span></div>
+              } @else if (errorHistorialEstados) {
+                <p class="module-warning" role="alert">{{ errorHistorialEstados }}</p>
+              } @else if (historialEstados.length === 0) {
+                <p class="history-empty">Aún no hay cambios de estado registrados.</p>
+              } @else {
+                <ol class="state-history-list">
+                  @for (evento of historialEstados; track evento.id_historial) {
+                    <li>
+                      <span class="history-dot" aria-hidden="true"></span>
+                      <div>
+                        <strong>{{ evento.estado }}</strong>
+                        <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.usuario }}</p>
+                        @if (evento.observacion) { <p class="history-observation">{{ evento.observacion }}</p> }
+                      </div>
+                    </li>
+                  }
+                </ol>
+              }
             </div>
 
             <div class="practice-section">
@@ -320,6 +350,9 @@
             <p>Consulta los antecedentes y resuelve las solicitudes pendientes.</p>
             <ion-button expand="block" (click)="revisarPracticas()">
               Ver solicitudes
+            </ion-button>
+            <ion-button expand="block" fill="outline" (click)="gestionarEstados()">
+              Gestionar estados · EP04
             </ion-button>
           </ion-card-content>
         </ion-card>

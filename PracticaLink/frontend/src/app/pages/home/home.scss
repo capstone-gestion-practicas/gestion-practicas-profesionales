@@ -153,6 +153,52 @@
   margin-top: 10px;
 }
 
+.state-history {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(27, 54, 44, .12);
+}
+
+.state-history-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.state-history-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.state-history-list li:not(:last-child)::after {
+  position: absolute;
+  top: 11px;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background: #d7e5dc;
+  content: '';
+}
+
+.history-dot {
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+}
+
+.state-history-list strong { color: var(--ink); }
+.state-history-list p, .history-empty { margin: 4px 0 0; color: var(--ink-muted); font-size: .84rem; }
+.state-history-list .history-observation { color: var(--ink); }
+.history-loading { display: flex; align-items: center; gap: 10px; color: var(--ink-muted); }
+
 ion-modal.requests-modal {
   --width: min(720px, calc(100% - 32px));
   --height: auto;
@@ -214,13 +260,6 @@ ion-modal.requests-modal {
 
 .brand-spacer {
   flex: 1;
-}
-
-.notification-mark {
-  margin-right: 12px;
-  color: #fffdf7;
-  font-size: 1.15rem;
-  line-height: 1;
 }
 
 .account-summary {

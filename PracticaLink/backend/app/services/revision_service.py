@@ -52,21 +52,40 @@ def resolver_solicitud(
     id_usuario: int,
     datos: DecisionRevisionRequest,
 ) -> dict:
-    resultado = db.execute(text("""
-        SELECT fn_revisar_practica(
-            :id_practica, :id_usuario, :decision, :observacion
-        )
-    """), {
-        "id_practica": id_practica,
-        "id_usuario": id_usuario,
-        "decision": datos.decision,
-        "observacion": datos.observacion.strip() if datos.observacion else None,
-    }).scalar_one()
-
-    if resultado.get("error") == "SOLICITUD_NO_ENCONTRADA":
+    practica = db.execute(text("""
+        SELECT p.id_practica, ep.nombre AS estado_actual
+        FROM practica p JOIN estado_practica ep ON ep.id_estado = p.id_estado_actual
+        WHERE p.id_practica = :id_practica FOR UPDATE OF p
+    """), {"id_practica": id_practica}).mappings().first()
+    if practica is None:
         raise SolicitudNoEncontradaError
-    if resultado.get("error") == "SOLICITUD_NO_REVISABLE":
+    if practica["estado_actual"] not in {"REGISTRADA", "EN_REVISION", "OBSERVADA"}:
         raise SolicitudNoRevisableError
-
+    estado = db.execute(text("""
+        SELECT id_estado, nombre FROM estado_practica
+        WHERE nombre = :nombre AND activo = TRUE
+    """), {"nombre": datos.decision}).mappings().first()
+    if estado is None:
+        raise SolicitudNoRevisableError
+    db.execute(text("""
+        UPDATE practica SET id_estado_actual = :id_estado, fecha_actualizacion = NOW()
+        WHERE id_practica = :id_practica
+    """), {"id_estado": estado["id_estado"], "id_practica": id_practica})
+    db.execute(text("""
+        INSERT INTO historial_estado (id_practica, id_estado, id_usuario, observacion)
+        VALUES (:id_practica, :id_estado, :id_usuario, :observacion)
+    """), {"id_practica": id_practica, "id_estado": estado["id_estado"],
+           "id_usuario": id_usuario, "observacion": datos.observacion.strip() if datos.observacion else None})
+    db.execute(text("""
+        INSERT INTO notificacion (
+            id_usuario, id_practica, tipo, titulo, mensaje
+        )
+        SELECT e.id_usuario, :id_practica, 'CAMBIO_ESTADO',
+               'Estado de práctica actualizado',
+               CONCAT('Tu práctica cambió al estado ', :estado, '.')
+        FROM practica p
+        JOIN estudiante e ON e.id_estudiante = p.id_estudiante
+        WHERE p.id_practica = :id_practica
+    """), {"id_practica": id_practica, "estado": estado["nombre"]})
     db.commit()
-    return resultado
+    return {"id_practica": id_practica, "estado": estado["nombre"], "mensaje": "Solicitud resuelta correctamente"}
