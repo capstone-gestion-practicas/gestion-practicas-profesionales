@@ -114,7 +114,9 @@
           </ion-grid>
         </section>
       } @else {
-      <section class="student-dashboard" aria-label="Panel personal">
+      <section class="student-dashboard"
+        [class.single-panel]="!practicaDetalle && !puedeRevisarPracticas()"
+        aria-label="Panel personal">
 
       <aside class="student-sidebar">
       <ion-card class="welcome-card">
@@ -168,14 +170,18 @@
             <ion-button fill="outline" size="small" (click)="copiarCorreo(ctx.usuario.correo)">
               Copiar correo
             </ion-button>
-            <ion-button fill="clear" size="small" (click)="irAPractica()">
-              Ver práctica
-            </ion-button>
+            @if (esEstudiante()) {
+              <ion-button fill="clear" size="small" (click)="irAPractica()">
+                Ver práctica
+              </ion-button>
+            }
           </div>
         </ion-card-content>
       </ion-card>
 
-      <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
+      @if (esEstudiante()) {
+        <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
+      }
       </aside>
 
       @if (practicaDetalle) {

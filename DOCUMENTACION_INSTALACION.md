@@ -65,6 +65,17 @@ git switch develop
 git pull origin develop
 ```
 
+### Ejecutar la primera versión
+
+La primera versión consolidada está disponible en `release-1.1` e incluye los
+desarrollos de EP01, EP02 y EP03. Para ejecutar específicamente esa versión:
+
+```powershell
+git fetch origin
+git switch release-1.1
+git pull --ff-only origin release-1.1
+```
+
 ## 3.1. Crear una rama de funcionalidad
 
 Todas las ramas `feature/*` deben crearse desde `develop` actualizado:
@@ -133,18 +144,18 @@ Completar `PracticaLink/backend/.env`:
 
 ```env
 SUPABASE_DATABASE_URL=postgresql+psycopg://USUARIO:CONTRASENA_CODIFICADA@HOST:5432/postgres
-JWT_SECRET_KEY=CLAVE_ALEATORIA_LARGA
+JWT_SECRET_KEY=<GENERAR_UN_SECRETO_LOCAL_ALEATORIO>
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 # Integraciones externas - Chile RUT Empresa
-CHILE_RUT_EMPRESA_API_KEY=API_KEY_DEL_AMBIENTE
+CHILE_RUT_EMPRESA_API_KEY=<API_KEY_LOCAL_NO_PUBLICAR>
 CHILE_RUT_EMPRESA_API_URL=https://chilerutempresa.cl/api
 ```
 
 Consideraciones:
 
-- Solicitar `SUPABASE_DATABASE_URL` y `JWT_SECRET_KEY` al responsable del proyecto por un canal privado.
+- Solicitar la configuración autorizada de base de datos por un canal privado. Para desarrollo local, generar un `JWT_SECRET_KEY` independiente con un generador criptográfico, por ejemplo `secrets.token_urlsafe(48)` de Python, y guardarlo solo en el `.env` local. No reutilizar el valor de una plantilla. Para entornos compartidos, coordinar su gestión con el responsable; cambiarlo invalida los tokens existentes.
 - Si la contraseña contiene caracteres especiales, debe estar codificada para una URL. Por ejemplo, `@` se representa como `%40`.
 - Nunca publicar `.env` en Git, chats, capturas ni documentación.
 - `.env` ya está excluido mediante `.gitignore`.
@@ -283,6 +294,7 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 .\scripts\practicalink-back-test.cmd
 .\scripts\practicalink-front-test.cmd
 ```
+
 4. Iniciar sesión con un usuario existente en la base de datos o crear una
    cuenta desde `Registrarme`. El registro solicita nombre, apellido, correo y
    contraseña; el perfil académico se completa después desde el Home.
@@ -290,14 +302,34 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 
 ### Credenciales de prueba
 
+Los valores entre `<...>` son marcadores y no permiten iniciar sesión. Cada
+persona debe provisionar cuentas sintéticas en una base local aislada y asignar
+los roles necesarios mediante el procedimiento autorizado del proyecto. Usar
+contraseñas distintas por cuenta, conservarlas únicamente en configuración local
+segura y no publicarlas en Git, chats, capturas ni documentación. Estos ejemplos
+no autorizan crear o modificar cuentas en Supabase ni en otras bases reales.
+
+Las credenciales documentadas anteriormente pueden persistir en el historial Git.
+Retirarlas de esta versión no revoca su acceso: si llegaron a utilizarse en un
+entorno real, el responsable debe investigar y rotarlas por un procedimiento
+separado y autorizado, incluida la clave del proveedor externo si corresponde.
+
 Para comprobar el inicio de sesión en el entorno de desarrollo:
 
 ```text
-Correo: demo@practicalink.cl
-Contraseña: 123456.abc
+Estudiante:
+Correo: <CORREO_ESTUDIANTE_LOCAL>
+Contraseña: <CONTRASEÑA_DE_DEMOSTRACIÓN_LOCAL>
+
+Administrador:
+Correo: <CORREO_ADMINISTRADOR_LOCAL>
+Contraseña: <CONTRASEÑA_DE_DEMOSTRACIÓN_LOCAL>
 ```
 
-Esta cuenta es únicamente para demostración y pruebas locales sobre la rama `develop`. No debe reutilizarse en producción ni almacenar información sensible.
+Estas cuentas son únicamente para demostración y pruebas locales. La cuenta
+administradora permite acceder a `/usuarios` y validar la creación, edición,
+asignación de roles y activación de usuarios. No deben reutilizarse en producción
+ni almacenar información sensible.
 
 ## 8. Problemas frecuentes
 
@@ -359,8 +391,14 @@ npm start
 ## Credenciales de acceso rápido
 
 ```text
-Correo: demo@practicalink.cl
-Contraseña: 123456.abc
+Estudiante: <CORREO_ESTUDIANTE_LOCAL>
+Administrador: <CORREO_ADMINISTRADOR_LOCAL>
+Contraseña estudiante: <CONTRASEÑA_ESTUDIANTE_LOCAL>
+Contraseña administrador: <CONTRASEÑA_ADMINISTRADOR_LOCAL>
+Gestor o coordinador: <CORREO_GESTOR_LOCAL>
+Contraseña gestor: <CONTRASEÑA_DE_DEMOSTRACIÓN_LOCAL>
 ```
 
-Usar únicamente para demostración y pruebas locales en la rama `develop`.
+Usar únicamente para demostración y pruebas locales. Para comprobar el panel
+administrativo, iniciar sesión con `<CORREO_ADMINISTRADOR_LOCAL>` y entrar a
+`http://localhost:4200/usuarios`.
