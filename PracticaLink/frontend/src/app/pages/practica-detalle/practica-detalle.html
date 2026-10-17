@@ -28,7 +28,33 @@
             <div><dt>Cargo o función</dt><dd>{{ p.cargo_funcion ?? 'No disponible' }}</dd></div>
             <div class="full"><dt>Descripción</dt><dd>{{ p.descripcion ?? 'No disponible' }}</dd></div>
           </dl>
+          @if (puedeIniciar) {
+            <section aria-labelledby="inicio-titulo" [attr.aria-busy]="iniciando">
+              <h3 id="inicio-titulo">Inicio de práctica</h3>
+              @if (!confirmandoInicio) {
+                <ion-button [disabled]="iniciando || requiereConsultaEstado"
+                  (click)="solicitarInicio()">Iniciar práctica</ion-button>
+              } @else {
+                <p>¿Confirmas iniciar esta práctica? Su estado pasará a EN_CURSO.</p>
+                <label for="observacion-inicio">Observación opcional (máximo 500 caracteres)</label>
+                <textarea id="observacion-inicio" rows="4" [(ngModel)]="observacionInicio"
+                  [disabled]="iniciando" aria-describedby="inicio-titulo"></textarea>
+                <ion-button [disabled]="iniciando" (click)="confirmarInicio()">
+                  {{ iniciando ? 'Iniciando...' : 'Confirmar inicio' }}
+                </ion-button>
+                <ion-button fill="outline" [disabled]="iniciando" (click)="cancelarInicio()">Cancelar</ion-button>
+              }
+            </section>
+          }
         </ion-card-content></ion-card>
+      }
+    </section>
+    <section aria-live="polite">
+      @if (mensajeInicio) { <p role="status">{{ mensajeInicio }}</p> }
+      @if (errorInicio) { <p role="alert">{{ errorInicio }}</p> }
+      @if (requiereConsultaEstado) {
+        <ion-button fill="outline" [disabled]="cargando || cargandoHistorial"
+          (click)="consultarEstado()">Consultar nuevamente el estado</ion-button>
       }
     </section>
     @if (historialHabilitado) {

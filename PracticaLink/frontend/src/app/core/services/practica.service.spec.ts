@@ -16,6 +16,17 @@ describe('PracticaService', () => {
   let service: PracticaService;
   let httpMock: HttpTestingController;
 
+  it('starts a practice with PATCH, exact body and no automatic retry', () => {
+    service.iniciar('15', { estado: 'EN_CURSO', observacion: null }).subscribe({
+      error: error => expect(error.status).toBe(503)
+    });
+    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas/15/estado');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ estado: 'EN_CURSO', observacion: null });
+    request.flush({}, { status: 503, statusText: 'Unavailable' });
+    httpMock.expectNone('http://127.0.0.1:8000/practicas/15/estado');
+  });
+
   const practicaDetalle: PracticaDetalleResponse = {
     id_practica: 101,
     fecha_registro: '2026-09-01T10:30:00',

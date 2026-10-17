@@ -9,7 +9,9 @@ import {
   PracticasListadoResponse,
   PracticaCreate,
   PracticaCreateResponse,
-  EmpresaLookup
+  EmpresaLookup,
+  IniciarPracticaRequest,
+  IniciarPracticaResponse
 } from '../models/practica.models';
 
 @Injectable({ providedIn: 'root' })
@@ -29,6 +31,12 @@ export class PracticaService {
   obtenerDetalle(idPractica: string): Observable<PracticaDetalleGestionResponse> {
     return this.http.get<PracticaDetalleGestionResponse>(
       `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}`
+    );
+  }
+
+  iniciar(idPractica: string, datos: IniciarPracticaRequest): Observable<IniciarPracticaResponse> {
+    return this.http.patch<IniciarPracticaResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/estado`, datos
     );
   }
 

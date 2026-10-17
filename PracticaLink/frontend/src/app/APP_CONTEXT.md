@@ -256,4 +256,25 @@ Cambiar de práctica reinicia la paginación y cancela las peticiones anteriores
 al destruir la vista se cancelan ambas consultas. Usa el formateador compartido
 America/Santiago. Observaciones por interpolación de texto, sin innerHTML.
 Solo los roles de gestión existentes pueden abrir la pantalla; no se añade
-acceso del estudiante ni acciones de revisión o modificación de estados.
+acceso del estudiante ni acciones de revisión en el historial.
+
+### EP04 / HU04.2: iniciar práctica
+
+El detalle muestra Iniciar práctica solo a GESTOR/ADMINISTRADOR con APROBADA no
+final. Solicita confirmación explícita y observación opcional; normaliza espacios
+en extremos como PostgreSQL y valida hasta 500 caracteres Unicode. PracticaService
+envía PATCH con destino EN_CURSO, sin identificador de responsable en el cuerpo.
+Mientras se envía, bloquea confirmación/cancelación y evita solicitudes duplicadas.
+Solo confirma éxito después del servidor y recarga antecedentes e historial desde
+la primera página. Ante 409 explica el conflicto y refresca ambas consultas.
+Ante 503 o resultado incierto ofrece consultar nuevamente el estado, sin reintentar
+la escritura automáticamente. Una consulta fallida mantiene bloqueado un nuevo
+intento. Cambiar de práctica o destruir la vista cancela la suscripción local;
+esto no garantiza cancelar una escritura que ya llegó al servidor. No usa EP03.
+
+En la simulación local de corte abrupto, Angular invocó una sola vez el servicio
+y se observó un único `XHR.send()`, pero Firefox produjo dos solicitudes HTTP
+PATCH. También se reprodujo con XHR nativo sin Angular; no se verificó en otros
+navegadores. La aplicación no implementa reintentos automáticos. PostgreSQL
+protege contra una transición repetida mediante bloqueo y validación del estado:
+una segunda operación sobre EN_CURSO se rechaza sin añadir otro evento.

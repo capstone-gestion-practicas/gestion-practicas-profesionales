@@ -140,3 +140,17 @@ export interface HistorialPracticaResponse {
   offset: number;
   hay_mas: boolean;
 }
+
+export interface IniciarPracticaRequest {
+  estado: 'EN_CURSO';
+  observacion?: string | null;
+}
+
+export interface IniciarPracticaResponse {
+  id_practica: number;
+  estado_anterior: EstadoHistorial;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string;
+  id_historial: number;
+  mensaje: string;
+}
