@@ -59,6 +59,8 @@ Ejecución local desde `PracticaLink/backend`:
 `core/config.py` carga las siguientes variables desde `PracticaLink/backend/.env`:
 
 - `SUPABASE_DATABASE_URL`
+- `INICIO_PRACTICA_DATABASE_URL` (opcional al iniciar la aplicación; obligatoria
+  al usar la conexión restringida de HU04.2)
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
@@ -72,6 +74,16 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 `core/database.py` crea el engine de SQLAlchemy y `SessionLocal`. La dependencia `get_db()` entrega una sesión por solicitud y garantiza su cierre.
 
 El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
+
+`core/inicio_practica_database.py` ofrece `get_inicio_practica_db()` para HU04.2.
+Su engine y fábrica de sesiones se inicializan al primer uso, de forma independiente
+y sin fallback a `SessionLocal`. Requiere una URL `postgresql+psycopg` con host,
+base y usuario distinto del principal. Solo admite los parámetros de URL
+`sslmode`, `sslrootcert` y `connect_timeout`; la conexión usa timeout de 10 segundos.
+La ausencia/configuración inválida o fallo de apertura devuelve HTTP 503 genérico,
+sin URLs ni credenciales. La sesión se cierra siempre y no se confirma automáticamente.
+Todavía no está integrada con endpoints. El login dedicado y sus privilegios reales
+deben aprovisionarse y verificarse por separado; una URL distinta no acredita permisos.
 
 ### Convención para inserciones
 
