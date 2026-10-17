@@ -1,5 +1,5 @@
-.review-content { --background: #f4f6f9; }
-.review-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+.review-content { --background: var(--cream); }
+.review-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; --ion-grid-padding: 0; --ion-grid-column-padding: 0; }
 .page-heading {
   display: flex;
   justify-content: space-between;
@@ -23,7 +23,7 @@
 }
 .heading-subtitle {
   margin: 0;
-  color: #667085;
+  color: var(--ink-muted);
   line-height: 1.5;
 }
 .back-button { flex-shrink: 0; }
@@ -37,7 +37,7 @@
   text-align: center;
 }
 .state-card-content p,
-.empty-state { margin: 0; color: #475467; font-weight: 500; }
+.empty-state { margin: 0; color: var(--ink-muted); font-weight: 500; }
 .state-card-error { --background: #fff5f5; }
 .state-card-error .error { margin: 0; color: #b42318; font-weight: 600; }
 .request-card ion-card-header { padding-bottom: 0; }
@@ -56,12 +56,12 @@
   margin: 0;
   padding: 12px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--cream-muted);
 }
 .request-meta span {
   display: block;
   margin-bottom: 4px;
-  color: #667085;
+  color: var(--ink-muted);
   font-size: .78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -69,7 +69,7 @@
 }
 .request-meta strong {
   display: block;
-  color: #101828;
+  color: var(--ink);
   font-size: .95rem;
   line-height: 1.35;
   word-break: break-word;

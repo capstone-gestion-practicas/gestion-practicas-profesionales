@@ -4,6 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "api": "cd ..\\backend && (if not exist .venv\\Scripts\\python.exe (python -m venv .venv && .venv\\Scripts\\python.exe -m pip install -r requirements.txt)) && .venv\\Scripts\\python.exe -m uvicorn app.main:app --reload",
+    "start:all": "concurrently --kill-others-on-fail \"npm run start\" \"npm run api\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -39,6 +41,7 @@
     "@angular/compiler-cli": "^20.3.0",
     "@ionic/angular-toolkit": "^13.0.0",
     "@types/jasmine": "~5.1.0",
+    "concurrently": "^9.1.2",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

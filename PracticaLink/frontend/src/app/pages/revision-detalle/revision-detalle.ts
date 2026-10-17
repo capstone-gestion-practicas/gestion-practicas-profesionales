@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
-  IonContent, IonModal, IonSpinner, IonTextarea
+  IonContent, IonModal, IonSpinner, IonTextarea, IonGrid, IonRow, IonCol
 } from '@ionic/angular';
 
 import {
@@ -17,7 +17,7 @@ import { RevisionService } from '../../core/services/revision.service';
 @Component({
   selector: 'app-revision-detalle', standalone: true,
   imports: [CommonModule, FormsModule, IonContent, IonCard, IonCardHeader,
-    IonCardTitle, IonCardContent, IonButton, IonModal, IonSpinner, IonTextarea],
+    IonCardTitle, IonCardContent, IonButton, IonModal, IonSpinner, IonTextarea, IonGrid, IonRow, IonCol],
   templateUrl: './revision-detalle.html', styleUrl: './revision-detalle.scss'
 })
 export class RevisionDetalle implements OnInit {

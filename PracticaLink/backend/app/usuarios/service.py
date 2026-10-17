@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
-from app.schemas.usuario import UsuarioActualizarRequest, UsuarioCrearRequest
+from app.usuarios.schemas import UsuarioActualizarRequest, UsuarioCrearRequest
 
 
 class UsuarioDuplicadoError(Exception):

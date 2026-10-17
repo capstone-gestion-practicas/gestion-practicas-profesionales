@@ -5,10 +5,10 @@ from sqlalchemy import text
 from app.core.database import engine
 from app.auth.routes import router as auth_router
 from app.practicas.routes import router as practicas_router
-from app.api.routes.estudiantes import router as estudiantes_router
+from app.estudiantes.routes import router as estudiantes_router
 from app.revisiones.routes import router as revisiones_router
-from app.api.routes.usuarios import router as usuarios_router
-from app.api.routes.empresas import router as empresas_router
+from app.usuarios.routes import router as usuarios_router
+from app.empresas.routes import router as empresas_router
 
 app = FastAPI(
     title="PracticaLink API",

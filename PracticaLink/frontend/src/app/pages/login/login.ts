@@ -11,9 +11,12 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonGrid,
   IonInput,
   IonItem,
   IonLabel,
+  IonCol,
+  IonRow,
   IonSpinner
 } from '@ionic/angular';
 
@@ -27,6 +30,9 @@ import { AuthStore } from '../../core/store/auth.store';
     CommonModule,
     FormsModule,
     IonContent,
+    IonGrid,
+    IonRow,
+    IonCol,
     IonCard,
     IonCardHeader,
     IonCardTitle,

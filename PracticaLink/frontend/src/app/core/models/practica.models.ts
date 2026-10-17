@@ -44,6 +44,7 @@ export interface CentroPracticaDetalle {
 export interface PracticaDetalleResponse {
   id_practica: number;
   fecha_registro: string;
+  fecha_ultimo_cambio_estado: string | null;
   estado: EstadoPracticaDetalle;
   centro_practica: CentroPracticaDetalle;
   fecha_inicio: string | null;
@@ -78,4 +79,78 @@ export interface ActividadEmpresa {
   descripcion: string;
   afecta_iva: string | null;
   categoria: string | null;
+}
+
+
+export interface PracticaResumen {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: string;
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+}
+
+export interface PracticasListadoResponse {
+  items: PracticaResumen[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
+
+export interface PracticaDetalleGestionResponse {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: { id_centro: number; nombre: string };
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  horas: number | null;
+  cargo_funcion: string | null;
+  descripcion: string | null;
+}
+
+
+export interface EstadoHistorial {
+  id_estado: number;
+  nombre: string;
+}
+
+export interface ResponsableHistorial {
+  id_usuario: number;
+  nombre: string;
+}
+
+export interface EventoHistorial {
+  id_historial: number;
+  estado_anterior: EstadoHistorial | null;
+  estado_nuevo: EstadoHistorial;
+  fecha_cambio: string;
+  responsable: ResponsableHistorial;
+  observacion: string | null;
+}
+
+export interface HistorialPracticaResponse {
+  id_practica: number;
+  items: EventoHistorial[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
+export interface IniciarPracticaRequest {
+  estado: 'EN_CURSO';
+  observacion?: string | null;
+}
+
+export interface IniciarPracticaResponse {
+  id_practica: number;
+  estado_anterior: EstadoHistorial;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string;
+  id_historial: number;
+  mensaje: string;
 }

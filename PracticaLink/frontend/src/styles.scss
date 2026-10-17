@@ -13,10 +13,64 @@
 @import "@ionic/angular/css/display.css";
 
 :root {
-  --form-primary: #155eef;
-  --form-border: #d0d5dd;
-  --form-surface: #f8fafc;
-  --form-error: #b42318;
+  --ion-color-primary: #245a45;
+  --ion-color-primary-rgb: 36, 90, 69;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1f4f3c;
+  --ion-color-primary-tint: #3a6b58;
+  --ion-color-secondary: #6f8769;
+  --ion-color-secondary-rgb: 111, 135, 105;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-shade: #62775c;
+  --ion-color-secondary-tint: #7d9378;
+  --ion-background-color: #f6f2e9;
+  --ion-text-color: #20372d;
+  --ion-card-background: #fffcf5;
+  --ion-toolbar-background: #fffcf5;
+  --ion-toolbar-color: #20372d;
+  --cream: #f6f2e9;
+  --cream-surface: #fffcf5;
+  --cream-muted: #f0ebdf;
+  --ink: #20372d;
+  --ink-muted: #627168;
+  --line: #d9d0bf;
+  --form-primary: var(--ion-color-primary);
+  --form-border: var(--line);
+  --form-surface: #fbf8f0;
+  --form-error: #a23d34;
+}
+
+ion-card {
+  --background: var(--cream-surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 28px rgba(32, 55, 45, .08);
+}
+
+ion-toolbar {
+  --border-color: var(--line);
+}
+
+ion-button {
+  --border-radius: 10px;
+  font-weight: 700;
+}
+
+ion-input::part(native),
+ion-textarea::part(native) {
+  background: transparent;
+  color: var(--ink);
+}
+
+ion-input::part(native):-webkit-autofill,
+ion-input::part(native):-webkit-autofill:hover,
+ion-input::part(native):-webkit-autofill:focus,
+ion-textarea::part(native):-webkit-autofill,
+ion-textarea::part(native):-webkit-autofill:hover,
+ion-textarea::part(native):-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--form-surface) inset;
+  caret-color: var(--ink);
 }
 
 .login-card ion-item,
@@ -42,9 +96,9 @@
 .profile-modal ion-item:focus-within,
 .form-wrapper ion-item:focus-within,
 .user-modal > ion-item:focus-within {
-  --background: #fff;
+  --background: var(--cream-surface);
   border-color: var(--form-primary);
-  box-shadow: 0 0 0 3px rgba(21, 94, 239, .12);
+  box-shadow: 0 0 0 3px rgba(36, 90, 69, .14);
 }
 
 .login-card ion-label,
@@ -52,7 +106,7 @@
 .form-wrapper ion-label,
 .user-modal > ion-item ion-label {
   margin-top: 4px;
-  color: #475467;
+  color: var(--ink-muted);
   font-size: .82rem;
   font-weight: 600;
   overflow: visible;
@@ -67,15 +121,15 @@
   font-size: 1rem;
 }
 
-.field-help { margin: -5px 4px 12px; color: #667085; font-size: .78rem; }
+.field-help { margin: -5px 4px 12px; color: var(--ink-muted); font-size: .78rem; }
 
 .field-error,
 .error,
 .profile-error {
   padding: 10px 12px;
-  border-left: 3px solid #d92d20;
+  border-left: 3px solid #bd5147;
   border-radius: 7px;
-  background: #fef3f2;
+  background: #fbebe8;
   color: var(--form-error);
   font-size: .86rem;
 }
@@ -89,7 +143,21 @@ ion-modal.practice-registration-modal {
   --width: min(960px, calc(100% - 32px));
   --height: min(860px, calc(100% - 32px));
   --border-radius: 18px;
-  --box-shadow: 0 24px 70px rgba(16, 24, 40, .24);
+  --box-shadow: 0 24px 70px rgba(32, 55, 45, .24);
+}
+
+ion-modal.requests-modal {
+  --width: min(720px, calc(100% - 32px));
+  --height: min(82vh, 640px);
+  --max-height: 82vh;
+  --border-radius: 16px;
+}
+
+ion-modal.request-detail-modal {
+  --width: min(640px, calc(100% - 32px));
+  --height: min(82vh, 620px);
+  --max-height: 82vh;
+  --border-radius: 16px;
 }
 
 @media (max-width: 640px) {

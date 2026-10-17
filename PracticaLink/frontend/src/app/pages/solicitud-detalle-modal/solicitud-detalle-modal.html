@@ -1,0 +1,28 @@
+<ion-content class="detail-modal-content">
+  <section class="detail-modal">
+    <div class="detail-modal-heading">
+      <div>
+        <p class="module-label">Solicitud de práctica</p>
+        <h2>Detalle de solicitud</h2>
+      </div>
+      <ion-button fill="clear" (click)="cerrar()">Cerrar</ion-button>
+    </div>
+
+    @if (cargando) {
+      <div class="modal-loading"><ion-spinner name="crescent"></ion-spinner></div>
+    } @else if (solicitud) {
+      <ion-list lines="none" class="detail-list">
+        <ion-item><ion-label><span>Estudiante</span><strong>{{ solicitud.estudiante }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Correo</span><strong>{{ solicitud.correo_estudiante }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Carrera</span><strong>{{ solicitud.carrera }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Centro de práctica</span><strong>{{ solicitud.centro_practica }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Estado</span><strong>{{ solicitud.estado }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Fecha de inicio</span><strong>{{ solicitud.fecha_inicio || 'No informada' }}</strong></ion-label></ion-item>
+        <ion-item><ion-label><span>Horas</span><strong>{{ solicitud.horas || 'No informadas' }}</strong></ion-label></ion-item>
+      </ion-list>
+      <ion-button expand="block" (click)="abrirRevision()">Abrir revisión completa</ion-button>
+    } @else {
+      <p class="modal-error" role="alert">{{ error }}</p>
+    }
+  </section>
+</ion-content>

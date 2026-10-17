@@ -1,6 +1,6 @@
 import inspect
 import unittest
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from unittest.mock import MagicMock
 
 from app.practicas.schemas import PracticaDetalleResponse
@@ -29,6 +29,7 @@ class ObtenerPracticaDelEstudianteTests(unittest.TestCase):
                             return_value={
                                 "id_practica": 101,
                                 "fecha_registro": datetime(2026, 9, 1, 10, 30, 0),
+                                "fecha_ultimo_cambio_estado": None,
                                 "fecha_inicio": date(2026, 3, 2),
                                 "fecha_termino": date(2026, 6, 30),
                                 "horas": 360,
@@ -52,6 +53,35 @@ class ObtenerPracticaDelEstudianteTests(unittest.TestCase):
             ),
         ]
         return db
+
+    def test_returns_last_state_change_date_and_preserves_existing_fields(self):
+        db = self._mock_estudiante()
+        # Materializar la respuesta SQL simulada sin ejecutar consultas reales.
+        results = list(db.execute.side_effect)
+        fecha = datetime(2026, 10, 17, 12, 30, tzinfo=timezone.utc)
+        results[1].mappings.return_value.first.return_value["fecha_ultimo_cambio_estado"] = fecha
+        db.execute.side_effect = results
+        result = obtener_practica_del_estudiante(db, 55)
+        self.assertEqual(result["fecha_ultimo_cambio_estado"], fecha)
+        self.assertEqual(result["estado"]["nombre"], "REGISTRADA")
+        self.assertEqual(result["id_practica"], 101)
+        self.assertEqual(result["horas"], 360)
+        self.assertEqual(PracticaDetalleResponse(**result).model_dump(mode="json")[
+            "fecha_ultimo_cambio_estado"], "2026-10-17T12:30:00Z")
+        db.commit.assert_not_called()
+        db.rollback.assert_not_called()
+
+    def test_no_history_returns_null_and_query_selects_latest_event_deterministically(self):
+        db = self._mock_estudiante()
+        result = obtener_practica_del_estudiante(db, 55)
+        self.assertIsNone(result["fecha_ultimo_cambio_estado"])
+        sql = " ".join(str(db.execute.call_args_list[1].args[0]).split())
+        self.assertIn("FROM historial_estado h", sql)
+        self.assertIn("WHERE h.id_practica = p.id_practica", sql)
+        self.assertIn("ORDER BY h.fecha_cambio DESC, h.id_historial DESC LIMIT 1", sql)
+        self.assertNotIn("fecha_actualizacion", sql)
+        self.assertEqual(db.execute.call_args_list[0].args[1], {"id_usuario": 55})
+        self.assertEqual(db.execute.call_args_list[1].args[1], {"id_estudiante": 9})
 
     def test_signature_only_accepts_db_and_id_usuario(self) -> None:
         params = list(inspect.signature(obtener_practica_del_estudiante).parameters)
@@ -118,6 +148,7 @@ class ObtenerPracticaDelEstudianteTests(unittest.TestCase):
             {
                 "id_practica": 101,
                 "fecha_registro": "2026-09-01T10:30:00",
+                "fecha_ultimo_cambio_estado": None,
                 "estado": {
                     "id_estado": 1,
                     "nombre": "REGISTRADA",
