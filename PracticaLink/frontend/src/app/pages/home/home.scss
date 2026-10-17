@@ -95,8 +95,7 @@
 }
 
 .metric-card,
-.admin-table-card,
-.quick-actions-card {
+.admin-table-card {
   height: 100%;
   margin: 0;
 }
@@ -130,8 +129,7 @@
   --color: var(--ion-color-primary);
 }
 
-.admin-table-card ion-card-title,
-.quick-actions-card ion-card-title {
+.admin-table-card ion-card-title {
   color: var(--ink);
   font-size: 1.1rem;
 }
@@ -147,10 +145,6 @@
   font-size: .72rem;
   font-weight: 700;
   text-align: right;
-}
-
-.quick-actions-card ion-button + ion-button {
-  margin-top: 10px;
 }
 
 .state-history {
@@ -260,6 +254,33 @@ ion-modal.requests-modal {
 
 .brand-spacer {
   flex: 1;
+}
+
+.quick-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 12px;
+}
+
+.quick-nav button {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #fffdf7;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.quick-nav button:hover,
+.quick-nav button:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, .16);
 }
 
 .account-summary {
@@ -561,6 +582,26 @@ ion-modal {
 }
 
 @media (max-width: 720px) {
+  .brand-header {
+    min-height: 0;
+    flex-wrap: wrap;
+    gap: 4px 0;
+    padding: 8px 10px;
+  }
+
+  .quick-nav {
+    order: 4;
+    flex: 0 0 100%;
+    overflow-x: auto;
+    margin: 4px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, .22);
+  }
+
+  .quick-nav button {
+    padding: 9px 8px;
+    font-size: .65rem;
+  }
+
   .admin-heading {
     align-items: flex-start;
     flex-direction: column;

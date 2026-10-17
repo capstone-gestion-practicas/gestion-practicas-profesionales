@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -21,23 +23,20 @@ def completar_perfil_estudiante(
     id_usuario: int,
     datos: PerfilEstudianteCreate,
 ) -> dict:
-    valido = db.execute(text("""
-        SELECT 1 FROM usuario u
-        JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
-        JOIN rol r ON r.id_rol = ur.id_rol
-        WHERE u.id_usuario = :id_usuario AND u.activo = TRUE
-          AND r.nombre = 'ESTUDIANTE' AND r.activo = TRUE
-    """), {"id_usuario": id_usuario}).first()
-    if not valido:
+    resultado = db.execute(text("""
+        SELECT public.fn_completar_perfil_estudiante(
+            :id_usuario, CAST(:datos AS JSONB)
+        )
+    """), {
+        "id_usuario": id_usuario,
+        "datos": json.dumps(datos.model_dump(mode="json"), ensure_ascii=False),
+    }).scalar_one()
+    error = resultado.get("error")
+    if error == "USUARIO_ESTUDIANTE_NO_VALIDO":
         raise UsuarioEstudianteNoValidoError
-    if db.execute(text("SELECT 1 FROM estudiante WHERE id_usuario = :id_usuario"), {"id_usuario": id_usuario}).first():
+    if error == "PERFIL_EXISTENTE":
         raise PerfilEstudianteExistenteError
-    if db.execute(text("SELECT 1 FROM estudiante WHERE UPPER(rut) = UPPER(:rut)"), {"rut": datos.rut}).first():
+    if error == "RUT_EXISTENTE":
         raise RutEstudianteExistenteError
-    fila = db.execute(text("""
-        INSERT INTO estudiante (id_usuario, rut, carrera, sede, telefono, direccion)
-        VALUES (:id_usuario, :rut, :carrera, :sede, :telefono, :direccion)
-        RETURNING id_estudiante
-    """), {"id_usuario": id_usuario, **datos.model_dump()}).mappings().one()
     db.commit()
-    return {"id_estudiante": fila["id_estudiante"], "mensaje": "Perfil de estudiante completado correctamente"}
+    return resultado

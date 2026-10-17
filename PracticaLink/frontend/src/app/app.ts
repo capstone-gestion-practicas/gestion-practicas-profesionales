@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Injector, OnInit, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet } from '@ionic/angular';
 import { EMPTY, timer } from 'rxjs';
@@ -21,6 +21,7 @@ export class App implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   protected readonly notificacionEmergente = signal<Notificacion | null>(null);
 
   ngOnInit(): void {
@@ -28,36 +29,71 @@ export class App implements OnInit {
     let idsVistos = new Set<number>();
     let primeraConsulta = true;
 
-    timer(0, 20000).pipe(
+    effect(onCleanup => {
+      const contexto = this.authStore.contexto();
+      if (!sessionStorage.getItem('access_token') || !contexto) {
+        usuarioActual = null;
+        idsVistos = new Set<number>();
+        primeraConsulta = true;
+        this.notificacionService.noLeidas.set(0);
+        this.notificacionService.desconectarRealtime();
+        return;
+      }
+
+      usuarioActual = contexto.usuario.id_usuario;
+      idsVistos = new Set<number>();
+      primeraConsulta = true;
+      const realtimeSub = this.notificacionService.conectarRealtime(usuarioActual, id => {
+        this.notificacionService.listar().subscribe(resumen => {
+          this.notificacionService.noLeidas.set(resumen.no_leidas);
+          const nueva = resumen.notificaciones.find(item => item.id_notificacion === id);
+          if (nueva) {
+            idsVistos.add(id);
+            this.mostrarNotificacion(nueva);
+          }
+        });
+      }).pipe(catchError(() => EMPTY)).subscribe();
+
+      // Carga inmediata al completar el login, sin esperar al timer de respaldo.
+      const cargaInicial = this.notificacionService.listar().subscribe({
+        next: resumen => {
+          this.notificacionService.noLeidas.set(resumen.no_leidas);
+          idsVistos = new Set(resumen.notificaciones.map(item => item.id_notificacion));
+          primeraConsulta = false;
+        },
+        error: () => undefined
+      });
+      onCleanup(() => {
+        realtimeSub.unsubscribe();
+        cargaInicial.unsubscribe();
+        this.notificacionService.desconectarRealtime();
+      });
+    }, { injector: this.injector });
+
+    timer(0, 60000).pipe(
       switchMap(() => {
         const contexto = this.authStore.obtenerContextoActual();
         if (!sessionStorage.getItem('access_token') || !contexto) {
-          usuarioActual = null;
-          idsVistos = new Set<number>();
-          primeraConsulta = true;
-          this.notificacionService.noLeidas.set(0);
           return EMPTY;
         }
         if (usuarioActual !== contexto.usuario.id_usuario) {
-          usuarioActual = contexto.usuario.id_usuario;
-          idsVistos = new Set<number>();
-          primeraConsulta = true;
+          return EMPTY;
+        }
+        // El polling solo cubre períodos en que Realtime no logra conectarse.
+        if (this.notificacionService.realtimeConectado()) {
+          return EMPTY;
         }
         return this.notificacionService.listar().pipe(catchError(() => EMPTY));
       }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(resumen => {
       this.notificacionService.noLeidas.set(resumen.no_leidas);
-      if (primeraConsulta) {
-        idsVistos = new Set(resumen.notificaciones.map(item => item.id_notificacion));
-        primeraConsulta = false;
-        return;
-      }
       const nuevas = resumen.notificaciones
         .filter(item => !idsVistos.has(item.id_notificacion))
         .sort((a, b) => b.id_notificacion - a.id_notificacion);
       resumen.notificaciones.forEach(item => idsVistos.add(item.id_notificacion));
-      if (nuevas.length) this.mostrarNotificacion(nuevas[0]);
+      if (!primeraConsulta && nuevas.length) this.mostrarNotificacion(nuevas[0]);
+      primeraConsulta = false;
     });
   }
 

@@ -15,3 +15,16 @@ CREATE INDEX IF NOT EXISTS idx_notificacion_usuario_fecha
 CREATE INDEX IF NOT EXISTS idx_notificacion_no_leida
     ON notificacion (id_usuario, id_notificacion DESC)
     WHERE fecha_leida IS NULL;
+
+-- Realtime reads are restricted to the user ID embedded in the short-lived JWT
+-- issued by the API. The API itself continues writing directly to PostgreSQL.
+ALTER TABLE public.notificacion ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON TABLE public.notificacion TO authenticated;
+
+DROP POLICY IF EXISTS notificacion_select_own ON public.notificacion;
+CREATE POLICY notificacion_select_own
+    ON public.notificacion
+    FOR SELECT
+    TO authenticated
+    USING (id_usuario = (auth.jwt() ->> 'sub')::BIGINT);

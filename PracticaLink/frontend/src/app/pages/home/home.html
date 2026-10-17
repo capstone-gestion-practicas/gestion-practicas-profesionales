@@ -8,6 +8,15 @@
       <span class="brand-name">PracticaLink</span>
       <span class="brand-spacer"></span>
       @if (contexto(); as ctx) {
+        <nav class="quick-nav" aria-label="Navegación principal">
+          @if (esAdministrador()) {
+            <button type="button" (click)="gestionarUsuarios()">EP01 · Usuarios y roles</button>
+          }
+          @if (puedeRevisarPracticas()) {
+            <button type="button" (click)="revisarPracticas()">EP03 · Revisiones</button>
+            <button type="button" (click)="gestionarEstados()">EP04 · Seguimiento</button>
+          }
+        </nav>
         <button class="notification-mark" type="button" aria-label="Abrir notificaciones" (click)="abrirCentroNotificaciones()">
           ♧
           @if (notificacionesNoLeidas() > 0) {
@@ -34,12 +43,9 @@
         <section class="admin-dashboard" aria-label="Dashboard administrativo">
           <div class="admin-heading">
             <div>
-              <p class="module-label">Administración</p>
+              <p class="module-label">EP01 · Administración</p>
               <h1>Dashboard</h1>
               <p>Resumen general de la gestión de prácticas.</p>
-            </div>
-            <div class="admin-heading-actions">
-              <ion-button (click)="gestionarUsuarios()">Gestionar usuarios</ion-button>
             </div>
           </div>
 
@@ -76,7 +82,7 @@
 
           <ion-grid class="admin-panels">
             <ion-row>
-              <ion-col size="12" size-lg="7">
+              <ion-col size="12" size-lg="12">
                 <ion-card class="admin-table-card">
                   <ion-card-header>
                     <ion-card-title>Solicitudes recientes</ion-card-title>
@@ -97,16 +103,6 @@
                     } @else {
                       <p class="empty-state">No hay solicitudes disponibles.</p>
                     }
-                  </ion-card-content>
-                </ion-card>
-              </ion-col>
-              <ion-col size="12" size-lg="5">
-                <ion-card class="quick-actions-card">
-                  <ion-card-header><ion-card-title>Accesos rápidos</ion-card-title></ion-card-header>
-                  <ion-card-content>
-                    <ion-button expand="block" (click)="gestionarUsuarios()">Usuarios y roles</ion-button>
-                    <ion-button expand="block" fill="outline" (click)="revisarPracticas()">Revisar prácticas</ion-button>
-                    <ion-button expand="block" fill="outline" (click)="gestionarEstados()">Gestionar estados · EP04</ion-button>
                   </ion-card-content>
                 </ion-card>
               </ion-col>

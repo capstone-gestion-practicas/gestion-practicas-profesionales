@@ -1,9 +1,13 @@
+from datetime import datetime, timedelta, timezone
+
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
+from app.core.config import settings
 from app.schemas.notificacion import NotificacionesResumenResponse
 from app.services.notificacion_service import (
     listar_notificaciones,
@@ -25,6 +29,31 @@ def listar(
     db: Session = Depends(get_db),
 ):
     return listar_notificaciones(db, id_usuario)
+
+
+@router.get("/realtime-token")
+def obtener_token_realtime(
+    id_usuario: int = Depends(get_current_user_id),
+):
+    """Issue a short-lived Supabase JWT scoped to this user's notifications."""
+    if not settings.supabase_jwt_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Realtime no está configurado en el backend",
+        )
+
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    token = jwt.encode(
+        {
+            "sub": str(id_usuario),
+            "role": "authenticated",
+            "aud": "authenticated",
+            "exp": expires_at,
+        },
+        settings.supabase_jwt_secret,
+        algorithm="HS256",
+    )
+    return {"token": token, "expires_at": expires_at.isoformat()}
 
 
 @router.patch("/leidas")

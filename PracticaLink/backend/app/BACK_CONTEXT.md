@@ -4,7 +4,7 @@ Este archivo entrega contexto técnico y funcional a desarrolladores y asistente
 
 ## Propósito
 
-El backend de PracticaLink expone una API para autenticar usuarios y consultar su contexto dentro del proceso de práctica profesional. Actualmente contiene la base del módulo de autenticación y se conecta a PostgreSQL alojado en Supabase.
+El backend de PracticaLink expone la API del proceso de práctica profesional y se conecta a PostgreSQL alojado en Supabase.
 
 ## Tecnologías y reglas generales
 
@@ -71,13 +71,13 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 
 `core/database.py` crea el engine de SQLAlchemy y `SessionLocal`. La dependencia `get_db()` entrega una sesión por solicitud y garantiza su cierre.
 
-El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
+El código usa SQLAlchemy para invocar funciones PostgreSQL. Toda llamada debe usar parámetros enlazados, nunca interpolación directa de valores.
 
 ### Operaciones transaccionales
 
-Las rutas autentican y autorizan; Pydantic valida la entrada; los servicios de Python ejecutan SQL textual parametrizado mediante SQLAlchemy y gestionan `commit()`/`rollback()`. El backend no debe invocar funciones almacenadas de PostgreSQL. Una operación con varias escrituras debe ejecutarse en una sola transacción, validar nuevamente los datos persistidos y bloquear con `SELECT ... FOR UPDATE` cuando puedan ocurrir cambios concurrentes.
+Las rutas autentican y autorizan; Pydantic valida la entrada; los servicios de Python invocan funciones de PostgreSQL mediante llamadas parametrizadas de SQLAlchemy. La lógica de consulta, escritura y transacción de persistencia se mantiene en funciones versionadas con migraciones de Supabase. Python conserva tareas que no son de persistencia, como verificar hashes de contraseña, firmar JWT y consultar la API externa de empresas.
 
-Las restricciones, claves foráneas e índices de la base siguen protegiendo la integridad. Las excepciones de dominio se traducen a respuestas HTTP sin exponer errores internos del motor. Los `SELECT` pueden permanecer en servicios o moverse a repositorios cuando el módulo lo justifique.
+Las restricciones, claves foráneas e índices de la base siguen protegiendo la integridad. Las excepciones de dominio devueltas por las funciones se traducen a respuestas HTTP sin exponer errores internos del motor. Las funciones de aplicación se ejecutan desde la conexión privada del backend y no se publican como RPC para `anon`, `authenticated` o `service_role`.
 ## Endpoints
 
 ### `GET /`
@@ -117,11 +117,11 @@ Flujo:
 2. Rechaza correos ya registrados con `409 Conflict`.
 3. Comprueba que exista el rol activo `ESTUDIANTE`.
 4. Genera un hash Bcrypt de la contraseña.
-5. Crea el usuario y su asignación de rol dentro de una transacción.
+5. Llama a `fn_registrar_usuario_estudiante`, que crea el usuario y su asignación de rol dentro de una transacción.
 6. Devuelve los datos públicos del usuario con `201 Created`.
 
 El registro no crea el perfil de estudiante. Si corresponde, RUT, carrera y
-sede se incorporan posteriormente mediante una transacción SQL del backend.
+sede se incorporan posteriormente mediante `fn_completar_perfil_estudiante`.
 El registro nunca devuelve ni almacena la contraseña en texto plano.
 
 ### `GET /auth/context`
@@ -132,7 +132,7 @@ Requiere el encabezado:
 Authorization: Bearer <token>
 ```
 
-El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y consulta usuario, roles, perfil y práctica actual mediante SQL parametrizado.
+El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y consulta usuario, roles, perfil y práctica actual mediante `fn_contexto_usuario`.
 
 ### `POST /practicas`
 
@@ -145,7 +145,7 @@ El endpoint rechaza el registro cuando el usuario no posee perfil de estudiante
 o ya tiene una práctica cuyo estado no es final. Si se informa el RUT de una
 empresa existente, reutiliza ese centro en lugar de duplicarlo.
 
-El servicio ejecuta las consultas SQL parametrizadas y confirma la transacción solo cuando el centro, la práctica y el historial inicial se guardan correctamente. La autorización y la obtención del usuario desde el JWT permanecen en FastAPI.
+`fn_registrar_practica` confirma el centro, la práctica, el historial inicial y las notificaciones en una sola transacción. La autorización y la obtención del usuario desde el JWT permanecen en FastAPI.
 
 ### Centro de notificaciones
 
@@ -166,8 +166,8 @@ Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:
 - `GET /revisiones/solicitudes/{id_practica}`: entrega los antecedentes del
   estudiante, centro y práctica.
 - `PATCH /revisiones/solicitudes/{id_practica}`: aprueba, observa o rechaza la
-  solicitud con consultas SQL transaccionales y registra la trazabilidad en
-  `historial_estado`.
+  solicitud con `fn_revisar_practica`, que registra la trazabilidad en
+  `historial_estado` y notifica al estudiante en la misma transacción.
 
 Las decisiones `OBSERVADA` y `RECHAZADA` requieren una observación.
 
@@ -177,9 +177,10 @@ Los endpoints bajo `/usuarios` requieren el rol `ADMINISTRADOR`:
 
 - `GET /usuarios`: lista las cuentas con su estado y roles.
 - `GET /usuarios/roles`: lista los roles activos disponibles.
-- `POST /usuarios`: crea una cuenta y asigna roles mediante SQL transaccional.
+- `POST /usuarios`: crea una cuenta y asigna roles mediante
+  `fn_crear_usuario_admin`.
 - `PATCH /usuarios/{id_usuario}`: actualiza nombre, apellido, estado y roles
-  mediante SQL transaccional.
+  mediante `fn_actualizar_usuario_admin`.
 
 El identificador del administrador proviene siempre del JWT. El backend valida que el administrador esté activo y posea el rol `ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
 quitarse su propio rol administrativo.
@@ -228,7 +229,7 @@ Reglas obligatorias:
 - Nunca guardar contraseñas en texto plano.
 - Nunca registrar tokens, contraseñas o secretos en logs.
 - No exponer `password_hash` en respuestas.
-- Mantener consultas parametrizadas.
+- Mantener llamadas parametrizadas a funciones de PostgreSQL.
 - Proteger mediante dependencia de autenticación todo endpoint privado.
 - No aceptar el algoritmo JWT desde el contenido del token; usar el configurado por el servidor.
 
@@ -237,7 +238,7 @@ Reglas obligatorias:
 - `main.py`: inicialización, middleware, routers y health checks.
 - `api/routes/auth.py`: capa HTTP de autenticación.
 - `schemas/auth.py`: contratos Pydantic de entrada y salida.
-- `services/auth_service.py`: consultas y lógica de autenticación/contexto.
+- `services/auth_service.py`: llamadas de persistencia y lógica de autenticación.
 - `core/security.py`: hashing y JWT.
 - `core/permissions.py`: autorización reutilizable de endpoints por roles activos.
 - `core/database.py`: engine, sesiones y dependencia de base de datos.
@@ -264,9 +265,11 @@ Las pruebas actuales validan permisos concedidos y denegados, normalización de 
 
 ## Estado actual y límites conocidos
 
-- No hay migraciones versionadas ni un mecanismo automático para crear todo el esquema.
-- Las funciones almacenadas históricas del esquema no son llamadas por el backend.
+- El esquema y las funciones se versionan en `supabase/migrations`; la migración
+  `20261017020000_backend_operations.sql` concentra las operaciones de persistencia
+  de los módulos implementados.
 - No existe renovación de tokens.
 - No existe revocación ni lista de tokens invalidados.
 - CORS está configurado solamente para el frontend local.
-- La lógica actual cubre autenticación y consulta de contexto; los demás módulos del dominio aún deben implementarse.
+- La autorización HTTP sigue en FastAPI; las funciones de base de datos no
+  sustituyen la validación JWT ni la comprobación de roles de cada ruta.

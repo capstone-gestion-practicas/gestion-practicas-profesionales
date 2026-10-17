@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.core.database import engine
+from app.core.database import get_db
 from app.api.routes.auth import router as auth_router
 from app.api.routes.practicas import router as practicas_router
 from app.api.routes.estudiantes import router as estudiantes_router
@@ -51,19 +52,5 @@ def root():
 
 
 @app.get("/health/database")
-def database_health():
-    with engine.connect() as connection:
-        result = connection.execute(
-            text("""
-                SELECT
-                    current_database(),
-                    current_user,
-                    NOW()
-            """)
-        ).fetchone()
-
-    return {
-        "database": result[0],
-        "user": result[1],
-        "server_time": result[2]
-    }
+def database_health(db: Session = Depends(get_db)):
+    return db.execute(text("SELECT public.fn_health_database()")).scalar_one()
