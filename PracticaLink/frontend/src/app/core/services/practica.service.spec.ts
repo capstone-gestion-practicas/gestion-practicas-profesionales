@@ -19,6 +19,7 @@ describe('PracticaService', () => {
   const practicaDetalle: PracticaDetalleResponse = {
     id_practica: 101,
     fecha_registro: '2026-09-01T10:30:00',
+    fecha_ultimo_cambio_estado: null,
     estado: {
       id_estado: 1,
       nombre: 'REGISTRADA',

@@ -72,6 +72,13 @@ def obtener_practica_del_estudiante(
             SELECT
                 p.id_practica,
                 p.fecha_registro,
+                (
+                    SELECT h.fecha_cambio
+                    FROM historial_estado h
+                    WHERE h.id_practica = p.id_practica
+                    ORDER BY h.fecha_cambio DESC, h.id_historial DESC
+                    LIMIT 1
+                ) AS fecha_ultimo_cambio_estado,
                 p.fecha_inicio,
                 p.fecha_termino,
                 p.horas,
@@ -104,6 +111,7 @@ def obtener_practica_del_estudiante(
     return {
         "id_practica": practica["id_practica"],
         "fecha_registro": practica["fecha_registro"],
+        "fecha_ultimo_cambio_estado": practica["fecha_ultimo_cambio_estado"],
         "estado": {
             "id_estado": practica["id_estado"],
             "nombre": practica["estado_nombre"],

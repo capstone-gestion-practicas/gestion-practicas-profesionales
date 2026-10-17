@@ -44,6 +44,7 @@ export interface CentroPracticaDetalle {
 export interface PracticaDetalleResponse {
   id_practica: number;
   fecha_registro: string;
+  fecha_ultimo_cambio_estado: string | null;
   estado: EstadoPracticaDetalle;
   centro_practica: CentroPracticaDetalle;
   fecha_inicio: string | null;

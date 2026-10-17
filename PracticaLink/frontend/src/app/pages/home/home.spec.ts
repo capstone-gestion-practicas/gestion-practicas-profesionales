@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ModalController } from '@ionic/angular';
 import { of } from 'rxjs';
+import { UsuarioService } from '../../core/services/usuario.service';
+import { RevisionService } from '../../core/services/revision.service';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import {
@@ -62,6 +64,7 @@ describe('Home', () => {
   const practicaDetalleCompleta: PracticaDetalleResponse = {
     id_practica: 101,
     fecha_registro: '2026-09-01T10:30:00',
+    fecha_ultimo_cambio_estado: '2026-10-17T12:30:00Z',
     estado: {
       id_estado: 1,
       nombre: 'REGISTRADA',
@@ -87,6 +90,7 @@ describe('Home', () => {
   const practicaDetalleConNulos: PracticaDetalleResponse = {
     id_practica: 202,
     fecha_registro: '2026-09-01T10:30:00',
+    fecha_ultimo_cambio_estado: null,
     estado: {
       id_estado: 2,
       nombre: 'EN_REVISION',
@@ -122,6 +126,8 @@ describe('Home', () => {
       imports: [Home],
       providers: [
         AuthStore,
+        { provide: UsuarioService, useValue: jasmine.createSpyObj('UsuarioService', ['listar']) },
+        { provide: RevisionService, useValue: jasmine.createSpyObj('RevisionService', ['listar']) },
         { provide: AuthService, useValue: authService },
         { provide: PracticaService, useValue: practicaService },
         {
@@ -203,6 +209,9 @@ describe('Home', () => {
     expect(text).toContain('Practica de caracterizacion');
     expect(text).toContain('Estado');
     expect(text).toContain('REGISTRADA');
+    expect(text).toContain('Último cambio de estado');
+    expect(text).toContain('17/10/2026, 09:30');
+    expect(text).not.toContain('2026-10-17T12:30:00Z');
     expect(text).toContain('Centro de práctica');
     expect(text).toContain('Centro de prueba');
     expect(text).toContain('RUT empresa');
@@ -228,7 +237,22 @@ describe('Home', () => {
 
     expect(text).not.toContain('null');
     expect(text).toContain('No informado');
+    expect(text).toContain('Fecha no disponible');
     expect(text).toContain('Centro sin datos extra');
+  });
+
+  it('formats Chilean summer and winter times without changing the ISO value', () => {
+    const verano = '2026-10-17T12:30:00Z';
+    expect(component.formatearFechaUltimoCambio(verano)).toBe('17/10/2026, 09:30');
+    expect(component.formatearFechaUltimoCambio('2026-07-17T12:30:00Z'))
+      .toBe('17/07/2026, 08:30');
+    expect(component.formatearFechaUltimoCambio('2026-10-17T03:00:00Z'))
+      .toBe('17/10/2026, 00:00');
+    expect(verano).toBe('2026-10-17T12:30:00Z');
+  });
+
+  it('uses the missing date label for null', () => {
+    expect(component.formatearFechaUltimoCambio(null)).toBe('Fecha no disponible');
   });
 
   it('keeps loading the auth context as before', () => {

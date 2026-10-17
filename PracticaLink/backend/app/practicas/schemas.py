@@ -78,6 +78,7 @@ class CentroPracticaLectura(BaseModel):
 class PracticaDetalleResponse(BaseModel):
     id_practica: int
     fecha_registro: datetime
+    fecha_ultimo_cambio_estado: datetime | None = None
     estado: EstadoPracticaLectura
     centro_practica: CentroPracticaLectura
     fecha_inicio: date | None = None

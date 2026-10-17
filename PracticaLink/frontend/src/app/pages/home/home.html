@@ -188,6 +188,7 @@
               <div class="status-pill">
                 <strong>{{ practicaDetalle.estado.nombre }}</strong>
                 <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
+                <span>Último cambio de estado: {{ formatearFechaUltimoCambio(practicaDetalle.fecha_ultimo_cambio_estado) }}</span>
               </div>
             </div>
 

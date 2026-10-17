@@ -454,3 +454,12 @@ Las pruebas actuales validan permisos concedidos y denegados, normalización de 
 - No existe revocación ni lista de tokens invalidados.
 - CORS está configurado solamente para el frontend local.
 - La lógica actual cubre autenticación y consulta de contexto; los demás módulos del dominio aún deben implementarse.
+
+### Fecha del último cambio de estado (HU04.1)
+
+`GET /practicas/me` incluye `fecha_ultimo_cambio_estado`: fecha ISO 8601 o
+`null` si no existe historial. La lectura obtiene el último evento de la práctica
+propia por `fecha_cambio DESC, id_historial DESC`, sin usar `fecha_actualizacion`.
+El frontend presenta `dd/MM/yyyy, HH:mm` en la zona `America/Santiago`,
+respetando el horario de verano, y muestra «Fecha no disponible» para `null`.
+El valor ISO de la API permanece sin cambios. No modifica `/auth/context` ni las transiciones de estados.
