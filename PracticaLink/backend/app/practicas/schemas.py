@@ -86,3 +86,24 @@ class PracticaDetalleResponse(BaseModel):
     horas: int | None = None
     cargo_funcion: str | None = None
     descripcion: str | None = None
+
+
+class EstudiantePracticaResumen(BaseModel):
+    id_estudiante: int
+    nombre: str
+
+
+class PracticaResumen(BaseModel):
+    id_practica: int
+    estudiante: EstudiantePracticaResumen
+    centro_practica: str
+    fecha_registro: datetime
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime | None
+
+
+class PracticasListadoResponse(BaseModel):
+    items: list[PracticaResumen]
+    limit: int
+    offset: int
+    hay_mas: bool

@@ -463,3 +463,35 @@ propia por `fecha_cambio DESC, id_historial DESC`, sin usar `fecha_actualizacion
 El frontend presenta `dd/MM/yyyy, HH:mm` en la zona `America/Santiago`,
 respetando el horario de verano, y muestra «Fecha no disponible» para `null`.
 El valor ISO de la API permanece sin cambios. No modifica `/auth/context` ni las transiciones de estados.
+
+
+### EP04 / HU04.1: listado general de prácticas
+
+`GET /practicas` permite a GESTOR y ADMINISTRADOR consultar prácticas de
+cualquier estado, incluidas las históricas y finales. No modifica EP03 ni
+`GET /practicas/me`.
+
+Parámetros: `rut` opcional, `limit` (1–100, por defecto 50) y `offset`
+(>= 0, por defecto 0). El RUT debe tener 7–8 dígitos, guion y verificador
+numérico o K/k, sin puntos. Se reutiliza `normalizar_rut` para validar módulo 11
+y convertir al formato con puntos y K mayúscula que guarda el alta de estudiantes.
+La comparación parametrizada `e.rut = :rut` conserva la columna sin funciones
+para permitir el índice único. No se verificaron formatos de datos cargados por
+fuera del alta actual ni los datos de Supabase.
+
+La respuesta contiene `items`, `limit`, `offset` y `hay_mas`. Cada item incluye
+`id_practica`, `estudiante` (`id_estudiante`, `nombre`), `centro_practica` (nombre),
+`fecha_registro`, `estado` (`id_estado`, `nombre`, `es_final`) y
+`fecha_ultimo_cambio_estado` (ISO 8601 o null). No expone RUT ni correo.
+
+La consulta ordena por `fecha_registro DESC, id_practica DESC`, solicita una fila
+extra y obtiene la última fecha de historial mediante una subconsulta ordenada
+por `fecha_cambio DESC, id_historial DESC`. No hace consultas por item desde
+Python ni escrituras. Un filtro válido sin coincidencias devuelve 200 y lista
+vacía; formato, verificador o paginación inválidos devuelven 422.
+
+El endpoint no registra el RUT. Antes del despliegue debe verificarse que los
+logs de acceso, proxy y observabilidad omitan o redacten el parámetro `rut`:
+la URL contiene el dato por el contrato GET aprobado. La paginación offset puede
+desplazarse ante inserciones concurrentes; no garantiza una instantánea entre
+peticiones. Las pruebas con mocks no acreditan rendimiento o ejecución SQL real.

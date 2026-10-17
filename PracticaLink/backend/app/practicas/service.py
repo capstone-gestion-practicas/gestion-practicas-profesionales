@@ -133,3 +133,61 @@ def obtener_practica_del_estudiante(
         "cargo_funcion": practica["cargo_funcion"],
         "descripcion": practica["descripcion"],
     }
+
+
+def listar_practicas(
+    db: Session,
+    rut: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    filtro = "WHERE e.rut = :rut" if rut is not None else ""
+    parametros = {"limit": limit + 1, "offset": offset}
+    if rut is not None:
+        parametros["rut"] = rut
+
+    filas = db.execute(text(f"""
+        SELECT p.id_practica, p.fecha_registro,
+               e.id_estudiante, CONCAT(u.nombre, ' ', u.apellido) AS estudiante_nombre,
+               cp.nombre AS centro_nombre,
+               ep.id_estado, ep.nombre AS estado_nombre, ep.es_final,
+               (
+                   SELECT h.fecha_cambio
+                   FROM historial_estado h
+                   WHERE h.id_practica = p.id_practica
+                   ORDER BY h.fecha_cambio DESC, h.id_historial DESC
+                   LIMIT 1
+               ) AS fecha_ultimo_cambio_estado
+        FROM practica p
+        JOIN estudiante e ON e.id_estudiante = p.id_estudiante
+        JOIN usuario u ON u.id_usuario = e.id_usuario
+        JOIN centro_practica cp ON cp.id_centro = p.id_centro
+        JOIN estado_practica ep ON ep.id_estado = p.id_estado_actual
+        {filtro}
+        ORDER BY p.fecha_registro DESC, p.id_practica DESC
+        LIMIT :limit OFFSET :offset
+    """), parametros).mappings().all()
+
+    return {
+        "items": [
+            {
+                "id_practica": fila["id_practica"],
+                "estudiante": {
+                    "id_estudiante": fila["id_estudiante"],
+                    "nombre": fila["estudiante_nombre"],
+                },
+                "centro_practica": fila["centro_nombre"],
+                "fecha_registro": fila["fecha_registro"],
+                "estado": {
+                    "id_estado": fila["id_estado"],
+                    "nombre": fila["estado_nombre"],
+                    "es_final": fila["es_final"],
+                },
+                "fecha_ultimo_cambio_estado": fila["fecha_ultimo_cambio_estado"],
+            }
+            for fila in filas[:limit]
+        ],
+        "limit": limit,
+        "offset": offset,
+        "hay_mas": len(filas) > limit,
+    }

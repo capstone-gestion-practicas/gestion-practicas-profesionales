@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -9,15 +9,18 @@ from app.practicas.schemas import (
     PracticaCreate,
     PracticaCreateResponse,
     PracticaDetalleResponse,
+    PracticasListadoResponse,
 )
 from app.practicas.service import (
     EstadoInicialNoEncontradoError,
     PerfilEstudianteNoEncontradoError,
     PracticaActivaError,
     PracticaNoEncontradaError,
+    listar_practicas,
     obtener_practica_del_estudiante,
     registrar_practica,
 )
+from app.schemas.validators import normalizar_rut
 
 
 router = APIRouter(prefix="/practicas", tags=["Prácticas"])
@@ -83,3 +86,25 @@ def obtener_mi_practica(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="El estudiante no tiene una práctica registrada",
         ) from error
+
+
+@router.get(
+    "",
+    response_model=PracticasListadoResponse,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def consultar_practicas(
+    rut: str | None = Query(default=None, pattern=r"^[0-9]{7,8}-[0-9Kk]$"),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    if rut is not None:
+        try:
+            rut = normalizar_rut(rut)
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="El RUT no es válido",
+            ) from error
+    return listar_practicas(db, rut=rut, limit=limit, offset=offset)
