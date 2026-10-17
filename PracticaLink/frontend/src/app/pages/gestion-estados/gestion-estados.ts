@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
   IonBadge,
@@ -67,6 +67,7 @@ export class GestionEstados implements OnInit {
   cargando = true;
   error = '';
   busqueda = '';
+  filtroEstado: string | null = null;
   mensaje = '';
   errorHistorial = '';
   cargandoHistorialId: number | null = null;
@@ -79,10 +80,12 @@ export class GestionEstados implements OnInit {
 
   constructor(
     private readonly practicaService: PracticaService,
+    private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
 
   ngOnInit(): void {
+    this.filtroEstado = this.route.snapshot.queryParamMap.get('estado')?.toUpperCase() ?? null;
     this.cargar();
   }
 
@@ -107,13 +110,52 @@ export class GestionEstados implements OnInit {
 
   practicasFiltradas(): PracticaEstadoResumen[] {
     const consulta = this.busqueda.trim().toLocaleLowerCase();
-    if (!consulta) return this.practicas;
-    return this.practicas.filter(practica => [
-      practica.estudiante,
-      practica.rut_estudiante,
-      practica.centro_practica,
-      practica.estado
-    ].some(valor => valor.toLocaleLowerCase().includes(consulta)));
+    return this.practicas.filter(practica => {
+      const coincideEstado = !this.filtroEstado
+        || practica.estado.toUpperCase() === this.filtroEstado;
+      const coincideBusqueda = !consulta || [
+        practica.estudiante,
+        practica.rut_estudiante,
+        practica.centro_practica,
+        practica.estado
+      ].some(valor => valor.toLocaleLowerCase().includes(consulta));
+      return coincideEstado && coincideBusqueda;
+    });
+  }
+
+  practicasVencidas(): PracticaEstadoResumen[] {
+    return this.practicasFiltradas().filter(practica =>
+      !practica.es_final && this.fechaTerminoVencida(practica.fecha_termino)
+    );
+  }
+
+  practicasEnSeguimiento(): PracticaEstadoResumen[] {
+    return this.practicasFiltradas().filter(practica =>
+      practica.es_final || !this.fechaTerminoVencida(practica.fecha_termino)
+    );
+  }
+
+  fechaTerminoVencida(fechaTermino: string | null): boolean {
+    if (!fechaTermino) return false;
+    const hoy = new Date();
+    const hoyIso = [hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate()]
+      .map((parte, indice) => indice === 0 ? String(parte) : String(parte).padStart(2, '0'))
+      .join('-');
+    return fechaTermino.slice(0, 10) < hoyIso;
+  }
+
+  nombreEstado(estado: string): string {
+    return estado.replaceAll('_', ' ');
+  }
+
+  limpiarFiltroEstado(): void {
+    this.filtroEstado = null;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { estado: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   abrirCambio(practica: PracticaEstadoResumen): void {

@@ -147,6 +147,11 @@ empresa existente, reutiliza ese centro en lugar de duplicarlo.
 
 `fn_registrar_practica` confirma el centro, la práctica, el historial inicial y las notificaciones en una sola transacción. La autorización y la obtención del usuario desde el JWT permanecen en FastAPI.
 
+El registro puede incluir `horas_semanales` (entre 1 y 45), almacenadas por separado
+del campo histórico `horas` en `practica`. La restricción y las respuestas de
+contexto, detalle y revisión se actualizan mediante la migración
+`20261017030000_horas_semanales_practica.sql`.
+
 ### Centro de notificaciones
 
 - `GET /notificaciones`: devuelve las notificaciones del usuario autenticado y

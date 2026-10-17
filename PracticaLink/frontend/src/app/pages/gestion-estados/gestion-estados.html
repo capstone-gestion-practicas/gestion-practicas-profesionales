@@ -20,6 +20,13 @@
       (ionInput)="busqueda = $any($event).detail.value ?? ''">
     </ion-searchbar>
 
+    @if (filtroEstado) {
+      <div class="state-filter-notice">
+        <span>Prácticas en estado: <strong>{{ nombreEstado(filtroEstado) }}</strong></span>
+        <ion-button fill="clear" size="small" (click)="limpiarFiltroEstado()">Ver todas</ion-button>
+      </div>
+    }
+
     @if (cargando) {
       <ion-card class="state-card"><ion-card-content class="center-state">
         <ion-spinner name="crescent"></ion-spinner><p>Cargando prácticas...</p>
@@ -29,8 +36,73 @@
     } @else if (practicasFiltradas().length === 0) {
       <ion-card class="state-card"><ion-card-content>No hay prácticas que coincidan con la búsqueda.</ion-card-content></ion-card>
     } @else {
+      @if (practicasVencidas().length > 0) {
+        <ion-card class="expired-review-panel">
+          <ion-card-header>
+            <div class="expired-review-heading">
+              <div>
+                <ion-card-title>Revisión por fecha de término</ion-card-title>
+                <p>Prácticas activas cuya fecha de término ya pasó.</p>
+              </div>
+              <ion-badge color="danger">{{ practicasVencidas().length }}</ion-badge>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="expired-practice-list">
+              @for (practica of practicasVencidas(); track practica.id_practica) {
+                <article class="expired-practice-item">
+                  <div class="practice-heading">
+                    <div>
+                      <p class="practice-id">Práctica #{{ practica.id_practica }}</p>
+                      <h3>{{ practica.estudiante }}</h3>
+                    </div>
+                    <ion-badge color="warning">{{ practica.estado }}</ion-badge>
+                  </div>
+                  <p><strong>Centro:</strong> {{ practica.centro_practica }}</p>
+                  <p><strong>Fecha de término:</strong> {{ practica.fecha_termino | date:'dd/MM/yyyy' }}</p>
+                  <div class="practice-actions">
+                    <ion-button (click)="abrirCambio(practica)">Revisar y actualizar estado</ion-button>
+                    <ion-button fill="outline" (click)="alternarHistorial(practica)">
+                      {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
+                    </ion-button>
+                  </div>
+                  @if (historialAbiertoId === practica.id_practica) {
+                    <section class="history-panel" aria-label="Historial de estados">
+                      <h2>Historial de cambios</h2>
+                      @if (cargandoHistorialId === practica.id_practica) {
+                        <div class="center-state"><ion-spinner name="crescent"></ion-spinner></div>
+                      } @else if (errorHistorial) {
+                        <p class="error-text" role="alert">{{ errorHistorial }}</p>
+                      } @else if (historialDe(practica.id_practica).length === 0) {
+                        <p class="empty-history">Aún no hay cambios de estado registrados.</p>
+                      } @else {
+                        <ol class="history-list">
+                          @for (evento of historialDe(practica.id_practica); track evento.id_historial) {
+                            <li class="history-item">
+                              <span class="history-marker" aria-hidden="true"></span>
+                              <div>
+                                <strong>{{ evento.estado }}</strong>
+                                <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.usuario }}</p>
+                                @if (evento.observacion) { <p class="history-note">{{ evento.observacion }}</p> }
+                              </div>
+                            </li>
+                          }
+                        </ol>
+                      }
+                    </section>
+                  }
+                </article>
+              }
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      @if (practicasEnSeguimiento().length > 0 && practicasVencidas().length > 0) {
+        <h2 class="practice-section-heading">Otras prácticas</h2>
+      }
       <section class="practice-list" aria-label="Prácticas y estados">
-        @for (practica of practicasFiltradas(); track practica.id_practica) {
+        @for (practica of practicasEnSeguimiento(); track practica.id_practica) {
           <ion-card class="practice-card">
             <ion-card-header>
               <div class="practice-heading">

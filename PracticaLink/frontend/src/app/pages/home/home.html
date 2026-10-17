@@ -80,6 +80,28 @@
             </ion-row>
           </ion-grid>
 
+          <section class="state-metrics-section" aria-label="Prácticas por estado">
+            <div class="state-metrics-heading">
+              <h2>Prácticas por estado</h2>
+              <span>{{ metricasPracticasEstado.length }} estados</span>
+            </div>
+            <ion-grid class="admin-metrics">
+              <ion-row>
+                @for (metrica of metricasPracticasEstado; track metrica.id_estado) {
+                  <ion-col size="6" size-sm="4" size-lg="3">
+                    <ion-card class="metric-card" button="true" (click)="abrirPracticasEstado(metrica.nombre)">
+                      <ion-card-content>
+                        <span>{{ nombreEstado(metrica.nombre) }}</span>
+                        <strong>{{ metrica.cantidad }}</strong>
+                        <small>{{ metrica.cantidad === 1 ? 'práctica' : 'prácticas' }}</small>
+                      </ion-card-content>
+                    </ion-card>
+                  </ion-col>
+                }
+              </ion-row>
+            </ion-grid>
+          </section>
+
           <ion-grid class="admin-panels">
             <ion-row>
               <ion-col size="12" size-lg="12">
@@ -96,7 +118,7 @@
                               <h3>{{ solicitud.estudiante }}</h3>
                               <p>{{ solicitud.centro_practica }} · {{ solicitud.fecha_registro }}</p>
                             </ion-label>
-                            <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
+                            <ion-note slot="end" class="request-state">Estado: {{ nombreEstado(solicitud.estado) }}</ion-note>
                           </ion-item>
                         }
                       </ion-list>
@@ -235,6 +257,14 @@
                 <p>
                   <span>Horas</span>
                   <strong>{{ formatearCampo(practicaDetalle.horas) }}</strong>
+                </p>
+                <p>
+                  <span>Jornada semanal</span>
+                  <strong>{{ practicaDetalle.horas_semanales ?? 'No informada' }}{{ practicaDetalle.horas_semanales ? ' h/semana' : '' }}</strong>
+                </p>
+                <p>
+                  <span>Horas estimadas transcurridas</span>
+                  <strong>{{ estimacionHorasPractica(practicaDetalle.fecha_inicio, practicaDetalle.fecha_termino, practicaDetalle.horas_semanales) }}</strong>
                 </p>
                 <p>
                   <span>Función</span>

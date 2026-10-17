@@ -77,13 +77,6 @@
   color: var(--ink-muted);
 }
 
-.admin-heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .admin-metrics,
 .admin-panels {
   padding: 0;
@@ -605,15 +598,6 @@ ion-modal {
   .admin-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .admin-heading-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .admin-heading-actions ion-button {
-    flex: 1;
   }
 
   .student-dashboard {

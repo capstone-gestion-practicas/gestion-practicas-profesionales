@@ -40,6 +40,7 @@ export interface PracticaActualContext {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales: number | null;
   cargo_funcion: string | null;
 }
 

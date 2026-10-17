@@ -19,6 +19,7 @@ export interface SolicitudRevisionDetalle extends SolicitudRevisionResumen {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }

@@ -91,6 +91,7 @@ export class PracticaForm {
       fechaInicio: [''],
       fechaTermino: [''],
       horas: ['', Validators.pattern(/^\d+$/)],
+      horasSemanales: ['', [Validators.min(1), Validators.max(45), Validators.pattern(/^\d+$/)]],
       cargoFuncion: [''],
       descripcion: ['']
     });
@@ -119,6 +120,7 @@ export class PracticaForm {
       fecha_inicio: this.opcional(valor.fechaInicio),
       fecha_termino: this.opcional(valor.fechaTermino),
       horas: valor.horas ? Number(valor.horas) : null,
+      horas_semanales: valor.horasSemanales ? Number(valor.horasSemanales) : null,
       cargo_funcion: this.opcional(valor.cargoFuncion),
       descripcion: this.opcional(valor.descripcion)
     };

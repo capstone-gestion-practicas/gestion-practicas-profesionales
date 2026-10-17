@@ -13,6 +13,7 @@ export interface PracticaCreate {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }
@@ -51,6 +52,7 @@ export interface PracticaDetalleResponse {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }
@@ -68,6 +70,7 @@ export interface PracticaEstadoResumen {
   centro_practica: string;
   fecha_inicio: string | null;
   fecha_termino: string | null;
+  horas_semanales: number | null;
 }
 
 export interface HistorialEstadoPractica {

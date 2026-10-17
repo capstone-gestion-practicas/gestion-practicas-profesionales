@@ -57,6 +57,10 @@ src/app/
 
 Las rutas están declaradas en `app.routes.ts`.
 
+Al registrar una práctica, se puede informar la jornada semanal (1 a 45 horas).
+La estimación de horas transcurridas usa esa jornada y se detiene en la fecha de
+término cuando ya pasó; si no se informó, la estimación lo indica.
+
 ## Flujo de autenticación
 
 1. `Login` captura correo y contraseña.

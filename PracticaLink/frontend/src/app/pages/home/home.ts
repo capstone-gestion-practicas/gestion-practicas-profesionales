@@ -31,7 +31,8 @@ import { AuthStore } from '../../core/store/auth.store';
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import {
   HistorialEstadoPractica,
-  PracticaDetalleResponse
+  PracticaDetalleResponse,
+  PracticaEstadoResumen
 } from '../../core/models/practica.models';
 import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
@@ -43,6 +44,7 @@ import { SolicitudRevisionResumen } from '../../core/models/revision.models';
 import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/solicitudes-pendientes-modal';
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
 import { NotificacionService } from '../../core/services/notificacion.service';
+import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
 
 @Component({
   selector: 'app-home',
@@ -131,9 +133,12 @@ export class Home implements OnInit {
   direccionPerfil = '';
   usuariosAdmin: UsuarioAdministrable[] = [];
   solicitudesAdmin: SolicitudRevisionResumen[] = [];
+  practicasAdmin: PracticaEstadoResumen[] = [];
+  metricasPracticasEstado: { id_estado: number; nombre: string; cantidad: number }[] = [];
   errorDashboardAdmin = '';
   mensajeInteraccion = '';
   private firmaContextoPracticaProcesada = '';
+  private omitirPrimerIonViewWillEnter = true;
 
   private readonly sincronizarPracticaConContexto = effect(() => {
     const contexto = this.contexto();
@@ -174,6 +179,14 @@ export class Home implements OnInit {
     });
   }
 
+  ionViewWillEnter(): void {
+    if (this.omitirPrimerIonViewWillEnter) {
+      this.omitirPrimerIonViewWillEnter = false;
+      return;
+    }
+    this.cargarDashboardAdmin();
+  }
+
   cerrarSesion(): void {
     sessionStorage.removeItem('access_token');
     this.authStore.limpiar();
@@ -195,6 +208,12 @@ export class Home implements OnInit {
 
   gestionarEstados(): void {
     this.router.navigate(['/gestion-estados']);
+  }
+
+  abrirPracticasEstado(estado: string): void {
+    this.router.navigate(['/gestion-estados'], {
+      queryParams: { estado: estado.toUpperCase() }
+    });
   }
 
   gestionarUsuarios(): void {
@@ -259,8 +278,12 @@ export class Home implements OnInit {
     ).length;
   }
 
-  solicitudesRecientes(): SolicitudRevisionResumen[] {
-    return [...this.solicitudesAdmin]
+  nombreEstado(estado: string): string {
+    return estado.replaceAll('_', ' ');
+  }
+
+  solicitudesRecientes(): PracticaEstadoResumen[] {
+    return [...this.practicasAdmin]
       .sort((a, b) => b.fecha_registro.localeCompare(a.fecha_registro))
       .slice(0, 5);
   }
@@ -340,16 +363,50 @@ export class Home implements OnInit {
     this.errorDashboardAdmin = '';
     forkJoin({
       usuarios: this.usuarioService.listar(),
-      solicitudes: this.revisionService.listar()
+      solicitudes: this.revisionService.listar(),
+      estados: this.practicaService.listarEstados(),
+      practicas: this.practicaService.listarPracticasParaGestion()
     }).subscribe({
-      next: ({ usuarios, solicitudes }) => {
+      next: ({ usuarios, solicitudes, estados, practicas }) => {
         this.usuariosAdmin = usuarios;
         this.solicitudesAdmin = solicitudes;
+        this.practicasAdmin = practicas;
+        this.metricasPracticasEstado = this.contarPracticasPorEstado(estados, practicas);
       },
       error: () => {
         this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
       }
     });
+  }
+
+  private contarPracticasPorEstado(
+    estados: { id_estado: number; nombre: string }[],
+    practicas: PracticaEstadoResumen[]
+  ): { id_estado: number; nombre: string; cantidad: number }[] {
+    const cantidades = new Map<string, number>();
+    for (const practica of practicas) {
+      const nombre = practica.estado.toUpperCase();
+      cantidades.set(nombre, (cantidades.get(nombre) ?? 0) + 1);
+    }
+
+    const metricas = estados.map(estado => ({
+      id_estado: estado.id_estado,
+      nombre: estado.nombre,
+      cantidad: cantidades.get(estado.nombre.toUpperCase()) ?? 0
+    }));
+    const estadosNoActivos = new Map<string, { id_estado: number; nombre: string; cantidad: number }>();
+    for (const practica of practicas) {
+      const clave = practica.estado.toUpperCase();
+      if (!estados.some(estado => estado.nombre.toUpperCase() === clave)) {
+        const actual = estadosNoActivos.get(clave);
+        estadosNoActivos.set(clave, {
+          id_estado: practica.id_estado,
+          nombre: practica.estado,
+          cantidad: (actual?.cantidad ?? 0) + 1
+        });
+      }
+    }
+    return [...metricas, ...estadosNoActivos.values()];
   }
 
   private cargarPracticaRegistrada(contexto: ContextoUsuarioResponse): void {
@@ -417,5 +474,13 @@ export class Home implements OnInit {
     }
 
     return String(valor);
+  }
+
+  estimacionHorasPractica(
+    fechaInicio: string | null,
+    fechaTermino: string | null,
+    horasSemanales: number | null
+  ): string {
+    return formatoHorasEstimadas(fechaInicio, fechaTermino, horasSemanales);
   }
 }

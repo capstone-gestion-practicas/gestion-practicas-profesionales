@@ -35,6 +35,7 @@ class PracticaCreate(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = Field(default=None, gt=0)
+    horas_semanales: int | None = Field(default=None, ge=1, le=45)
     cargo_funcion: str | None = Field(default=None, max_length=150)
     descripcion: str | None = None
 
@@ -85,6 +86,7 @@ class PracticaDetalleResponse(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = None
+    horas_semanales: int | None = None
     cargo_funcion: str | None = None
     descripcion: str | None = None
 
@@ -102,6 +104,7 @@ class PracticaEstadoResumen(BaseModel):
     centro_practica: str
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
+    horas_semanales: int | None = None
 
 
 class ActualizarEstadoPracticaRequest(BaseModel):

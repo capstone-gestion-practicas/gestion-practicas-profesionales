@@ -48,8 +48,47 @@
             <p><span>Contacto</span><strong>{{ s.contacto_nombre || 'No informado' }}</strong></p>
             <p><span>Fechas</span><strong>{{ s.fecha_inicio || 'Pendiente' }} — {{ s.fecha_termino || 'Pendiente' }}</strong></p>
             <p><span>Horas</span><strong>{{ s.horas || 'No informadas' }}</strong></p>
+            <p><span>Jornada semanal</span><strong>{{ s.horas_semanales ? s.horas_semanales + ' h/semana' : 'No informada' }}</strong></p>
+            <p><span>Horas estimadas transcurridas</span><strong>{{ estimacionHoras(s.fecha_inicio, s.fecha_termino, s.horas_semanales) }}</strong></p>
             <p><span>Función</span><strong>{{ s.cargo_funcion || 'No informada' }}</strong></p>
             <p class="detail-full"><span>Descripción</span><strong>{{ s.descripcion || 'No informada' }}</strong></p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="detail-card status-update-card">
+        <ion-card-header>
+          <ion-card-title>Actualización de estado · EP04</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="status-current">Estado actual: <strong>{{ s.estado }}</strong></p>
+          <ion-item class="status-select-item">
+            <ion-label position="stacked">Nuevo estado</ion-label>
+            <ion-select [(ngModel)]="idEstadoSeleccionado" interface="popover" placeholder="Selecciona un estado">
+              @for (estado of estados; track estado.id_estado) {
+                <ion-select-option [value]="estado.id_estado">{{ estado.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-textarea
+            class="status-observation"
+            label="Observación (opcional)"
+            labelPlacement="stacked"
+            [counter]="true"
+            maxlength="500"
+            [autoGrow]="true"
+            [(ngModel)]="observacionEstado">
+          </ion-textarea>
+          @if (mensajeEstado) {
+            <p class="status-success" role="status">{{ mensajeEstado }}</p>
+          }
+          @if (errorEstado) {
+            <p class="error" role="alert">{{ errorEstado }}</p>
+          }
+          <div class="actions status-actions">
+            <ion-button [disabled]="guardandoEstado || idEstadoSeleccionado === null" (click)="guardarEstado()">
+              @if (guardandoEstado) { <ion-spinner name="crescent"></ion-spinner> } @else { Guardar estado }
+            </ion-button>
           </div>
         </ion-card-content>
       </ion-card>
