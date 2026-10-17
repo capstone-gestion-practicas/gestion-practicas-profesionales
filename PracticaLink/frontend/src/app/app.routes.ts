@@ -48,6 +48,13 @@ export const routes: Routes = [
         .then(m => m.RevisionDetalle)
   },
   {
+    path: 'practicas',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

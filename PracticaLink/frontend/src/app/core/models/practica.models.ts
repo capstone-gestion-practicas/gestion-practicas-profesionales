@@ -80,3 +80,20 @@ export interface ActividadEmpresa {
   afecta_iva: string | null;
   categoria: string | null;
 }
+
+
+export interface PracticaResumen {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: string;
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+}
+
+export interface PracticasListadoResponse {
+  items: PracticaResumen[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}

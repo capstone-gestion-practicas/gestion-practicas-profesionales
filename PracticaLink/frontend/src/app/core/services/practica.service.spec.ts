@@ -149,4 +149,21 @@ describe('PracticaService', () => {
 
     expect(respuesta).toEqual(empresa);
   });
+  it('lists practices with pagination and omits an absent RUT', () => {
+    service.listar(50, 0).subscribe();
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual(['limit', 'offset']);
+    expect(request.request.params.get('limit')).toBe('50');
+    expect(request.request.params.get('offset')).toBe('0');
+    request.flush({ items: [], limit: 50, offset: 0, hay_mas: false });
+  });
+
+  it('sends an exact RUT only as an HTTP query parameter', () => {
+    service.listar(50, 100, '12345678-5').subscribe();
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas');
+    expect(request.request.params.get('rut')).toBe('12345678-5');
+    expect(request.request.params.get('offset')).toBe('100');
+    request.flush({ items: [], limit: 50, offset: 100, hay_mas: false });
+  });
 });

@@ -1,9 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
   PracticaDetalleResponse,
+  PracticasListadoResponse,
   PracticaCreate,
   PracticaCreateResponse,
   EmpresaLookup
@@ -14,6 +15,14 @@ export class PracticaService {
   private readonly apiUrl = 'http://127.0.0.1:8000';
 
   constructor(private readonly http: HttpClient) {}
+
+  listar(limit = 50, offset = 0, rut?: string): Observable<PracticasListadoResponse> {
+    let params = new HttpParams().set('limit', limit).set('offset', offset);
+    if (rut) {
+      params = params.set('rut', rut);
+    }
+    return this.http.get<PracticasListadoResponse>(`${this.apiUrl}/practicas`, { params });
+  }
 
   registrar(datos: PracticaCreate): Observable<PracticaCreateResponse> {
     return this.http.post<PracticaCreateResponse>(

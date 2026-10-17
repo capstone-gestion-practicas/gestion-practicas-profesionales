@@ -269,4 +269,42 @@ describe('Home', () => {
       'Registro de práctica profesional'
     );
   });
+  it('shows general practice access only for gestor and administrador', () => {
+    expect(fixture.nativeElement.querySelector('.practicas-access')).toBeNull();
+    for (const rol of ['GESTOR', 'ADMINISTRADOR']) {
+      authStore.setContexto({ ...contextoSinPractica, roles: [rol] });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.practicas-access')).not.toBeNull();
+    }
+    component.consultarPracticas();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas']);
+  });
+
+  it('renders recent request dates in Chile time and preserves order and navigation', () => {
+    (TestBed.inject(UsuarioService).listar as jasmine.Spy).and.returnValue(of([]));
+    (TestBed.inject(RevisionService).listar as jasmine.Spy).and.returnValue(of([]));
+    authStore.setContexto({ ...contextoSinPractica, roles: ['ADMINISTRADOR'] });
+    fixture.detectChanges();
+    const verano = '2026-10-12T20:08:53.641264Z';
+    const invierno = '2026-07-12T20:08:53Z';
+    component.solicitudesAdmin = [
+      { id_practica: 2, estudiante: 'Estudiante invierno', rut_estudiante: '12345678-5',
+        centro_practica: 'Centro invierno', estado: 'EN_REVISION', fecha_registro: invierno },
+      { id_practica: 1, estudiante: 'Estudiante verano', rut_estudiante: '12345678-5',
+        centro_practica: 'Centro verano', estado: 'REGISTRADA', fecha_registro: verano }
+    ];
+    fixture.detectChanges();
+    const panel: HTMLElement = fixture.nativeElement.querySelector('.admin-table-card');
+    const items = panel.querySelectorAll('ion-item');
+    expect(items.length).toBe(2);
+    expect(items[0].textContent).toContain('Centro verano · 12/10/2026, 17:08');
+    expect(items[1].textContent).toContain('Centro invierno · 12/07/2026, 16:08');
+    expect(panel.textContent).not.toContain(verano);
+    expect(panel.textContent).not.toContain(invierno);
+    expect(component.solicitudesAdmin[0].fecha_registro).toBe(invierno);
+    expect(component.solicitudesAdmin[1].fecha_registro).toBe(verano);
+    const abrir = spyOn(component, 'abrirDetalleSolicitud').and.resolveTo();
+    (items[0] as HTMLElement).click();
+    expect(abrir).toHaveBeenCalledWith(1);
+  });
 });

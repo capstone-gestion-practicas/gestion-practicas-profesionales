@@ -202,3 +202,25 @@ Las pruebas actuales cubren guards, store de autenticación, componentes base y 
 - La API está configurada con una URL local fija.
 
 Cuando se implemente una de estas capacidades, actualizar este archivo para que continúe representando el comportamiento real de la aplicación.
+
+
+## EP04 / HU04.1: consulta general de prácticas
+
+`/practicas` es una pantalla de solo lectura protegida por authGuard y roleGuard
+para GESTOR y ADMINISTRADOR. Home muestra el acceso exclusivamente a esos roles.
+Consume `GET /practicas` mediante `PracticaService.listar(limit, offset, rut?)`;
+los modelos `PracticasListadoResponse` y `PracticaResumen` reflejan el backend.
+Incluye todos los estados, fechas en America/Santiago y paginación de 50 elementos.
+
+El RUT se ingresa como texto, con autocomplete desactivado, sin puntos y con guion y verificador; solo se
+comprueba formato básico. La API valida módulo 11. Los errores 422 se muestran
+sin reproducir entradas personales. El filtro y la paginación viven únicamente
+en el componente; no se guardan en almacenamiento ni en la navegación Angular.
+El parámetro rut solo se envía al backend cuando existe un filtro. Las consultas
+anteriores se cancelan al iniciar otra y al destruir el componente.
+No usa RevisionService ni ofrece detalle o acciones de revisión/cambio de estado.
+
+El listado indica discretamente si hay un filtro aplicado sin mostrar el RUT.
+Reintentar repite la consulta HTTP fallida con el filtro aplicado y el offset
+conservado, independientemente del texto editado en el buscador. Los errores
+locales de formato no ofrecen reintento HTTP.

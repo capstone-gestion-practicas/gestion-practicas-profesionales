@@ -180,6 +180,10 @@ export class Home implements OnInit {
     await modal.present();
   }
 
+  consultarPracticas(): void {
+    this.router.navigate(['/practicas']);
+  }
+
   revisarPracticas(): void {
     this.router.navigate(['/revisiones']);
   }
