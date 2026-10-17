@@ -112,3 +112,31 @@ export interface PracticaDetalleGestionResponse {
   cargo_funcion: string | null;
   descripcion: string | null;
 }
+
+
+export interface EstadoHistorial {
+  id_estado: number;
+  nombre: string;
+}
+
+export interface ResponsableHistorial {
+  id_usuario: number;
+  nombre: string;
+}
+
+export interface EventoHistorial {
+  id_historial: number;
+  estado_anterior: EstadoHistorial | null;
+  estado_nuevo: EstadoHistorial;
+  fecha_cambio: string;
+  responsable: ResponsableHistorial;
+  observacion: string | null;
+}
+
+export interface HistorialPracticaResponse {
+  id_practica: number;
+  items: EventoHistorial[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}

@@ -9,3 +9,10 @@ dt { font-weight: 600; } dd { margin: 4px 0 0; overflow-wrap: anywhere; white-sp
 .loading { display: flex; align-items: center; gap: 12px; }
 [role='alert'] { color: var(--ion-color-danger); }
 @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+
+.history-section { margin-top: 32px; }
+.history-list { padding-left: 24px; }
+.history-list li::marker { color: var(--ion-color-primary); }
+.history-transition { font-weight: 600; }
+.history-observation { white-space: pre-wrap; overflow-wrap: anywhere; }
+.history-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }

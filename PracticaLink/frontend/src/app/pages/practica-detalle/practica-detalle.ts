@@ -4,7 +4,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonButton, IonCard, IonCardContent, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
-import { PracticaDetalleGestionResponse } from '../../core/models/practica.models';
+import { EventoHistorial, PracticaDetalleGestionResponse } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/utils/fechas';
 
@@ -18,6 +18,14 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   cargando = false;
   error = '';
   permiteReintentar = false;
+  eventos: EventoHistorial[] = [];
+  readonly limitHistorial = 50;
+  offsetHistorial = 0;
+  hayMasHistorial = false;
+  cargandoHistorial = false;
+  errorHistorial = '';
+  historialHabilitado = false;
+  private consultaHistorial?: Subscription;
   private idPractica = '';
   private consulta?: Subscription;
   private parametros?: Subscription;
@@ -32,13 +40,22 @@ export class PracticaDetalle implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.parametros = this.route.paramMap.subscribe(parametros => {
+      this.consultaHistorial?.unsubscribe();
+      this.eventos = [];
+      this.offsetHistorial = 0;
+      this.hayMasHistorial = false;
+      this.cargandoHistorial = false;
+      this.errorHistorial = '';
       this.idPractica = parametros.get('id') ?? '';
       this.cargar();
+      this.historialHabilitado = this.idValido();
+      if (this.historialHabilitado) this.cargarHistorial(0);
     });
   }
 
   ngOnDestroy(): void {
     this.parametros?.unsubscribe();
+    this.consultaHistorial?.unsubscribe();
     this.consulta?.unsubscribe();
   }
 
@@ -48,8 +65,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     this.error = '';
     this.permiteReintentar = false;
     this.cargando = false;
-    if (!/^[1-9][0-9]{0,18}$/.test(this.idPractica)
-      || BigInt(this.idPractica) > 9223372036854775807n) {
+    if (!this.idValido()) {
       this.error = 'El identificador de práctica no es válido.';
       return;
     }
@@ -70,6 +86,50 @@ export class PracticaDetalle implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  private idValido(): boolean {
+    return /^[1-9][0-9]{0,18}$/.test(this.idPractica)
+      && BigInt(this.idPractica) <= 9223372036854775807n;
+  }
+
+  cargarHistorial(offset = this.offsetHistorial): void {
+    if (!this.idValido()) return;
+    this.consultaHistorial?.unsubscribe();
+    this.offsetHistorial = offset;
+    this.eventos = [];
+    this.hayMasHistorial = false;
+    this.errorHistorial = '';
+    this.cargandoHistorial = true;
+    this.consultaHistorial = this.practicas.obtenerHistorial(
+      this.idPractica, this.limitHistorial, offset
+    ).subscribe({
+      next: historial => {
+        this.eventos = historial.items;
+        this.hayMasHistorial = historial.hay_mas;
+        this.cargandoHistorial = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.cargandoHistorial = false;
+        this.errorHistorial = error.status === 401 || error.status === 403
+          ? 'Acceso denegado al historial. Revisa tu sesión y permisos.'
+          : error.status === 404
+            ? 'La práctica no existe.'
+            : 'No fue posible cargar el historial. Intenta nuevamente.';
+      }
+    });
+  }
+
+  anteriorHistorial(): void {
+    if (!this.cargandoHistorial && this.offsetHistorial > 0) {
+      this.cargarHistorial(Math.max(0, this.offsetHistorial - this.limitHistorial));
+    }
+  }
+
+  siguienteHistorial(): void {
+    if (!this.cargandoHistorial && this.hayMasHistorial) {
+      this.cargarHistorial(this.offsetHistorial + this.limitHistorial);
+    }
   }
 
   volver(): void { this.router.navigate(['/practicas']); }

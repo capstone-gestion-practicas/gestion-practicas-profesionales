@@ -31,5 +31,44 @@
         </ion-card-content></ion-card>
       }
     </section>
+    @if (historialHabilitado) {
+      <section class="history-section" aria-labelledby="historial-titulo" aria-live="polite"
+        [attr.aria-busy]="cargandoHistorial">
+        <h2 id="historial-titulo">Historial de estados</h2>
+        @if (cargandoHistorial) {
+          <div class="loading"><ion-spinner></ion-spinner><p>Cargando historial...</p></div>
+        } @else if (errorHistorial) {
+          <p role="alert">{{ errorHistorial }}</p>
+          <ion-button fill="outline" (click)="cargarHistorial()">Reintentar historial</ion-button>
+        } @else if (eventos.length === 0) {
+          <p>No hay eventos de historial registrados.</p>
+        } @else {
+          <ol class="history-list">
+            @for (evento of eventos; track evento.id_historial) {
+              <li>
+                <ion-card><ion-card-content>
+                  <p class="history-transition">
+                    {{ evento.estado_anterior?.nombre ?? 'Sin estado anterior registrado' }}
+                    → {{ evento.estado_nuevo.nombre }}
+                  </p>
+                  <p><strong>Fecha:</strong> {{ formatearFechaHora(evento.fecha_cambio) }}</p>
+                  <p><strong>Responsable:</strong> {{ evento.responsable.nombre }}</p>
+                  @if (evento.observacion !== null) {
+                    <p class="history-observation"><strong>Observación:</strong> {{ evento.observacion }}</p>
+                  }
+                </ion-card-content></ion-card>
+              </li>
+            }
+          </ol>
+        }
+        <nav class="history-pagination" aria-label="Paginación del historial">
+          <ion-button fill="outline" [disabled]="cargandoHistorial || offsetHistorial === 0"
+            (click)="anteriorHistorial()">Anterior</ion-button>
+          <span>Página {{ offsetHistorial / limitHistorial + 1 }}</span>
+          <ion-button fill="outline" [disabled]="cargandoHistorial || !hayMasHistorial"
+            (click)="siguienteHistorial()">Siguiente</ion-button>
+        </nav>
+      </section>
+    }
   </main>
 </ion-content>

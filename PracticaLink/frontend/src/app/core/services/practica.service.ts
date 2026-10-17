@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   PracticaDetalleResponse,
   PracticaDetalleGestionResponse,
+  HistorialPracticaResponse,
   PracticasListadoResponse,
   PracticaCreate,
   PracticaCreateResponse,
@@ -28,6 +29,13 @@ export class PracticaService {
   obtenerDetalle(idPractica: string): Observable<PracticaDetalleGestionResponse> {
     return this.http.get<PracticaDetalleGestionResponse>(
       `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}`
+    );
+  }
+
+  obtenerHistorial(idPractica: string, limit = 50, offset = 0): Observable<HistorialPracticaResponse> {
+    const params = new HttpParams().set('limit', limit).set('offset', offset);
+    return this.http.get<HistorialPracticaResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/historial`, { params }
     );
   }
 

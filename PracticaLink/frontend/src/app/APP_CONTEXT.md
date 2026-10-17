@@ -239,3 +239,21 @@ con horario de verano; fechas DATE por partes de calendario sin cambio de zona.
 Existen estados de carga, 404, acceso denegado 401/403 y error general con
 reintento. Se cancelan consultas anteriores al cambiar id o destruir la vista.
 Volver navega al listado completo sin restaurar filtro ni paginación.
+
+
+### EP04 / HU04.3: historial de estados en detalle
+
+La sección Historial de estados en `/practicas/:id` consume
+PracticaService.obtenerHistorial(id, limit, offset), con contratos
+HistorialPracticaResponse y EventoHistorial compatibles con el backend.
+Mantiene el orden recibido de la API (fecha_cambio, id_historial ascendentes),
+eventos repetidos y estado anterior null como Sin estado anterior registrado.
+No interpreta automáticamente ningún evento como registro inicial.
+
+La sección tiene carga, error, vacío, reintento y paginación de 50 eventos
+independientes de los antecedentes. Reintentar conserva la práctica y página.
+Cambiar de práctica reinicia la paginación y cancela las peticiones anteriores;
+al destruir la vista se cancelan ambas consultas. Usa el formateador compartido
+America/Santiago. Observaciones por interpolación de texto, sin innerHTML.
+Solo los roles de gestión existentes pueden abrir la pantalla; no se añade
+acceso del estudiante ni acciones de revisión o modificación de estados.

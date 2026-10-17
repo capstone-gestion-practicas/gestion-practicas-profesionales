@@ -180,4 +180,21 @@ describe('PracticaService', () => {
     expect(request.request.params.keys()).toEqual([]);
     request.flush(detalle);
   });
+  it('requests history with the selected identifier and default pagination', () => {
+    service.obtenerHistorial('15').subscribe(data => expect(data.items).toEqual([]));
+    const request = httpMock.expectOne(req => req.url === 'http://127.0.0.1:8000/practicas/15/historial');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual(['limit', 'offset']);
+    expect(request.request.params.get('limit')).toBe('50');
+    expect(request.request.params.get('offset')).toBe('0');
+    request.flush({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false });
+  });
+
+  it('sends history pagination without changing detail requests', () => {
+    service.obtenerHistorial('15', 10, 20).subscribe();
+    const request = httpMock.expectOne(req => req.url.endsWith('/practicas/15/historial'));
+    expect(request.request.params.get('limit')).toBe('10');
+    expect(request.request.params.get('offset')).toBe('20');
+    request.flush({ id_practica: 15, items: [], limit: 10, offset: 20, hay_mas: false });
+  });
 });
