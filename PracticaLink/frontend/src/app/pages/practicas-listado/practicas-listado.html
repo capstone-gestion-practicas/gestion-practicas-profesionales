@@ -1,10 +1,10 @@
 <ion-content>
   <main class="practicas-wrapper">
     <header>
-      <div><p class="module-label">EP04 · Consulta</p><h1>Prácticas profesionales</h1></div>
+      <div><p class="module-label">EP04 · Seguimiento</p><h1>Seguimiento de prácticas</h1></div>
       <ion-button fill="outline" (click)="volver()">Volver</ion-button>
     </header>
-    <p>Consulta prácticas de todos los estados, incluidas las finalizadas.</p>
+    <p>Selecciona una práctica para revisar su historial y registrar seguimientos o incidencias.</p>
     <form (ngSubmit)="buscar()" autocomplete="off">
       <label for="rut-busqueda">RUT del estudiante</label>
       <input id="rut-busqueda" name="rutBusqueda" type="text" [(ngModel)]="rutBusqueda"
@@ -39,8 +39,8 @@
               <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
             </dl>
             <ion-button expand="block" (click)="verAntecedentes(practica.id_practica)"
-              [attr.aria-label]="'Ver antecedentes de la práctica ' + practica.id_practica">
-              Ver antecedentes
+              [attr.aria-label]="'Abrir seguimiento de la práctica ' + practica.id_practica">
+              Abrir seguimiento
             </ion-button>
           </ion-card-content></ion-card>
         }

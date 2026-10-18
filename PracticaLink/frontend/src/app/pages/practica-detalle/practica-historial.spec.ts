@@ -41,7 +41,15 @@ describe('Historial en el detalle de práctica', () => {
     fixture.detectChanges();
   });
   afterEach(() => fixture.destroy());
-  function section(): HTMLElement { return fixture.nativeElement.querySelector('.history-section'); }
+  function section(): HTMLElement {
+    if (component.vistaHistorial !== 'antecedentes') {
+      const tabs = fixture.nativeElement.querySelectorAll('.tab') as NodeListOf<HTMLElement>;
+      const tab = Array.from(tabs).find(item => item.textContent?.includes('Antecedentes'))!;
+      tab.click();
+      fixture.detectChanges();
+    }
+    return fixture.nativeElement.querySelector('.history-section');
+  }
 
   it('renders chronological and repeated events without assuming registration', () => {
     expect(service.obtenerHistorial).toHaveBeenCalledWith('15', 50, 0);
@@ -77,7 +85,7 @@ describe('Historial en el detalle de práctica', () => {
   it('shows empty history while preserving antecedents', () => {
     service.obtenerHistorial.and.returnValue(of({ ...historial, items: [], hay_mas: false }));
     component.cargarHistorial(); fixture.detectChanges();
-    expect(section().textContent).toContain('No hay eventos de historial registrados');
+    expect(section().textContent).toContain('No hay cambios de estado registrados');
     expect(component.detalle).toEqual(detalle);
   });
 

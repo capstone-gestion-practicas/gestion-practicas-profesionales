@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -53,6 +53,20 @@ export const routes: Routes = [
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
     loadComponent: () =>
       import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
+  },
+  {
+    path: 'practicas/:id/seguimiento/nuevo',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'seguimiento' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
+  },
+  {
+    path: 'practicas/:id/incidencias/nueva',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'incidencia' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
   },
   {
     path: 'practicas/:id',
