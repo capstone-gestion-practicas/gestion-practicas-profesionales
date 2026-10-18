@@ -2,20 +2,6 @@
   <ion-grid class="home-wrapper">
     <ion-row>
       <ion-col size="12">
-    <header class="brand-header" aria-label="PracticaLink">
-      <span class="menu-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="brand-symbol" aria-hidden="true">⌁</span>
-      <span class="brand-name">PracticaLink</span>
-      <span class="brand-spacer"></span>
-      @if (contexto(); as ctx) {
-        <span class="notification-mark" aria-label="Notificaciones">♧</span>
-        <span class="account-summary">
-          <span class="account-avatar">{{ ctx.usuario.nombre[0] }}</span>
-          <span class="account-name">{{ ctx.usuario.nombre }}</span>
-        </span>
-      }
-    </header>
-
     @if (cargando) {
 
       <div class="loading">

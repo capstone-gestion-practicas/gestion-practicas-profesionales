@@ -1,3 +1,54 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <div class="app-shell" [class.login-layout]="esLogin()">
+    @if (!esLogin()) {
+      <aside class="app-sidebar" aria-label="Navegación principal">
+        <a class="brand" routerLink="/home" aria-label="PracticaLink, ir al inicio">
+          <span class="brand-mark">P</span>
+          <span class="brand-name">PracticaLink</span>
+        </a>
+
+        <nav class="sidebar-nav" aria-label="Secciones">
+          <div class="nav-section">
+            <span class="nav-label">Workspace</span>
+            <a class="nav-item" routerLink="/home" [class.active]="esRutaActiva('/home')"
+              [attr.aria-current]="esRutaActiva('/home') ? 'page' : null">
+              <span class="icon" aria-hidden="true">⌂</span><span>Inicio</span>
+            </a>
+            @if (esGestor) {
+              <a class="nav-item" routerLink="/practicas" [class.active]="esRutaActiva('/practicas')"
+                [attr.aria-current]="esRutaActiva('/practicas') ? 'page' : null">
+                <span class="icon" aria-hidden="true">◷</span><span>Seguimiento</span>
+              </a>
+              <a class="nav-item" routerLink="/revisiones" [class.active]="esRutaActiva('/revisiones')"
+                [attr.aria-current]="esRutaActiva('/revisiones') ? 'page' : null">
+                <span class="icon" aria-hidden="true">◷</span><span>Revisiones</span>
+              </a>
+            }
+          </div>
+
+          @if (esAdministrador) {
+            <div class="nav-section admin">
+              <span class="nav-label">Administración</span>
+              <a class="nav-item" routerLink="/usuarios" [class.active]="esRutaActiva('/usuarios')"
+                [attr.aria-current]="esRutaActiva('/usuarios') ? 'page' : null">
+                <span class="icon" aria-hidden="true">◫</span><span>Usuarios</span>
+              </a>
+            </div>
+          }
+        </nav>
+
+        <div class="sidebar-user">
+          <span class="user-avatar">{{ inicialesUsuario }}</span>
+          <span class="user-meta">
+            <strong>{{ nombreUsuario }}</strong>
+            <span>{{ rolUsuario }}</span>
+          </span>
+        </div>
+      </aside>
+    }
+
+    <main class="app-content">
+      <ion-router-outlet></ion-router-outlet>
+    </main>
+  </div>
 </ion-app>

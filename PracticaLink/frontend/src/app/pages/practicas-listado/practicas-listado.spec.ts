@@ -191,8 +191,8 @@ describe('PracticasListado', () => {
   it('opens the selected practice detail without passing search data', () => {
     component.rutBusqueda = '12345678-5';
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
-    const button = buttons.find(item => item.textContent?.trim() === 'Ver antecedentes')!;
-    expect(button.getAttribute('aria-label')).toBe('Ver antecedentes de la práctica 1');
+    const button = buttons.find(item => item.textContent?.trim() === 'Abrir seguimiento')!;
+    expect(button.getAttribute('aria-label')).toBe('Abrir seguimiento de la práctica 1');
     button.click();
     expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas', 1]);
   });

@@ -60,8 +60,9 @@ describe('PracticaDetalle', () => {
       service.obtenerDetalle.and.returnValue(of({ ...detalle, estado: { id_estado: 1, nombre, es_final } }));
       component.cargar(); fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain(nombre);
-      const entries = Array.from(fixture.nativeElement.querySelectorAll('dl > div')) as HTMLElement[];
-      expect(entries.find(item => item.querySelector('dt')?.textContent === 'Estado final')?.querySelector('dd')?.textContent).toBe(es_final ? 'Sí' : 'No');
+      const entries = Array.from(fixture.nativeElement.querySelectorAll('.summary-item')) as HTMLElement[];
+      expect(entries.find(item => item.querySelector('.label')?.textContent === 'Estado final')
+        ?.querySelector('strong')?.textContent).toBe(es_final ? 'Sí' : 'No');
     }
     for (const forbidden of ['RUT', 'Correo', 'Teléfono', 'Aprobar', 'Observar', 'Rechazar', 'Cambiar estado']) expect(fixture.nativeElement.textContent).not.toContain(forbidden);
   });
@@ -112,8 +113,12 @@ describe('PracticaDetalle', () => {
     expect(service.obtenerDetalle).toHaveBeenCalledWith('9223372036854775807');
   });
 
-  it('returns to the complete listing without search state', () => {
-    (fixture.nativeElement.querySelector('header ion-button') as HTMLElement).click();
-    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas']);
+  it('opens the follow-up registration from the detail page', () => {
+    const button = Array.from(fixture.nativeElement.querySelectorAll('ion-button') as NodeListOf<HTMLElement>)
+      .find(item => item.textContent?.trim() === 'Registrar seguimiento');
+    button!.click();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([
+      '/practicas', '15', 'seguimiento', 'nuevo'
+    ]);
   });
 });
