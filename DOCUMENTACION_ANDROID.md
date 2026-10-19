@@ -1,7 +1,7 @@
-# Aplicación Android — release 1.1 QA
+# Aplicación Android — PracticaLink
 
-Esta guía explica cómo preparar, ejecutar y generar la APK de PracticaLink desde
-la rama `feature/apk-release-1.1`.
+Esta guía explica cómo preparar y probar PracticaLink para Android en el
+emulador local o conectada a los servicios en la nube.
 
 ## Arquitectura
 
@@ -10,44 +10,50 @@ El proyecto nativo se encuentra en `PracticaLink/frontend/android`.
 
 - ID Android: `cl.practicalink.app`.
 - Nombre: `PracticaLink`.
-- Versión Android: `1.1.0` (`versionCode 2`).
+- La versión Android se sincroniza desde `PracticaLink/frontend/package.json`.
 - Android mínimo: API 24.
 - Android objetivo y de compilación: API 36.
-- Backend QA: `https://practicalink-api-qa.onrender.com`.
-- El backend está publicado en Render y la base de datos en Supabase.
+- Build `qa`: backend y Supabase locales en Docker.
+- Build `prod`: usa los endpoints en la nube configurados en
+  `src/environments/environment.ts`.
 
-El teléfono no necesita estar conectado a la misma red local del computador.
-La instancia gratuita de Render puede tardar cerca de un minuto en responder
-después de un periodo de inactividad.
+El build local usa `127.0.0.1` para el backend y Supabase. El build local
+requiere Docker Desktop y `adb reverse` activo para reenviar esos puertos desde
+el emulador al computador.
 
-## Dónde se ejecuta el backend
+## Ambientes de ejecución
 
-La APK no contiene ni ejecuta FastAPI. Render obtiene el código del backend
-desde el repositorio Git de PracticaLink y utiliza como directorio raíz:
+La APK no contiene ni ejecuta FastAPI. Para probar contra Docker, desde
+`PracticaLink` inicia el stack local:
 
-```text
-PracticaLink/backend
+```powershell
+.\start-local.cmd
 ```
 
-Render inicia ese código con:
+Mantén esa ventana abierta. Desde otra terminal, compila la variante local:
 
-```text
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```powershell
+cd frontend
+npm.cmd run android:reverse-local
+npm.cmd run build-android:qa
 ```
 
-La rama configurada en Render determina qué versión del backend utiliza la
-aplicación. Para QA debe apuntar a `feature/apk-release-1.1` o, después de su
-integración, a `release-1.1`. El flujo de ejecución es:
+Ejecuta `android:reverse-local` con el emulador encendido; reenvía los puertos
+8000 y 54321 desde el emulador al computador. El build apunta a
+`http://127.0.0.1:8000` y `http://127.0.0.1:54321`. En Android Studio, ejecuta
+la variante **debug** en el emulador. La configuración debug permite HTTP sin
+cifrar para este build local; no se incluye en el manifiesto de producción.
 
-```text
-Repositorio Git → Render (FastAPI) → aplicación Android
-                         ↓
-                 Supabase PostgreSQL
+Para usar los servicios en la nube, ejecuta:
+
+```powershell
+npm.cmd run build-android:prod
 ```
 
-Las actualizaciones del backend requieren subir los cambios al repositorio y
-desplegar esa rama en Render. No es necesario volver a generar la APK mientras
-la URL pública y el contrato de los endpoints se mantengan compatibles.
+El build `prod` usa `src/environments/environment.ts`. Antes de compilar,
+confirma que `apiUrl`, `supabaseUrl` y `supabasePublishableKey` correspondan al
+ambiente remoto que deseas probar. No agregues claves `service_role` ni
+`sb_secret` al frontend.
 
 ## Requisitos
 
@@ -66,7 +72,6 @@ incompatible con JVM 25, seleccionar **Use JVM 21**.
 Desde la raíz del repositorio:
 
 ```powershell
-git switch feature/apk-release-1.1
 cd PracticaLink/frontend
 npm ci
 ```
@@ -79,26 +84,21 @@ npm.cmd ci
 npm.cmd run build-android:qa
 ```
 
-## Compilar QA y abrir Android Studio
+## Compilar y abrir Android Studio
 
-Desde `PracticaLink/frontend`:
-
-```powershell
-npm run build-android:qa
-```
-
-El comando compila Angular con la configuración de producción/QA, sincroniza
-los archivos web con Capacitor y abre Android Studio. No genera por sí solo el
-archivo APK; la compilación final se realiza desde Android Studio o con Gradle.
+`build-android:qa` compila para servicios locales; `build-android:prod` compila
+para las URLs en la nube. Ambos sincronizan los archivos web con Capacitor y
+abren Android Studio. No generan por sí solos el archivo APK; la compilación
+final se realiza desde Android Studio o con Gradle.
 
 Antes de compilar, el comando sincroniza automáticamente la versión declarada
 en `package.json` con `android/app/build.gradle`. Para una nueva entrega sólo se
 deben actualizar estos dos valores en `package.json`:
 
 ```json
-"version": "1.1.0",
+"version": "1.2.0",
 "config": {
-  "androidVersionCode": 2
+  "androidVersionCode": 4
 }
 ```
 
@@ -180,8 +180,9 @@ Nunca se deben versionar el keystore, sus contraseñas ni archivos `.env`.
 
 ## Ambientes y conectividad
 
-- `environment.development.ts` usa `http://127.0.0.1:8000` para desarrollo web.
-- `environment.ts` usa el backend HTTPS de Render para QA y Android.
+- `environment.development.ts` usa `127.0.0.1` para desarrollo web en el PC.
+- `environment.android-local.ts` usa `127.0.0.1` con el reenvío `adb reverse`.
+- `environment.ts` define las URLs del ambiente remoto.
 - Capacitor carga la aplicación desde `https://localhost` dentro del WebView.
 - FastAPI permite los orígenes de Capacitor requeridos por la aplicación.
 
@@ -215,10 +216,17 @@ importarse con JVM 25.
 Instalarlo desde `Tools > SDK Manager > SDK Platforms`, aceptar las licencias y
 sincronizar nuevamente Gradle.
 
-### El backend demora o parece no responder
+### El backend demora o parece no responder en la nube
 
 Abrir `https://practicalink-api-qa.onrender.com` en el navegador y esperar a que
 la instancia gratuita despierte. Luego reintentar desde la aplicación.
+
+### El build local no conecta con Docker
+
+Confirmar que Docker Desktop y `.\start-local.cmd` estén activos, que el
+emulador esté encendido y que se haya ejecutado
+`npm.cmd run android:reverse-local`. Si reinicias el emulador, vuelve a ejecutar
+el reenvío de puertos.
 
 ### Los cambios web no aparecen en Android
 
