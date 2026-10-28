@@ -73,6 +73,21 @@ export interface PracticaEstadoResumen {
   horas_semanales: number | null;
 }
 
+export interface EstudianteSinPractica {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  tiene_perfil: boolean;
+  tiene_practica: boolean;
+  recordatorio_enviado_hoy: boolean;
+}
+
+export interface RecordatorioEstudianteResponse {
+  id_usuario: number;
+  mensaje: string;
+  recordatorio_enviado_hoy: boolean;
+}
+
 export interface HistorialEstadoPractica {
   id_historial: number;
   id_practica: number;
@@ -83,6 +98,40 @@ export interface HistorialEstadoPractica {
   usuario: string;
   fecha_cambio: string;
   observacion: string | null;
+}
+
+export interface SeguimientoPractica {
+  id_seguimiento: number;
+  id_practica: number;
+  id_usuario: number;
+  usuario: string;
+  fecha: string;
+  observacion: string;
+}
+
+export type PrioridadIncidencia = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
+export type EstadoIncidencia = 'ABIERTA' | 'EN_REVISION' | 'RESUELTA' | 'CERRADA';
+
+export interface IncidenciaPractica {
+  id_incidencia: number;
+  id_practica: number;
+  id_usuario: number;
+  usuario: string;
+  fecha: string;
+  descripcion: string;
+  prioridad: PrioridadIncidencia;
+  estado: EstadoIncidencia;
+  fecha_resolucion: string | null;
+  alerta: boolean;
+  estudiante: string | null;
+  correo_estudiante: string | null;
+  centro_practica: string | null;
+}
+
+export interface ActualizarEstadoIncidenciaResponse {
+  id_incidencia: number;
+  estado: EstadoIncidencia;
+  mensaje: string;
 }
 
 export interface ActualizarEstadoPracticaResponse {

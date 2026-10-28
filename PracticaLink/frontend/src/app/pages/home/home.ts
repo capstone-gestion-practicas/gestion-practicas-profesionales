@@ -32,6 +32,7 @@ import { AuthStore } from '../../core/store/auth.store';
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import {
   HistorialEstadoPractica,
+  EstudianteSinPractica,
   PracticaDetalleResponse,
   PracticaEstadoResumen
 } from '../../core/models/practica.models';
@@ -122,6 +123,7 @@ export class Home implements OnInit {
   cargando = true;
   errorPractica = '';
   practicaDetalle: PracticaDetalleResponse | null = null;
+  modalAntecedentesAbierto = false;
   historialEstados: HistorialEstadoPractica[] = [];
   cargandoHistorialEstados = false;
   errorHistorialEstados = '';
@@ -138,6 +140,10 @@ export class Home implements OnInit {
   telefonoPerfil = '';
   direccionPerfil = '';
   usuariosAdmin: UsuarioAdministrable[] = [];
+  estudiantesSinPractica: EstudianteSinPractica[] = [];
+  errorEstudiantesSinPractica = '';
+  recordatoriosEnCurso = new Set<number>();
+  resultadoRecordatorios: Record<number, { mensaje: string; error: boolean }> = {};
   solicitudesAdmin: SolicitudRevisionResumen[] = [];
   practicasAdmin: PracticaEstadoResumen[] = [];
   metricasPracticasEstado: { id_estado: number; nombre: string; cantidad: number }[] = [];
@@ -169,6 +175,7 @@ export class Home implements OnInit {
       this.cargando = false;
       this.cargarPracticaRegistrada(this.contexto() as ContextoUsuarioResponse);
       this.cargarDashboardAdmin();
+      this.cargarEstudiantesSinPractica();
       return;
     }
 
@@ -178,6 +185,7 @@ export class Home implements OnInit {
         this.cargando = false;
         this.cargarPracticaRegistrada(contexto);
         this.cargarDashboardAdmin();
+        this.cargarEstudiantesSinPractica();
       },
       error: () => {
         this.cerrarSesion();
@@ -191,6 +199,7 @@ export class Home implements OnInit {
       return;
     }
     this.cargarDashboardAdmin();
+    this.cargarEstudiantesSinPractica();
   }
 
   cerrarSesion(): void {
@@ -214,6 +223,14 @@ export class Home implements OnInit {
 
   gestionarEstados(): void {
     this.router.navigate(['/gestion-estados']);
+  }
+
+  gestionarSeguimientos(): void {
+    this.router.navigate(['/seguimientos']);
+  }
+
+  gestionarIncidencias(): void {
+    this.router.navigate(['/incidencias']);
   }
 
   abrirPracticasEstado(estado: string): void {
@@ -266,8 +283,12 @@ export class Home implements OnInit {
     );
   }
 
-  irAPractica(): void {
-    document.getElementById('antecedentes-practica')?.scrollIntoView({ behavior: 'smooth' });
+  abrirAntecedentesPractica(): void {
+    this.modalAntecedentesAbierto = true;
+  }
+
+  cerrarAntecedentes(): void {
+    this.modalAntecedentesAbierto = false;
   }
 
   solicitudesPendientes(): number {
@@ -387,6 +408,51 @@ export class Home implements OnInit {
       },
       error: () => {
         this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
+      }
+    });
+  }
+
+  private cargarEstudiantesSinPractica(): void {
+    if (!this.puedeRevisarPracticas()) {
+      return;
+    }
+
+    this.errorEstudiantesSinPractica = '';
+    this.practicaService.listarEstudiantesSinPractica().subscribe({
+      next: estudiantes => {
+        this.estudiantesSinPractica = estudiantes;
+      },
+      error: () => {
+        this.errorEstudiantesSinPractica =
+          'No fue posible consultar los estudiantes sin práctica registrada.';
+      }
+    });
+  }
+
+  enviarRecordatorioEstudiante(idUsuario: number): void {
+    this.resultadoRecordatorios = {
+      ...this.resultadoRecordatorios,
+      [idUsuario]: { mensaje: '', error: false }
+    };
+    this.recordatoriosEnCurso.add(idUsuario);
+    this.practicaService.enviarRecordatorioEstudiante(idUsuario).subscribe({
+      next: resultado => {
+        this.recordatoriosEnCurso.delete(idUsuario);
+        this.resultadoRecordatorios = {
+          ...this.resultadoRecordatorios,
+          [idUsuario]: { mensaje: resultado.mensaje, error: false }
+        };
+        this.cargarEstudiantesSinPractica();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.recordatoriosEnCurso.delete(idUsuario);
+        const detalle = typeof error.error?.detail === 'string'
+          ? error.error.detail
+          : 'No fue posible enviar el recordatorio.';
+        this.resultadoRecordatorios = {
+          ...this.resultadoRecordatorios,
+          [idUsuario]: { mensaje: detalle, error: true }
+        };
       }
     });
   }

@@ -44,7 +44,8 @@
 ion-card {
   --background: var(--cream-surface);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 28px rgba(32, 55, 45, .08);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(32, 55, 45, .07);
 }
 
 ion-toolbar {
@@ -52,9 +53,42 @@ ion-toolbar {
 }
 
 ion-button {
-  --border-radius: 10px;
-  font-weight: 700;
+  --border-radius: 12px;
+  font-weight: 750;
 }
+
+ion-card ion-card-title {
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 550;
+  line-height: 1.2;
+}
+
+ion-card .module-label,
+.page-heading .module-label {
+  margin: 0 0 7px;
+  color: var(--ion-color-primary);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.registration-card,
+.create-card,
+.request-card,
+.detail-card {
+  border-inline-start: 3px solid var(--ion-color-primary);
+}
+
+.module-success,
+.success-message {
+  border-radius: 9px;
+  background: #e4efe5;
+  color: #245a45;
+}
+
+.page-heading h1 { color: var(--ink); letter-spacing: -.025em; }
 
 ion-input::part(native),
 ion-textarea::part(native) {
@@ -193,4 +227,114 @@ button.notification-mark {
   color: #fff;
   font-size: .65rem;
   font-weight: 800;
+}
+
+ion-modal.practice-details-modal {
+  --width: min(900px, calc(100% - 32px));
+  --height: min(90vh, 820px);
+  --max-height: 90vh;
+  --border-radius: 18px;
+}
+
+.practice-details-modal-content { height: 100%; padding: 16px; overflow-y: auto; }
+.practice-modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 860px; margin: 0 auto 12px; color: var(--ink); font-size: .9rem; font-weight: 700; }
+.practice-details-modal-content .practice-card { max-width: 860px; margin: 0 auto; }
+
+@media (max-width: 720px) {
+  ion-modal.practice-details-modal { --width: 100%; --height: 100%; --border-radius: 0; }
+  .practice-details-modal-content { padding: 10px; }
+}
+
+/* Student home refresh */
+.student-brand-header {
+  min-height: 64px;
+  padding: 8px 16px;
+  border: 1px solid #e2eae4;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .88);
+  box-shadow: 0 8px 26px rgba(25, 55, 43, .07);
+  color: #173a30;
+}
+.student-brand-header .brand-symbol {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  margin-right: 10px;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #1d735c, #124c42);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+.student-brand-header .brand-name,
+.student-brand-header .account-name { color: #173a30; }
+.student-brand-header .account-avatar { border-color: #d6e8dc; background: #e8f4ec; }
+.student-brand-header .quick-nav button { color: #34584b; }
+.student-brand-header .quick-nav button:hover,
+.student-brand-header .quick-nav button:focus-visible { background: #edf5ef; }
+.student-brand-header .notification-mark { color: #245a45; }
+.student-dashboard { gap: 22px; }
+.student-sidebar { gap: 18px; }
+.student-dashboard .welcome-card {
+  overflow: hidden;
+  border: 1px solid #e5e1d5;
+  border-inline-start: 3px solid #245a45;
+  border-radius: 20px;
+  background: #fffefa;
+  box-shadow: 0 10px 26px rgba(32, 55, 45, .08);
+  color: #20372d;
+}
+.student-dashboard .welcome-card ion-card-header { padding: 18px 18px 6px; }
+.student-dashboard .welcome-card ion-card-content { padding: 8px 18px 16px; }
+.student-dashboard .welcome-card .module-label { color: #47775e; }
+.student-dashboard .welcome-card ion-card-title { color: #20372d; font-size: 1.45rem; }
+.student-dashboard .welcome-subtitle { margin-top: 6px; color: #627168; font-size: .84rem; }
+.student-dashboard .profile-avatar { width: 42px; height: 42px; flex-basis: 42px; background: #e4efe5; color: #245a45; }
+.student-dashboard .identity-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.student-dashboard .identity-item { display: grid; min-width: 0; min-height: 48px; align-content: center; gap: 3px; padding: 8px 10px; border: 1px solid #e7e3d8; border-radius: 12px; background: #f6f2e9; color: #20372d; }
+.student-dashboard .identity-item:first-child { grid-column: 1 / -1; }
+.student-dashboard .identity-item span { margin: 0; color: #627168; font-size: .62rem; }
+.student-dashboard .identity-item strong { color: #20372d; font-size: .78rem; line-height: 1.25; overflow-wrap: anywhere; }
+.student-dashboard .account-active { color: #245a45 !important; }
+.account-status-chip { display: inline-flex; margin-top: 5px; padding: 3px 8px; border: 1px solid #cfe2d2; border-radius: 999px; background: #eaf4e9; color: #245a45; font-size: .65rem; font-weight: 700; }
+.student-dashboard .profile-actions { margin-top: 8px; }
+.student-dashboard .profile-actions ion-button { --border-color: #b9cabb; --color: #245a45; }
+.student-sidebar .registration-card {
+  overflow: hidden;
+  border: 1px solid #e0e9e2;
+  border-radius: 22px;
+  background: #fffefa;
+  box-shadow: 0 12px 30px rgba(28, 54, 43, .07);
+}
+.student-sidebar .registration-card ion-card-header { padding: 20px 20px 8px; }
+.student-sidebar .registration-card ion-card-title { color: #1b3b30; font-size: 1.24rem; }
+.student-sidebar .registration-card ion-card-content { padding: 10px 20px 20px; color: #607168; line-height: 1.55; }
+.student-sidebar .registration-card ion-button { --border-radius: 12px; min-height: 46px; }
+.student-dashboard > .student-practice-status {
+  overflow: hidden;
+  border: 1px solid #e0e9e2;
+  border-inline-start: 3px solid var(--ion-color-primary);
+  border-radius: 24px;
+  background: #fffefa;
+  box-shadow: 0 14px 34px rgba(28, 54, 43, .07);
+}
+.student-practice-status > ion-card-header { padding: 24px 26px 18px; background: linear-gradient(120deg, #e6f2e8, #f4f7e9); }
+.student-practice-status > ion-card-header .module-label { color: #47775e; }
+.student-practice-status > ion-card-header ion-card-title { color: #173d32; font-size: 1.5rem; }
+.student-practice-status > ion-card-content { padding: 8px 26px 24px; }
+.student-practice-status .practice-status { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.student-practice-status .section-label { margin: 0; color: #60776a; }
+.student-practice-status .status-pill { min-width: 180px; align-items: flex-start; border: 1px solid #c8e1cf; background: #edf7ee; color: #1d6447; }
+.student-practice-status .observation-response { padding: 16px; border: 1px solid #f1d5a8; border-radius: 16px; background: #fff9ed; }
+.student-practice-status .state-history { margin-top: 20px; padding-top: 20px; border-color: #e7ede7; }
+.student-practice-status .state-history-list li { padding-bottom: 18px; }
+@media (max-width: 720px) {
+  .student-brand-header { border-radius: 14px; }
+  .student-dashboard { gap: 14px; }
+  .student-dashboard .welcome-card { border-radius: 20px; }
+  .student-practice-status > ion-card-header { padding: 20px 18px 14px; }
+  .student-practice-status > ion-card-content { padding: 8px 18px 20px; }
+  .student-practice-status .practice-status { align-items: flex-start; flex-direction: column; }
+  .student-practice-status .status-pill { min-width: 0; }
 }

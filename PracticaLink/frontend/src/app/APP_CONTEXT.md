@@ -156,6 +156,11 @@ Endpoints consumidos:
 - `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
+- `GET /practicas/{id}/seguimientos`: lista los seguimientos de una práctica para gestores y administradores.
+- `POST /practicas/{id}/seguimientos`: registra fecha y observación durante el desarrollo de la práctica.
+- `GET /incidencias`: lista las incidencias y su prioridad, estado y práctica asociada para gestores y administradores.
+- `POST /practicas/{id}/incidencias`: registra una incidencia; las prioridades altas y críticas generan alertas.
+- `PATCH /incidencias/{id}/estado`: actualiza el estado de una incidencia.
 - `GET /empresas/consulta/{rut}`: consulta antecedentes tributarios con caché de backend.
 - `GET /usuarios`: lista usuarios para el administrador.
 - `GET /usuarios/roles`: lista roles activos.
@@ -176,6 +181,8 @@ proyecto nativo vive en `frontend/android` y se sincroniza con `npm run apk:sync
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
+- `pages/seguimientos`: registro y consulta del historial EP05 por práctica.
+- `pages/incidencias`: registro, gestión de estado y detección de incidencias pendientes EP06.
 - `practica-form`: modal de registro, búsqueda por RUT e ingreso manual del centro.
 - `practica.service.ts`: registro de prácticas y consulta de empresas.
 - `usuario.service.ts`: comunicación con los endpoints administrativos.

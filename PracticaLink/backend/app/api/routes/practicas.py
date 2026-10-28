@@ -10,24 +10,35 @@ from app.schemas.practica import (
     ActualizarEstadoPracticaResponse,
     EstadoPracticaActualResponse,
     EstadoPracticaDetalle,
+    EstudianteSinPractica,
     HistorialEstadoPractica,
     PracticaCreate,
     PracticaCreateResponse,
     PracticaDetalleResponse,
     PracticaEstadoResumen,
+    RecordatorioEstudianteResponse,
     ResponderObservacionPracticaRequest,
 )
+from app.schemas.seguimiento import SeguimientoCreate, SeguimientoResponse
 from app.services.estado_practica_service import (
     EstadoPracticaNoDisponibleError,
     PracticaNoObservadaError,
     PracticaEstadoNoEncontradaError,
     actualizar_estado_practica,
     listar_estados_activos,
+    listar_estudiantes_sin_practica,
     listar_practicas_para_gestion,
     obtener_estado_actual,
     obtener_historial_estados,
     obtener_practica_estudiante,
     responder_observacion_practica,
+)
+from app.services.correo_service import (
+    ErrorEnvioCorreoError,
+    EstudianteNoEncontradoError,
+    RecordatorioYaEnviadoHoyError,
+    EstudianteYaTienePracticaError,
+    enviar_recordatorio_sin_practica,
 )
 from app.services.practica_service import (
     EstadoInicialNoEncontradoError,
@@ -35,9 +46,48 @@ from app.services.practica_service import (
     PracticaActivaError,
     registrar_practica,
 )
+from app.services.seguimiento_service import (
+    PracticaSeguimientoNoDisponibleError,
+    listar_seguimientos,
+    registrar_seguimiento,
+)
 
 
 router = APIRouter(prefix="/practicas", tags=["Prácticas"])
+
+
+@router.post(
+    "/{id_practica}/seguimientos",
+    response_model=SeguimientoResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def crear_seguimiento(
+    id_practica: int,
+    datos: SeguimientoCreate,
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        return registrar_seguimiento(db, id_practica, id_usuario, datos)
+    except PracticaSeguimientoNoDisponibleError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "La práctica no existe o ya se encuentra finalizada",
+        ) from error
+
+
+@router.get(
+    "/{id_practica}/seguimientos",
+    response_model=list[SeguimientoResponse],
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def consultar_seguimientos(
+    id_practica: int,
+    db: Session = Depends(get_db),
+):
+    return listar_seguimientos(db, id_practica)
 
 
 @router.patch(
@@ -133,6 +183,48 @@ def listar_estados(db: Session = Depends(get_db)):
 )
 def listar_para_gestionar_estados(db: Session = Depends(get_db)):
     return listar_practicas_para_gestion(db)
+
+
+@router.get(
+    "/estudiantes-sin-practica",
+    response_model=list[EstudianteSinPractica],
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def listar_estudiantes_sin_practica_endpoint(db: Session = Depends(get_db)):
+    return listar_estudiantes_sin_practica(db)
+
+
+@router.post(
+    "/estudiantes/{id_usuario}/recordatorio",
+    response_model=RecordatorioEstudianteResponse,
+    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+)
+def enviar_recordatorio_estudiante(
+    id_usuario: int,
+    db: Session = Depends(get_db),
+):
+    try:
+        return enviar_recordatorio_sin_practica(db, id_usuario)
+    except EstudianteNoEncontradoError as error:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "No se encontró un estudiante activo con ese identificador",
+        ) from error
+    except EstudianteYaTienePracticaError as error:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "El estudiante ya tiene una práctica registrada",
+        ) from error
+    except RecordatorioYaEnviadoHoyError as error:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Ya se envió un recordatorio a este estudiante durante el día de hoy",
+        ) from error
+    except ErrorEnvioCorreoError as error:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY,
+            str(error),
+        ) from error
 
 
 @router.get(

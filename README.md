@@ -74,6 +74,19 @@ El proyecto se encuentra organizado en las siguientes épicas:
 - Centro persistente de notificaciones: avisa de nuevas prácticas a gestores y
   administradores, y de cambios de estado al estudiante.
 
+### EP05: seguimiento de práctica
+
+- Gestores y administradores registran seguimientos con fecha y observaciones en prácticas no finalizadas.
+- El historial por práctica muestra fecha, observaciones y responsable, y permanece disponible después del cierre.
+- La pantalla `/seguimientos` permite registrar y consultar el historial desde el panel de gestión.
+
+### EP06: gestión de incidencias y alertas
+
+- Gestores y administradores registran incidencias con fecha, descripción y prioridad en prácticas activas.
+- Las incidencias de prioridad alta o crítica generan una alerta asociada.
+- El estado de cada incidencia puede actualizarse; las abiertas y en revisión se destacan como pendientes.
+- La pantalla `/incidencias` permite consultar incidencias y prácticas vinculadas.
+
 ### EP08: centro de notificaciones
 
 - Bandeja personal con contador de notificaciones no leídas.

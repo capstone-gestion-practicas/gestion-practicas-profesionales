@@ -64,6 +64,8 @@ Ejecución local desde `PracticaLink/backend`:
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
 - `CHILE_RUT_EMPRESA_API_KEY`
 - `CHILE_RUT_EMPRESA_API_URL`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
+- `SMTP_FROM_EMAIL` y `SMTP_USE_TLS` para recordatorios por correo
 
 El archivo `.env` es local y está ignorado por Git. La plantilla pública es `PracticaLink/backend/.env.template`.
 
@@ -182,6 +184,21 @@ Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:
   `historial_estado` y notifica al estudiante en la misma transacción.
 
 Las decisiones `OBSERVADA` y `RECHAZADA` requieren una observación.
+
+### Seguimiento de prácticas (EP05)
+
+- `POST /practicas/{id_practica}/seguimientos`: registra fecha y observación; requiere rol `GESTOR` o `ADMINISTRADOR` y una práctica no finalizada.
+- `GET /practicas/{id_practica}/seguimientos`: consulta el historial de esa práctica para gestores y administradores.
+- La migración `20261028010000_ep05_seguimientos.sql` añade las operaciones transaccionales sobre la tabla `seguimiento` ya creada por el esquema inicial.
+
+### Incidencias y alertas (EP06)
+
+- `POST /practicas/{id_practica}/incidencias`: registra fecha, descripción y prioridad para gestores y administradores; requiere práctica no finalizada.
+- `GET /incidencias`: lista incidencias junto con la práctica, estudiante, correo, estado y prioridad.
+- `PATCH /incidencias/{id_incidencia}/estado`: actualiza el estado; al resolver o cerrar conserva la fecha de resolución.
+- Las prioridades `ALTA` y `CRITICA` generan una fila asociada en `alerta` dentro de la misma transacción.
+- `ABIERTA` y `EN_REVISION` cuentan como pendientes. La pantalla de gestión destaca esos registros.
+- La migración `20261028020000_ep06_incidencias_alertas.sql` crea las operaciones sobre las tablas `incidencia` y `alerta` existentes.
 
 ### Gestión de usuarios (EP01)
 

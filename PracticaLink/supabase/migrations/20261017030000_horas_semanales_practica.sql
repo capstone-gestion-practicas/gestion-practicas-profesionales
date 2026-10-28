@@ -1,9 +1,20 @@
 ALTER TABLE public.practica
-    ADD COLUMN horas_semanales INTEGER;
+    ADD COLUMN IF NOT EXISTS horas_semanales INTEGER;
 
-ALTER TABLE public.practica
-    ADD CONSTRAINT chk_practica_horas_semanales
-    CHECK (horas_semanales IS NULL OR horas_semanales BETWEEN 1 AND 45);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'public.practica'::regclass
+          AND conname = 'chk_practica_horas_semanales'
+    ) THEN
+        ALTER TABLE public.practica
+            ADD CONSTRAINT chk_practica_horas_semanales
+            CHECK (horas_semanales IS NULL OR horas_semanales BETWEEN 1 AND 45);
+    END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.fn_registrar_practica(
     p_id_usuario BIGINT,

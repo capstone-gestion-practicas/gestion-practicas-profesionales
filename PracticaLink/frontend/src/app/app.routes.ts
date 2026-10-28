@@ -63,6 +63,20 @@ export const routes: Routes = [
         .then(m => m.GestionEstados)
   },
   {
+    path: 'seguimientos',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/seguimientos/seguimientos').then(m => m.Seguimientos)
+  },
+  {
+    path: 'incidencias',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/incidencias/incidencias').then(m => m.Incidencias)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }

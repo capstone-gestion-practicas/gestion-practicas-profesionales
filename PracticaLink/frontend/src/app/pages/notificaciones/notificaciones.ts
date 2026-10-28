@@ -73,7 +73,10 @@ export class Notificaciones implements OnInit {
     const irADestino = () => {
       if (notificacion.tipo === 'NUEVA_PRACTICA') {
         this.router.navigate(['/revisiones', notificacion.id_practica]);
-      } else if (notificacion.tipo === 'CAMBIO_ESTADO') {
+      } else if (
+        notificacion.tipo === 'CAMBIO_ESTADO'
+        || notificacion.tipo === 'RECORDATORIO_SIN_PRACTICA'
+      ) {
         this.router.navigate(['/home']);
       }
     };

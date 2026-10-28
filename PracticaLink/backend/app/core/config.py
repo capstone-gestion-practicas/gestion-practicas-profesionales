@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     chile_rut_empresa_api_key: str | None = None
     chile_rut_empresa_api_url: str = "https://chilerutempresa.cl/api"
 
+    smtp_host: str = "127.0.0.1"
+    smtp_port: int = 54325
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "noreply@practicalink.local"
+    smtp_use_tls: bool = False
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[2] / ".env",
         env_file_encoding="utf-8",

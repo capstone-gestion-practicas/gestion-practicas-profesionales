@@ -34,6 +34,12 @@ def listar_practicas_para_gestion(db: Session) -> list[dict]:
     """)).scalar_one()
 
 
+def listar_estudiantes_sin_practica(db: Session) -> list[dict]:
+    return db.execute(text("""
+        SELECT public.fn_listar_estudiantes_sin_practica()
+    """)).scalar_one()
+
+
 def obtener_estado_actual(
     db: Session,
     id_practica: int,

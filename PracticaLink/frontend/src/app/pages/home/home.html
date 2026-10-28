@@ -2,9 +2,8 @@
   <ion-grid class="home-wrapper">
     <ion-row>
       <ion-col size="12">
-    <header class="brand-header" aria-label="PracticaLink">
-      <span class="menu-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="brand-symbol" aria-hidden="true">⌁</span>
+    <header class="brand-header" [class.student-brand-header]="esEstudiante() && !esAdministrador()" aria-label="PracticaLink">
+      <span class="brand-symbol" aria-hidden="true">P</span>
       <span class="brand-name">PracticaLink</span>
       <span class="brand-spacer"></span>
       @if (contexto(); as ctx) {
@@ -15,6 +14,8 @@
           @if (puedeRevisarPracticas()) {
             <button type="button" (click)="revisarPracticas()">EP03 · Revisiones</button>
             <button type="button" (click)="gestionarEstados()">EP04 · Seguimiento</button>
+            <button type="button" (click)="gestionarSeguimientos()">EP05 · Seguimientos</button>
+            <button type="button" (click)="gestionarIncidencias()">EP06 · Incidencias</button>
           }
         </nav>
         <button class="notification-mark" type="button" aria-label="Abrir notificaciones" (click)="abrirCentroNotificaciones()">
@@ -102,6 +103,62 @@
             </ion-grid>
           </section>
 
+          @if (errorEstudiantesSinPractica) {
+            <p class="module-warning" role="alert">{{ errorEstudiantesSinPractica }}</p>
+          } @else if (estudiantesSinPractica.length > 0) {
+            <ion-card class="admin-table-card" role="status">
+              <ion-card-header>
+                <ion-card-title>
+                  Aviso para gestor · {{ estudiantesSinPractica.length }}
+                  {{ estudiantesSinPractica.length === 1 ? 'estudiante sin' : 'estudiantes sin' }}
+                  práctica registrada
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-list lines="full">
+                  @for (estudiante of estudiantesSinPractica; track estudiante.id_usuario) {
+                    <ion-item>
+                      <ion-label>
+                        <h3>{{ estudiante.nombre }} {{ estudiante.apellido }}</h3>
+                        @if (!estudiante.tiene_perfil) {
+                          <p>Sin perfil de estudiante</p>
+                        }
+                        @if (!estudiante.tiene_practica) {
+                          <p>Sin práctica registrada</p>
+                        }
+                      </ion-label>
+                      <ion-button
+                        slot="end"
+                        size="small"
+                        fill="outline"
+                        [disabled]="
+                          estudiante.recordatorio_enviado_hoy
+                          || recordatoriosEnCurso.has(estudiante.id_usuario)
+                        "
+                        (click)="enviarRecordatorioEstudiante(estudiante.id_usuario)">
+                        @if (recordatoriosEnCurso.has(estudiante.id_usuario)) {
+                          <ion-spinner name="crescent"></ion-spinner>
+                        } @else if (estudiante.recordatorio_enviado_hoy) {
+                          Enviado hoy
+                        } @else {
+                          Enviar recordatorio
+                        }
+                      </ion-button>
+                    </ion-item>
+                    @if (resultadoRecordatorios[estudiante.id_usuario]; as resultado) {
+                      <p
+                        class="student-reminder-result"
+                        [class.student-reminder-error]="resultado.error"
+                        [attr.role]="resultado.error ? 'alert' : 'status'">
+                        {{ resultado.mensaje }}
+                      </p>
+                    }
+                  }
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          }
+
           <ion-grid class="admin-panels">
             <ion-row>
               <ion-col size="12" size-lg="12">
@@ -140,54 +197,38 @@
           <div class="profile-intro">
             <span class="profile-avatar">{{ ctx.usuario.nombre[0] }}</span>
             <div>
-              <p class="module-label">Panel personal</p>
+              <p class="module-label">Tu espacio de práctica</p>
               <ion-card-title>Hola, {{ ctx.usuario.nombre }}</ion-card-title>
+              <span class="account-status-chip">Cuenta activa</span>
             </div>
           </div>
           <p class="welcome-subtitle">
-            Revisa tu información de perfil, el estado de tu práctica y los
-            accesos disponibles según tu rol.
+            Tu proceso de práctica, en un solo lugar.
           </p>
         </ion-card-header>
 
         <ion-card-content>
-          <ion-list class="identity-list" lines="none">
-            <ion-item class="identity-item">
-              <ion-label>
+          <div class="identity-list">
+            <div class="identity-item">
               <span>Correo institucional</span>
               <strong>{{ ctx.usuario.correo }}</strong>
-              </ion-label>
-            </ion-item>
-
-            <ion-item class="identity-item">
-              <ion-label>
-              <span>Estado de cuenta</span>
-              <strong class="account-active">Activa</strong>
-              </ion-label>
-            </ion-item>
+            </div>
 
             @if (ctx.perfil) {
-              <ion-item class="identity-item">
-                <ion-label>
+              <div class="identity-item">
                 <span>Carrera</span>
                 <strong>{{ ctx.perfil.carrera }}</strong>
-                </ion-label>
-              </ion-item>
+              </div>
 
-              <ion-item class="identity-item">
-                <ion-label>
+              <div class="identity-item">
                 <span>Sede</span>
                 <strong>{{ ctx.perfil.sede }}</strong>
-                </ion-label>
-              </ion-item>
+              </div>
             }
-          </ion-list>
+          </div>
           <div class="profile-actions">
             <ion-button fill="outline" size="small" (click)="copiarCorreo(ctx.usuario.correo)">
               Copiar correo
-            </ion-button>
-            <ion-button fill="clear" size="small" (click)="irAPractica()">
-              Ver práctica
             </ion-button>
           </div>
         </ion-card-content>
@@ -196,19 +237,15 @@
       <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
       </aside>
 
-      @if (practicaDetalle) {
-        <ion-card id="antecedentes-practica" class="practice-card">
+      @if (practicaDetalle && esEstudiante()) {
+        <ion-card class="practice-card state-card student-practice-status">
           <ion-card-header>
-            <p class="module-label">EP02 · Registro</p>
-            <ion-card-title>Antecedentes de tu práctica</ion-card-title>
-            <p class="practice-subtitle">
-              Información general, estado actual y datos del centro de práctica.
-            </p>
+            <p class="module-label">EP04 · Tu práctica</p>
+            <ion-card-title>Estado y seguimiento</ion-card-title>
           </ion-card-header>
-
           <ion-card-content>
             <div class="practice-section practice-status">
-              <p class="section-label">EP04 · Estado actual</p>
+              <p class="section-label">Estado actual</p>
               <div class="status-pill">
                 <strong>{{ practicaDetalle.estado.nombre }}</strong>
                 <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
@@ -217,7 +254,7 @@
 
             @if (practicaDetalle.estado.nombre.toUpperCase() === 'OBSERVADA' && esEstudiante()) {
               <div class="practice-section observation-response">
-                <p class="section-label">Responder observación · EP04</p>
+                <p class="section-label">Responder observación</p>
                 <p>Indica qué corregiste o responde a lo solicitado. Al enviarlo, la práctica volverá a revisión.</p>
                 <ion-item>
                   <ion-label position="stacked">Tu respuesta</ion-label>
@@ -232,7 +269,7 @@
             }
 
             <div class="practice-section state-history">
-              <p class="section-label">EP04 · Historial de estados</p>
+              <p class="section-label">Historial de estados</p>
               @if (cargandoHistorialEstados) {
                 <div class="history-loading"><ion-spinner name="crescent"></ion-spinner><span>Cargando historial...</span></div>
               } @else if (errorHistorialEstados) {
@@ -254,7 +291,33 @@
                 </ol>
               }
             </div>
+          </ion-card-content>
+        </ion-card>
+      } @else if (errorPractica && esEstudiante()) {
+        <ion-card class="state-card state-card-warning">
+          <ion-card-content><p class="module-warning" role="alert">{{ errorPractica }}</p></ion-card-content>
+        </ion-card>
+      }
 
+      <ion-modal
+        class="practice-details-modal"
+        [isOpen]="modalAntecedentesAbierto"
+        (didDismiss)="cerrarAntecedentes()">
+        <ng-template>
+          <div class="practice-details-modal-content">
+            <div class="practice-modal-heading">
+              <span>Antecedentes de tu práctica</span>
+              <ion-button fill="clear" (click)="cerrarAntecedentes()">Cerrar</ion-button>
+            </div>
+      @if (practicaDetalle) {
+        <ion-card id="antecedentes-practica" class="practice-card">
+          <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
+            <ion-card-title>Antecedentes de tu práctica</ion-card-title>
+            <p class="practice-subtitle">Datos generales y antecedentes del centro de práctica.</p>
+          </ion-card-header>
+
+          <ion-card-content>
             <div class="practice-section">
               <p class="section-label">Datos generales</p>
               <div class="detail-grid detail-grid-general">
@@ -337,6 +400,9 @@
           </ion-card-content>
         </ion-card>
       }
+          </div>
+        </ng-template>
+      </ion-modal>
 
       <ng-template #registrationCard>
         <ion-card class="registration-card">
@@ -350,6 +416,10 @@
               <p class="module-success">
                 Tu práctica ya fue registrada correctamente.
               </p>
+              <p>Consulta aquí el estado, el historial y los datos completos de tu práctica.</p>
+              <ion-button expand="block" (click)="abrirAntecedentesPractica()">
+                Ver antecedentes de práctica
+              </ion-button>
             } @else if (ctx.perfil) {
               <p>
                 Ingresa los antecedentes de la empresa, las fechas, las horas
@@ -398,6 +468,55 @@
             </ion-button>
           </ion-card-content>
         </ion-card>
+
+        @if (errorEstudiantesSinPractica) {
+          <p class="module-warning" role="alert">{{ errorEstudiantesSinPractica }}</p>
+        } @else if (estudiantesSinPractica.length > 0) {
+          <ion-card class="registration-card students-without-practice" role="status">
+            <ion-card-header>
+              <p class="module-label">Aviso para gestor</p>
+              <ion-card-title>
+                {{ estudiantesSinPractica.length }}
+                {{ estudiantesSinPractica.length === 1 ? 'estudiante sin' : 'estudiantes sin' }}
+                práctica registrada
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list lines="full">
+                @for (estudiante of estudiantesSinPractica; track estudiante.id_usuario) {
+                  <ion-item>
+                    <ion-label>{{ estudiante.nombre }} {{ estudiante.apellido }}</ion-label>
+                    <ion-button
+                      slot="end"
+                      size="small"
+                      fill="outline"
+                      [disabled]="
+                        estudiante.recordatorio_enviado_hoy
+                        || recordatoriosEnCurso.has(estudiante.id_usuario)
+                      "
+                      (click)="enviarRecordatorioEstudiante(estudiante.id_usuario)">
+                      @if (recordatoriosEnCurso.has(estudiante.id_usuario)) {
+                        <ion-spinner name="crescent"></ion-spinner>
+                      } @else if (estudiante.recordatorio_enviado_hoy) {
+                        Enviado hoy
+                      } @else {
+                        Enviar recordatorio
+                      }
+                    </ion-button>
+                  </ion-item>
+                  @if (resultadoRecordatorios[estudiante.id_usuario]; as resultado) {
+                    <p
+                      class="student-reminder-result"
+                      [class.student-reminder-error]="resultado.error"
+                      [attr.role]="resultado.error ? 'alert' : 'status'">
+                      {{ resultado.mensaje }}
+                    </p>
+                  }
+                }
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        }
       }
 
       @if (esAdministrador()) {

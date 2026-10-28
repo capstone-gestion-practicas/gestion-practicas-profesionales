@@ -9,10 +9,12 @@
         }
       </div>
       <div class="heading-actions">
+        <ion-button class="back-home-button" fill="outline" (click)="volver()">
+          ← Volver al inicio
+        </ion-button>
         <ion-button fill="outline" [disabled]="servicio.noLeidas() === 0 || actualizando" (click)="marcarTodas()">
           Marcar todas como leídas
         </ion-button>
-        <ion-button fill="clear" (click)="volver()">Volver</ion-button>
       </div>
     </header>
 

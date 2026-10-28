@@ -107,6 +107,21 @@ class PracticaEstadoResumen(BaseModel):
     horas_semanales: int | None = None
 
 
+class EstudianteSinPractica(BaseModel):
+    id_usuario: int
+    nombre: str
+    apellido: str
+    tiene_perfil: bool
+    tiene_practica: bool
+    recordatorio_enviado_hoy: bool
+
+
+class RecordatorioEstudianteResponse(BaseModel):
+    id_usuario: int
+    mensaje: str
+    recordatorio_enviado_hoy: bool
+
+
 class ActualizarEstadoPracticaRequest(BaseModel):
     id_estado: int = Field(gt=0)
     observacion: str | None = Field(default=None, max_length=500)
