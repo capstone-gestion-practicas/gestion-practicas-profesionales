@@ -135,12 +135,16 @@ desde **Notificaciones > Activar push en este dispositivo**. Para recibir avisos
 1. En Firebase Console, registra `cl.practicalink.app` y descarga
    `google-services.json` en `PracticaLink/frontend/android/app/`. No subas ese
    archivo al repositorio.
+   El proyecto aplica el complemento Google Services y el plugin Capacitor de
+   push incluye Firebase Messaging; no es necesario agregar Analytics ni otra
+   dependencia Firebase para registrar el dispositivo.
 2. Configura `FIREBASE_SERVICE_ACCOUNT_JSON` en el entorno privado del backend
    con la cuenta de servicio de Firebase autorizada para enviar mensajes FCM.
 3. Instala dependencias actualizadas (`npm.cmd ci`) y ejecuta
    `pip install -r requirements.txt` en el backend.
 4. Aplica `PracticaLink/supabase/migrations/20261028070000_push_devices.sql`.
-5. Ejecuta `npm.cmd run apk:sync` y recompila la app Android.
+5. Ejecuta `npm.cmd run apk:sync` y recompila la app Android. El plugin Gradle
+   de Google Services procesa el JSON durante la compilación.
 
 Sin la configuración de Firebase no se generan tokens ni se envían pushes.
 Las notificaciones siguen persistidas en el centro y usan Realtime cuando la
