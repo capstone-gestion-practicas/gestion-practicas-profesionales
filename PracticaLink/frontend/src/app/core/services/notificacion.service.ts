@@ -19,10 +19,14 @@ export class NotificacionService {
   readonly noLeidas = signal(0);
   readonly realtimeConectado = signal(false);
   readonly dispositivoPushRegistrado = signal(false);
+  readonly estadoRegistroPush = signal<'inactivo' | 'registrando' | 'registrado' | 'error'>(
+    'inactivo'
+  );
   readonly notificacionAbiertaPorPush = signal<number | null>(null);
   private realtime: SupabaseClient | null = null;
   private channel: RealtimeChannel | null = null;
   private pushListenersRegistrados = false;
+  private timeoutRegistroPush: number | null = null;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -34,7 +38,7 @@ export class NotificacionService {
 
   private async registrarTokenSiAutorizado(): Promise<void> {
     const permiso = await PushNotifications.checkPermissions();
-    if (permiso.receive === 'granted') await PushNotifications.register();
+    if (permiso.receive === 'granted') await this.registrarPush();
   }
 
   async pedirPermisoPush(): Promise<boolean> {
@@ -45,35 +49,75 @@ export class NotificacionService {
       permiso = await PushNotifications.requestPermissions();
     }
     if (permiso.receive === 'granted') {
-      await PushNotifications.register();
+      await this.registrarPush();
       return true;
     }
     return false;
+  }
+
+  private async registrarPush(): Promise<void> {
+    this.dispositivoPushRegistrado.set(false);
+    this.estadoRegistroPush.set('registrando');
+    this.iniciarTimeoutRegistroPush();
+    try {
+      await PushNotifications.register();
+    } catch (error) {
+      this.limpiarTimeoutRegistroPush();
+      this.dispositivoPushRegistrado.set(false);
+      this.estadoRegistroPush.set('error');
+      throw error;
+    }
   }
 
   private async asegurarListenersPush(): Promise<void> {
     if (this.pushListenersRegistrados) return;
     this.pushListenersRegistrados = true;
     await PushNotifications.addListener('registration', (token: Token) => {
+      this.estadoRegistroPush.set('registrando');
+      this.iniciarTimeoutRegistroPush();
       this.http.post(`${this.apiUrl}/dispositivos`, {
         token: token.value,
         plataforma: Capacitor.getPlatform()
       }).subscribe({
-        next: () => this.dispositivoPushRegistrado.set(true),
+        next: () => {
+          this.limpiarTimeoutRegistroPush();
+          this.dispositivoPushRegistrado.set(true);
+          this.estadoRegistroPush.set('registrado');
+        },
         error: error => {
+          this.limpiarTimeoutRegistroPush();
           this.dispositivoPushRegistrado.set(false);
+          this.estadoRegistroPush.set('error');
           console.warn('[Push] No se pudo registrar el dispositivo.', error);
         }
       });
     });
     await PushNotifications.addListener('registrationError', error => {
+      this.limpiarTimeoutRegistroPush();
       this.dispositivoPushRegistrado.set(false);
+      this.estadoRegistroPush.set('error');
       console.warn('[Push] Falló el registro del dispositivo.', error);
     });
     await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
       const id = Number(action.notification.data?.['id_notificacion']);
       this.notificacionAbiertaPorPush.set(Number.isFinite(id) ? id : Date.now());
     });
+  }
+
+  private limpiarTimeoutRegistroPush(): void {
+    if (this.timeoutRegistroPush !== null) {
+      window.clearTimeout(this.timeoutRegistroPush);
+      this.timeoutRegistroPush = null;
+    }
+  }
+
+  private iniciarTimeoutRegistroPush(): void {
+    this.limpiarTimeoutRegistroPush();
+    this.timeoutRegistroPush = window.setTimeout(() => {
+      this.timeoutRegistroPush = null;
+      this.dispositivoPushRegistrado.set(false);
+      this.estadoRegistroPush.set('error');
+    }, 25000);
   }
 
   desregistrarPush(): void {

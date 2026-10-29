@@ -27,6 +27,20 @@ describe('Login', () => {
 
   it('should create', () => expect(component).toBeTruthy());
 
+  it('dismisses the release notes before navigating home', () => {
+    component.novedadesAbiertas = true;
+    spyOn(localStorage, 'setItem');
+
+    component.continuarDespuesDeNovedades();
+
+    expect(component.novedadesAbiertas).toBeFalse();
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'practicalink-version-novedades',
+      component.appVersion
+    );
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/home']);
+  });
+
   it('does not register when passwords differ', () => {
     component.correo = 'usuario@practicalink.cl';
     component.password = '123456.abc';
