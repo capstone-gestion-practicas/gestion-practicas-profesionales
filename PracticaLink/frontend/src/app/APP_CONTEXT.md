@@ -218,6 +218,11 @@ por usuario para recibir avisos push cuando la app está en segundo plano o
 cerrada. El usuario habilita el permiso desde el centro de notificaciones.
 FCM requiere `google-services.json` en Android y la variable
 `FIREBASE_SERVICE_ACCOUNT_JSON` configurada en el backend.
+Gestores y administradores pueden enviar desde esta pantalla un mensaje
+personalizado a un estudiante activo; el aviso también queda en su bandeja y
+se envía por FCM si el estudiante habilitó push en su dispositivo.
+También pueden elegir broadcast para enviar el mensaje a todos los estudiantes
+activos; la interfaz pide confirmación antes de realizar el envío.
 
 - `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.

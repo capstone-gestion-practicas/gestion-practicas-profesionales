@@ -3,15 +3,26 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.core.config import settings
-from app.schemas.notificacion import NotificacionesResumenResponse
+from app.schemas.notificacion import (
+    DestinatarioMensajePush,
+    EnviarBroadcastPushRequest,
+    EnviarBroadcastPushResponse,
+    EnviarMensajePushRequest,
+    EnviarMensajePushResponse,
+    NotificacionesResumenResponse,
+)
 from app.services.notificacion_service import (
     listar_notificaciones,
+    listar_destinatarios_mensaje_push,
+    crear_mensaje_push_gestor,
+    crear_broadcast_push_gestor,
     marcar_notificacion_leida,
     marcar_todas_leidas,
 )
@@ -35,6 +46,68 @@ def listar(
     db: Session = Depends(get_db),
 ):
     return listar_notificaciones(db, id_usuario)
+
+
+@router.get(
+    '/destinatarios-push',
+    response_model=list[DestinatarioMensajePush],
+    dependencies=[Depends(require_roles('GESTOR', 'ADMINISTRADOR'))],
+)
+def listar_destinatarios_push(db: Session = Depends(get_db)):
+    return listar_destinatarios_mensaje_push(db)
+
+
+@router.post(
+    '/mensaje-personalizado',
+    response_model=EnviarMensajePushResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles('GESTOR', 'ADMINISTRADOR'))],
+)
+def enviar_mensaje_personalizado(
+    body: EnviarMensajePushRequest,
+    db: Session = Depends(get_db),
+):
+    id_notificacion, enviados = crear_mensaje_push_gestor(
+        db, body.id_usuario, body.titulo, body.mensaje
+    )
+    if id_notificacion is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='El destinatario no está disponible.',
+        )
+    return {
+        'id_notificacion': id_notificacion,
+        'dispositivos_enviados': enviados,
+        'mensaje': (
+            'Mensaje enviado por push.' if enviados
+            else 'Aviso guardado en la bandeja; el destinatario no tiene un dispositivo push activo.'
+        ),
+    }
+
+
+@router.post(
+    '/mensaje-broadcast',
+    response_model=EnviarBroadcastPushResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles('GESTOR', 'ADMINISTRADOR'))],
+)
+def enviar_broadcast_personalizado(
+    body: EnviarBroadcastPushRequest,
+    db: Session = Depends(get_db),
+):
+    destinatarios, enviados = crear_broadcast_push_gestor(
+        db, body.titulo, body.mensaje
+    )
+    return {
+        'destinatarios': destinatarios,
+        'dispositivos_enviados': enviados,
+        'mensaje': (
+            f'Mensaje enviado a {destinatarios} estudiantes; '
+            f'{enviados} dispositivos recibieron el push.'
+            if destinatarios
+            else 'No hay estudiantes activos para enviar el mensaje.'
+        ),
+    }
 
 
 @router.post("/dispositivos", status_code=status.HTTP_204_NO_CONTENT)

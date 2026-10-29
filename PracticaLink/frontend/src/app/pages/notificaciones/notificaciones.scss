@@ -7,6 +7,19 @@
 .heading-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; }
 .back-home-button { --color:var(--ion-color-primary); --border-color:#9db8a4; --border-radius:12px; font-weight:800; }
 ion-card { margin:0 0 12px; cursor:pointer; }
+.custom-push-card { cursor:default; }
+.custom-push-card h2 { margin:6px 0; font-size:1.2rem; }
+.custom-push-card .form-hint { margin:0 0 14px; color:var(--ink-muted); }
+.custom-push-card .broadcast-notice { margin:0; padding:10px 12px; border-radius:10px; background:#edf4ef; color:var(--ink-muted); }
+.custom-push-card form { display:grid; gap:8px; }
+.custom-push-card label { margin-top:8px; font-weight:700; }
+.custom-push-card input, .custom-push-card textarea, .custom-push-card select {
+  width:100%; box-sizing:border-box; border:1px solid #cbd5ce; border-radius:10px;
+  padding:12px; color:var(--ink); background:#fff; font:inherit;
+}
+.custom-push-card textarea { resize:vertical; }
+.custom-push-card form ion-button { justify-self:start; margin:8px 0 0; }
+.send-success { color:var(--ion-color-primary); font-weight:700; }
 ion-card.unread { border-inline-start:4px solid var(--ion-color-primary); }
 .notification-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .notification-title { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }

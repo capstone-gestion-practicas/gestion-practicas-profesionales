@@ -1,7 +1,6 @@
 import json
 import logging
 
-import httpx
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -10,10 +9,10 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int) -> None:
+def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int) -> int:
     """Send a persisted notification to all active FCM registrations for its user."""
     if not settings.firebase_service_account_json:
-        return
+        return 0
 
     try:
         import firebase_admin
@@ -30,12 +29,13 @@ def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int)
             WHERE id_notificacion = :id AND id_usuario = :usuario
         """), {"id": id_notificacion, "usuario": id_usuario}).mappings().one_or_none()
         if not notificacion:
-            return
+            return 0
 
         tokens = db.execute(text("""
             SELECT token FROM public.dispositivo_push
             WHERE id_usuario = :usuario AND activo
         """), {"usuario": id_usuario}).scalars().all()
+        enviados = 0
         for token in tokens:
             try:
                 messaging.send(messaging.Message(
@@ -45,6 +45,7 @@ def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int)
                     ),
                     data={"id_notificacion": str(id_notificacion)},
                 ), app=app)
+                enviados += 1
             except Exception as error:
                 logger.exception("No se pudo enviar push a un dispositivo registrado.")
                 if "registration-token-not-registered" in str(error) or "invalid-registration-token" in str(error):
@@ -53,5 +54,7 @@ def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int)
                         WHERE token = :token
                     """), {"token": token})
         db.commit()
+        return enviados
     except Exception:
         logger.exception("No se pudo inicializar Firebase Cloud Messaging.")
+        return 0

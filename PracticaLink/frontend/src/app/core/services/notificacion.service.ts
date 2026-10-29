@@ -6,7 +6,12 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed } from '@capacitor/push-notifications';
 
 import { environment } from '../../../environments/environment';
-import { NotificacionesResumen } from '../models/notificacion.models';
+import {
+  DestinatarioMensajePush,
+  EnviarBroadcastPushResponse,
+  EnviarMensajePushResponse,
+  NotificacionesResumen
+} from '../models/notificacion.models';
 
 @Injectable({ providedIn: 'root' })
 export class NotificacionService {
@@ -151,5 +156,28 @@ export class NotificacionService {
 
   marcarTodasLeidas(): Observable<{ actualizadas: number }> {
     return this.http.patch<{ actualizadas: number }>(`${this.apiUrl}/leidas`, {});
+  }
+
+  listarDestinatariosPush(): Observable<DestinatarioMensajePush[]> {
+    return this.http.get<DestinatarioMensajePush[]>(`${this.apiUrl}/destinatarios-push`);
+  }
+
+  enviarMensajePersonalizado(datos: {
+    id_usuario: number;
+    titulo: string;
+    mensaje: string;
+  }): Observable<EnviarMensajePushResponse> {
+    return this.http.post<EnviarMensajePushResponse>(
+      `${this.apiUrl}/mensaje-personalizado`, datos
+    );
+  }
+
+  enviarBroadcastPersonalizado(datos: {
+    titulo: string;
+    mensaje: string;
+  }): Observable<EnviarBroadcastPushResponse> {
+    return this.http.post<EnviarBroadcastPushResponse>(
+      `${this.apiUrl}/mensaje-broadcast`, datos
+    );
   }
 }

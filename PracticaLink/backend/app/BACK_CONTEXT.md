@@ -167,6 +167,9 @@ contexto, detalle y revisión se actualizan mediante la migración
   `PATCH /notificaciones/leidas`: marcan avisos como leídos.
 - `POST /notificaciones/dispositivos`: registra el token FCM del usuario autenticado.
 - `DELETE /notificaciones/dispositivos/actual`: desvincula los dispositivos push del usuario.
+- `GET /notificaciones/destinatarios-push`: lista estudiantes activos para gestores y administradores.
+- `POST /notificaciones/mensaje-personalizado`: guarda y envía un mensaje push a un estudiante activo; requiere rol `GESTOR` o `ADMINISTRADOR`.
+- `POST /notificaciones/mensaje-broadcast`: guarda un aviso por cada estudiante activo y envía push a sus dispositivos registrados; requiere rol `GESTOR` o `ADMINISTRADOR`.
 
 Cada práctica nueva avisa a los gestores y administradores activos; cada cambio
 de estado avisa al estudiante. La tabla persistente se crea con la migración
