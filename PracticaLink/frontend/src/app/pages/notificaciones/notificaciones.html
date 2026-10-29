@@ -19,6 +19,9 @@
       </div>
     </header>
     @if (mensajePush) { <p role="status">{{ mensajePush }}</p> }
+    @if (servicio.dispositivoPushRegistrado()) {
+      <p class="send-success" role="status">Este dispositivo quedó registrado para recibir push.</p>
+    }
 
     @if (puedeEnviarMensaje()) {
       <ion-card class="custom-push-card">

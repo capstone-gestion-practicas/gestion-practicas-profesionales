@@ -18,6 +18,7 @@ export class NotificacionService {
   private readonly apiUrl = `${environment.apiUrl}/notificaciones`;
   readonly noLeidas = signal(0);
   readonly realtimeConectado = signal(false);
+  readonly dispositivoPushRegistrado = signal(false);
   readonly notificacionAbiertaPorPush = signal<number | null>(null);
   private realtime: SupabaseClient | null = null;
   private channel: RealtimeChannel | null = null;
@@ -40,7 +41,9 @@ export class NotificacionService {
     if (!Capacitor.isNativePlatform()) return false;
     await this.asegurarListenersPush();
     let permiso = await PushNotifications.checkPermissions();
-    if (permiso.receive === 'prompt') permiso = await PushNotifications.requestPermissions();
+    if (permiso.receive === 'prompt' || permiso.receive === 'prompt-with-rationale') {
+      permiso = await PushNotifications.requestPermissions();
+    }
     if (permiso.receive === 'granted') {
       await PushNotifications.register();
       return true;
@@ -55,9 +58,16 @@ export class NotificacionService {
       this.http.post(`${this.apiUrl}/dispositivos`, {
         token: token.value,
         plataforma: Capacitor.getPlatform()
-      }).subscribe({ error: error => console.warn('[Push] No se pudo registrar el dispositivo.', error) });
+      }).subscribe({
+        next: () => this.dispositivoPushRegistrado.set(true),
+        error: error => {
+          this.dispositivoPushRegistrado.set(false);
+          console.warn('[Push] No se pudo registrar el dispositivo.', error);
+        }
+      });
     });
     await PushNotifications.addListener('registrationError', error => {
+      this.dispositivoPushRegistrado.set(false);
       console.warn('[Push] Falló el registro del dispositivo.', error);
     });
     await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {

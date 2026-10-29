@@ -8,7 +8,9 @@ La guía completa se encuentra en
 El proyecto incluye `ionic.config.json`, por lo que también puede iniciarse
 desde esta carpeta con `ionic.cmd serve` en PowerShell.
 
-La aplicación Android utiliza Capacitor y consume el backend QA publicado en:
+La aplicación Android usa Capacitor. El build local (`build-android:qa`) apunta
+a Supabase y al backend locales; el build optimizado remoto
+(`build-android:prod`) apunta al backend QA publicado en:
 
 ```text
 https://practicalink-api-qa.onrender.com
@@ -25,15 +27,23 @@ Para compilar el frontend y sincronizar el proyecto nativo:
 npm run apk:sync
 ```
 
-Para preparar el build QA y abrir el proyecto en Android Studio:
+Para preparar el build local y abrir el proyecto en Android Studio:
 
 ```powershell
 npm run build-android:qa
 ```
 
-El comando usa la configuración de producción de Angular, que apunta al backend
-QA de Render, sincroniza Capacitor y abre Android Studio. La APK se genera desde
-`Build > Build App Bundles or APKs > Build APKs`.
+El comando usa `environment.android-local.ts`, sincroniza Capacitor y abre
+Android Studio. Para preparar una APK que use los servicios remotos QA, ejecuta:
+
+```powershell
+npm.cmd run build-android:prod
+```
+
+Ese build usa `environment.ts`, con el backend QA de Render y el proyecto QA
+Supabase configurados. En Android Studio, genera la APK desde
+`Build > Build App Bundles or APKs > Build APKs`. La guía completa está en
+[`DOCUMENTACION_ANDROID.md`](../../DOCUMENTACION_ANDROID.md).
 
 Para abrirlo en Android Studio:
 
@@ -44,8 +54,8 @@ npm run android:open
 Desde Android Studio se puede ejecutar en un dispositivo o generar una APK
 mediante `Build > Build App Bundles or APKs > Build APKs`.
 
-La configuración de desarrollo conserva `http://127.0.0.1:8000`; los builds de
-producción y Android utilizan la URL HTTPS de Render.
+La configuración local conserva `http://127.0.0.1:8000`; los builds remotos
+usan la URL HTTPS de Render.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.35.
 

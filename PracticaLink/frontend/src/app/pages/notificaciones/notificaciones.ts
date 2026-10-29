@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import {
   IonBadge,
   IonButton,
@@ -129,11 +130,16 @@ export class Notificaciones implements OnInit {
   }
 
   async habilitarPush(): Promise<void> {
+    this.mensajePush = '';
+    if (!Capacitor.isNativePlatform()) {
+      this.mensajePush = 'El registro de push debe hacerse desde la APK Android instalada, no desde el navegador.';
+      return;
+    }
     try {
       const habilitado = await this.servicio.pedirPermisoPush();
       this.mensajePush = habilitado
-        ? 'Notificaciones push activadas en este dispositivo.'
-        : 'No se concedió permiso para notificaciones.';
+        ? 'Permiso concedido. Registrando el dispositivo con el servidor…'
+        : 'Permiso denegado. Activa las notificaciones de PracticaLink en los ajustes de Android.';
     } catch {
       this.mensajePush = 'No fue posible activar las notificaciones push.';
     }
