@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.services.push_service import enviar_push_notificacion
 
 
 logger = logging.getLogger(__name__)
@@ -105,22 +106,28 @@ Equipo PracticaLink
     )
 
     try:
-        db.execute(text("""
+        id_notificacion = db.execute(text("""
             INSERT INTO notificacion (
                 id_usuario, id_practica, tipo, titulo, mensaje
             ) VALUES (
                 :id_usuario, NULL, 'RECORDATORIO_SIN_PRACTICA',
                 'Recordatorio de práctica profesional',
                 :mensaje
-            )
+            ) RETURNING id_notificacion
         """), {
             "id_usuario": id_usuario,
             "mensaje": texto_recordatorio,
-        })
+        }).scalar_one()
         db.commit()
     except Exception:
         db.rollback()
         raise
+
+    try:
+        enviar_push_notificacion(db, id_notificacion, id_usuario)
+    except Exception:
+        # Push is an auxiliary channel; persisted notification/email still succeed.
+        logger.exception("No se pudo entregar la notificación push al usuario %s", id_usuario)
 
     correo_enviado = True
     if bool(settings.smtp_username) != bool(settings.smtp_password):

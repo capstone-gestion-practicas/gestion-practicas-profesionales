@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications, Token, ActionPerformed } from '@capacitor/push-notifications';
 
 import { environment } from '../../../environments/environment';
 import { NotificacionesResumen } from '../models/notificacion.models';
@@ -11,10 +13,60 @@ export class NotificacionService {
   private readonly apiUrl = `${environment.apiUrl}/notificaciones`;
   readonly noLeidas = signal(0);
   readonly realtimeConectado = signal(false);
+  readonly notificacionAbiertaPorPush = signal<number | null>(null);
   private realtime: SupabaseClient | null = null;
   private channel: RealtimeChannel | null = null;
+  private pushListenersRegistrados = false;
 
   constructor(private readonly http: HttpClient) {}
+
+  async iniciarPush(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    await this.asegurarListenersPush();
+    await this.registrarTokenSiAutorizado();
+  }
+
+  private async registrarTokenSiAutorizado(): Promise<void> {
+    const permiso = await PushNotifications.checkPermissions();
+    if (permiso.receive === 'granted') await PushNotifications.register();
+  }
+
+  async pedirPermisoPush(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return false;
+    await this.asegurarListenersPush();
+    let permiso = await PushNotifications.checkPermissions();
+    if (permiso.receive === 'prompt') permiso = await PushNotifications.requestPermissions();
+    if (permiso.receive === 'granted') {
+      await PushNotifications.register();
+      return true;
+    }
+    return false;
+  }
+
+  private async asegurarListenersPush(): Promise<void> {
+    if (this.pushListenersRegistrados) return;
+    this.pushListenersRegistrados = true;
+    await PushNotifications.addListener('registration', (token: Token) => {
+      this.http.post(`${this.apiUrl}/dispositivos`, {
+        token: token.value,
+        plataforma: Capacitor.getPlatform()
+      }).subscribe({ error: error => console.warn('[Push] No se pudo registrar el dispositivo.', error) });
+    });
+    await PushNotifications.addListener('registrationError', error => {
+      console.warn('[Push] Falló el registro del dispositivo.', error);
+    });
+    await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
+      const id = Number(action.notification.data?.['id_notificacion']);
+      this.notificacionAbiertaPorPush.set(Number.isFinite(id) ? id : Date.now());
+    });
+  }
+
+  desregistrarPush(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    this.http.delete(`${this.apiUrl}/dispositivos/actual`).subscribe({
+      error: error => console.warn('[Push] No se pudo desvincular el dispositivo.', error)
+    });
+  }
 
   conectarRealtime(
     idUsuario: number,

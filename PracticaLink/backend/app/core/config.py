@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Keep this server-side; never expose it to the frontend.
     supabase_jwt_secret: str | None = None
 
+    # Firebase service account JSON used to send Android push notifications.
+    firebase_service_account_json: str | None = None
+
     chile_rut_empresa_api_key: str | None = None
     chile_rut_empresa_api_url: str = "https://chilerutempresa.cl/api"
 

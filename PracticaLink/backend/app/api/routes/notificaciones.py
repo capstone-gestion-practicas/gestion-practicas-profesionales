@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -23,12 +24,40 @@ router = APIRouter(
 )
 
 
+class DispositivoPushRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=4096)
+    plataforma: str = Field(pattern="^(android|ios)$")
+
+
 @router.get("", response_model=NotificacionesResumenResponse)
 def listar(
     id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     return listar_notificaciones(db, id_usuario)
+
+
+@router.post("/dispositivos", status_code=status.HTTP_204_NO_CONTENT)
+def registrar_dispositivo(
+    body: DispositivoPushRequest,
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    db.execute(text("SELECT public.fn_registrar_dispositivo_push(:usuario, :token, :plataforma)"), {
+        "usuario": id_usuario, "token": body.token, "plataforma": body.plataforma,
+    })
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/dispositivos/actual", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_dispositivo(
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    db.execute(text("SELECT public.fn_eliminar_dispositivos_usuario_push(:usuario)"), {"usuario": id_usuario})
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/realtime-token")

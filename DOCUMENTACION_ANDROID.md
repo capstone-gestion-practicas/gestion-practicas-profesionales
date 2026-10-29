@@ -14,7 +14,8 @@ El proyecto nativo se encuentra en `PracticaLink/frontend/android`.
 - Android mínimo: API 24.
 - Android objetivo y de compilación: API 36.
 - Build `qa`: backend y Supabase locales en Docker.
-- Build `prod`: usa los endpoints en la nube configurados en
+- Build `prod`: configuración optimizada que usa los endpoints remotos de QA
+  configurados en
   `src/environments/environment.ts`.
 
 El build local usa `127.0.0.1` para el backend y Supabase. El build local
@@ -50,10 +51,18 @@ Para usar los servicios en la nube, ejecuta:
 npm.cmd run build-android:prod
 ```
 
-El build `prod` usa `src/environments/environment.ts`. Antes de compilar,
-confirma que `apiUrl`, `supabaseUrl` y `supabasePublishableKey` correspondan al
-ambiente remoto que deseas probar. No agregues claves `service_role` ni
-`sb_secret` al frontend.
+El build `prod` usa `src/environments/environment.ts`, configurado actualmente
+para el backend QA `https://practicalink-api-qa.onrender.com` y el proyecto
+Supabase `vfiixozamcfbhypvmgmk`. La clave `sb_publishable_...` es pública y se
+usa para Supabase Realtime; nunca agregues claves `service_role` ni `sb_secret`
+al frontend. La base cloud ya contiene las migraciones de esta versión, y el
+backend QA expone las rutas de seguimiento, incidencias y recordatorios.
+
+Esta configuración apunta a QA, no a un backend de producción independiente.
+Antes de distribuir la APK como release, confirma que ese es el entorno
+intencionado. Para compilarla desde Android Studio después de preparar y
+sincronizar el proyecto, selecciona `Build > Build App Bundles or APKs > Build
+APKs`.
 
 ## Requisitos
 
@@ -117,6 +126,25 @@ Para abrir Android Studio sin volver a compilar:
 ```powershell
 npm run android:open
 ```
+
+## Configurar notificaciones push
+
+La app registra un token FCM por usuario autenticado. El permiso se solicita
+desde **Notificaciones > Activar push en este dispositivo**. Para recibir avisos:
+
+1. En Firebase Console, registra `cl.practicalink.app` y descarga
+   `google-services.json` en `PracticaLink/frontend/android/app/`. No subas ese
+   archivo al repositorio.
+2. Configura `FIREBASE_SERVICE_ACCOUNT_JSON` en el entorno privado del backend
+   con la cuenta de servicio de Firebase autorizada para enviar mensajes FCM.
+3. Instala dependencias actualizadas (`npm.cmd ci`) y ejecuta
+   `pip install -r requirements.txt` en el backend.
+4. Aplica `PracticaLink/supabase/migrations/20261028070000_push_devices.sql`.
+5. Ejecuta `npm.cmd run apk:sync` y recompila la app Android.
+
+Sin la configuración de Firebase no se generan tokens ni se envían pushes.
+Las notificaciones siguen persistidas en el centro y usan Realtime cuando la
+app está abierta.
 
 ## Ejecutar en un emulador
 

@@ -29,6 +29,7 @@ export class Notificaciones implements OnInit {
   cargando = true;
   error = '';
   actualizando = false;
+  mensajePush = '';
 
   constructor(
     readonly servicio: NotificacionService,
@@ -36,6 +37,17 @@ export class Notificaciones implements OnInit {
   ) {}
 
   ngOnInit(): void { this.cargar(); }
+
+  async habilitarPush(): Promise<void> {
+    try {
+      const habilitado = await this.servicio.pedirPermisoPush();
+      this.mensajePush = habilitado
+        ? 'Notificaciones push activadas en este dispositivo.'
+        : 'No se concedió permiso para notificaciones.';
+    } catch {
+      this.mensajePush = 'No fue posible activar las notificaciones push.';
+    }
+  }
 
   cargar(): void {
     this.cargando = true;

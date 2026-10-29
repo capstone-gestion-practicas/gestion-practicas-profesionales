@@ -41,6 +41,13 @@ export class App implements OnInit {
       }
 
       usuarioActual = contexto.usuario.id_usuario;
+      void this.notificacionService.iniciarPush().catch(error =>
+        console.warn('[Push] No se pudo iniciar el registro.', error)
+      );
+      if (this.notificacionService.notificacionAbiertaPorPush() !== null) {
+        this.notificacionService.notificacionAbiertaPorPush.set(null);
+        void this.router.navigateByUrl('/notificaciones');
+      }
       idsVistos = new Set<number>();
       primeraConsulta = true;
       const realtimeSub = this.notificacionService.conectarRealtime(usuarioActual, id => {

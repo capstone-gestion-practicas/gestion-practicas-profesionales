@@ -9,6 +9,7 @@
         }
       </div>
       <div class="heading-actions">
+        <ion-button fill="solid" (click)="habilitarPush()">Activar push en este dispositivo</ion-button>
         <ion-button class="back-home-button" fill="outline" (click)="volver()">
           ← Volver al inicio
         </ion-button>
@@ -17,6 +18,7 @@
         </ion-button>
       </div>
     </header>
+    @if (mensajePush) { <p role="status">{{ mensajePush }}</p> }
 
     @if (cargando) {
       <div class="center"><ion-spinner name="crescent"></ion-spinner></div>

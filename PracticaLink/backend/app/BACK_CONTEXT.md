@@ -66,6 +66,7 @@ Ejecución local desde `PracticaLink/backend`:
 - `CHILE_RUT_EMPRESA_API_URL`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
 - `SMTP_FROM_EMAIL` y `SMTP_USE_TLS` para recordatorios por correo
+- `FIREBASE_SERVICE_ACCOUNT_JSON` para entrega Android mediante Firebase Cloud Messaging
 
 Los recordatorios persisten y publican la notificación Realtime aunque el
 servidor SMTP no esté disponible; en ese caso, la respuesta indica que el correo
@@ -164,6 +165,8 @@ contexto, detalle y revisión se actualizan mediante la migración
   el total de avisos sin leer.
 - `PATCH /notificaciones/{id_notificacion}/leida` y
   `PATCH /notificaciones/leidas`: marcan avisos como leídos.
+- `POST /notificaciones/dispositivos`: registra el token FCM del usuario autenticado.
+- `DELETE /notificaciones/dispositivos/actual`: desvincula los dispositivos push del usuario.
 
 Cada práctica nueva avisa a los gestores y administradores activos; cada cambio
 de estado avisa al estudiante. La tabla persistente se crea con la migración

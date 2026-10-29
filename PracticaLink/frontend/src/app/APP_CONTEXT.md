@@ -212,9 +212,12 @@ Las pruebas actuales cubren guards, store de autenticación, componentes base y 
 
 ## Estado actual y límites conocidos
 
-El centro de notificaciones consulta los avisos persistidos cada 20 segundos y
-actualiza el contador y los avisos emergentes mientras la aplicación está
-abierta. No envía notificaciones push cuando la aplicación está cerrada.
+El centro de notificaciones mantiene Realtime y avisos emergentes con la app
+abierta. En Android nativo, permite registrar un token Firebase Cloud Messaging
+por usuario para recibir avisos push cuando la app está en segundo plano o
+cerrada. El usuario habilita el permiso desde el centro de notificaciones.
+FCM requiere `google-services.json` en Android y la variable
+`FIREBASE_SERVICE_ACCOUNT_JSON` configurada en el backend.
 
 - `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.
