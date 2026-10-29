@@ -166,6 +166,19 @@ ion-card-title {
   text-align: center;
 }
 
+ion-modal.release-notes-modal {
+  --width: min(92vw, 520px);
+  --height: fit-content;
+  --border-radius: 22px;
+  --background: var(--cream-surface);
+}
+
+.release-notes { padding: 30px; color: var(--ink); }
+.release-eyebrow { margin: 0 0 8px; color: var(--ion-color-primary); font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.release-notes h2 { margin: 0; font-size: 1.6rem; }
+.release-intro { color: var(--ink-muted); }
+.release-notes ul { display: grid; gap: 14px; margin: 22px 0 26px; padding-left: 22px; line-height: 1.5; }
+
 @media (max-width: 760px) {
   .login-wrapper { padding: 16px; }
 

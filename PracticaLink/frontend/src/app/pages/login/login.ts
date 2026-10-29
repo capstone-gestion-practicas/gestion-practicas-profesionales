@@ -11,6 +11,7 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonModal,
   IonGrid,
   IonInput,
   IonItem,
@@ -31,6 +32,7 @@ import { environment } from '../../../environments/environment';
     CommonModule,
     FormsModule,
     IonContent,
+    IonModal,
     IonGrid,
     IonRow,
     IonCol,
@@ -50,6 +52,12 @@ import { environment } from '../../../environments/environment';
 export class Login {
   readonly appVersion = environment.appVersion;
   readonly androidVersionCode = environment.androidVersionCode;
+  readonly cambiosVersion = [
+    'Recibe notificaciones push en Android cuando la app está en segundo plano.',
+    'Consulta tus avisos desde el centro de notificaciones.',
+    'Gestores pueden enviar mensajes personalizados a un estudiante o a todos los estudiantes activos.'
+  ];
+  novedadesAbiertas = false;
   modoRegistro = false;
   nombre = '';
   apellido = '';
@@ -144,7 +152,12 @@ export class Login {
           next: (contexto) => {
             this.authStore.setContexto(contexto);
             this.cargando = false;
-            this.router.navigate(['/home']);
+            const versionVista = localStorage.getItem('practicalink-version-novedades');
+            if (versionVista === this.appVersion) {
+              this.router.navigate(['/home']);
+            } else {
+              this.novedadesAbiertas = true;
+            }
           },
           error: () => {
             this.cargando = false;
@@ -157,6 +170,12 @@ export class Login {
         this.error = 'Correo o contraseña incorrectos.';
       }
     });
+  }
+
+  continuarDespuesDeNovedades(): void {
+    localStorage.setItem('practicalink-version-novedades', this.appVersion);
+    this.novedadesAbiertas = false;
+    this.router.navigate(['/home']);
   }
 
   private correoValido(correo: string): boolean {

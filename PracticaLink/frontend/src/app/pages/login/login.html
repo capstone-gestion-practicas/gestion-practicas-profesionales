@@ -137,3 +137,25 @@
 
   </ion-col></ion-row></ion-grid>
 </ion-content>
+
+<ion-modal
+  class="release-notes-modal"
+  [isOpen]="novedadesAbiertas"
+  [backdropDismiss]="false"
+  [canDismiss]="false">
+  <ng-template>
+    <section class="release-notes">
+      <p class="release-eyebrow">PracticaLink · Versión {{ appVersion }}</p>
+      <h2>Novedades de esta versión</h2>
+      <p class="release-intro">Estas son las mejoras que encontrarás desde ahora:</p>
+      <ul>
+        @for (cambio of cambiosVersion; track cambio) {
+          <li>{{ cambio }}</li>
+        }
+      </ul>
+      <ion-button expand="block" (click)="continuarDespuesDeNovedades()">
+        Continuar a PracticaLink
+      </ion-button>
+    </section>
+  </ng-template>
+</ion-modal>
