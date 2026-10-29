@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1] - 2026-10-29
+
+### Corregido
+
+- El botón Atrás de Android navega dentro de la aplicación en lugar de cerrarla.
+- El modal de novedades permite continuar y muestra el estado real del registro push.
+
 ## [1.2.0] - 2026-10-19
 
 ### Añadido

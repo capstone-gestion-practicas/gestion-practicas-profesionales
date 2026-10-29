@@ -1,8 +1,8 @@
 {
   "name": "practicalink-frontend",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "config": {
-    "androidVersionCode": 4
+    "androidVersionCode": 5
   },
   "scripts": {
     "ng": "ng",

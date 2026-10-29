@@ -105,9 +105,9 @@ en `package.json` con `android/app/build.gradle`. Para una nueva entrega sólo s
 deben actualizar estos dos valores en `package.json`:
 
 ```json
-"version": "1.2.0",
+"version": "1.2.1",
 "config": {
-  "androidVersionCode": 4
+  "androidVersionCode": 5
 }
 ```
 
