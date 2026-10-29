@@ -34,7 +34,6 @@ from app.services.estado_practica_service import (
     responder_observacion_practica,
 )
 from app.services.correo_service import (
-    ErrorEnvioCorreoError,
     EstudianteNoEncontradoError,
     RecordatorioYaEnviadoHoyError,
     EstudianteYaTienePracticaError,
@@ -219,11 +218,6 @@ def enviar_recordatorio_estudiante(
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Ya se envió un recordatorio a este estudiante durante el día de hoy",
-        ) from error
-    except ErrorEnvioCorreoError as error:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            str(error),
         ) from error
 
 

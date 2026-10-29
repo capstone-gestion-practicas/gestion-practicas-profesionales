@@ -9,7 +9,6 @@ from app.core.config import settings  # noqa: E402
 from app.services.correo_service import (  # noqa: E402
     RecordatorioYaEnviadoHoyError,
     EstudianteYaTienePracticaError,
-    ErrorEnvioCorreoError,
     enviar_recordatorio_sin_practica,
 )
 
@@ -46,6 +45,7 @@ class RecordatorioEstudianteTests(unittest.TestCase):
 
         message = smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
         self.assertEqual(result["id_usuario"], 42)
+        self.assertTrue(result["correo_enviado"])
         self.assertTrue(result["recordatorio_enviado_hoy"])
         self.assertIn("Correo y notificación", result["mensaje"])
         self.assertEqual(message["To"], "estudiante@example.test")
@@ -123,7 +123,7 @@ class RecordatorioEstudianteTests(unittest.TestCase):
         smtp.assert_not_called()
 
     @patch("app.services.correo_service.smtplib.SMTP")
-    def test_rolls_back_daily_marker_if_email_delivery_fails(
+    def test_persists_notification_if_email_delivery_fails(
         self, smtp: MagicMock
     ) -> None:
         smtp.side_effect = OSError("SMTP unavailable")
@@ -134,13 +134,16 @@ class RecordatorioEstudianteTests(unittest.TestCase):
             patch.object(settings, "smtp_username", None),
             patch.object(settings, "smtp_password", None),
             patch.object(settings, "smtp_use_tls", False),
-            self.assertRaises(ErrorEnvioCorreoError),
             self.assertLogs("app.services.correo_service", level="ERROR"),
         ):
-            enviar_recordatorio_sin_practica(self.db, 42)
+            result = enviar_recordatorio_sin_practica(self.db, 42)
 
-        self.db.rollback.assert_called_once()
-        self.db.commit.assert_not_called()
+        self.db.execute.assert_called()
+        self.db.commit.assert_called_once()
+        self.db.rollback.assert_not_called()
+        self.assertFalse(result["correo_enviado"])
+        self.assertTrue(result["recordatorio_enviado_hoy"])
+        self.assertIn("Notificación enviada", result["mensaje"])
 
     @patch("app.services.correo_service.smtplib.SMTP")
     def test_releases_daily_marker_when_another_request_won_race(

@@ -24,10 +24,6 @@ class RecordatorioYaEnviadoHoyError(Exception):
     pass
 
 
-class ErrorEnvioCorreoError(Exception):
-    pass
-
-
 def enviar_recordatorio_sin_practica(db: Session, id_usuario: int) -> dict:
     estudiante = db.execute(text("""
         SELECT
@@ -121,37 +117,46 @@ Equipo PracticaLink
             "id_usuario": id_usuario,
             "mensaje": texto_recordatorio,
         })
-
-        if bool(settings.smtp_username) != bool(settings.smtp_password):
-            raise ErrorEnvioCorreoError(
-                "La configuración SMTP requiere usuario y contraseña juntos."
-            )
-        with smtplib.SMTP(
-            settings.smtp_host,
-            settings.smtp_port,
-            timeout=10,
-        ) as servidor:
-            if settings.smtp_use_tls:
-                servidor.starttls(context=ssl.create_default_context())
-            if settings.smtp_username and settings.smtp_password:
-                servidor.login(settings.smtp_username, settings.smtp_password)
-            servidor.send_message(mensaje)
         db.commit()
-    except ErrorEnvioCorreoError:
-        db.rollback()
-        raise
-    except (OSError, smtplib.SMTPException):
-        db.rollback()
-        logger.exception("No fue posible enviar recordatorio al usuario %s", id_usuario)
-        raise ErrorEnvioCorreoError(
-            "No fue posible enviar el correo. Verifica la configuración del servidor SMTP."
-        ) from None
     except Exception:
         db.rollback()
         raise
 
+    correo_enviado = True
+    if bool(settings.smtp_username) != bool(settings.smtp_password):
+        logger.error(
+            "La configuración SMTP requiere usuario y contraseña juntos."
+        )
+        correo_enviado = False
+    else:
+        try:
+            with smtplib.SMTP(
+                settings.smtp_host,
+                settings.smtp_port,
+                timeout=10,
+            ) as servidor:
+                if settings.smtp_use_tls:
+                    servidor.starttls(context=ssl.create_default_context())
+                if settings.smtp_username and settings.smtp_password:
+                    servidor.login(settings.smtp_username, settings.smtp_password)
+                servidor.send_message(mensaje)
+        except (OSError, smtplib.SMTPException):
+            correo_enviado = False
+            logger.exception(
+                "No fue posible enviar recordatorio por correo al usuario %s",
+                id_usuario,
+            )
+
+    if correo_enviado:
+        mensaje_resultado = "Correo y notificación enviados correctamente."
+    else:
+        mensaje_resultado = (
+            "Notificación enviada; no fue posible enviar el correo."
+        )
+
     return {
         "id_usuario": id_usuario,
-        "mensaje": "Correo y notificación enviados correctamente.",
+        "mensaje": mensaje_resultado,
+        "correo_enviado": correo_enviado,
         "recordatorio_enviado_hoy": True,
     }

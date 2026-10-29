@@ -67,6 +67,10 @@ Ejecución local desde `PracticaLink/backend`:
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
 - `SMTP_FROM_EMAIL` y `SMTP_USE_TLS` para recordatorios por correo
 
+Los recordatorios persisten y publican la notificación Realtime aunque el
+servidor SMTP no esté disponible; en ese caso, la respuesta indica que el correo
+no se envió.
+
 El archivo `.env` es local y está ignorado por Git. La plantilla pública es `PracticaLink/backend/.env.template`.
 
 ## Base de datos

@@ -85,6 +85,7 @@ export interface EstudianteSinPractica {
 export interface RecordatorioEstudianteResponse {
   id_usuario: number;
   mensaje: string;
+  correo_enviado: boolean;
   recordatorio_enviado_hoy: boolean;
 }
 

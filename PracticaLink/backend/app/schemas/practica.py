@@ -119,6 +119,7 @@ class EstudianteSinPractica(BaseModel):
 class RecordatorioEstudianteResponse(BaseModel):
     id_usuario: int
     mensaje: str
+    correo_enviado: bool
     recordatorio_enviado_hoy: bool
 
 
