@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2] - 2026-10-29
+
+### Corregido
+
+- Configurado el canal Android predeterminado de FCM para las notificaciones de PracticaLink.
+- Evitado mostrar el toast interno de Realtime en Android cuando el sistema presenta el push.
+- Incrementados la versión Android a `1.2.2` y el código de build a `6`.
+
 ## [1.2.1] - 2026-10-29
 
 ### Corregido

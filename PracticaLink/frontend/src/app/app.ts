@@ -56,7 +56,7 @@ export class App implements OnInit {
           const nueva = resumen.notificaciones.find(item => item.id_notificacion === id);
           if (nueva) {
             idsVistos.add(id);
-            this.mostrarNotificacion(nueva);
+            if (!this.notificacionService.esAndroid()) this.mostrarNotificacion(nueva);
           }
         });
       }).pipe(catchError(() => EMPTY)).subscribe();

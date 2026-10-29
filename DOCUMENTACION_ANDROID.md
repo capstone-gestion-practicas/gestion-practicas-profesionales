@@ -105,9 +105,9 @@ en `package.json` con `android/app/build.gradle`. Para una nueva entrega sólo s
 deben actualizar estos dos valores en `package.json`:
 
 ```json
-"version": "1.2.1",
+"version": "1.2.2",
 "config": {
-  "androidVersionCode": 5
+  "androidVersionCode": 6
 }
 ```
 
@@ -139,16 +139,20 @@ desde **Notificaciones > Activar push en este dispositivo**. Para recibir avisos
    push incluye Firebase Messaging; no es necesario agregar Analytics ni otra
    dependencia Firebase para registrar el dispositivo.
 2. Configura `FIREBASE_SERVICE_ACCOUNT_JSON` en el entorno privado del backend
-   con la cuenta de servicio de Firebase autorizada para enviar mensajes FCM.
+   con el contenido JSON completo de la cuenta de servicio de Firebase autorizada para enviar mensajes FCM. En Render, escribe el nombre en **Key** y pega solo el objeto JSON (desde `{` hasta `}`) en **Value**, sin `FIREBASE_SERVICE_ACCOUNT_JSON=`. Guarda y vuelve a desplegar el backend. No publiques la clave ni la guardes en Git.
 3. Instala dependencias actualizadas (`npm.cmd ci`) y ejecuta
    `pip install -r requirements.txt` en el backend.
 4. Aplica `PracticaLink/supabase/migrations/20261028070000_push_devices.sql`.
 5. Ejecuta `npm.cmd run apk:sync` y recompila la app Android. El plugin Gradle
    de Google Services procesa el JSON durante la compilación.
 
+El canal Android `practicalink-notificaciones` se crea al iniciar la app y se declara también como canal predeterminado de FCM. Si ya existe en el dispositivo, su importancia y sonido se controlan desde los ajustes de notificaciones de Android.
+
 Sin la configuración de Firebase no se generan tokens ni se envían pushes.
 Las notificaciones siguen persistidas en el centro y usan Realtime cuando la
-app está abierta.
+app está abierta. Si Android recibe un push mientras la app está abierta, se
+muestra también una notificación en el sistema; con la app en segundo plano o
+cerrada, Android muestra directamente el push de FCM.
 
 ## Ejecutar en un emulador
 
