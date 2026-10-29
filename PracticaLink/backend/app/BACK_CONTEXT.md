@@ -579,3 +579,52 @@ verificaron datos reales ni índices. La comprobación de existencia y la lectur
 del historial son dos sentencias: no garantizan una instantánea conjunta bajo
 el aislamiento predeterminado si hay cambios concurrentes. Las observaciones
 pueden contener información sensible preexistente; no deben registrarse en logs.
+
+### EP05 / HU013: registro de seguimientos WEB
+
+`POST /practicas/{id_practica}/seguimientos` está organizado en
+`app/seguimientos/{routes,schemas,service}.py`. Autoriza GESTOR y ADMINISTRADOR
+mediante el JWT y el contexto existente, cuya función SQL filtra usuarios y
+roles activos. Comprueba que el usuario del contexto coincide con el JWT.
+La función de escritura revalida actividad y roles bajo bloqueo.
+
+El cuerpo admite exclusivamente `fecha` (YYYY-MM-DD, no futura según
+America/Santiago), `tipo` y `observacion` (texto obligatorio, máximo 2000
+caracteres, conservando espacios). Los medios son Reunión presencial,
+Videollamada, Llamada telefónica, Correo electrónico y Otro. No admite campos
+adicionales ni parámetros query; el autor procede exclusivamente del JWT.
+El identificador de práctica debe ser positivo y caber en BIGINT.
+
+Responde 201 con `id_seguimiento`, `id_practica`, `id_usuario`, `fecha`, `tipo`,
+`observacion` y `fecha_creacion` con zona horaria. Conserva los errores de
+autenticación existentes. Permisos insuficientes: 403; práctica inexistente:
+404; estado distinto de EN_CURSO o conflicto concurrente: 409; entrada inválida:
+422; resultado inesperado o registro no confirmado: 500; conexión o verificación
+de permisos no disponible: 503. Los mensajes no contienen errores del driver.
+No hay endpoints de modificación ni eliminación en este módulo.
+
+Requiere los scripts EP05 ya versionados y `SEGUIMIENTOS_DATABASE_URL` configurada
+de forma privada con un login dedicado que herede `pl_ep05_executor`, sin
+privilegios directos sobre tablas, superusuario ni BYPASSRLS, ni membresías
+adicionales. No usar `pl_ep05_owner`, el login principal ni el de EP04.
+La aplicación rechaza URLs incompatibles y logins compartidos con esas dos
+conexiones; esto no verifica los privilegios efectivos del servidor. Su
+aprovisionamiento y auditoría corresponden a una operación separada autorizada.
+Sin configuración, este endpoint falla con 503 y no utiliza otra conexión.
+
+El servicio ejecuta una sola llamada parametrizada a
+`seguimientos_privados.fn_registrar_seguimiento`. Valida la estructura y la
+correspondencia del resultado con práctica, autor y datos enviados antes del
+commit. Un error de negocio, respuesta malformada o fallo SQL produce rollback;
+un fallo del rollback conserva el error original. No hay reintentos automáticos,
+incluido un fallo durante commit cuyo resultado pueda ser incierto. Ante 500/503
+el cliente no debe reenviar automáticamente: no se implementa idempotencia.
+Los bloqueos y la comprobación atómica de EN_CURSO permanecen en PostgreSQL.
+La dependencia SQL incluye usuario, usuario_rol, rol, practica, estado_practica
+y seguimiento; la separación modular no elimina este acoplamiento.
+
+Las pruebas `test_seguimientos_{routes,schemas,service,database}.py` verifican
+JWT, permisos, contratos, rollback, respuesta antes de commit, errores de
+concurrencia y aislamiento de conexión mediante mocks. No acreditan ejecución
+del endpoint con PostgreSQL real ni permisos de un entorno desplegado. Angular
+continúa pendiente de integración; no se migran los datos de demostración.

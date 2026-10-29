@@ -116,3 +116,11 @@ pero Docker denegó acceso al socket, también fuera del sandbox; `sudo -n` requ
 contraseña. La suite terminó antes de crear recursos y antes de ejecutar SQL.
 **No hay pruebas PostgreSQL aprobadas ni se considera validado este incremento.**
 La revisión/ejecución pendiente debe incluir los scripts y la suite juntos.
+
+## Validación posterior de SQL y HTTP — 29-10-2026
+
+El resultado de la sesión inicial anterior es histórico. En la validación posterior
+se ejecutaron correctamente las 20 pruebas SQL sobre PostgreSQL 18.6 y nueve pruebas
+HTTP reales del backend HU013. El endpoint ya existe en el árbol de trabajo.
+Consultar [HU013_HTTP.md](HU013_HTTP.md) para el contrato probado, aislamiento,
+comando reproducible, resultados y limitaciones. Los scripts SQL no cambiaron.
