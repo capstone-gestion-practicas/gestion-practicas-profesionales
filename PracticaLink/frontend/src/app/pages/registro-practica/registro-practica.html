@@ -47,7 +47,7 @@
                 {{ esIncidencia ? 'Fecha de la incidencia *' : 'Fecha del seguimiento *' }}
               </label>
               <input [id]="esIncidencia ? 'fecha-incidencia' : 'fecha-seguimiento'"
-                name="fecha" type="date" [(ngModel)]="fecha" required />
+                name="fecha" type="date" [attr.max]="esIncidencia ? null : fechaMaxima" [(ngModel)]="fecha" required />
             </div>
 
             @if (esIncidencia) {
@@ -81,19 +81,16 @@
               </div>
               <div class="field full-width">
                 <label for="observaciones">Observaciones *</label>
-                <textarea id="observaciones" name="observaciones" rows="5" maxlength="2000"
+                <textarea id="observaciones" name="observaciones" rows="5"
                   [(ngModel)]="observaciones" required
                   placeholder="Describe avances, acuerdos o aspectos relevantes del seguimiento..."></textarea>
                 <small>Incluye información concreta para dar continuidad al proceso. Máximo 2.000 caracteres.</small>
               </div>
-              <div class="field next-date">
-                <label for="proxima-fecha">Próxima fecha de seguimiento</label>
-                <input id="proxima-fecha" name="proximaFecha" type="date" [(ngModel)]="proximaFecha" />
-              </div>
-              <p class="form-note full-width">El registro se guarda en este navegador y aparece en el historial de esta práctica.</p>
+              <p class="form-note full-width">El seguimiento se guarda en el servidor. El historial local contiene solo datos de demostración.</p>
             }
           </div>
 
+          @if (mensaje) { <p class="form-note" role="status">{{ mensaje }}</p> }
           @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
 
           @if (esIncidencia && incidencias.length > 0) {
@@ -115,7 +112,7 @@
             <ion-button fill="outline" type="button" [disabled]="guardando" (click)="cancelar()">
               Cancelar
             </ion-button>
-            <ion-button type="submit" [disabled]="guardando">
+            <ion-button type="submit" [disabled]="guardando || (!esIncidencia && seguimientoBloqueado)">
               {{ guardando ? 'Guardando...' : esIncidencia ? 'Guardar incidencia' : 'Guardar seguimiento' }}
             </ion-button>
           </footer>

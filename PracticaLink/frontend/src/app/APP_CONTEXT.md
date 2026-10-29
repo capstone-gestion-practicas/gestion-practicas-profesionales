@@ -278,3 +278,38 @@ PATCH. También se reprodujo con XHR nativo sin Angular; no se verificó en otro
 navegadores. La aplicación no implementa reintentos automáticos. PostgreSQL
 protege contra una transición repetida mediante bloqueo y validación del estado:
 una segunda operación sobre EN_CURSO se rechaza sin añadir otro evento.
+
+### EP05 / HU013: registrar seguimiento mediante FastAPI
+
+RegistroPractica conserva el componente compartido y la apariencia existente.
+Para seguimientos usa PracticaService.registrarSeguimiento y POST
+`/practicas/{id}/seguimientos`, enviando solo fecha, tipo y observacion. El
+interceptor existente agrega el JWT de sessionStorage; las rutas conservan
+los guards de autenticación y los roles GESTOR/ADMINISTRADOR. No envía autor.
+
+Valida fecha calendario no futura en America/Santiago (también la fecha inicial),
+los cinco medios existentes y observación con contenido de hasta 2000 puntos de
+código Unicode, sin recortar el texto enviado. No usa maxlength HTML para este
+campo porque cuenta unidades UTF-16, distinto del contrato Python/PostgreSQL.
+Se retiró próxima fecha del formulario de seguimiento: no forma parte del contrato.
+
+Bloquea envíos simultáneos. Solo HTTP 201 con cuerpo confirma éxito y deja un
+mensaje en el formulario; no navega a un historial que aún no consulta el servidor.
+Presenta errores diferenciados para 401/403/404/409/422/500/503. No muestra detalles
+internos recibidos ni reintenta escrituras. Ante error de red, 500/503 u otro
+resultado incierto bloquea un nuevo envío en esa instancia y pide verificarlo.
+Este bloqueo no persiste tras recargar: no constituye idempotencia. Destruir la
+vista cancela la suscripción, no garantiza cancelar una escritura en el servidor.
+
+Los registros locales anteriores permanecen sin migración ni asignación de autor.
+La pestaña existente los rotula como demostración; no consulta ni simula datos
+PostgreSQL y no representa HU014 implementada. Los nuevos seguimientos no se
+escriben en localStorage. El guardado local de incidencias EP06 y su servicio
+compartido permanecen sin cambios de comportamiento.
+
+Validación de este incremento: 110 pruebas Angular aprobadas con Chromium
+Headless y build de producción aprobado. Se probaron HTTP/JWT con HttpTestingController,
+formulario, fechas chilenas, errores, doble envío y ausencia de escritura local.
+No se ejecutó una prueba de extremo a extremo Angular/FastAPI/PostgreSQL en esta
+sesión. El build advierte sobre el presupuesto inicial y estilos de home/detalle;
+no se modificaron presupuestos ni dependencias para ocultar esas advertencias.
