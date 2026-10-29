@@ -53,9 +53,15 @@ src/app/
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
 - `/notificaciones`: muestra la bandeja persistente del usuario autenticado.
+- `/envio-notificaciones`: permite a gestores y administradores enviar avisos push a un estudiante o a todos los estudiantes activos.
 - `/usuarios`: panel de gestión de cuentas exclusivo para el rol `ADMINISTRADOR`.
 
 Las rutas están declaradas en `app.routes.ts`.
+
+El inicio prioriza tareas según el rol: gestores ven solicitudes pendientes y
+accesos directos a revisión, estados, seguimientos, incidencias y envío de
+avisos; estudiantes ven el paso que necesitan completar y el estado de su
+práctica. Las cuentas con ambos roles pueden cambiar de espacio desde el encabezado.
 
 Al registrar una práctica, se puede informar la jornada semanal (1 a 45 horas).
 La estimación de horas transcurridas usa esa jornada y se detiene en la fecha de
@@ -221,9 +227,9 @@ FCM requiere `google-services.json` en Android y la variable
 Cuando la app Android está abierta, el push recibido también se presenta como
 una notificación local del sistema; en segundo plano, Android presenta el push
 de FCM directamente.
-Gestores y administradores pueden enviar desde esta pantalla un mensaje
-personalizado a un estudiante activo; el aviso también queda en su bandeja y
-se envía por FCM si el estudiante habilitó push en su dispositivo.
+Gestores y administradores envían desde `/envio-notificaciones` un mensaje
+personalizado a un estudiante activo o a todos los estudiantes activos; el
+aviso queda en la bandeja del destinatario y se envía por FCM si habilitó push.
 También pueden elegir broadcast para enviar el mensaje a todos los estudiantes
 activos; la interfaz pide confirmación antes de realizar el envío.
 

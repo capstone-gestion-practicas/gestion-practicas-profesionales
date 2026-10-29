@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import {
@@ -17,30 +16,16 @@ import {
 
 import { Notificacion } from '../../core/models/notificacion.models';
 import { NotificacionService } from '../../core/services/notificacion.service';
-import { AuthStore } from '../../core/store/auth.store';
-import { DestinatarioMensajePush } from '../../core/models/notificacion.models';
 
 @Component({
   selector: 'app-notificaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonBadge, IonButton, IonCard, IonCardContent,
+  imports: [CommonModule, IonBadge, IonButton, IonCard, IonCardContent,
     IonContent, IonGrid, IonRow, IonCol, IonSpinner],
   templateUrl: './notificaciones.html',
   styleUrl: './notificaciones.scss'
 })
 export class Notificaciones implements OnInit {
-  readonly puedeEnviarMensaje = computed(() => {
-    const roles = this.authStore.contexto()?.roles ?? [];
-    return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
-  });
-  destinatarios: DestinatarioMensajePush[] = [];
-  modoEnvio: 'individual' | 'broadcast' = 'individual';
-  destinatarioId = '';
-  tituloPersonalizado = '';
-  mensajePersonalizado = '';
-  enviandoMensaje = false;
-  estadoEnvio = '';
-  errorEnvio = '';
   notificaciones: Notificacion[] = [];
   cargando = true;
   error = '';
@@ -49,84 +34,11 @@ export class Notificaciones implements OnInit {
 
   constructor(
     readonly servicio: NotificacionService,
-    private readonly authStore: AuthStore,
     private readonly router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargar();
-    if (this.puedeEnviarMensaje()) this.cargarDestinatarios();
-  }
-
-  cargarDestinatarios(): void {
-    this.servicio.listarDestinatariosPush().subscribe({
-      next: destinatarios => {
-        this.destinatarios = destinatarios;
-        if (!this.destinatarioId && destinatarios.length) {
-          this.destinatarioId = String(destinatarios[0].id_usuario);
-        }
-      },
-      error: () => { this.errorEnvio = 'No fue posible cargar los estudiantes.'; }
-    });
-  }
-
-  enviarMensajePersonalizado(): void {
-    const titulo = this.tituloPersonalizado.trim();
-    const mensaje = this.mensajePersonalizado.trim();
-    this.estadoEnvio = '';
-    this.errorEnvio = '';
-    if (!titulo || !mensaje) {
-      this.errorEnvio = 'Completa el título y el mensaje.';
-      return;
-    }
-
-    if (this.modoEnvio === 'broadcast') {
-      if (!this.destinatarios.length) {
-        this.errorEnvio = 'No hay estudiantes activos para el envío.';
-        return;
-      }
-      if (!window.confirm(`¿Enviar este mensaje a los ${this.destinatarios.length} estudiantes activos?`)) {
-        return;
-      }
-      this.enviandoMensaje = true;
-      this.servicio.enviarBroadcastPersonalizado({ titulo, mensaje }).subscribe({
-        next: respuesta => {
-          this.enviandoMensaje = false;
-          this.estadoEnvio = respuesta.mensaje;
-          this.tituloPersonalizado = '';
-          this.mensajePersonalizado = '';
-        },
-        error: error => {
-          this.enviandoMensaje = false;
-          this.errorEnvio = typeof error.error?.detail === 'string'
-            ? error.error.detail
-            : 'No fue posible enviar el broadcast.';
-        }
-      });
-      return;
-    }
-
-    const idUsuario = Number(this.destinatarioId);
-    if (!Number.isInteger(idUsuario) || idUsuario <= 0) {
-      this.errorEnvio = 'Selecciona un estudiante.';
-      return;
-    }
-
-    this.enviandoMensaje = true;
-    this.servicio.enviarMensajePersonalizado({ id_usuario: idUsuario, titulo, mensaje }).subscribe({
-      next: respuesta => {
-        this.enviandoMensaje = false;
-        this.estadoEnvio = respuesta.mensaje;
-        this.tituloPersonalizado = '';
-        this.mensajePersonalizado = '';
-      },
-      error: error => {
-        this.enviandoMensaje = false;
-        this.errorEnvio = typeof error.error?.detail === 'string'
-          ? error.error.detail
-          : 'No fue posible enviar el mensaje.';
-      }
-    });
   }
 
   async habilitarPush(): Promise<void> {

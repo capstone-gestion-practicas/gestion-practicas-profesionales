@@ -30,50 +30,6 @@
       <p role="status">{{ mensajePush }}</p>
     }
 
-    @if (puedeEnviarMensaje()) {
-      <ion-card class="custom-push-card">
-        <ion-card-content>
-          <p class="module-label">Herramientas de gestión</p>
-          <h2>Enviar mensaje push personalizado</h2>
-          <p class="form-hint">El aviso también quedará guardado en la bandeja de cada destinatario.</p>
-          <form (ngSubmit)="enviarMensajePersonalizado()">
-            <label for="push-mode">Destinatarios</label>
-            <select id="push-mode" name="modoEnvio" [(ngModel)]="modoEnvio"
-              [disabled]="enviandoMensaje || destinatarios.length === 0">
-              <option value="individual">Un estudiante</option>
-              <option value="broadcast">Todos los estudiantes activos</option>
-            </select>
-            @if (modoEnvio === 'individual') {
-              <label for="push-recipient">Estudiante</label>
-              <select id="push-recipient" name="destinatarioId" [(ngModel)]="destinatarioId"
-              [disabled]="enviandoMensaje || destinatarios.length === 0">
-                @for (destinatario of destinatarios; track destinatario.id_usuario) {
-                  <option [value]="destinatario.id_usuario">{{ destinatario.nombre }}</option>
-                }
-              </select>
-            } @else {
-              <p class="broadcast-notice">Se creará un aviso para cada estudiante activo.</p>
-            }
-            @if (destinatarios.length === 0) {
-              <p class="form-hint">No hay estudiantes activos disponibles.</p>
-            }
-            <label for="push-title">Título</label>
-            <input id="push-title" name="tituloPersonalizado" [(ngModel)]="tituloPersonalizado"
-              maxlength="150" required [disabled]="enviandoMensaje" placeholder="Escribe un título" />
-            <label for="push-message">Mensaje</label>
-            <textarea id="push-message" name="mensajePersonalizado" [(ngModel)]="mensajePersonalizado"
-              maxlength="500" rows="4" required [disabled]="enviandoMensaje"
-              placeholder="Escribe el mensaje para el estudiante"></textarea>
-            <ion-button type="submit" [disabled]="enviandoMensaje || !destinatarios.length">
-              {{ enviandoMensaje ? 'Enviando…' : modoEnvio === 'broadcast' ? 'Enviar broadcast' : 'Enviar mensaje' }}
-            </ion-button>
-          </form>
-          @if (estadoEnvio) { <p class="send-success" role="status">{{ estadoEnvio }}</p> }
-          @if (errorEnvio) { <p class="error-text" role="alert">{{ errorEnvio }}</p> }
-        </ion-card-content>
-      </ion-card>
-    }
-
     @if (cargando) {
       <div class="center"><ion-spinner name="crescent"></ion-spinner></div>
     } @else if (error) {

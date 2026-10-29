@@ -119,9 +119,15 @@ export class Home implements OnInit {
   readonly esAdministrador = computed(
     () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
   );
+  readonly tieneEspacioEstudiante = computed(
+    () => this.esEstudiante() && this.puedeRevisarPracticas()
+  );
 
   cargando = true;
+  mostrarPanelEstudiante = false;
   errorPractica = '';
+  errorSolicitudesGestion = '';
+  cargandoSolicitudesGestion = false;
   practicaDetalle: PracticaDetalleResponse | null = null;
   modalAntecedentesAbierto = false;
   historialEstados: HistorialEstadoPractica[] = [];
@@ -176,6 +182,7 @@ export class Home implements OnInit {
       this.cargarPracticaRegistrada(this.contexto() as ContextoUsuarioResponse);
       this.cargarDashboardAdmin();
       this.cargarEstudiantesSinPractica();
+      this.cargarSolicitudesGestion();
       return;
     }
 
@@ -186,6 +193,7 @@ export class Home implements OnInit {
         this.cargarPracticaRegistrada(contexto);
         this.cargarDashboardAdmin();
         this.cargarEstudiantesSinPractica();
+        this.cargarSolicitudesGestion();
       },
       error: () => {
         this.cerrarSesion();
@@ -200,6 +208,7 @@ export class Home implements OnInit {
     }
     this.cargarDashboardAdmin();
     this.cargarEstudiantesSinPractica();
+    this.cargarSolicitudesGestion();
   }
 
   cerrarSesion(): void {
@@ -233,6 +242,10 @@ export class Home implements OnInit {
     this.router.navigate(['/incidencias']);
   }
 
+  enviarNotificaciones(): void {
+    this.router.navigate(['/envio-notificaciones']);
+  }
+
   abrirPracticasEstado(estado: string): void {
     this.router.navigate(['/gestion-estados'], {
       queryParams: { estado: estado.toUpperCase() }
@@ -241,6 +254,14 @@ export class Home implements OnInit {
 
   gestionarUsuarios(): void {
     this.router.navigate(['/usuarios']);
+  }
+
+  verEspacioEstudiante(): void {
+    this.mostrarPanelEstudiante = true;
+  }
+
+  verEspacioGestion(): void {
+    this.mostrarPanelEstudiante = false;
   }
 
   abrirCentroNotificaciones(): void {
@@ -408,6 +429,25 @@ export class Home implements OnInit {
       },
       error: () => {
         this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
+      }
+    });
+  }
+
+  private cargarSolicitudesGestion(): void {
+    if (!this.puedeRevisarPracticas() || this.esAdministrador()) {
+      return;
+    }
+
+    this.cargandoSolicitudesGestion = true;
+    this.errorSolicitudesGestion = '';
+    this.revisionService.listar().subscribe({
+      next: solicitudes => {
+        this.solicitudesAdmin = solicitudes;
+        this.cargandoSolicitudesGestion = false;
+      },
+      error: () => {
+        this.errorSolicitudesGestion = 'No fue posible cargar las solicitudes por revisar.';
+        this.cargandoSolicitudesGestion = false;
       }
     });
   }

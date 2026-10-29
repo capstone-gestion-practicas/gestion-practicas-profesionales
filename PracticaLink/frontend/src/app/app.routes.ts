@@ -33,6 +33,14 @@ export const routes: Routes = [
       import('./pages/notificaciones/notificaciones').then(m => m.Notificaciones)
   },
   {
+    path: 'envio-notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/envio-notificaciones/envio-notificaciones')
+        .then(m => m.EnvioNotificaciones)
+  },
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },

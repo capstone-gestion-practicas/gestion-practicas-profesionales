@@ -203,14 +203,33 @@ ion-modal.request-detail-modal {
 }
 button.notification-mark {
   position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
   margin-right: 12px;
-  padding: 4px;
+  padding: 8px;
+  place-items: center;
   border: 0;
+  border-radius: 11px;
   background: transparent;
   color: #fffdf7;
-  font-size: 1.15rem;
-  line-height: 1;
   cursor: pointer;
+}
+
+button.notification-mark:hover,
+button.notification-mark:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, .14);
+}
+
+.notification-mark svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .notification-count {
@@ -227,6 +246,27 @@ button.notification-mark {
   color: #fff;
   font-size: .65rem;
   font-weight: 800;
+}
+
+.workspace-switch {
+  min-height: 34px;
+  margin-right: 12px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+  color: #fffdf7;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.workspace-switch:hover,
+.workspace-switch:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, .2);
 }
 
 ion-modal.practice-details-modal {
@@ -274,6 +314,9 @@ ion-modal.practice-details-modal {
 .student-brand-header .quick-nav button:hover,
 .student-brand-header .quick-nav button:focus-visible { background: #edf5ef; }
 .student-brand-header .notification-mark { color: #245a45; }
+.student-brand-header .notification-mark:hover,
+.student-brand-header .notification-mark:focus-visible { background: #edf5ef; }
+.student-brand-header .workspace-switch { border-color: #b9cabb; background: #edf5ef; color: #245a45; }
 .student-dashboard { gap: 22px; }
 .student-sidebar { gap: 18px; }
 .student-dashboard .welcome-card {
@@ -337,4 +380,191 @@ ion-modal.practice-details-modal {
   .student-practice-status > ion-card-content { padding: 8px 18px 20px; }
   .student-practice-status .practice-status { align-items: flex-start; flex-direction: column; }
   .student-practice-status .status-pill { min-width: 0; }
+}
+
+:root header.brand-header:not(.student-brand-header) {
+  border-radius: 14px;
+  background: linear-gradient(110deg, #1f4f3c, #245a45 72%, #386b54);
+  box-shadow: 0 6px 16px rgba(32, 55, 45, .16);
+}
+
+.management-dashboard {
+  display: grid;
+  gap: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 0 20px;
+}
+
+.management-heading h1 {
+  margin: 4px 0 8px;
+  color: var(--ink);
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+}
+
+.management-heading p:not(.module-label) {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.workflow-section,
+.management-queue {
+  display: grid;
+  gap: 14px;
+}
+
+.management-dashboard .section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.management-dashboard .section-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.management-dashboard .section-heading p {
+  margin: 5px 0 0;
+  color: var(--ink-muted);
+  font-size: .88rem;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workflow-card {
+  height: 100%;
+  margin: 0;
+}
+
+.workflow-card ion-card-content {
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 18px;
+}
+
+.workflow-label {
+  color: var(--ion-color-primary);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.workflow-card strong {
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.workflow-detail {
+  color: var(--ink-muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.workflow-link {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  color: var(--ion-color-primary);
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.workflow-priority {
+  border-color: #a8c5ad;
+  background: #f4faf3;
+}
+
+.workflow-priority .workflow-detail {
+  color: var(--ion-color-primary);
+  font-weight: 700;
+}
+
+.management-list-card {
+  margin: 0;
+}
+
+.management-list-card ion-item {
+  --background: transparent;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+}
+
+.management-list-card ion-item h3 {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.management-list-card ion-item p {
+  margin-top: 4px;
+  color: var(--ink-muted);
+}
+
+.management-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 720px) {
+  :root header.brand-header .quick-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+    gap: 4px;
+    overflow: visible;
+    padding-top: 4px;
+  }
+
+  :root header.brand-header .quick-nav button {
+    font-size: .72rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .management-dashboard {
+    gap: 22px;
+  }
+
+  .workflow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workflow-card ion-card-content {
+    min-height: 158px;
+    padding: 15px;
+  }
+
+  .management-dashboard .section-heading {
+    align-items: flex-start;
+  }
+
+  .management-dashboard .section-heading ion-button {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-card ion-card-content {
+    min-height: 0;
+  }
 }
