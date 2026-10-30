@@ -61,6 +61,8 @@ Ejecución local desde `PracticaLink/backend`:
 - `SUPABASE_DATABASE_URL`
 - `INICIO_PRACTICA_DATABASE_URL` (opcional al iniciar la aplicación; obligatoria
   al usar la conexión restringida de HU04.2)
+- `SEGUIMIENTOS_DATABASE_URL` (conexión exclusiva de escritura HU013)
+- `SEGUIMIENTOS_LECTURA_DATABASE_URL` (conexión exclusiva de lectura HU014)
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
@@ -626,8 +628,9 @@ y seguimiento; la separación modular no elimina este acoplamiento.
 Las pruebas `test_seguimientos_{routes,schemas,service,database}.py` verifican
 JWT, permisos, contratos, rollback, respuesta antes de commit, errores de
 concurrencia y aislamiento de conexión mediante mocks. No acreditan ejecución
-del endpoint con PostgreSQL real ni permisos de un entorno desplegado. Angular
-continúa pendiente de integración; no se migran los datos de demostración.
+del endpoint con PostgreSQL real ni permisos de un entorno desplegado.
+Nota histórica: al cerrar la etapa backend HU013, Angular estaba pendiente;
+actualmente HU013 y HU014 están integradas en Angular. No se migran demostraciones.
 
 ### EP05 / HU014: consulta HTTP del historial de seguimientos
 
@@ -663,5 +666,17 @@ Validación de esta etapa: 247/247 unitarias, 30/30 SQL y 15/15 HTTP sobre Postg
 18.6 exclusivo. Incluye POST→GET, transacción read-only, SELECT directo rechazado,
 históricos, ausencia de fallback y regresión HU013/EP03/EP04 en escenarios existentes.
 Ver tests/integration/HU014_HTTP.md. No acredita permisos de Supabase ni despliegue.
-La consulta Angular HU014 sigue pendiente; el registro Angular HU013 ya existe
-(la referencia anterior a Angular pendiente corresponde a una etapa histórica).
+La consulta Angular HU014 y el registro Angular HU013 están implementados.
+Las referencias anteriores a integración pendiente corresponden a etapas históricas.
+
+
+### EP05: operación vigente y límites
+
+El orden de aplicación es ep05-01, ep05-02, ep05-03, ep05-04 y ep05-05, según
+[DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md). Esa guía
+identifica los ejecutores separados, la comprobación de privilegios efectivos y
+los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
+responde 503; no utiliza otra conexión. Las pruebas locales no validan migraciones
+ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con respuesta
+HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados
+como number en JavaScript pierden precisión fuera del rango seguro ±(2^53−1).

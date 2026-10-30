@@ -39,6 +39,7 @@ export class RegistroPractica implements OnInit, OnDestroy {
   error = '';
   mensaje = '';
   private consulta?: Subscription;
+  private parametros?: Subscription;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -48,11 +49,30 @@ export class RegistroPractica implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.parametros = this.route.paramMap.subscribe(parametros => {
+      this.cargarFormulario(parametros.get('id') ?? '');
+    });
+  }
+
+  private cargarFormulario(idPractica: string): void {
+    this.consulta?.unsubscribe();
+    this.envio?.unsubscribe();
+    this.detalle = null;
+    this.cargando = true;
+    this.guardando = false;
+    this.error = '';
+    this.mensaje = '';
+    this.tipoContacto = '';
+    this.observaciones = '';
+    this.seguimientoBloqueado = false;
+    this.estadoIncidencia = 'Pendiente';
+    this.descripcionIncidencia = '';
+    this.incidencias = [];
     this.tipo = this.route.snapshot.data['tipoRegistro'] === 'incidencia'
       ? 'incidencia'
       : 'seguimiento';
-    if (!this.esIncidencia) this.fecha = hoySantiago();
-    this.idPractica = this.route.snapshot.paramMap.get('id') ?? '';
+    this.fecha = this.esIncidencia ? this.fechaLocalHoy() : hoySantiago();
+    this.idPractica = idPractica;
     if (!this.idValido()) {
       this.error = 'El identificador de práctica no es válido.';
       this.cargando = false;
@@ -77,6 +97,7 @@ export class RegistroPractica implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.parametros?.unsubscribe();
     this.consulta?.unsubscribe();
     this.envio?.unsubscribe();
   }

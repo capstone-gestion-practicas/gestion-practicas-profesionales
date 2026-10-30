@@ -281,6 +281,9 @@ una segunda operación sobre EN_CURSO se rechaza sin añadir otro evento.
 
 ### EP05 / HU013: registrar seguimiento mediante FastAPI
 
+Nota histórica: este apartado describe el incremento HU013; el estado vigente de
+la consulta está en HU014, más abajo.
+
 RegistroPractica conserva el componente compartido y la apariencia existente.
 Para seguimientos usa PracticaService.registrarSeguimiento y POST
 `/practicas/{id}/seguimientos`, enviando solo fecha, tipo y observacion. El
@@ -352,3 +355,21 @@ por bloqueo del puerto 9876. No se instalaron dependencias. Advertencias de tama
 inicial y estilos de home/practica-detalle, sin cambiar presupuestos.
 Pruebas de HTTP simuladas: no se ejecutó el recorrido completo navegador→FastAPI→
 PostgreSQL en esta sesión. Offset puede desplazarse ante inserciones concurrentes.
+
+
+### EP05: navegación y límites vigentes
+
+El formulario de registro observa paramMap: navegar entre prácticas con la misma
+instancia cancela suscripciones anteriores, reinicia campos, mensajes y bloqueos,
+y carga la práctica nueva. Una cancelación local no deshace una escritura que ya
+alcanzó PostgreSQL. La prueba de Router real conserva este escenario como regresión.
+HU014 está integrada; sus datos proceden exclusivamente de FastAPI.
+
+Las conexiones de servidor SEGUIMIENTOS_DATABASE_URL (escritura) y
+SEGUIMIENTOS_LECTURA_DATABASE_URL (lectura) nunca se configuran en Angular. Su
+separación, orden SQL y verificación de permisos están en
+[la guía de instalación](../../../../DOCUMENTACION_INSTALACION.md). Si falta una
+conexión, su endpoint responde 503 sin fallback. Migraciones y privilegios no se
+han validado en despliegue. Persisten la falta de idempotencia ante respuestas
+perdidas, desplazamientos de offset y pérdida de precisión de BIGINT como number
+fuera de ±(2^53−1); esta corrección no rediseña esos contratos.

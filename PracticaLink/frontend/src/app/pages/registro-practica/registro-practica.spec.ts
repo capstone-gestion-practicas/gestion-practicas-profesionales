@@ -43,7 +43,10 @@ describe('RegistroPractica', () => {
       providers: [
         provideRouter([]),
         { provide: PracticaService, useValue: practicaService },
-        { provide: ActivatedRoute, useValue: routeStub }
+        { provide: ActivatedRoute, useValue: {
+          get snapshot() { return routeStub.snapshot; },
+          get paramMap() { return of(routeStub.snapshot.paramMap); }
+        } }
       ]
     }).compileComponents();
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
