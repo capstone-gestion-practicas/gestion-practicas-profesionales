@@ -373,3 +373,44 @@ conexión, su endpoint responde 503 sin fallback. Migraciones y privilegios no s
 han validado en despliegue. Persisten la falta de idempotencia ante respuestas
 perdidas, desplazamientos de offset y pérdida de precisión de BIGINT como number
 fuera de ±(2^53−1); esta corrección no rediseña esos contratos.
+
+
+### EP06 / HU015: registro Angular persistente
+
+El formulario compartido `/practicas/:id/incidencias/nueva` utiliza
+`PracticaService.registrarIncidencia()` y el interceptor JWT existente para
+`POST /practicas/{id}/incidencias`. Envía exclusivamente tipo y descripcion;
+no envía identidad, fecha, estado, prioridad ni resolución.
+Los códigos son ABANDONO, PROBLEMA_CENTRO, SALUD y OTRO. La descripción exige
+contenido y hasta 2000 puntos de código Unicode, conservando espacios exteriores.
+El estado inicial PENDIENTE es de solo lectura; no se solicita fecha local.
+Se habilita el alta solo con detalle EN_CURSO no final; FastAPI/PostgreSQL
+conservan la autorización definitiva y la comprobación atómica del estado.
+
+Solo HTTP 201 con respuesta compatible confirma éxito. Se muestra exclusivamente
+la fecha recibida del servidor, formateada mediante la utilidad existente para
+America/Santiago. No se navega automáticamente a un historial no implementado.
+Bloquea doble envío, altas confirmadas y reenvío ante resultados inciertos.
+Errores 401/403/404/409/422/500/503 tienen mensajes propios, sin detalles internos.
+401 limpia sesión/contexto y navega a login. No hay reintentos automáticos.
+
+El cambio de paramMap cancela suscripciones y limpia campos, fecha, mensajes y
+bloqueos. Cancelar HTTP no garantiza deshacer una escritura ya recibida en backend.
+El bloqueo es local a la instancia: no proporciona idempotencia después de navegar
+ni recargar. Continúa la limitación de precisión BIGINT representados como number.
+
+El formulario y la pestaña Incidencias del detalle ya no leen ni escriben
+RegistroPracticaService/localStorage. El almacenamiento antiguo permanece intacto
+como demostración, sin migración ni asignación de autor. La pestaña informa que
+la consulta persistente está pendiente y no muestra contador ni historial local.
+Esto sustituye la presentación de incidencias descrita en las etapas históricas
+EP05 anteriores. HU013 y HU014 conservan sus contratos y operaciones.
+
+Validación de este incremento: 149/149 pruebas Angular con Chromium Headless,
+build de producción aprobado y diff sin errores de whitespace. Se cubren contrato
+HTTP/JWT, tipos, validación, fecha servidor en Santiago, errores, doble envío,
+Router real reutilizando componente y conservación de demostraciones sin mostrarlas.
+HTTP está simulado mediante HttpTestingController; no se ejecutó E2E con backend.
+Karma necesitó ejecución fuera del sandbox por EPERM en el puerto 9876.
+Persisten las advertencias de presupuesto del bundle inicial y CSS home/detalle.
+No se instalaron dependencias ni se modificaron FastAPI o SQL.

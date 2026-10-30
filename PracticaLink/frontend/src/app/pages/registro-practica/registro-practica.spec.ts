@@ -30,7 +30,7 @@ describe('RegistroPractica', () => {
 
   beforeEach(async () => {
     localStorage.removeItem('practicalink.registros-practica');
-    practicaService = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'registrarSeguimiento']);
+    practicaService = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'registrarSeguimiento', 'registrarIncidencia']);
     practicaService.obtenerDetalle.and.returnValue(of(detalle));
     routeStub = {
       snapshot: {
@@ -152,20 +152,25 @@ describe('RegistroPractica', () => {
     expect(fixture.componentInstance.seguimientoBloqueado).toBeTrue();
   });
 
-  it('saves an incidence with its initial status', () => {
+  it('registers an incidence remotely without changing local demonstration data', () => {
     routeStub.snapshot.data = { tipoRegistro: 'incidencia' };
     fixture.destroy();
     fixture = TestBed.createComponent(RegistroPractica);
     fixture.detectChanges();
     fixture.componentInstance.descripcionIncidencia = 'Falta de asignación de tareas';
-    fixture.componentInstance.estadoIncidencia = 'Pendiente';
+    fixture.componentInstance.tipoIncidencia = 'OTRO';
+    practicaService.registrarIncidencia.and.returnValue(of(new HttpResponse({ status: 201, body: {
+      id_incidencia: 1, id_practica: 15, id_usuario: 101, tipo: 'OTRO' as const,
+      descripcion: 'Falta de asignación de tareas', estado: 'PENDIENTE' as const,
+      fecha: '2026-10-30T15:00:00Z'
+    } })));
+    const guardar = spyOn(registros, 'guardar');
     fixture.componentInstance.guardar();
-
-    expect(registros.listar('15')[0]).toEqual(jasmine.objectContaining({
-      tipo: 'incidencia',
-      descripcion: 'Falta de asignación de tareas',
-      estado: 'Pendiente'
-    }));
-    expect(router.navigate).toHaveBeenCalledWith(['/practicas', '15']);
+    expect(practicaService.registrarIncidencia).toHaveBeenCalledOnceWith('15', {
+      tipo: 'OTRO', descripcion: 'Falta de asignación de tareas'
+    });
+    expect(guardar).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.mensaje).toContain('Incidencia registrada correctamente');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

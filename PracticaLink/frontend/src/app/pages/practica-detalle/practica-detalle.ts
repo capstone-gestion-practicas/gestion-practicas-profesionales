@@ -8,10 +8,7 @@ import { IonButton, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { EventoHistorial, PracticaDetalleGestionResponse } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
-import {
-  RegistroPracticaLocal,
-  RegistroPracticaService
-} from '../../core/services/registro-practica.service';
+
 import { AuthStore } from '../../core/store/auth.store';
 import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/utils/fechas';
 
@@ -34,7 +31,6 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   seguimientosConsultados = false;
   errorSeguimientos = '';
   private consultaSeguimientos?: Subscription;
-  registrosIncidencia: RegistroPracticaLocal[] = [];
   vistaHistorial: 'seguimientos' | 'incidencias' | 'antecedentes' = 'seguimientos';
   readonly limitHistorial = 50;
   offsetHistorial = 0;
@@ -74,8 +70,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly practicas: PracticaService,
-    private readonly auth: AuthStore,
-    private readonly registros: RegistroPracticaService
+    private readonly auth: AuthStore
   ) {}
 
   ngOnInit(): void {
@@ -101,9 +96,6 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       this.seguimientosConsultados = false;
       this.errorSeguimientos = '';
       this.idPractica = parametros.get('id') ?? '';
-      const registros = this.registros.listar(this.idPractica);
-      this.registrosIncidencia = registros
-        .filter(registro => registro.tipo === 'incidencia');
       this.vistaHistorial = 'seguimientos';
       this.cargar();
       this.historialHabilitado = this.idValido();

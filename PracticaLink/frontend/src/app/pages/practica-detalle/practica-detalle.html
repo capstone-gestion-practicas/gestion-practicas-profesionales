@@ -138,7 +138,7 @@
               [class.active]="vistaHistorial === 'incidencias'"
               [attr.aria-selected]="vistaHistorial === 'incidencias'"
               (click)="seleccionarVista('incidencias')">Incidencias
-              <span class="tab-count warning">{{ registrosIncidencia.length }}</span>
+
             </button>
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'antecedentes'"
@@ -185,24 +185,7 @@
               </nav>
             }
           } @else if (vistaHistorial === 'incidencias') {
-            @if (registrosIncidencia.length === 0) {
-              <p class="empty-state">No hay incidencias registradas para esta práctica.</p>
-            } @else {
-              <ol class="timeline">
-                @for (registro of registrosIncidencia; track registro.id) {
-                  <li class="timeline-item">
-                    <span class="timeline-marker warning" aria-hidden="true"></span>
-                    <article class="timeline-content">
-                      <div class="event-head">
-                        <h3>{{ registro.descripcion }}</h3>
-                        <time class="event-date">{{ formatearFechaRegistro(registro.fecha) }}</time>
-                      </div>
-                      <span class="incident-status">{{ registro.estado }}</span>
-                    </article>
-                  </li>
-                }
-              </ol>
-            }
+            <p class="empty-state">La consulta del historial persistente de incidencias está pendiente de implementación. Los datos locales de demostración no se muestran ni se migran.</p>
           } @else if (cargandoHistorial) {
             <div class="loading"><ion-spinner></ion-spinner><p>Cargando antecedentes...</p></div>
           } @else if (errorHistorial) {

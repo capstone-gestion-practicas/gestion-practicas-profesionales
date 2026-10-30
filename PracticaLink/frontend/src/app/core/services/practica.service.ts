@@ -1,3 +1,4 @@
+import { IncidenciaCreate, IncidenciaResponse } from '../models/incidencia.models';
 import { SeguimientoCreate, SeguimientoResponse, SeguimientosHistorialResponse } from '../models/seguimiento.models';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -33,6 +34,14 @@ export class PracticaService {
     return this.http.post<SeguimientoResponse>(
       `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`,
       { fecha, tipo, observacion }, { observe: 'response' }
+    );
+  }
+
+  registrarIncidencia(idPractica: string, datos: IncidenciaCreate): Observable<HttpResponse<IncidenciaResponse>> {
+    const { tipo, descripcion } = datos;
+    return this.http.post<IncidenciaResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/incidencias`,
+      { tipo, descripcion }, { observe: 'response' }
     );
   }
 

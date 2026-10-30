@@ -42,30 +42,35 @@
                 readonly />
             </div>
 
-            <div class="field">
-              <label [for]="esIncidencia ? 'fecha-incidencia' : 'fecha-seguimiento'">
-                {{ esIncidencia ? 'Fecha de la incidencia *' : 'Fecha del seguimiento *' }}
-              </label>
-              <input [id]="esIncidencia ? 'fecha-incidencia' : 'fecha-seguimiento'"
-                name="fecha" type="date" [attr.max]="esIncidencia ? null : fechaMaxima" [(ngModel)]="fecha" required />
-            </div>
+            @if (!esIncidencia) {
+              <div class="field">
+                <label for="fecha-seguimiento">Fecha del seguimiento *</label>
+                <input id="fecha-seguimiento" name="fecha" type="date" [attr.max]="fechaMaxima"
+                  [(ngModel)]="fecha" required />
+              </div>
+            }
 
             @if (esIncidencia) {
               <div class="field">
-                <label for="estado-incidencia">Estado inicial</label>
-                <select id="estado-incidencia" name="estadoIncidencia" [(ngModel)]="estadoIncidencia">
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="En seguimiento">En seguimiento</option>
-                  <option value="Resuelta">Resuelta</option>
+                <label for="tipo-incidencia">Tipo de incidencia *</label>
+                <select id="tipo-incidencia" name="tipoIncidencia" [(ngModel)]="tipoIncidencia" required>
+                  <option value="" disabled>Selecciona una opción</option>
+                  @for (tipo of tiposIncidencia; track tipo.codigo) {
+                    <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+                  }
                 </select>
-                <small>El estado puede actualizarse cuando sea atendida.</small>
+              </div>
+              <div class="field">
+                <label for="estado-incidencia">Estado inicial</label>
+                <input id="estado-incidencia" value="PENDIENTE" readonly />
+                <small>La fecha y hora se asignarán en el servidor al registrar.</small>
               </div>
               <div class="field full-width">
                 <label for="descripcion-incidencia">Descripción de la situación *</label>
                 <textarea id="descripcion-incidencia" name="descripcionIncidencia" rows="5"
-                  maxlength="2000" [(ngModel)]="descripcionIncidencia" required
+                  [(ngModel)]="descripcionIncidencia" required
                   placeholder="Describe qué ocurrió, a quién afecta y qué atención se requiere..."></textarea>
-                <small>Registra hechos y contexto suficiente para facilitar su resolución.</small>
+                <small>Registra hechos y contexto suficiente. Máximo 2.000 caracteres.</small>
               </div>
             } @else {
               <div class="field">
@@ -93,26 +98,21 @@
           @if (mensaje) { <p class="form-note" role="status">{{ mensaje }}</p> }
           @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
 
-          @if (esIncidencia && incidencias.length > 0) {
-            <section class="incident-list" aria-labelledby="incidencias-titulo">
-              <h3 id="incidencias-titulo">Incidencias registradas para esta práctica</h3>
-              @for (incidencia of incidencias; track incidencia.id) {
-                <article class="incident-item">
-                  <div>
-                    <strong>{{ incidencia.descripcion }}</strong>
-                    <p>{{ incidencia.fecha }} · Registrada en este navegador</p>
-                  </div>
-                  <span class="incident-status">{{ incidencia.estado }}</span>
-                </article>
-              }
-            </section>
+          @if (esIncidencia) {
+            @if (!incidenciaHabilitada) {
+              <p class="form-error">Solo se pueden registrar incidencias en prácticas EN_CURSO.</p>
+            }
+            @if (fechaIncidencia) {
+              <p class="form-note">Fecha registrada: <time [attr.datetime]="fechaIncidencia">{{ fechaIncidenciaVisible(fechaIncidencia) }}</time> (America/Santiago).</p>
+            }
+            <p class="form-note">La consulta del historial persistente de incidencias está pendiente de implementación. Los datos locales de demostración no se muestran ni se migran.</p>
           }
 
           <footer class="form-actions">
             <ion-button fill="outline" type="button" [disabled]="guardando" (click)="cancelar()">
               Cancelar
             </ion-button>
-            <ion-button type="submit" [disabled]="guardando || (!esIncidencia && seguimientoBloqueado)">
+            <ion-button type="submit" [disabled]="guardando || (esIncidencia ? incidenciaBloqueada || !incidenciaHabilitada : seguimientoBloqueado)">
               {{ guardando ? 'Guardando...' : esIncidencia ? 'Guardar incidencia' : 'Guardar seguimiento' }}
             </ion-button>
           </footer>
