@@ -454,3 +454,22 @@ Contraseña gestor: <CONTRASEÑA_DE_DEMOSTRACIÓN_LOCAL>
 Usar únicamente para demostración y pruebas locales. Para comprobar el panel
 administrativo, iniciar sesión con `<CORREO_ADMINISTRADOR_LOCAL>` y entrar a
 `http://localhost:4200/usuarios`.
+
+
+### EP06 / HU015 — conexión de registro de incidencias
+
+El endpoint `POST /practicas/{id_practica}/incidencias` requiere la variable privada
+`INCIDENCIAS_DATABASE_URL` en el backend. Debe ser una conexión `postgresql+psycopg`
+con login exclusivo, distinto del principal y de EP04/EP05, que herede únicamente
+`pl_ep06_executor`. No utilizar `pl_ep06_owner`, superusuario ni BYPASSRLS.
+No conceder acceso directo a tablas o secuencias. La validación de URL no sustituye
+comprobar membresías y privilegios efectivos en el entorno autorizado.
+
+Aplicar previamente, con autorización del entorno, los scripts EP06-01, EP06-02
+y EP06-03 después de EP04 y EP05. No reaplicar `schema.sql` en una base existente.
+La aplicación no ejecuta migraciones ni aprovisiona roles. Sin conexión configurada
+o disponible responde 503, sin fallback. No reintentar automáticamente una escritura
+con resultado incierto; este incremento no incorpora idempotencia.
+
+Reproducción local y límites:
+[HU015 HTTP + PostgreSQL](PracticaLink/backend/tests/integration/HU015_HTTP.md).

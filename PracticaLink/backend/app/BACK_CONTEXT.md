@@ -680,3 +680,40 @@ responde 503; no utiliza otra conexión. Las pruebas locales no validan migracio
 ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con respuesta
 HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados
 como number en JavaScript pierden precisión fuera del rango seguro ±(2^53−1).
+
+
+### EP06 / HU015: registro HTTP de incidencias
+
+`POST /practicas/{id_practica}/incidencias`, módulo `app/incidencias/`.
+Recibe exclusivamente `tipo` (ABANDONO, PROBLEMA_CENTRO, SALUD u OTRO) y
+`descripcion` (contenido obligatorio, hasta 2000 caracteres, espacios conservados).
+Rechaza campos adicionales y parámetros query. Identificador de práctica positivo BIGINT.
+Autor exclusivamente del JWT validado, contrastado con el contexto persistido:
+GESTOR/ADMINISTRADOR activos, sin asignaciones territoriales en este PMV.
+PostgreSQL revalida usuario, rol, tipo activo y práctica EN_CURSO bajo bloqueo.
+
+Requiere `INCIDENCIAS_DATABASE_URL`, login exclusivo que herede únicamente
+`pl_ep06_executor`, sin privilegios directos ni membresía en `pl_ep06_owner`.
+No puede reutilizar el usuario principal ni los configurados para EP04/HU013/HU014.
+Inicialización perezosa, sin fallback; configuración ausente/inválida o conexión
+indisponible devuelve 503. Validar la URL no acredita los privilegios efectivos:
+el aprovisionamiento y su auditoría se realizan separadamente en un entorno autorizado.
+No se crean permisos ni logins desde FastAPI.
+
+Invoca solamente `incidencias_privadas.fn_registrar_incidencia(bigint,bigint,text,text)`.
+Valida el JSONB y correspondencia de práctica/autor/tipo/descripción antes del commit.
+Devuelve 201 después de confirmar: id_incidencia, id_practica, id_usuario, tipo,
+descripcion, estado PENDIENTE y fecha con zona horaria asignada por PostgreSQL.
+La fecha se muestra posteriormente en America/Santiago; no se acepta desde el cliente.
+La incidencia y su historial inicial se insertan atómicamente en SQL.
+
+Errores: autenticación existente; 403 autorización; 404 práctica inexistente;
+409 práctica no EN_CURSO o conflicto concurrente; 422 entrada inválida;
+503 indisponibilidad; 500 fallo inesperado. No se exponen mensajes SQL ni
+parámetros. Se intenta rollback, preservando el error original. No se reintenta
+la escritura, incluso si falla el commit y su resultado es incierto.
+No hay idempotencia ni integración Angular EP06 en este incremento.
+
+Orden SQL previo: EP04, EP05-01 a EP05-05, EP06-01 a EP06-03; ver
+`tests/integration/HU015_PERSISTENCIA.md` y `tests/integration/HU015_HTTP.md`.
+Los scripts validados no se modifican en esta implementación backend.
