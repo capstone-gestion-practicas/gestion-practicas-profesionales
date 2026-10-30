@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     inicio_practica_database_url: str | None = None
     seguimientos_database_url: str | None = None
 
+    seguimientos_lectura_database_url: str | None = None
+
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60

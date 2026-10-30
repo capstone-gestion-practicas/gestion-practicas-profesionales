@@ -56,3 +56,33 @@ class SeguimientoCreateResponse(SeguimientoDatos):
     id_practica: Identificador
     id_usuario: Identificador
     fecha_creacion: AwareDatetime
+
+
+class ResponsableSeguimiento(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    id_usuario: Identificador
+    nombre: str
+
+
+class SeguimientoHistorialItem(BaseModel):
+    # Lectura histórica: no heredar límites ni catálogo del contrato de creación.
+    model_config = ConfigDict(extra='forbid')
+    id_seguimiento: Identificador
+    fecha: date
+    tipo: str | None
+    observacion: str
+    responsable: ResponsableSeguimiento
+
+    @field_validator('fecha', mode='before')
+    @classmethod
+    def fecha_calendario(cls, value):
+        return SeguimientoDatos.fecha_calendario(value)
+
+
+class SeguimientosHistorialResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    id_practica: Identificador
+    items: list[SeguimientoHistorialItem]
+    limit: int = Field(strict=True, ge=1, le=100)
+    offset: int = Field(strict=True, ge=0, le=9223372036854775807)
+    hay_mas: bool = Field(strict=True)

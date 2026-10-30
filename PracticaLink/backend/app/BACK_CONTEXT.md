@@ -628,3 +628,40 @@ JWT, permisos, contratos, rollback, respuesta antes de commit, errores de
 concurrencia y aislamiento de conexión mediante mocks. No acreditan ejecución
 del endpoint con PostgreSQL real ni permisos de un entorno desplegado. Angular
 continúa pendiente de integración; no se migran los datos de demostración.
+
+### EP05 / HU014: consulta HTTP del historial de seguimientos
+
+`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` amplía el módulo
+seguimientos. JWT y contexto deben coincidir; usuario activo GESTOR o ADMINISTRADOR
+accede a todas las prácticas según el PMV, incluidas finalizadas. SQL revalida
+actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
+no identidad externa. No modifica la dependencia ni el POST HU013.
+
+La respuesta 200 contiene id_practica, items, limit, offset, hay_mas. Cada item:
+id_seguimiento, fecha DATE, tipo nullable/libre, observacion sin restricciones de
+creación y responsable {id_usuario,nombre}. Conserva el orden SQL y los valores
+históricos, incluso autor actualmente inactivo. No expone otros datos personales.
+Identificadores positivos BIGINT; limit 1–100, offset 0–BIGINT máximo. No se
+convierten fechas a timestamp ni se reordenan resultados en Python.
+
+Requiere `SEGUIMIENTOS_LECTURA_DATABASE_URL` privada con login dedicado que herede
+solo pl_ep05_read_executor. Configuración opcional al arrancar, necesaria al usar
+GET. La conexión independiente rechaza compartir usuario con principal, EP04 o
+HU013, no tiene fallback y activa transacciones PostgreSQL read-only. La validación
+de URL no sustituye auditar los privilegios efectivos del login en el despliegue.
+No se provisionan credenciales ni grants desde FastAPI.
+
+El servicio invoca exclusivamente fn_consultar_seguimientos con parámetros
+vinculados. Valida respuesta y correspondencia de práctica/paginación antes de
+retornar. No hace commit; el cierre termina la lectura. Ante error intenta rollback
+sin sustituir el error original. No registra resultados, parámetros ni errores SQL.
+Errores JSON USUARIO_NO_AUTORIZADO/PRACTICA_NO_ENCONTRADA/PAGINACION_INVALIDA se
+traducen a 403/404/422; autenticación conserva el comportamiento existente.
+Conexión ausente/indisponible: 503; error SQL o respuesta inesperada: 500 genérico.
+
+Validación de esta etapa: 247/247 unitarias, 30/30 SQL y 15/15 HTTP sobre PostgreSQL
+18.6 exclusivo. Incluye POST→GET, transacción read-only, SELECT directo rechazado,
+históricos, ausencia de fallback y regresión HU013/EP03/EP04 en escenarios existentes.
+Ver tests/integration/HU014_HTTP.md. No acredita permisos de Supabase ni despliegue.
+La consulta Angular HU014 sigue pendiente; el registro Angular HU013 ya existe
+(la referencia anterior a Angular pendiente corresponde a una etapa histórica).
