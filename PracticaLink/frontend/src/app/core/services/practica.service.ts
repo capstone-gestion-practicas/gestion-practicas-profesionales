@@ -1,4 +1,5 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { SeguimientoCreate, SeguimientoResponse, SeguimientosHistorialResponse } from '../models/seguimiento.models';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -19,6 +20,21 @@ export class PracticaService {
   private readonly apiUrl = 'http://127.0.0.1:8000';
 
   constructor(private readonly http: HttpClient) {}
+
+  obtenerSeguimientos(idPractica: string, limit = 50, offset = 0): Observable<SeguimientosHistorialResponse> {
+    const params = new HttpParams().set('limit', limit).set('offset', offset);
+    return this.http.get<SeguimientosHistorialResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`, { params }
+    );
+  }
+
+  registrarSeguimiento(idPractica: string, datos: SeguimientoCreate): Observable<HttpResponse<SeguimientoResponse>> {
+    const { fecha, tipo, observacion } = datos;
+    return this.http.post<SeguimientoResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`,
+      { fecha, tipo, observacion }, { observe: 'response' }
+    );
+  }
 
   listar(limit = 50, offset = 0, rut?: string): Observable<PracticasListadoResponse> {
     let params = new HttpParams().set('limit', limit).set('offset', offset);

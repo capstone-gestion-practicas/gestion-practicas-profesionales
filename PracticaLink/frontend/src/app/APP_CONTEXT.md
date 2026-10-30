@@ -278,3 +278,98 @@ PATCH. También se reprodujo con XHR nativo sin Angular; no se verificó en otro
 navegadores. La aplicación no implementa reintentos automáticos. PostgreSQL
 protege contra una transición repetida mediante bloqueo y validación del estado:
 una segunda operación sobre EN_CURSO se rechaza sin añadir otro evento.
+
+### EP05 / HU013: registrar seguimiento mediante FastAPI
+
+Nota histórica: este apartado describe el incremento HU013; el estado vigente de
+la consulta está en HU014, más abajo.
+
+RegistroPractica conserva el componente compartido y la apariencia existente.
+Para seguimientos usa PracticaService.registrarSeguimiento y POST
+`/practicas/{id}/seguimientos`, enviando solo fecha, tipo y observacion. El
+interceptor existente agrega el JWT de sessionStorage; las rutas conservan
+los guards de autenticación y los roles GESTOR/ADMINISTRADOR. No envía autor.
+
+Valida fecha calendario no futura en America/Santiago (también la fecha inicial),
+los cinco medios existentes y observación con contenido de hasta 2000 puntos de
+código Unicode, sin recortar el texto enviado. No usa maxlength HTML para este
+campo porque cuenta unidades UTF-16, distinto del contrato Python/PostgreSQL.
+Se retiró próxima fecha del formulario de seguimiento: no forma parte del contrato.
+
+Bloquea envíos simultáneos. Solo HTTP 201 con cuerpo confirma éxito y deja un
+mensaje en el formulario; no navega a un historial que aún no consulta el servidor.
+Presenta errores diferenciados para 401/403/404/409/422/500/503. No muestra detalles
+internos recibidos ni reintenta escrituras. Ante error de red, 500/503 u otro
+resultado incierto bloquea un nuevo envío en esa instancia y pide verificarlo.
+Este bloqueo no persiste tras recargar: no constituye idempotencia. Destruir la
+vista cancela la suscripción, no garantiza cancelar una escritura en el servidor.
+
+Los registros locales anteriores permanecen sin migración ni asignación de autor.
+La pestaña existente los rotula como demostración; no consulta ni simula datos
+PostgreSQL y no representa HU014 implementada. Los nuevos seguimientos no se
+escriben en localStorage. El guardado local de incidencias EP06 y su servicio
+compartido permanecen sin cambios de comportamiento.
+
+Validación de este incremento: 110 pruebas Angular aprobadas con Chromium
+Headless y build de producción aprobado. Se probaron HTTP/JWT con HttpTestingController,
+formulario, fechas chilenas, errores, doble envío y ausencia de escritura local.
+No se ejecutó una prueba de extremo a extremo Angular/FastAPI/PostgreSQL en esta
+sesión. El build advierte sobre el presupuesto inicial y estilos de home/detalle;
+no se modificaron presupuestos ni dependencias para ocultar esas advertencias.
+
+### EP05 / HU014: historial de seguimientos persistidos
+
+La pestaña Seguimientos de `/practicas/:id` ya consulta exclusivamente
+`GET /practicas/{id}/seguimientos?limit=50&offset=0` mediante PracticaService y el
+interceptor JWT existente. Sustituye la visualización local descrita en la etapa
+HU013 anterior. Los guards de gestión permanecen: no añade acceso ESTUDIANTE.
+
+SeguimientosHistorialResponse y SeguimientoHistorialItem son contratos de lectura
+independientes del contrato de creación: medio nullable o histórico, observación
+vacía o extensa y responsable con ID/nombre actual, incluso inactivo. Conserva
+el orden recibido, sin sort; usa formatearFechaCalendario para DATE. Texto por
+interpolación, sin innerHTML ni truncado; tipo null se presenta como Medio no registrado.
+
+La carga de seguimientos es independiente del historial de estados EP04. Tiene
+carga, error, respuesta vacía confirmada y paginación limit/offset con hay_mas.
+El contador de la pestaña representa filas de la página, no el total del historial.
+Una página posterior vacía no afirma que toda la práctica carece de seguimientos.
+Durante solicitudes pendientes no inicia otra lectura de seguimientos; cancela
+la anterior y borra datos/paginación al cambiar de práctica o destruir la vista.
+Cambiar de pestaña no reintenta lecturas fallidas. Reintentar conserva la página
+fallida y requiere acción explícita. Las páginas se reemplazan, no se acumulan.
+
+401 limpia access_token y AuthStore mediante limpiar() y navega a login, como
+el mecanismo de sesión existente. 403/404/422/500/503 presentan mensajes propios
+sin reproducir detalles internos. Fallos de red no recurren al almacenamiento local.
+
+El detalle utiliza RegistroPracticaService solo para los registros de incidencias;
+los seguimientos locales antiguos se ignoran, sin migrarlos, borrarlos ni atribuir
+responsables. EP06 mantiene su almacenamiento y presentación. HU013 conserva su
+POST y bloqueo ante resultados inciertos; únicamente se actualizaron sus mensajes
+para indicar que ahora se puede consultar el historial al volver al detalle.
+
+Validación 30-10-2026: 123/123 pruebas Angular con Chromium Headless, build de
+producción y git diff --check aprobados. Karma requirió ejecución fuera del sandbox
+por bloqueo del puerto 9876. No se instalaron dependencias. Advertencias de tamaño
+inicial y estilos de home/practica-detalle, sin cambiar presupuestos.
+Pruebas de HTTP simuladas: no se ejecutó el recorrido completo navegador→FastAPI→
+PostgreSQL en esta sesión. Offset puede desplazarse ante inserciones concurrentes.
+
+
+### EP05: navegación y límites vigentes
+
+El formulario de registro observa paramMap: navegar entre prácticas con la misma
+instancia cancela suscripciones anteriores, reinicia campos, mensajes y bloqueos,
+y carga la práctica nueva. Una cancelación local no deshace una escritura que ya
+alcanzó PostgreSQL. La prueba de Router real conserva este escenario como regresión.
+HU014 está integrada; sus datos proceden exclusivamente de FastAPI.
+
+Las conexiones de servidor SEGUIMIENTOS_DATABASE_URL (escritura) y
+SEGUIMIENTOS_LECTURA_DATABASE_URL (lectura) nunca se configuran en Angular. Su
+separación, orden SQL y verificación de permisos están en
+[la guía de instalación](../../../../DOCUMENTACION_INSTALACION.md). Si falta una
+conexión, su endpoint responde 503 sin fallback. Migraciones y privilegios no se
+han validado en despliegue. Persisten la falta de idempotencia ante respuestas
+perdidas, desplazamientos de offset y pérdida de precisión de BIGINT como number
+fuera de ±(2^53−1); esta corrección no rediseña esos contratos.

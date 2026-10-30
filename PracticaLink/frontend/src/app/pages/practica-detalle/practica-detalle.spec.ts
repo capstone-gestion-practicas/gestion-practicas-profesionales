@@ -19,7 +19,8 @@ describe('PracticaDetalle', () => {
     fecha_termino: '2026-06-30', horas: 360, cargo_funcion: 'Desarrollo', descripcion: 'Antecedentes sintéticos'
   };
   beforeEach(async () => {
-    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerHistorial']);
+    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerSeguimientos', 'obtenerHistorial']);
+    service.obtenerSeguimientos.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     service.obtenerDetalle.and.returnValue(of(detalle));
     service.obtenerHistorial.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     parametros = new BehaviorSubject(convertToParamMap({ id: '15' }));
