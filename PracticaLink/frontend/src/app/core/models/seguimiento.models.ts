@@ -29,3 +29,20 @@ export function fechaSeguimientoValida(fecha: string): boolean {
   return !Number.isNaN(instante.getTime()) && instante.toISOString().slice(0, 10) === fecha
     && fecha <= hoySantiago();
 }
+
+// Lectura histórica: no hereda el catálogo ni las validaciones de creación.
+export interface SeguimientoHistorialItem {
+  id_seguimiento: number;
+  fecha: string;
+  tipo: string | null;
+  observacion: string;
+  responsable: { id_usuario: number; nombre: string };
+}
+
+export interface SeguimientosHistorialResponse {
+  id_practica: number;
+  items: SeguimientoHistorialItem[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}

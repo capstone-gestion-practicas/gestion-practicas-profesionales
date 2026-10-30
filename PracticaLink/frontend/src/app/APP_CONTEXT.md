@@ -313,3 +313,42 @@ formulario, fechas chilenas, errores, doble envío y ausencia de escritura local
 No se ejecutó una prueba de extremo a extremo Angular/FastAPI/PostgreSQL en esta
 sesión. El build advierte sobre el presupuesto inicial y estilos de home/detalle;
 no se modificaron presupuestos ni dependencias para ocultar esas advertencias.
+
+### EP05 / HU014: historial de seguimientos persistidos
+
+La pestaña Seguimientos de `/practicas/:id` ya consulta exclusivamente
+`GET /practicas/{id}/seguimientos?limit=50&offset=0` mediante PracticaService y el
+interceptor JWT existente. Sustituye la visualización local descrita en la etapa
+HU013 anterior. Los guards de gestión permanecen: no añade acceso ESTUDIANTE.
+
+SeguimientosHistorialResponse y SeguimientoHistorialItem son contratos de lectura
+independientes del contrato de creación: medio nullable o histórico, observación
+vacía o extensa y responsable con ID/nombre actual, incluso inactivo. Conserva
+el orden recibido, sin sort; usa formatearFechaCalendario para DATE. Texto por
+interpolación, sin innerHTML ni truncado; tipo null se presenta como Medio no registrado.
+
+La carga de seguimientos es independiente del historial de estados EP04. Tiene
+carga, error, respuesta vacía confirmada y paginación limit/offset con hay_mas.
+El contador de la pestaña representa filas de la página, no el total del historial.
+Una página posterior vacía no afirma que toda la práctica carece de seguimientos.
+Durante solicitudes pendientes no inicia otra lectura de seguimientos; cancela
+la anterior y borra datos/paginación al cambiar de práctica o destruir la vista.
+Cambiar de pestaña no reintenta lecturas fallidas. Reintentar conserva la página
+fallida y requiere acción explícita. Las páginas se reemplazan, no se acumulan.
+
+401 limpia access_token y AuthStore mediante limpiar() y navega a login, como
+el mecanismo de sesión existente. 403/404/422/500/503 presentan mensajes propios
+sin reproducir detalles internos. Fallos de red no recurren al almacenamiento local.
+
+El detalle utiliza RegistroPracticaService solo para los registros de incidencias;
+los seguimientos locales antiguos se ignoran, sin migrarlos, borrarlos ni atribuir
+responsables. EP06 mantiene su almacenamiento y presentación. HU013 conserva su
+POST y bloqueo ante resultados inciertos; únicamente se actualizaron sus mensajes
+para indicar que ahora se puede consultar el historial al volver al detalle.
+
+Validación 30-10-2026: 123/123 pruebas Angular con Chromium Headless, build de
+producción y git diff --check aprobados. Karma requirió ejecución fuera del sandbox
+por bloqueo del puerto 9876. No se instalaron dependencias. Advertencias de tamaño
+inicial y estilos de home/practica-detalle, sin cambiar presupuestos.
+Pruebas de HTTP simuladas: no se ejecutó el recorrido completo navegador→FastAPI→
+PostgreSQL en esta sesión. Offset puede desplazarse ante inserciones concurrentes.

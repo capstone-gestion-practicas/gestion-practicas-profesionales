@@ -29,7 +29,8 @@ describe('Inicio de práctica en detalle', () => {
   };
   beforeEach(async () => {
     roles = ['GESTOR'];
-    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerHistorial', 'iniciar']);
+    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerSeguimientos', 'obtenerHistorial', 'iniciar']);
+    service.obtenerSeguimientos.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     service.obtenerDetalle.and.returnValue(of(detalle));
     service.obtenerHistorial.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     service.iniciar.and.returnValue(of(respuesta));

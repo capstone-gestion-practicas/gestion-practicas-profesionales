@@ -24,6 +24,19 @@ describe('HU013 HTTP contract', () => {
     else sessionStorage.setItem('access_token', token);
   });
 
+  it('reads HU014 with pagination and existing JWT interceptor, without retries', () => {
+    TestBed.inject(PracticaService).obtenerSeguimientos('15', 50, 100).subscribe({
+      error: error => expect(error.status).toBe(503)
+    });
+    const req = http.expectOne(request => request.url === 'http://127.0.0.1:8000/practicas/15/seguimientos');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.keys()).toEqual(['limit', 'offset']);
+    expect(req.request.params.get('limit')).toBe('50');
+    expect(req.request.params.get('offset')).toBe('100');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
+    req.flush({}, { status: 503, statusText: 'Unavailable' });
+  });
+
   it('sends only allowed fields and JWT, preserving HTTP status', () => {
     const datos = { fecha: '2026-01-01', tipo: 'Otro' as const, observacion: ' Texto ', id_usuario: 999 };
     TestBed.inject(PracticaService).registrarSeguimiento('15', datos).subscribe(response => {

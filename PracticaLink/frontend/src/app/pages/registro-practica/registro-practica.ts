@@ -150,7 +150,7 @@ export class RegistroPractica implements OnInit, OnDestroy {
         next: respuesta => {
           this.seguimientoBloqueado = true;
           if (respuesta.status === 201 && respuesta.body) {
-            this.mensaje = 'Seguimiento registrado correctamente en el servidor. La consulta del historial de seguimientos aún no está disponible.';
+            this.mensaje = 'Seguimiento registrado correctamente en el servidor. Puedes consultarlo al volver al detalle de la práctica.';
           } else {
             this.error = 'No se pudo confirmar el registro. No repitas el envío; solicita verificar el resultado.';
           }

@@ -124,13 +124,15 @@
 
       @if (historialHabilitado) {
         <section class="tabs-panel history-section" aria-labelledby="historial-titulo"
-          aria-live="polite" [attr.aria-busy]="cargandoHistorial">
+          aria-live="polite" [attr.aria-busy]="vistaHistorial === 'seguimientos' ? cargandoSeguimientos : cargandoHistorial">
           <div class="tabs" role="tablist" aria-label="Información de seguimiento">
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'seguimientos'"
               [attr.aria-selected]="vistaHistorial === 'seguimientos'"
               (click)="seleccionarVista('seguimientos')">Seguimientos
-              <span class="tab-count">{{ registrosSeguimiento.length }}</span>
+              @if (seguimientosConsultados) {
+                <span class="tab-count" title="Registros en esta página">{{ registrosSeguimiento.length }}</span>
+              }
             </button>
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'incidencias'"
@@ -145,27 +147,42 @@
           </div>
 
           @if (vistaHistorial === 'seguimientos') {
-            <p class="empty-state">Datos de demostración de este navegador. No corresponden al historial del servidor; su consulta aún no está disponible.</p>
-            @if (registrosSeguimiento.length === 0) {
-              <p class="empty-state">No hay datos de demostración en este navegador.</p>
-            } @else {
-              <ol class="timeline">
-                @for (registro of registrosSeguimiento; track registro.id) {
-                  <li class="timeline-item">
-                    <span class="timeline-marker" aria-hidden="true"></span>
-                    <article class="timeline-content">
-                      <div class="event-head">
-                        <h3>{{ registro.tipo_contacto }}</h3>
-                        <time class="event-date">{{ formatearFechaRegistro(registro.fecha) }}</time>
-                      </div>
-                      <p>{{ registro.observaciones }}</p>
-                      @if (registro.proxima_fecha) {
-                        <p class="event-foot">Próximo seguimiento: {{ formatearFechaRegistro(registro.proxima_fecha) }}</p>
-                      }
-                    </article>
-                  </li>
-                }
-              </ol>
+            @if (cargandoSeguimientos) {
+              <div class="loading"><ion-spinner></ion-spinner><p>Cargando seguimientos...</p></div>
+            } @else if (errorSeguimientos) {
+              <p role="alert">{{ errorSeguimientos }}</p>
+              <ion-button fill="outline" (click)="cargarSeguimientos()">Reintentar seguimientos</ion-button>
+            } @else if (seguimientosConsultados) {
+              @if (registrosSeguimiento.length === 0) {
+                <p class="empty-state">{{ offsetSeguimientos === 0
+                  ? 'No hay seguimientos registrados para esta práctica'
+                  : 'No hay seguimientos en esta página.' }}</p>
+              } @else {
+                <ol class="timeline">
+                  @for (registro of registrosSeguimiento; track registro.id_seguimiento) {
+                    <li class="timeline-item">
+                      <span class="timeline-marker" aria-hidden="true"></span>
+                      <article class="timeline-content">
+                        <div class="event-head">
+                          <h3>{{ registro.tipo ?? 'Medio no registrado' }}</h3>
+                          <time class="event-date">{{ formatearFecha(registro.fecha) }}</time>
+                        </div>
+                        <p class="history-observation">{{ registro.observacion }}</p>
+                        <p class="event-foot">Responsable: {{ registro.responsable.nombre }}</p>
+                      </article>
+                    </li>
+                  }
+                </ol>
+              }
+            }
+            @if (seguimientosConsultados || errorSeguimientos || cargandoSeguimientos) {
+              <nav class="history-pagination" aria-label="Paginación de seguimientos">
+                <ion-button fill="outline" [disabled]="cargandoSeguimientos || offsetSeguimientos === 0"
+                  (click)="anteriorSeguimientos()">Anterior</ion-button>
+                <span>Página {{ offsetSeguimientos / limitSeguimientos + 1 }}</span>
+                <ion-button fill="outline" [disabled]="cargandoSeguimientos || !hayMasSeguimientos"
+                  (click)="siguienteSeguimientos()">Siguiente</ion-button>
+              </nav>
             }
           } @else if (vistaHistorial === 'incidencias') {
             @if (registrosIncidencia.length === 0) {
