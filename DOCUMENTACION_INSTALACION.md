@@ -8,8 +8,7 @@ El proyecto se ejecuta como dos procesos:
 
 - Backend: FastAPI en `http://127.0.0.1:8000`.
 - Frontend: Angular/Ionic en `http://localhost:4200`.
-- Base de datos: Supabase local (PostgreSQL en Docker); los cambios de esquema se
-  publican en Supabase alojado mediante migraciones revisadas.
+- Base de datos: PostgreSQL alojado en Supabase.
 
 La estructura relevante del repositorio es:
 
@@ -35,7 +34,6 @@ Antes de comenzar, instalar:
 - Python 3.12.
 - Node.js 20 LTS o una versión compatible con Angular 20.
 - npm (incluido con Node.js).
-- Docker Desktop con el motor Linux iniciado.
 - Acceso autorizado a la base de datos Supabase del equipo.
 
 Comprobar las instalaciones:
@@ -65,6 +63,17 @@ Si el repositorio ya está descargado:
 ```powershell
 git switch develop
 git pull origin develop
+```
+
+### Ejecutar la primera versión
+
+La primera versión consolidada está disponible en `release-1.1` e incluye los
+desarrollos de EP01, EP02 y EP03. Para ejecutar específicamente esa versión:
+
+```powershell
+git fetch origin
+git switch release-1.1
+git pull --ff-only origin release-1.1
 ```
 
 ## 3.1. Crear una rama de funcionalidad
@@ -154,93 +163,8 @@ Consideraciones:
 
 ### Base de datos
 
-El esquema reproducible de Supabase local está en
-`PracticaLink/supabase/migrations`. Para instalar las dependencias de la CLI y
-del frontend desde la raíz del repositorio:
-
-```powershell
-cd PracticaLink
-npm ci
-cd frontend
-npm ci
-cd ..
-```
-
-Iniciar Supabase local y la aplicación:
-
-```powershell
-.\start-local.cmd
-```
-
-El script local inicia Supabase en Docker y ejecuta el backend con la base local,
-sin cambiar el `.env` ni conectarse a la base alojada. La primera inicialización
-usa la migración inicial y crea el esquema, pero no copia datos de la nube. Para
-recrear la base local desde cero y aplicar todas las migraciones:
-
-```powershell
-npx.cmd supabase db reset --local
-```
-
-Este comando **borra los datos de la base local**. No usar `--linked` ni una URL
-de la base alojada para este reinicio.
-
-Para un cambio de esquema, crear una migración, editar el SQL generado y probar
-la secuencia completa localmente:
-
-```powershell
-npx.cmd supabase migration new nombre_del_cambio
-npx.cmd supabase db reset --local
-```
-
-El trabajo diario y la validación de migraciones se hacen en Supabase local; no
-se requiere un branch remoto de Supabase. Los branches remotos no están
-disponibles en el plan Free del proyecto.
-
-Para preparar el envío de migraciones al proyecto alojado, enlazar la CLI al
-proyecto y revisar primero su historial y esquema:
-
-```powershell
-npx.cmd supabase link --project-ref <PROJECT_REF>
-npx.cmd supabase migration list --linked
-npx.cmd supabase db diff --linked
-```
-
-La migración inicial de este repositorio describe un esquema que ya existe en
-la base alojada. **No aplicar `db push` hasta confirmar que el esquema remoto
-coincide con esa migración y que no hay una migración inicial registrada.** Si
-coincide y el historial remoto no tiene ese baseline, registrar la migración
-inicial como ya aplicada (esto solo actualiza el historial):
-
-```powershell
-npx.cmd supabase migration repair --status applied --linked 20261017000000
-```
-
-Para migraciones nuevas, probarlas localmente y revisar el plan que se aplicará
-al proyecto enlazado:
-
-```powershell
-npx.cmd supabase db push --dry-run --linked
-```
-
-No ejecutar `db push` si el plan incluye la migración inicial contra tablas que
-ya existen. Las migraciones versionan cambios de esquema; no copian datos de
-usuarios ni reemplazan una copia de seguridad.
-
-Como el destino es producción y no hay un branch remoto de preview disponible,
-confirmar el plan, coordinar el cambio con el equipo y tener una copia de
-seguridad antes de ejecutar `npx.cmd supabase db push --linked`. Si el proyecto
-usa la integración de GitHub para desplegar migraciones automáticamente,
-seguir ese flujo y no ejecutar `db push` manualmente sobre el mismo proyecto.
-
-Si se necesita ejecutar la aplicación directamente contra la base alojada, se
-puede crear `PracticaLink/backend/.env.cloud` a partir de
-`.env.cloud.template` y ejecutar `.\start-cloud.cmd`. En ese modo, las
-operaciones del backend se hacen contra la base remota; para el trabajo diario
-local se debe usar `.\start-local.cmd`.
-
-El esquema histórico adicional del proyecto está en `scripts/BD/schema.sql`.
-Para actualizar una base existente con el caché de empresas, ejecutar en
-Supabase SQL Editor:
+El esquema reproducible se encuentra en `scripts/BD/schema.sql`. Para actualizar
+una base existente con el caché de empresas, ejecutar en Supabase SQL Editor:
 
 ```text
 scripts/BD/fixes/release-1.1-cache-empresas.sql
@@ -370,6 +294,7 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 .\scripts\practicalink-back-test.cmd
 .\scripts\practicalink-front-test.cmd
 ```
+
 4. Iniciar sesión con un usuario existente en la base de datos o crear una
    cuenta desde `Registrarme`. El registro solicita nombre, apellido, correo y
    contraseña; el perfil académico se completa después desde el Home.
@@ -380,11 +305,19 @@ Sin instalar los comandos globales, se pueden utilizar desde la raíz:
 Para comprobar el inicio de sesión en el entorno de desarrollo:
 
 ```text
+Estudiante:
 Correo: demo@practicalink.cl
+Contraseña: 123456.abc
+
+Administrador:
+Correo: demo.admin@practicalink.cl
 Contraseña: 123456.abc
 ```
 
-Esta cuenta es únicamente para demostración y pruebas locales sobre la rama `develop`. No debe reutilizarse en producción ni almacenar información sensible.
+Estas cuentas son únicamente para demostración y pruebas locales. La cuenta
+administradora permite acceder a `/usuarios` y validar la creación, edición,
+asignación de roles y activación de usuarios. No deben reutilizarse en producción
+ni almacenar información sensible.
 
 ## 8. Problemas frecuentes
 
@@ -446,51 +379,13 @@ npm start
 ## Credenciales de acceso rápido
 
 ```text
-Correo: demo@practicalink.cl
-Contraseña: 123456.abc
+Estudiante: demo@practicalink.cl
+Administrador: demo.admin@practicalink.cl
+Contraseña para ambas cuentas: 123456.abc
+Gestor o coordinador: gestor.prueba@practicalink.cl
+Contraseña gestor: Prueba123!
 ```
 
-Usar únicamente para demostración y pruebas locales en la rama `develop`.
-
-## Aplicación Android de QA
-
-La guía completa de requisitos, configuración, emulador, dispositivo físico,
-generación de APK y solución de problemas está disponible en
-[`DOCUMENTACION_ANDROID.md`](DOCUMENTACION_ANDROID.md).
-
-La rama `feature/apk-release-1.1` contiene un proyecto Capacitor en
-`PracticaLink/frontend/android`. El build Android consume el backend HTTPS:
-
-```text
-https://practicalink-api-qa.onrender.com
-```
-
-Instalar Android Studio con el Android SDK y JDK. Luego ejecutar:
-
-```powershell
-cd PracticaLink/frontend
-npm ci
-npm run apk:sync
-npm run android:open
-```
-
-Para preparar QA y abrir Android Studio:
-
-```powershell
-npm run build-android:qa
-```
-
-En Android Studio seleccionar `Build > Build App Bundles or APKs > Build APKs`.
-La APK de depuración también puede generarse, con Java y el SDK configurados,
-mediante:
-
-```powershell
-cd PracticaLink/frontend/android
-.\gradlew.bat assembleDebug
-```
-
-El archivo resultante queda en:
-
-```text
-PracticaLink/frontend/android/app/build/outputs/apk/debug/app-debug.apk
-```
+Usar únicamente para demostración y pruebas locales. Para comprobar el panel
+administrativo, iniciar sesión con `demo.admin@practicalink.cl` y entrar a
+`http://localhost:4200/usuarios`.

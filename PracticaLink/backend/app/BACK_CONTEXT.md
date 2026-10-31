@@ -1,10 +1,10 @@
-﻿# Contexto de la aplicación backend
+# Contexto de la aplicación backend
 
 Este archivo entrega contexto técnico y funcional a desarrolladores y asistentes de IA que trabajen dentro de `backend/app`.
 
 ## Propósito
 
-El backend de PracticaLink expone la API del proceso de práctica profesional y se conecta a PostgreSQL alojado en Supabase.
+El backend de PracticaLink expone una API modular para autenticación, prácticas, revisiones, seguimientos, incidencias y notificaciones. FastAPI centraliza las rutas y los módulos organizan esquemas y servicios por responsabilidad. La persistencia usa PostgreSQL alojado en Supabase.
 
 ## Tecnologías y reglas generales
 
@@ -25,28 +25,59 @@ No incorporar credenciales, URL reales de base de datos, contraseñas ni claves 
 app/
 ├── api/
 │   └── routes/
-│       └── auth.py
+│       ├── empresas.py
+│       ├── estudiantes.py
+│       ├── incidencias.py
+│       ├── notificaciones.py
+│       └── usuarios.py
+├── auth/
+│   ├── routes.py
+│   ├── schemas.py
+│   └── service.py
 ├── core/
 │   ├── config.py
 │   ├── database.py
 │   ├── permissions.py
 │   └── security.py
+├── practicas/
+│   ├── routes.py
+│   ├── schemas.py
+│   └── service.py
+├── revisiones/
+│   ├── routes.py
+│   ├── schemas.py
+│   └── service.py
 ├── schemas/
-│   └── auth.py
+│   ├── empresa.py
+│   ├── estudiante.py
+│   ├── incidencia.py
+│   ├── notificacion.py
+│   ├── seguimiento.py
+│   └── usuario.py
 ├── services/
-│   └── auth_service.py
+│   ├── correo_service.py
+│   ├── estado_practica_service.py
+│   ├── incidencia_service.py
+│   ├── notificacion_service.py
+│   ├── push_service.py
+│   └── seguimiento_service.py
 ├── BACK_CONTEXT.md
 └── main.py
 ```
 
 ## Inicio de la aplicación
 
-`main.py` crea la instancia de FastAPI, configura CORS, registra las rutas de autenticación y expone comprobaciones de estado.
+`main.py` crea la instancia de FastAPI, configura CORS, registra los routers de los módulos y expone comprobaciones de estado.
 
-Orígenes locales permitidos actualmente:
+Orígenes locales y de la aplicación Android permitidos actualmente:
 
 - `http://localhost:4200`
 - `http://127.0.0.1:4200`
+- `http://localhost:8100`
+- `http://127.0.0.1:8100`
+- `http://localhost`
+- `https://localhost`
+- `capacitor://localhost`
 
 Ejecución local desde `PracticaLink/backend`:
 
@@ -62,15 +93,11 @@ Ejecución local desde `PracticaLink/backend`:
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
+- `SUPABASE_JWT_SECRET`
+- `FIREBASE_SERVICE_ACCOUNT_JSON`
 - `CHILE_RUT_EMPRESA_API_KEY`
 - `CHILE_RUT_EMPRESA_API_URL`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
-- `SMTP_FROM_EMAIL` y `SMTP_USE_TLS` para recordatorios por correo
-- `FIREBASE_SERVICE_ACCOUNT_JSON` para entrega Android mediante Firebase Cloud Messaging
-
-Los recordatorios persisten y publican la notificación Realtime aunque el
-servidor SMTP no esté disponible; en ese caso, la respuesta indica que el correo
-no se envió.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME` y `SMTP_PASSWORD`
 
 El archivo `.env` es local y está ignorado por Git. La plantilla pública es `PracticaLink/backend/.env.template`.
 
@@ -78,13 +105,196 @@ El archivo `.env` es local y está ignorado por Git. La plantilla pública es `P
 
 `core/database.py` crea el engine de SQLAlchemy y `SessionLocal`. La dependencia `get_db()` entrega una sesión por solicitud y garantiza su cierre.
 
-El código usa SQLAlchemy para invocar funciones PostgreSQL. Toda llamada debe usar parámetros enlazados, nunca interpolación directa de valores.
+El código usa SQL textual sobre PostgreSQL. Las consultas deben usar parámetros enlazados, nunca interpolación directa de valores.
 
-### Operaciones transaccionales
+### Convención para inserciones
 
-Las rutas autentican y autorizan; Pydantic valida la entrada; los servicios de Python invocan funciones de PostgreSQL mediante llamadas parametrizadas de SQLAlchemy. La lógica de consulta, escritura y transacción de persistencia se mantiene en funciones versionadas con migraciones de Supabase. Python conserva tareas que no son de persistencia, como verificar hashes de contraseña, firmar JWT y consultar la API externa de empresas.
+Las inserciones que forman parte de una operación de negocio deben realizarse
+mediante funciones PostgreSQL almacenadas en la base de datos. Esto permite que
+las validaciones, los `INSERT` relacionados y el registro de trazabilidad se
+ejecuten dentro de una única transacción.
 
-Las restricciones, claves foráneas e índices de la base siguen protegiendo la integridad. Las excepciones de dominio devueltas por las funciones se traducen a respuestas HTTP sin exponer errores internos del motor. Las funciones de aplicación se ejecutan desde la conexión privada del backend y no se publican como RPC para `anon`, `authenticated` o `service_role`.
+La división de responsabilidades es la siguiente:
+
+- La ruta FastAPI autentica al usuario y exige los roles correspondientes.
+- Los esquemas Pydantic validan tipos, campos obligatorios y reglas de formato.
+- El servicio obtiene el identificador del usuario desde el JWT y llama a la
+  función PostgreSQL mediante SQL textual parametrizado.
+- La función PostgreSQL valida el estado persistido, ejecuta los `INSERT`
+  relacionados y retorna un objeto `JSONB` con el resultado o un código de error
+  de negocio.
+- El servicio interpreta ese resultado, confirma la transacción con `commit()`
+  o genera una excepción para que la ruta ejecute `rollback()` y responda con el
+  código HTTP correspondiente.
+
+Ejemplo de llamada desde un servicio:
+
+```python
+resultado = db.execute(
+    text("""
+        SELECT fn_operacion_negocio(
+            :id_usuario,
+            CAST(:datos AS JSONB)
+        )
+    """),
+    {
+        "id_usuario": id_usuario,
+        "datos": datos.model_dump_json(),
+    },
+).scalar_one()
+```
+
+### Contrato de funciones PostgreSQL
+
+Las funciones de negocio llamadas desde el backend deben respetar este formato:
+
+```sql
+CREATE OR REPLACE FUNCTION fn_nombre_operacion(
+    p_id_usuario BIGINT,
+    p_datos JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+    v_id_resultado BIGINT;
+BEGIN
+    -- Validar nuevamente usuarios, roles, estados y relaciones persistidas.
+
+    IF condicion_de_error THEN
+        RETURN jsonb_build_object(
+            'error', 'CODIGO_ERROR_ESTABLE'
+        );
+    END IF;
+
+    -- Ejecutar todas las escrituras relacionadas dentro de la función.
+
+    RETURN jsonb_build_object(
+        'id_resultado', v_id_resultado,
+        'mensaje', 'Operación realizada correctamente'
+    );
+END;
+$$;
+```
+
+Convenciones del contrato:
+
+- Los nombres comienzan con `fn_` y describen una operación de negocio.
+- Los parámetros comienzan con `p_`; los valores internos comienzan con `v_`.
+- Cuando existen varios datos de entrada se agrupan en un parámetro `JSONB`.
+- Los identificadores de seguridad, como `p_id_usuario`, se envían por separado
+  y siempre provienen del JWT validado por FastAPI.
+- El tipo de retorno es `JSONB`, tanto para resultados correctos como para
+  errores esperados de negocio.
+- Un resultado correcto contiene los identificadores creados o modificados y
+  puede incluir un `mensaje`.
+- Un error esperado contiene `{"error": "CODIGO_ESTABLE"}` y no incluye
+  mensajes internos de PostgreSQL.
+- Los códigos de error se escriben en mayúsculas con guiones bajos y no deben
+  cambiar una vez que el servicio dependa de ellos.
+- Las restricciones de integridad inesperadas pueden propagarse como errores de
+  PostgreSQL; la ruta debe ejecutar `rollback()` y responder sin filtrar detalles
+  técnicos.
+- `SET search_path = public` evita que la resolución de tablas dependa del
+  contexto de conexión.
+- Para evitar condiciones de carrera se debe bloquear la fila relevante con
+  `SELECT ... FOR UPDATE` cuando dos solicitudes concurrentes puedan modificar
+  el mismo proceso.
+
+El servicio traduce el contrato de la función a excepciones de dominio:
+
+```python
+resultado = db.execute(
+    text("""
+        SELECT fn_nombre_operacion(
+            :id_usuario,
+            CAST(:datos AS JSONB)
+        )
+    """),
+    {
+        "id_usuario": id_usuario,
+        "datos": datos.model_dump_json(),
+    },
+).scalar_one()
+
+if resultado.get("error") == "CODIGO_ERROR_ESTABLE":
+    raise OperacionNoPermitidaError
+
+db.commit()
+return resultado
+```
+
+La ruta captura la excepción de dominio, revierte la sesión y la convierte en
+una respuesta HTTP:
+
+```python
+try:
+    return ejecutar_operacion(db, id_usuario, datos)
+except OperacionNoPermitidaError as error:
+    db.rollback()
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="La operación no está permitida",
+    ) from error
+```
+
+Las funciones no reemplazan las validaciones Pydantic ni la autorización de
+FastAPI. La aplicación valida primero la solicitud y la base de datos vuelve a
+validar las reglas que dependen del estado persistido.
+
+Inventario actual:
+
+| Función | Servicio | Responsabilidad |
+| --- | --- | --- |
+| `fn_registrar_usuario_estudiante` | `auth_service.py` | Crear la cuenta base con rol estudiante |
+| `fn_contexto_usuario` | `auth_service.py` | Obtener usuario, roles, perfil y práctica actual |
+| `fn_completar_perfil_estudiante` | `estudiante_service.py` | Crear el perfil faltante de un estudiante |
+| `fn_registrar_practica` | `practicas/service.py` | Crear centro, práctica e historial inicial |
+| `fn_revisar_practica` | `revisiones/service.py` | Resolver una solicitud y registrar su nuevo estado |
+| `fn_crear_usuario_admin` | `usuario_service.py` | Crear una cuenta y asignar roles desde el panel administrativo |
+| `fn_actualizar_usuario_admin` | `usuario_service.py` | Actualizar datos, estado y roles de una cuenta |
+| `fn_obtener_empresa_cache` | `empresa_service.py` | Obtener antecedentes guardados y determinar su vigencia |
+| `fn_guardar_empresa_cache` | `empresa_service.py` | Insertar o actualizar antecedentes tributarios por RUT |
+
+Reglas obligatorias para nuevas inserciones:
+
+- El identificador del usuario debe obtenerse del JWT, nunca del cuerpo enviado
+  por el cliente.
+- Todos los argumentos deben enviarse como parámetros enlazados.
+- Una función de negocio debe completar toda la operación o no persistir ningún
+  cambio.
+- Los estados, perfiles y relaciones deben comprobarse nuevamente en la base de
+  datos para evitar decisiones basadas solo en datos del frontend.
+- Las funciones deben retornar códigos de error estables que el backend pueda
+  traducir a respuestas HTTP sin exponer detalles internos de PostgreSQL.
+- La definición de cada función debe quedar versionada en `scripts/BD/schema.sql`
+  o en una migración SQL antes de que el backend comience a utilizarla.
+- Los `SELECT` simples pueden permanecer en servicios; si su cantidad crece,
+  deben trasladarse a una capa `repositories`.
+
+Esta convención se aplica mediante servicios que llaman funciones como
+`fn_registrar_usuario_estudiante`, `fn_completar_perfil_estudiante`,
+`fn_registrar_practica` y `fn_revisar_practica`.
+
+El esquema completo y las funciones utilizadas por el backend están versionados
+en `scripts/BD/schema.sql`. El archivo `scripts/BD/user_roles.sql` conserva el
+bloque inicial de usuarios y roles como referencia histórica.
+
+Entre las tablas base se encuentran:
+
+- `usuario`
+- `rol`
+- `usuario_rol`
+- `empresa`
+
+La consulta `GET /empresas/consulta/{rut}` implementa una estrategia cache-aside:
+usa registros con menos de 30 días, consulta Chile RUT Empresa cuando no existen
+o están vencidos y conserva datos antiguos como respaldo si el proveedor falla.
+
+Las funciones de autenticación, contexto, perfil, registro y revisión están
+versionadas en `scripts/BD/schema.sql`.
+
 ## Endpoints
 
 ### `GET /`
@@ -124,7 +334,7 @@ Flujo:
 2. Rechaza correos ya registrados con `409 Conflict`.
 3. Comprueba que exista el rol activo `ESTUDIANTE`.
 4. Genera un hash Bcrypt de la contraseña.
-5. Llama a `fn_registrar_usuario_estudiante`, que crea el usuario y su asignación de rol dentro de una transacción.
+5. Crea el usuario y su asignación de rol dentro de una transacción.
 6. Devuelve los datos públicos del usuario con `201 Created`.
 
 El registro no crea el perfil de estudiante. Si corresponde, RUT, carrera y
@@ -139,7 +349,7 @@ Requiere el encabezado:
 Authorization: Bearer <token>
 ```
 
-El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y consulta usuario, roles, perfil y práctica actual mediante `fn_contexto_usuario`.
+El backend valida el JWT, exige uno de los roles conocidos, obtiene `id_usuario` desde `sub` y ejecuta `fn_contexto_usuario(:id_usuario)`.
 
 ### `POST /practicas`
 
@@ -152,35 +362,27 @@ El endpoint rechaza el registro cuando el usuario no posee perfil de estudiante
 o ya tiene una práctica cuyo estado no es final. Si se informa el RUT de una
 empresa existente, reutiliza ese centro en lugar de duplicarlo.
 
-`fn_registrar_practica` confirma el centro, la práctica, el historial inicial y las notificaciones en una sola transacción. La autorización y la obtención del usuario desde el JWT permanecen en FastAPI.
+La operación se ejecuta en PostgreSQL mediante
+`fn_registrar_practica(id_usuario, datos_jsonb)`. El servicio envía parámetros
+enlazados, interpreta los errores de negocio retornados por la función y
+confirma la transacción. La autorización y la obtención del usuario desde el
+JWT permanecen en FastAPI.
 
-El registro puede incluir `horas_semanales` (entre 1 y 45), almacenadas por separado
-del campo histórico `horas` en `practica`. La restricción y las respuestas de
-contexto, detalle y revisión se actualizan mediante la migración
-`20261017030000_horas_semanales_practica.sql`.
+Las rutas complementarias de `/practicas` permiten consultar estados e
+historial, gestionar cambios de estado, registrar seguimientos y enviar
+recordatorios a estudiantes sin práctica. Las operaciones de seguimiento y
+cambio de estado reutilizan servicios compartidos bajo `services/`.
 
-### Centro de notificaciones
+### Incidencias y notificaciones
 
-- `GET /notificaciones`: devuelve las notificaciones del usuario autenticado y
-  el total de avisos sin leer.
-- `PATCH /notificaciones/{id_notificacion}/leida` y
-  `PATCH /notificaciones/leidas`: marcan avisos como leídos.
-- `POST /notificaciones/dispositivos`: registra el token FCM del usuario autenticado.
-- `DELETE /notificaciones/dispositivos/actual`: desvincula los dispositivos push del usuario.
-- `GET /notificaciones/destinatarios-push`: lista estudiantes activos para gestores y administradores.
-- `POST /notificaciones/mensaje-personalizado`: guarda y envía un mensaje push a un estudiante activo; requiere rol `GESTOR` o `ADMINISTRADOR`.
-- `POST /notificaciones/mensaje-broadcast`: guarda un aviso por cada estudiante activo y envía push a sus dispositivos registrados; requiere rol `GESTOR` o `ADMINISTRADOR`.
-
-Cada práctica nueva avisa a los gestores y administradores activos; cada cambio
-de estado avisa al estudiante. La tabla persistente se crea con la migración
-`supabase/migrations/20261017010000_create_notificacion.sql`.
-
-Cuando una práctica está `OBSERVADA`, el estudiante puede responder mediante
-`PATCH /practicas/{id_practica}/respuesta-observacion`. La función
-`fn_responder_observacion_practica` verifica que sea su práctica, la devuelve a
-`EN_REVISION`, agrega la respuesta en `historial_estado.observacion` y notifica a
-gestores y administradores en la misma transacción. Se incorpora con la migración
-`20261017040000_respuesta_observacion_estudiante.sql`.
+- `/incidencias` permite a gestores y administradores consultar incidencias,
+  registrar una incidencia asociada a una práctica y actualizar su estado.
+- `/notificaciones` entrega la bandeja personal, permite marcar notificaciones
+  como leídas y registra dispositivos push Android.
+- Los gestores y administradores pueden enviar mensajes push individuales o
+  de difusión mediante rutas independientes de la bandeja automática.
+- La firma del token para Realtime y las credenciales de Firebase se configuran
+  exclusivamente en el backend; no deben exponerse al frontend.
 
 ### Revisión de prácticas (EP03)
 
@@ -190,25 +392,10 @@ Los endpoints bajo `/revisiones` requieren rol `GESTOR` o `ADMINISTRADOR`:
 - `GET /revisiones/solicitudes/{id_practica}`: entrega los antecedentes del
   estudiante, centro y práctica.
 - `PATCH /revisiones/solicitudes/{id_practica}`: aprueba, observa o rechaza la
-  solicitud con `fn_revisar_practica`, que registra la trazabilidad en
-  `historial_estado` y notifica al estudiante en la misma transacción.
+  solicitud mediante `fn_revisar_practica` y registra la trazabilidad en
+  `historial_estado`.
 
 Las decisiones `OBSERVADA` y `RECHAZADA` requieren una observación.
-
-### Seguimiento de prácticas (EP05)
-
-- `POST /practicas/{id_practica}/seguimientos`: registra fecha y observación; requiere rol `GESTOR` o `ADMINISTRADOR` y una práctica no finalizada.
-- `GET /practicas/{id_practica}/seguimientos`: consulta el historial de esa práctica para gestores y administradores.
-- La migración `20261028010000_ep05_seguimientos.sql` añade las operaciones transaccionales sobre la tabla `seguimiento` ya creada por el esquema inicial.
-
-### Incidencias y alertas (EP06)
-
-- `POST /practicas/{id_practica}/incidencias`: registra fecha, descripción y prioridad para gestores y administradores; requiere práctica no finalizada.
-- `GET /incidencias`: lista incidencias junto con la práctica, estudiante, correo, estado y prioridad.
-- `PATCH /incidencias/{id_incidencia}/estado`: actualiza el estado; al resolver o cerrar conserva la fecha de resolución.
-- Las prioridades `ALTA` y `CRITICA` generan una fila asociada en `alerta` dentro de la misma transacción.
-- `ABIERTA` y `EN_REVISION` cuentan como pendientes. La pantalla de gestión destaca esos registros.
-- La migración `20261028020000_ep06_incidencias_alertas.sql` crea las operaciones sobre las tablas `incidencia` y `alerta` existentes.
 
 ### Gestión de usuarios (EP01)
 
@@ -216,12 +403,13 @@ Los endpoints bajo `/usuarios` requieren el rol `ADMINISTRADOR`:
 
 - `GET /usuarios`: lista las cuentas con su estado y roles.
 - `GET /usuarios/roles`: lista los roles activos disponibles.
-- `POST /usuarios`: crea una cuenta y asigna roles mediante
-  `fn_crear_usuario_admin`.
+- `POST /usuarios`: crea una cuenta mediante `fn_crear_usuario_admin`.
 - `PATCH /usuarios/{id_usuario}`: actualiza nombre, apellido, estado y roles
   mediante `fn_actualizar_usuario_admin`.
 
-El identificador del administrador proviene siempre del JWT. El backend valida que el administrador esté activo y posea el rol `ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
+El identificador del administrador proviene siempre del JWT. Las funciones
+vuelven a validar en PostgreSQL que la cuenta esté activa y posea el rol
+`ADMINISTRADOR`. Un administrador no puede desactivar su propia cuenta ni
 quitarse su propio rol administrativo.
 
 ## Contexto del usuario
@@ -268,7 +456,7 @@ Reglas obligatorias:
 - Nunca guardar contraseñas en texto plano.
 - Nunca registrar tokens, contraseñas o secretos en logs.
 - No exponer `password_hash` en respuestas.
-- Mantener llamadas parametrizadas a funciones de PostgreSQL.
+- Mantener consultas parametrizadas.
 - Proteger mediante dependencia de autenticación todo endpoint privado.
 - No aceptar el algoritmo JWT desde el contenido del token; usar el configurado por el servidor.
 
@@ -277,7 +465,7 @@ Reglas obligatorias:
 - `main.py`: inicialización, middleware, routers y health checks.
 - `api/routes/auth.py`: capa HTTP de autenticación.
 - `schemas/auth.py`: contratos Pydantic de entrada y salida.
-- `services/auth_service.py`: llamadas de persistencia y lógica de autenticación.
+- `services/auth_service.py`: consultas y lógica de autenticación/contexto.
 - `core/security.py`: hashing y JWT.
 - `core/permissions.py`: autorización reutilizable de endpoints por roles activos.
 - `core/database.py`: engine, sesiones y dependencia de base de datos.
@@ -304,11 +492,9 @@ Las pruebas actuales validan permisos concedidos y denegados, normalización de 
 
 ## Estado actual y límites conocidos
 
-- El esquema y las funciones se versionan en `supabase/migrations`; la migración
-  `20261017020000_backend_operations.sql` concentra las operaciones de persistencia
-  de los módulos implementados.
+- No hay migraciones versionadas ni un mecanismo automático para crear todo el esquema.
+- La función `fn_contexto_usuario` debe existir previamente en Supabase.
 - No existe renovación de tokens.
 - No existe revocación ni lista de tokens invalidados.
 - CORS está configurado solamente para el frontend local.
-- La autorización HTTP sigue en FastAPI; las funciones de base de datos no
-  sustituyen la validación JWT ni la comprobación de roles de cada ruta.
+- La lógica actual cubre autenticación y consulta de contexto; los demás módulos del dominio aún deben implementarse.

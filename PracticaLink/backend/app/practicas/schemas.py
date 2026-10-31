@@ -59,34 +59,46 @@ class PracticaCreateResponse(BaseModel):
     mensaje: str
 
 
-class EstadoPracticaDetalle(BaseModel):
+class EstadoPracticaLectura(BaseModel):
     id_estado: int
     nombre: str
-    descripcion: str | None = None
     es_final: bool
 
 
-class CentroPracticaDetalle(BaseModel):
+class EstadoPracticaDetalle(EstadoPracticaLectura):
+    descripcion: str | None = None
+
+
+class CentroPracticaLectura(BaseModel):
     id_centro: int
     nombre: str
     rut_empresa: str | None = None
     direccion: str | None = None
     telefono: str | None = None
-    correo: str | None = None
+    correo: EmailStr | None = None
     contacto_nombre: str | None = None
     contacto_cargo: str | None = None
+
+
+CentroPracticaDetalle = CentroPracticaLectura
 
 
 class PracticaDetalleResponse(BaseModel):
     id_practica: int
     fecha_registro: datetime
-    fecha_actualizacion: datetime
-    estado: EstadoPracticaDetalle
-    centro_practica: CentroPracticaDetalle
+    fecha_actualizacion: datetime | None = Field(
+        default=None,
+        exclude_if=lambda valor: valor is None,
+    )
+    estado: EstadoPracticaLectura
+    centro_practica: CentroPracticaLectura
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = None
-    horas_semanales: int | None = None
+    horas_semanales: int | None = Field(
+        default=None,
+        exclude_if=lambda valor: valor is None,
+    )
     cargo_funcion: str | None = None
     descripcion: str | None = None
 

@@ -1,17 +1,16 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db
-from app.api.routes.auth import router as auth_router
-from app.api.routes.practicas import router as practicas_router
+from app.core.database import engine
+from app.auth.routes import router as auth_router
+from app.practicas.routes import router as practicas_router
 from app.api.routes.estudiantes import router as estudiantes_router
-from app.api.routes.revisiones import router as revisiones_router
+from app.revisiones.routes import router as revisiones_router
 from app.api.routes.usuarios import router as usuarios_router
 from app.api.routes.empresas import router as empresas_router
-from app.api.routes.notificaciones import router as notificaciones_router
 from app.api.routes.incidencias import router as incidencias_router
+from app.api.routes.notificaciones import router as notificaciones_router
 
 app = FastAPI(
     title="PracticaLink API",
@@ -54,5 +53,19 @@ def root():
 
 
 @app.get("/health/database")
-def database_health(db: Session = Depends(get_db)):
-    return db.execute(text("SELECT public.fn_health_database()")).scalar_one()
+def database_health():
+    with engine.connect() as connection:
+        result = connection.execute(
+            text("""
+                SELECT
+                    current_database(),
+                    current_user,
+                    NOW()
+            """)
+        ).fetchone()
+
+    return {
+        "database": result[0],
+        "user": result[1],
+        "server_time": result[2]
+    }

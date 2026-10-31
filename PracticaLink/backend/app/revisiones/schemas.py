@@ -40,7 +40,7 @@ class DecisionRevisionRequest(BaseModel):
             self.decision in {"OBSERVADA", "RECHAZADA"}
             and not (self.observacion or "").strip()
         ):
-            raise ValueError("Debe ingresar una observación")
+            raise ValueError("Debe ingresar una observaciÃ³n")
         return self
 
 

@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.practica import ActualizarEstadoPracticaRequest
+from app.practicas.schemas import ActualizarEstadoPracticaRequest
 
 
 class PracticaEstadoNoEncontradaError(Exception):
