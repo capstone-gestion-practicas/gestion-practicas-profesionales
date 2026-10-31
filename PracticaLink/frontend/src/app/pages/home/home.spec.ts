@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import { AuthService } from '../../core/services/auth.service';
 import { EstudianteService } from '../../core/services/estudiante.service';
-import { NotificacionService } from '../../core/services/notificacion.service';
+import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { PracticaService } from '../../core/services/practica.service';
 import { RevisionService } from '../../core/services/revision.service';
 import { UsuarioService } from '../../core/services/usuario.service';

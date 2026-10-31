@@ -45,7 +45,7 @@ import { UsuarioAdministrable } from '../../core/models/usuario.models';
 import { SolicitudRevisionResumen } from '../../core/models/revision.models';
 import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/solicitudes-pendientes-modal';
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
-import { NotificacionService } from '../../core/services/notificacion.service';
+import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
 
 @Component({

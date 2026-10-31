@@ -14,8 +14,8 @@ import {
   IonSpinner
 } from '@ionic/angular';
 
-import { DestinatarioMensajePush } from '../../core/models/notificacion.models';
-import { NotificacionService } from '../../core/services/notificacion.service';
+import { DestinatarioMensajePush } from '../../models/notificacion.models';
+import { NotificacionService } from '../../services/notificacion.service';
 
 @Component({
   selector: 'app-envio-notificaciones',

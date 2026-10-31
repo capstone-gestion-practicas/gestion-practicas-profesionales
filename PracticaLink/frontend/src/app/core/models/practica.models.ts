@@ -13,7 +13,7 @@ export interface PracticaCreate {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
-  horas_semanales: number | null;
+  horas_semanales?: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }
@@ -46,13 +46,13 @@ export interface CentroPracticaDetalle {
 export interface PracticaDetalleResponse {
   id_practica: number;
   fecha_registro: string;
-  fecha_actualizacion: string;
+  fecha_actualizacion?: string;
   estado: EstadoPracticaDetalle;
   centro_practica: CentroPracticaDetalle;
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
-  horas_semanales: number | null;
+  horas_semanales?: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }

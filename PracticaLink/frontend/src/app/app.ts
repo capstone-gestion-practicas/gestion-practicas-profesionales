@@ -5,8 +5,8 @@ import { EMPTY, timer } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { Notificacion } from './core/models/notificacion.models';
-import { NotificacionService } from './core/services/notificacion.service';
+import { Notificacion } from './features/notificaciones/models/notificacion.models';
+import { NotificacionService } from './features/notificaciones/services/notificacion.service';
 import { AuthStore } from './core/store/auth.store';
 
 @Component({

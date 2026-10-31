@@ -30,14 +30,15 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR'] },
     loadComponent: () =>
-      import('./pages/notificaciones/notificaciones').then(m => m.Notificaciones)
+      import('./features/notificaciones/pages/notificaciones/notificaciones')
+        .then(m => m.Notificaciones)
   },
   {
     path: 'envio-notificaciones',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
     loadComponent: () =>
-      import('./pages/envio-notificaciones/envio-notificaciones')
+      import('./features/notificaciones/pages/envio-notificaciones/envio-notificaciones')
         .then(m => m.EnvioNotificaciones)
   },
   {

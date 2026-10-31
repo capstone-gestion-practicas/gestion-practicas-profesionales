@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 
-import { NotificacionService } from '../../core/services/notificacion.service';
+import { NotificacionService } from '../../services/notificacion.service';
 import { EnvioNotificaciones } from './envio-notificaciones';
 
 describe('EnvioNotificaciones', () => {

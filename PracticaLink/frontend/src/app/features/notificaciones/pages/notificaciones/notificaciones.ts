@@ -14,8 +14,8 @@ import {
   IonSpinner
 } from '@ionic/angular';
 
-import { Notificacion } from '../../core/models/notificacion.models';
-import { NotificacionService } from '../../core/services/notificacion.service';
+import { Notificacion } from '../../models/notificacion.models';
+import { NotificacionService } from '../../services/notificacion.service';
 
 @Component({
   selector: 'app-notificaciones',
