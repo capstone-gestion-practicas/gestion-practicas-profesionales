@@ -22,12 +22,7 @@ class EmpresaApiNoDisponibleError(Exception):
 
 def consultar_empresa(db: Session, rut: str) -> dict:
     rut_normalizado = normalizar_rut(rut)
-
-    cache = db.execute(
-        text("SELECT fn_obtener_empresa_cache(:rut)"),
-        {"rut": rut_normalizado},
-    ).scalar_one_or_none()
-
+    cache = _leer_cache(db, rut_normalizado)
     if cache and cache.get("cache_vigente"):
         return cache
 
@@ -39,12 +34,17 @@ def consultar_empresa(db: Session, rut: str) -> dict:
             return cache
         raise
 
-    guardada = db.execute(
-        text("SELECT fn_guardar_empresa_cache(CAST(:datos AS JSONB))"),
-        {"datos": _serializar_json(datos_api)},
-    ).scalar_one()
+    guardada = db.execute(text("""
+        SELECT public.fn_guardar_empresa_cache(CAST(:datos AS JSONB))
+    """), {"datos": json.dumps(datos_api, ensure_ascii=False)}).scalar_one()
     db.commit()
     return guardada
+
+
+def _leer_cache(db: Session, rut: str) -> dict | None:
+    return db.execute(text("""
+        SELECT public.fn_obtener_empresa_cache(:rut)
+    """), {"rut": rut}).scalar_one_or_none()
 
 
 def _consultar_api(rut_normalizado: str) -> dict:
@@ -89,7 +89,3 @@ def _consultar_api(rut_normalizado: str) -> dict:
         "num_trabajadores": datos.get("num_trabajadores"),
         "fuente": "Chile RUT Empresa",
     }
-
-
-def _serializar_json(datos: dict) -> str:
-    return json.dumps(datos, ensure_ascii=False)

@@ -9,6 +9,8 @@ from app.estudiantes.routes import router as estudiantes_router
 from app.revisiones.routes import router as revisiones_router
 from app.usuarios.routes import router as usuarios_router
 from app.empresas.routes import router as empresas_router
+from app.api.routes.incidencias import router as incidencias_router
+from app.api.routes.notificaciones import router as notificaciones_router
 from app.seguimientos.routes import router as seguimientos_router
 
 app = FastAPI(
@@ -22,6 +24,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:4200",
         "http://127.0.0.1:4200",
+        "http://localhost:8100",
+        "http://127.0.0.1:8100",
+        "http://localhost",
+        "https://localhost",
+        "capacitor://localhost",
     ],
     allow_credentials=False,
     allow_methods=["*"],
@@ -34,6 +41,8 @@ app.include_router(estudiantes_router)
 app.include_router(revisiones_router)
 app.include_router(usuarios_router)
 app.include_router(empresas_router)
+app.include_router(notificaciones_router)
+app.include_router(incidencias_router)
 app.include_router(seguimientos_router)
 
 
