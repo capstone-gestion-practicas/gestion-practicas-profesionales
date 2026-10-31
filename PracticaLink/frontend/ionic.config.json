@@ -1,7 +1,0 @@
-{
-  "name": "PracticaLink",
-  "type": "angular",
-  "integrations": {
-    "capacitor": {}
-  }
-}
