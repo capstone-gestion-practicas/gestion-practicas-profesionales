@@ -67,6 +67,8 @@ Ejecución local desde `PracticaLink/backend`:
 - `SUPABASE_DATABASE_URL`
 - `INICIO_PRACTICA_DATABASE_URL` (opcional al iniciar la aplicación; obligatoria
   al usar la conexión restringida de HU04.2)
+- `SEGUIMIENTOS_DATABASE_URL` (conexión exclusiva de escritura HU013)
+- `SEGUIMIENTOS_LECTURA_DATABASE_URL` (conexión exclusiva de lectura HU014)
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
@@ -590,3 +592,102 @@ verificaron datos reales ni índices. La comprobación de existencia y la lectur
 del historial son dos sentencias: no garantizan una instantánea conjunta bajo
 el aislamiento predeterminado si hay cambios concurrentes. Las observaciones
 pueden contener información sensible preexistente; no deben registrarse en logs.
+
+### EP05 / HU013: registro de seguimientos WEB
+
+`POST /practicas/{id_practica}/seguimientos` está organizado en
+`app/seguimientos/{routes,schemas,service}.py`. Autoriza GESTOR y ADMINISTRADOR
+mediante el JWT y el contexto existente, cuya función SQL filtra usuarios y
+roles activos. Comprueba que el usuario del contexto coincide con el JWT.
+La función de escritura revalida actividad y roles bajo bloqueo.
+
+El cuerpo admite exclusivamente `fecha` (YYYY-MM-DD, no futura según
+America/Santiago), `tipo` y `observacion` (texto obligatorio, máximo 2000
+caracteres, conservando espacios). Los medios son Reunión presencial,
+Videollamada, Llamada telefónica, Correo electrónico y Otro. No admite campos
+adicionales ni parámetros query; el autor procede exclusivamente del JWT.
+El identificador de práctica debe ser positivo y caber en BIGINT.
+
+Responde 201 con `id_seguimiento`, `id_practica`, `id_usuario`, `fecha`, `tipo`,
+`observacion` y `fecha_creacion` con zona horaria. Conserva los errores de
+autenticación existentes. Permisos insuficientes: 403; práctica inexistente:
+404; estado distinto de EN_CURSO o conflicto concurrente: 409; entrada inválida:
+422; resultado inesperado o registro no confirmado: 500; conexión o verificación
+de permisos no disponible: 503. Los mensajes no contienen errores del driver.
+No hay endpoints de modificación ni eliminación en este módulo.
+
+Requiere los scripts EP05 ya versionados y `SEGUIMIENTOS_DATABASE_URL` configurada
+de forma privada con un login dedicado que herede `pl_ep05_executor`, sin
+privilegios directos sobre tablas, superusuario ni BYPASSRLS, ni membresías
+adicionales. No usar `pl_ep05_owner`, el login principal ni el de EP04.
+La aplicación rechaza URLs incompatibles y logins compartidos con esas dos
+conexiones; esto no verifica los privilegios efectivos del servidor. Su
+aprovisionamiento y auditoría corresponden a una operación separada autorizada.
+Sin configuración, este endpoint falla con 503 y no utiliza otra conexión.
+
+El servicio ejecuta una sola llamada parametrizada a
+`seguimientos_privados.fn_registrar_seguimiento`. Valida la estructura y la
+correspondencia del resultado con práctica, autor y datos enviados antes del
+commit. Un error de negocio, respuesta malformada o fallo SQL produce rollback;
+un fallo del rollback conserva el error original. No hay reintentos automáticos,
+incluido un fallo durante commit cuyo resultado pueda ser incierto. Ante 500/503
+el cliente no debe reenviar automáticamente: no se implementa idempotencia.
+Los bloqueos y la comprobación atómica de EN_CURSO permanecen en PostgreSQL.
+La dependencia SQL incluye usuario, usuario_rol, rol, practica, estado_practica
+y seguimiento; la separación modular no elimina este acoplamiento.
+
+Las pruebas `test_seguimientos_{routes,schemas,service,database}.py` verifican
+JWT, permisos, contratos, rollback, respuesta antes de commit, errores de
+concurrencia y aislamiento de conexión mediante mocks. No acreditan ejecución
+del endpoint con PostgreSQL real ni permisos de un entorno desplegado.
+Nota histórica: al cerrar la etapa backend HU013, Angular estaba pendiente;
+actualmente HU013 y HU014 están integradas en Angular. No se migran demostraciones.
+
+### EP05 / HU014: consulta HTTP del historial de seguimientos
+
+`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` amplía el módulo
+seguimientos. JWT y contexto deben coincidir; usuario activo GESTOR o ADMINISTRADOR
+accede a todas las prácticas según el PMV, incluidas finalizadas. SQL revalida
+actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
+no identidad externa. No modifica la dependencia ni el POST HU013.
+
+La respuesta 200 contiene id_practica, items, limit, offset, hay_mas. Cada item:
+id_seguimiento, fecha DATE, tipo nullable/libre, observacion sin restricciones de
+creación y responsable {id_usuario,nombre}. Conserva el orden SQL y los valores
+históricos, incluso autor actualmente inactivo. No expone otros datos personales.
+Identificadores positivos BIGINT; limit 1–100, offset 0–BIGINT máximo. No se
+convierten fechas a timestamp ni se reordenan resultados en Python.
+
+Requiere `SEGUIMIENTOS_LECTURA_DATABASE_URL` privada con login dedicado que herede
+solo pl_ep05_read_executor. Configuración opcional al arrancar, necesaria al usar
+GET. La conexión independiente rechaza compartir usuario con principal, EP04 o
+HU013, no tiene fallback y activa transacciones PostgreSQL read-only. La validación
+de URL no sustituye auditar los privilegios efectivos del login en el despliegue.
+No se provisionan credenciales ni grants desde FastAPI.
+
+El servicio invoca exclusivamente fn_consultar_seguimientos con parámetros
+vinculados. Valida respuesta y correspondencia de práctica/paginación antes de
+retornar. No hace commit; el cierre termina la lectura. Ante error intenta rollback
+sin sustituir el error original. No registra resultados, parámetros ni errores SQL.
+Errores JSON USUARIO_NO_AUTORIZADO/PRACTICA_NO_ENCONTRADA/PAGINACION_INVALIDA se
+traducen a 403/404/422; autenticación conserva el comportamiento existente.
+Conexión ausente/indisponible: 503; error SQL o respuesta inesperada: 500 genérico.
+
+Validación de esta etapa: 247/247 unitarias, 30/30 SQL y 15/15 HTTP sobre PostgreSQL
+18.6 exclusivo. Incluye POST→GET, transacción read-only, SELECT directo rechazado,
+históricos, ausencia de fallback y regresión HU013/EP03/EP04 en escenarios existentes.
+Ver tests/integration/HU014_HTTP.md. No acredita permisos de Supabase ni despliegue.
+La consulta Angular HU014 y el registro Angular HU013 están implementados.
+Las referencias anteriores a integración pendiente corresponden a etapas históricas.
+
+
+### EP05: operación vigente y límites
+
+El orden de aplicación es ep05-01, ep05-02, ep05-03, ep05-04 y ep05-05, según
+[DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md). Esa guía
+identifica los ejecutores separados, la comprobación de privilegios efectivos y
+los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
+responde 503; no utiliza otra conexión. Las pruebas locales no validan migraciones
+ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con respuesta
+HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados
+como number en JavaScript pierden precisión fuera del rango seguro ±(2^53−1).

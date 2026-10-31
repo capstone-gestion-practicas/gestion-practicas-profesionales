@@ -28,7 +28,8 @@ describe('Historial en el detalle de práctica', () => {
     ]
   };
   beforeEach(async () => {
-    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerHistorial']);
+    service = jasmine.createSpyObj<PracticaService>('PracticaService', ['obtenerDetalle', 'obtenerSeguimientos', 'obtenerHistorial']);
+    service.obtenerSeguimientos.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     service.obtenerDetalle.and.returnValue(of(detalle));
     service.obtenerHistorial.and.returnValue(of(historial));
     parametros = new BehaviorSubject(convertToParamMap({ id: '15' }));

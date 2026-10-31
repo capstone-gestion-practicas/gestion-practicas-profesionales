@@ -173,6 +173,58 @@ scripts/BD/fixes/release-1.1-cache-empresas.sql
 El script crea la tabla `empresa`, habilita RLS y registra las funciones
 `fn_obtener_empresa_cache` y `fn_guardar_empresa_cache` utilizadas por el backend.
 
+### EP05: conexiones y scripts incrementales
+
+HU013 (registro) y HU014 (consulta) están implementadas en PostgreSQL, FastAPI y
+Angular. Configurar privadamente en el entorno backend, sin versionar sus valores:
+
+| Variable | Login dedicado y capacidad |
+| --- | --- |
+| `SEGUIMIENTOS_DATABASE_URL` | Hereda únicamente `pl_ep05_executor`: ejecutar el registro HU013. |
+| `SEGUIMIENTOS_LECTURA_DATABASE_URL` | Hereda únicamente `pl_ep05_read_executor`: ejecutar la consulta HU014. |
+
+Ambas usan `postgresql+psycopg`, con logins diferentes del principal, de EP04 y
+entre sí. No conceder los propietarios técnicos `pl_ep05_owner` ni
+`pl_ep05_read_owner` al login HTTP. Los ejecutores no reciben SELECT ni escrituras
+directas sobre las tablas. La lectura abre transacciones read-only. No hay fallback:
+la ausencia de la configuración correspondiente produce 503 al usar su endpoint,
+aunque la aplicación pueda arrancar. Una URL distinta no acredita privilegios mínimos.
+
+Sobre el esquema requerido y con autorización específica para el entorno, el orden es:
+
+1. `scripts/BD/fixes/ep05-01-seguimiento-calendario.sql`.
+2. `scripts/BD/fixes/ep05-02-permisos-seguimiento.sql`.
+3. `scripts/BD/fixes/ep05-03-registrar-seguimiento.sql`.
+4. `scripts/BD/fixes/ep05-04-consultar-seguimientos.sql`.
+5. `scripts/BD/fixes/ep05-05-indice-lectura-seguimientos.sql`.
+
+`schema.sql` es exclusivamente para bases vacías; no recrear una base existente.
+Cada script tiene su propia transacción, no existe una transacción global de despliegue.
+Los cuatro primeros son incrementos de aplicación única. El quinto evita duplicar
+un índice equivalente. Revisar la aplicación previa de cada incremento antes de
+reanudar un despliegue parcial. La migración de fecha toma un bloqueo exclusivo;
+la creación normal del índice puede bloquear escritores. Planificar una ventana.
+Una reversión del código no revierte SQL: conservar datos y FK RESTRICT, sin volver
+a CASCADE ni eliminar históricos como mecanismo de recuperación.
+
+La comprobación de privilegios efectivos, ACL/RLS y separación de capacidades está
+explicada y probada en los laboratorios
+[HU013](PracticaLink/backend/tests/integration/HU013_HTTP.md) y
+[HU014](PracticaLink/backend/tests/integration/HU014_HTTP.md), con el
+[detalle de permisos de lectura](PracticaLink/backend/tests/integration/HU014_LECTURA.md).
+Antes de desplegar hay que auditar membresías, atributos del login, grants heredados
+(incluido PUBLIC), ejecución de funciones y denegación de acceso directo a tablas.
+Los resultados locales no validan migraciones ni privilegios de un despliegue real.
+
+Limitaciones conocidas de EP05:
+
+- Sin idempotencia ante una respuesta HTTP perdida después del commit. El cliente
+  no reintenta automáticamente; recargar elimina el bloqueo local de envío.
+- Nuevas inserciones pueden desplazar páginas basadas en offset.
+- BIGINT se representa como `number` en Angular: fuera de ±(2^53−1) pierde precisión.
+  No se ha ampliado el contrato para ese rango.
+- Migraciones, logins y privilegios aún no están validados en un entorno desplegado.
+
 ## 5. Ejecutar el backend
 
 Desde `PracticaLink/backend`, con el entorno virtual activo:

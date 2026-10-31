@@ -1,3 +1,4 @@
+import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -25,7 +26,14 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   error = '';
   permiteReintentar = false;
   eventos: EventoHistorial[] = [];
-  registrosSeguimiento: RegistroPracticaLocal[] = [];
+  registrosSeguimiento: SeguimientoHistorialItem[] = [];
+  readonly limitSeguimientos = 50;
+  offsetSeguimientos = 0;
+  hayMasSeguimientos = false;
+  cargandoSeguimientos = false;
+  seguimientosConsultados = false;
+  errorSeguimientos = '';
+  private consultaSeguimientos?: Subscription;
   registrosIncidencia: RegistroPracticaLocal[] = [];
   vistaHistorial: 'seguimientos' | 'incidencias' | 'antecedentes' = 'seguimientos';
   readonly limitHistorial = 50;
@@ -85,20 +93,29 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       this.hayMasHistorial = false;
       this.cargandoHistorial = false;
       this.errorHistorial = '';
+      this.consultaSeguimientos?.unsubscribe();
+      this.registrosSeguimiento = [];
+      this.offsetSeguimientos = 0;
+      this.hayMasSeguimientos = false;
+      this.cargandoSeguimientos = false;
+      this.seguimientosConsultados = false;
+      this.errorSeguimientos = '';
       this.idPractica = parametros.get('id') ?? '';
       const registros = this.registros.listar(this.idPractica);
-      this.registrosSeguimiento = registros
-        .filter(registro => registro.tipo === 'seguimiento');
       this.registrosIncidencia = registros
         .filter(registro => registro.tipo === 'incidencia');
       this.vistaHistorial = 'seguimientos';
       this.cargar();
       this.historialHabilitado = this.idValido();
-      if (this.historialHabilitado) this.cargarHistorial(0);
+      if (this.historialHabilitado) {
+        this.cargarHistorial(0);
+        this.cargarSeguimientos(0);
+      }
     });
   }
 
   ngOnDestroy(): void {
+    this.consultaSeguimientos?.unsubscribe();
     this.operacionInicio?.unsubscribe();
     this.parametros?.unsubscribe();
     this.consultaHistorial?.unsubscribe();
@@ -256,6 +273,57 @@ export class PracticaDetalle implements OnInit, OnDestroy {
             : 'No fue posible cargar el historial. Intenta nuevamente.';
       }
     });
+  }
+
+  cargarSeguimientos(offset = this.offsetSeguimientos): void {
+    if (!this.idValido() || this.cargandoSeguimientos) return;
+    this.consultaSeguimientos?.unsubscribe();
+    this.offsetSeguimientos = offset;
+    this.registrosSeguimiento = [];
+    this.hayMasSeguimientos = false;
+    this.seguimientosConsultados = false;
+    this.errorSeguimientos = '';
+    this.cargandoSeguimientos = true;
+    this.consultaSeguimientos = this.practicas.obtenerSeguimientos(
+      this.idPractica, this.limitSeguimientos, offset
+    ).subscribe({
+      next: historial => {
+        this.registrosSeguimiento = historial.items;
+        this.hayMasSeguimientos = historial.hay_mas;
+        this.cargandoSeguimientos = false;
+        this.seguimientosConsultados = true;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.cargandoSeguimientos = false;
+        const mensajes: Record<number, string> = {
+          401: 'Tu sesión no es válida. Inicia sesión nuevamente.',
+          403: 'Acceso denegado al historial de seguimientos.',
+          404: 'La práctica no está disponible.',
+          422: 'Los parámetros de consulta no son válidos.',
+          500: 'El servidor no pudo consultar los seguimientos.',
+          503: 'El servicio de seguimientos está temporalmente no disponible.'
+        };
+        this.errorSeguimientos = mensajes[error.status]
+          ?? 'No fue posible conectar para consultar los seguimientos.';
+        if (error.status === 401) {
+          sessionStorage.removeItem('access_token');
+          this.auth.limpiar();
+          this.router.navigate(['/login']);
+        }
+      }
+    });
+  }
+
+  anteriorSeguimientos(): void {
+    if (!this.cargandoSeguimientos && this.offsetSeguimientos > 0) {
+      this.cargarSeguimientos(Math.max(0, this.offsetSeguimientos - this.limitSeguimientos));
+    }
+  }
+
+  siguienteSeguimientos(): void {
+    if (!this.cargandoSeguimientos && this.hayMasSeguimientos) {
+      this.cargarSeguimientos(this.offsetSeguimientos + this.limitSeguimientos);
+    }
   }
 
   anteriorHistorial(): void {

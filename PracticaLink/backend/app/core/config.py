@@ -6,6 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     supabase_database_url: str
     inicio_practica_database_url: str | None = None
+    seguimientos_database_url: str | None = None
+
+    seguimientos_lectura_database_url: str | None = None
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
