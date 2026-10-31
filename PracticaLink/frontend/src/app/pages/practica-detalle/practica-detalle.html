@@ -1,0 +1,225 @@
+<ion-content>
+  <main class="main-panel">
+      <header class="topbar">
+        <div class="breadcrumb">
+          <button type="button" (click)="navegarA('/home')">PracticaLink</button>
+          <span class="separator">·</span>
+          <span class="current">Detalle de práctica</span>
+        </div>
+
+        <div class="topbar-actions" [attr.aria-label]="nombreUsuario">
+          <div class="avatar-mini">{{ inicialesUsuario }}</div>
+        </div>
+      </header>
+
+      <section class="page-header">
+        <div class="eyebrow">EP04 · SEGUIMIENTO</div>
+        <div class="header-row">
+          @if (detalle; as practica) {
+            <h1>{{ practica.estudiante.nombre }}</h1>
+          } @else {
+            <h1>Detalle de práctica</h1>
+          }
+          <div class="page-actions">
+            <ion-button fill="outline" (click)="registrarIncidencia()">Nueva incidencia</ion-button>
+            <ion-button (click)="registrarSeguimiento()">Registrar seguimiento</ion-button>
+          </div>
+        </div>
+        <p class="subtitle">
+          Antecedentes, estado e historial de la práctica profesional.
+        </p>
+      </section>
+
+      <section class="detail-state" aria-live="polite" [attr.aria-busy]="cargando">
+        @if (cargando) {
+          <div class="loading"><ion-spinner></ion-spinner><p>Cargando práctica...</p></div>
+        } @else if (error) {
+          <p role="alert">{{ error }}</p>
+          @if (permiteReintentar) {
+            <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
+          }
+        } @else if (detalle; as practica) {
+          <section class="practice-summary" aria-label="Antecedentes de la práctica">
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="label">N.º de práctica</span>
+                <strong>Práctica {{ practica.id_practica }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Centro de práctica</span>
+                <strong>{{ practica.centro_practica.nombre }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Estado actual</span>
+                <strong class="status-badge">{{ practica.estado.nombre }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Estado final</span>
+                <strong>{{ practica.estado.es_final ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Fecha de registro</span>
+                <strong>{{ formatearFechaHora(practica.fecha_registro) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Último cambio de estado</span>
+                <strong>{{ formatearFechaHora(practica.fecha_ultimo_cambio_estado) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Fecha de inicio</span>
+                <strong>{{ formatearFecha(practica.fecha_inicio) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Fecha de término</span>
+                <strong>{{ formatearFecha(practica.fecha_termino) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Horas registradas</span>
+                <strong>{{ practica.horas ?? 'No disponible' }}</strong>
+              </div>
+              <div class="summary-item">
+                <span class="label">Cargo o función</span>
+                <strong>{{ practica.cargo_funcion ?? 'No disponible' }}</strong>
+              </div>
+              <div class="summary-item summary-description">
+                <span class="label">Descripción</span>
+                <strong>{{ practica.descripcion ?? 'No disponible' }}</strong>
+              </div>
+            </div>
+          </section>
+
+          @if (puedeIniciar) {
+            <section class="start-section" aria-labelledby="inicio-titulo" [attr.aria-busy]="iniciando">
+              <div>
+                <h2 id="inicio-titulo">Inicio de práctica</h2>
+                <p>La práctica aprobada puede cambiar al estado EN_CURSO.</p>
+              </div>
+              @if (!confirmandoInicio) {
+                <ion-button [disabled]="iniciando || requiereConsultaEstado"
+                  (click)="solicitarInicio()">Iniciar práctica</ion-button>
+              } @else {
+                <label for="observacion-inicio">Observación opcional (máximo 500 caracteres)</label>
+                <textarea id="observacion-inicio" rows="3" [(ngModel)]="observacionInicio"
+                  [disabled]="iniciando"></textarea>
+                <div class="start-actions">
+                  <ion-button [disabled]="iniciando" (click)="confirmarInicio()">
+                    {{ iniciando ? 'Iniciando...' : 'Confirmar inicio' }}
+                  </ion-button>
+                  <ion-button fill="outline" [disabled]="iniciando" (click)="cancelarInicio()">
+                    Cancelar
+                  </ion-button>
+                </div>
+              }
+            </section>
+          }
+        }
+      </section>
+
+      @if (mensajeInicio) { <p role="status">{{ mensajeInicio }}</p> }
+      @if (errorInicio) { <p role="alert">{{ errorInicio }}</p> }
+      @if (requiereConsultaEstado) {
+        <ion-button fill="outline" [disabled]="cargando || cargandoHistorial"
+          (click)="consultarEstado()">Consultar nuevamente el estado</ion-button>
+      }
+
+      @if (historialHabilitado) {
+        <section class="tabs-panel history-section" aria-labelledby="historial-titulo"
+          aria-live="polite" [attr.aria-busy]="cargandoHistorial">
+          <div class="tabs" role="tablist" aria-label="Información de seguimiento">
+            <button class="tab" type="button" role="tab"
+              [class.active]="vistaHistorial === 'seguimientos'"
+              [attr.aria-selected]="vistaHistorial === 'seguimientos'"
+              (click)="seleccionarVista('seguimientos')">Seguimientos
+              <span class="tab-count">{{ registrosSeguimiento.length }}</span>
+            </button>
+            <button class="tab" type="button" role="tab"
+              [class.active]="vistaHistorial === 'incidencias'"
+              [attr.aria-selected]="vistaHistorial === 'incidencias'"
+              (click)="seleccionarVista('incidencias')">Incidencias
+              <span class="tab-count warning">{{ registrosIncidencia.length }}</span>
+            </button>
+            <button class="tab" type="button" role="tab"
+              [class.active]="vistaHistorial === 'antecedentes'"
+              [attr.aria-selected]="vistaHistorial === 'antecedentes'"
+              (click)="seleccionarVista('antecedentes')">Antecedentes</button>
+          </div>
+
+          @if (vistaHistorial === 'seguimientos') {
+            @if (registrosSeguimiento.length === 0) {
+              <p class="empty-state">Aún no hay seguimientos registrados para esta práctica.</p>
+            } @else {
+              <ol class="timeline">
+                @for (registro of registrosSeguimiento; track registro.id) {
+                  <li class="timeline-item">
+                    <span class="timeline-marker" aria-hidden="true"></span>
+                    <article class="timeline-content">
+                      <div class="event-head">
+                        <h3>{{ registro.tipo_contacto }}</h3>
+                        <time class="event-date">{{ formatearFechaRegistro(registro.fecha) }}</time>
+                      </div>
+                      <p>{{ registro.observaciones }}</p>
+                      @if (registro.proxima_fecha) {
+                        <p class="event-foot">Próximo seguimiento: {{ formatearFechaRegistro(registro.proxima_fecha) }}</p>
+                      }
+                    </article>
+                  </li>
+                }
+              </ol>
+            }
+          } @else if (vistaHistorial === 'incidencias') {
+            @if (registrosIncidencia.length === 0) {
+              <p class="empty-state">No hay incidencias registradas para esta práctica.</p>
+            } @else {
+              <ol class="timeline">
+                @for (registro of registrosIncidencia; track registro.id) {
+                  <li class="timeline-item">
+                    <span class="timeline-marker warning" aria-hidden="true"></span>
+                    <article class="timeline-content">
+                      <div class="event-head">
+                        <h3>{{ registro.descripcion }}</h3>
+                        <time class="event-date">{{ formatearFechaRegistro(registro.fecha) }}</time>
+                      </div>
+                      <span class="incident-status">{{ registro.estado }}</span>
+                    </article>
+                  </li>
+                }
+              </ol>
+            }
+          } @else if (cargandoHistorial) {
+            <div class="loading"><ion-spinner></ion-spinner><p>Cargando antecedentes...</p></div>
+          } @else if (errorHistorial) {
+            <p role="alert">{{ errorHistorial }}</p>
+            <ion-button fill="outline" (click)="cargarHistorial()">Reintentar antecedentes</ion-button>
+          } @else if (eventos.length === 0) {
+            <p class="empty-state">No hay cambios de estado registrados.</p>
+          } @else {
+            <ol class="timeline">
+              @for (evento of eventos; track evento.id_historial) {
+                <li class="timeline-item">
+                  <span class="timeline-marker" aria-hidden="true"></span>
+                  <article class="timeline-content">
+                    <div class="event-head">
+                      <h3>{{ evento.estado_anterior?.nombre ?? 'Sin estado anterior registrado' }}
+                        <span aria-hidden="true">→</span> {{ evento.estado_nuevo.nombre }}</h3>
+                      <time class="event-date">{{ formatearFechaHora(evento.fecha_cambio) }}</time>
+                    </div>
+                    <p class="event-foot">Responsable: {{ evento.responsable.nombre }}</p>
+                    @if (evento.observacion !== null) {
+                      <p class="history-observation">{{ evento.observacion }}</p>
+                    }
+                  </article>
+                </li>
+              }
+            </ol>
+            <nav class="history-pagination" aria-label="Paginación de antecedentes">
+              <ion-button fill="outline" [disabled]="cargandoHistorial || offsetHistorial === 0"
+                (click)="anteriorHistorial()">Anterior</ion-button>
+              <span>Página {{ offsetHistorial / limitHistorial + 1 }}</span>
+              <ion-button fill="outline" [disabled]="cargandoHistorial || !hayMasHistorial"
+                (click)="siguienteHistorial()">Siguiente</ion-button>
+            </nav>
+          }
+        </section>
+      }
+  </main>
+</ion-content>

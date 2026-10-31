@@ -63,6 +63,7 @@ class PracticaDetalleResponseTests(unittest.TestCase):
         self.assertIsNone(model.centro_practica.rut_empresa)
         self.assertIsNone(model.fecha_inicio)
         self.assertIsNone(model.descripcion)
+        self.assertIsNone(model.fecha_ultimo_cambio_estado)
 
     def test_serializes_nested_structure_as_expected(self) -> None:
         model = PracticaDetalleResponse(
@@ -95,6 +96,7 @@ class PracticaDetalleResponseTests(unittest.TestCase):
             {
                 "id_practica": 303,
                 "fecha_registro": "2026-09-01T10:30:00",
+                "fecha_ultimo_cambio_estado": None,
                 "estado": {
                     "id_estado": 3,
                     "nombre": "REGISTRADA",

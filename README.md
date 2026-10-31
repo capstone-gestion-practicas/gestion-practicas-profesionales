@@ -163,7 +163,6 @@ El proyecto se encuentra organizado en las siguientes épicas:
 | EP05 | Seguimiento de práctica |
 | EP06 | Gestión de incidencias y alertas |
 | EP07 | Cierre de práctica profesional |
-| EP08 | Centro de notificaciones |
 
 ## Funcionalidades implementadas
 
@@ -191,36 +190,9 @@ El proyecto se encuentra organizado en las siguientes épicas:
 - Listado y detalle de solicitudes para gestores y administradores.
 - Aprobación, observación o rechazo con trazabilidad de estados.
 
-### EP04: gestión de estado de práctica
-
-- Consulta del estado actual y su historial por parte del estudiante.
-- Gestión del estado por gestores y administradores, con trazabilidad.
-- Centro persistente de notificaciones: avisa de nuevas prácticas a gestores y
-  administradores, y de cambios de estado al estudiante.
-
-### EP05: seguimiento de práctica
-
-- Gestores y administradores registran seguimientos con fecha y observaciones en prácticas no finalizadas.
-- El historial por práctica muestra fecha, observaciones y responsable, y permanece disponible después del cierre.
-- La pantalla `/seguimientos` permite registrar y consultar el historial desde el panel de gestión.
-
-### EP06: gestión de incidencias y alertas
-
-- Gestores y administradores registran incidencias con fecha, descripción y prioridad en prácticas activas.
-- Las incidencias de prioridad alta o crítica generan una alerta asociada.
-- El estado de cada incidencia puede actualizarse; las abiertas y en revisión se destacan como pendientes.
-- La pantalla `/incidencias` permite consultar incidencias y prácticas vinculadas.
-
-### EP08: centro de notificaciones
-
-- Bandeja personal con contador de notificaciones no leídas.
-- Avisos por prácticas nuevas para gestores y administradores.
-- Avisos al estudiante cuando cambia el estado de su práctica.
-- Aviso emergente durante el uso de la app y persistencia para consultarlo después.
-
 ## Historias de Usuario
 
-El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las épicas. La épica EP08 se incorporó después como extensión del backlog.
+El Product Backlog inicial está compuesto por 19 historias de usuario distribuidas entre las siete épicas.
 
 Las historias de usuario son gestionadas mediante GitHub Issues y organizadas dentro de GitHub Projects.
 

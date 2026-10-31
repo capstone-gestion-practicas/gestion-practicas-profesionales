@@ -1,0 +1,464 @@
+<ion-content class="home-content">
+  <ion-grid class="home-wrapper">
+    <ion-row>
+      <ion-col size="12">
+    @if (cargando) {
+
+      <div class="loading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Cargando información...</p>
+      </div>
+
+    } @else if (contexto(); as ctx) {
+
+      @if (puedeRevisarPracticas()) {
+        <ion-button class="practicas-access" expand="block" (click)="consultarPracticas()">
+          Consultar prácticas
+        </ion-button>
+      }
+
+      @if (esAdministrador()) {
+        <section class="admin-dashboard" aria-label="Dashboard administrativo">
+          <div class="admin-heading">
+            <div>
+              <p class="module-label">Administración</p>
+              <h1>Dashboard</h1>
+              <p>Resumen general de la gestión de prácticas.</p>
+            </div>
+            <div class="admin-heading-actions">
+              <ion-button (click)="gestionarUsuarios()">Gestionar usuarios</ion-button>
+            </div>
+          </div>
+
+          @if (errorDashboardAdmin) {
+            <p class="module-warning" role="alert">{{ errorDashboardAdmin }}</p>
+          }
+
+          <ion-grid class="admin-metrics">
+            <ion-row>
+              <ion-col size="12" size-md="4">
+                <ion-card class="metric-card">
+                  <ion-card-content><span>Usuarios activos</span><strong>{{ usuariosActivos() }}</strong><small>cuentas habilitadas</small></ion-card-content>
+                </ion-card>
+              </ion-col>
+              <ion-col size="12" size-md="4">
+                <ion-card class="metric-card">
+                  <ion-card-content><span>Gestores activos</span><strong>{{ gestoresActivos() }}</strong><small>con rol de revisión</small></ion-card-content>
+                </ion-card>
+              </ion-col>
+              <ion-col size="12" size-md="4">
+                <ion-card class="metric-card emphasis">
+                  <ion-card-content>
+                    <span>Solicitudes pendientes</span>
+                    <strong>{{ solicitudesPendientes() }}</strong>
+                    <small>requieren seguimiento</small>
+                    <ion-button fill="clear" size="small" (click)="abrirSolicitudesPendientes()">
+                      Ver solicitudes
+                    </ion-button>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <ion-grid class="admin-panels">
+            <ion-row>
+              <ion-col size="12" size-lg="7">
+                <ion-card class="admin-table-card">
+                  <ion-card-header>
+                    <ion-card-title>Solicitudes recientes</ion-card-title>
+                  </ion-card-header>
+                  <ion-card-content>
+                    @if (solicitudesRecientes().length) {
+                      <ion-list lines="full">
+                        @for (solicitud of solicitudesRecientes(); track solicitud.id_practica) {
+                          <ion-item button detail="true" (click)="abrirDetalleSolicitud(solicitud.id_practica)">
+                            <ion-label>
+                              <h3>{{ solicitud.estudiante }}</h3>
+                              <p>{{ solicitud.centro_practica }} · {{ formatearFechaUltimoCambio(solicitud.fecha_registro) }}</p>
+                            </ion-label>
+                            <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
+                          </ion-item>
+                        }
+                      </ion-list>
+                    } @else {
+                      <p class="empty-state">No hay solicitudes disponibles.</p>
+                    }
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+              <ion-col size="12" size-lg="5">
+                <ion-card class="quick-actions-card">
+                  <ion-card-header><ion-card-title>Accesos rápidos</ion-card-title></ion-card-header>
+                  <ion-card-content>
+                    <ion-button expand="block" (click)="gestionarUsuarios()">Usuarios y roles</ion-button>
+                    <ion-button expand="block" fill="outline" (click)="revisarPracticas()">Revisar prácticas</ion-button>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </section>
+      } @else {
+      <section class="student-dashboard"
+        [class.single-panel]="!practicaDetalle && !puedeRevisarPracticas()"
+        aria-label="Panel personal">
+
+      <aside class="student-sidebar">
+      <ion-card class="welcome-card">
+        <ion-card-header>
+          <div class="profile-intro">
+            <span class="profile-avatar">{{ ctx.usuario.nombre[0] }}</span>
+            <div>
+              <p class="module-label">Panel personal</p>
+              <ion-card-title>Hola, {{ ctx.usuario.nombre }}</ion-card-title>
+            </div>
+          </div>
+          <p class="welcome-subtitle">
+            Revisa tu información de perfil, el estado de tu práctica y los
+            accesos disponibles según tu rol.
+          </p>
+        </ion-card-header>
+
+        <ion-card-content>
+          <ion-list class="identity-list" lines="none">
+            <ion-item class="identity-item">
+              <ion-label>
+              <span>Correo institucional</span>
+              <strong>{{ ctx.usuario.correo }}</strong>
+              </ion-label>
+            </ion-item>
+
+            <ion-item class="identity-item">
+              <ion-label>
+              <span>Estado de cuenta</span>
+              <strong class="account-active">Activa</strong>
+              </ion-label>
+            </ion-item>
+
+            @if (ctx.perfil) {
+              <ion-item class="identity-item">
+                <ion-label>
+                <span>Carrera</span>
+                <strong>{{ ctx.perfil.carrera }}</strong>
+                </ion-label>
+              </ion-item>
+
+              <ion-item class="identity-item">
+                <ion-label>
+                <span>Sede</span>
+                <strong>{{ ctx.perfil.sede }}</strong>
+                </ion-label>
+              </ion-item>
+            }
+          </ion-list>
+          <div class="profile-actions">
+            <ion-button fill="outline" size="small" (click)="copiarCorreo(ctx.usuario.correo)">
+              Copiar correo
+            </ion-button>
+            @if (esEstudiante()) {
+              <ion-button fill="clear" size="small" (click)="irAPractica()">
+                Ver práctica
+              </ion-button>
+            }
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      @if (esEstudiante()) {
+        <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
+      }
+      </aside>
+
+      @if (practicaDetalle) {
+        <ion-card id="antecedentes-practica" class="practice-card">
+          <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
+            <ion-card-title>Antecedentes de tu práctica</ion-card-title>
+            <p class="practice-subtitle">
+              Información general, estado actual y datos del centro de práctica.
+            </p>
+          </ion-card-header>
+
+          <ion-card-content>
+            <div class="practice-section practice-status">
+              <p class="section-label">Estado de la práctica</p>
+              <div class="status-pill">
+                <strong>{{ practicaDetalle.estado.nombre }}</strong>
+                <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
+                <span>Último cambio de estado: {{ formatearFechaUltimoCambio(practicaDetalle.fecha_ultimo_cambio_estado) }}</span>
+              </div>
+            </div>
+
+            <div class="practice-section">
+              <p class="section-label">Datos generales</p>
+              <div class="detail-grid detail-grid-general">
+                <p>
+                  <span>Fecha de registro</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_registro) }}</strong>
+                </p>
+                <p>
+                  <span>Fecha de inicio</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_inicio) }}</strong>
+                </p>
+                <p>
+                  <span>Fecha de término</span>
+                  <strong>{{ formatearCampo(practicaDetalle.fecha_termino) }}</strong>
+                </p>
+                <p>
+                  <span>Horas</span>
+                  <strong>{{ formatearCampo(practicaDetalle.horas) }}</strong>
+                </p>
+                <p>
+                  <span>Función</span>
+                  <strong>{{ formatearCampo(practicaDetalle.cargo_funcion) }}</strong>
+                </p>
+                <p class="full-width">
+                  <span>Descripción</span>
+                  <strong>{{ formatearCampo(practicaDetalle.descripcion) }}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div class="practice-section">
+              <p class="section-label">Centro de práctica</p>
+              <div class="detail-grid detail-grid-center">
+                <p class="full-width">
+                  <span>Centro</span>
+                  <strong>{{ practicaDetalle.centro_practica.nombre }}</strong>
+                </p>
+                <p>
+                  <span>RUT empresa</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.rut_empresa) }}</strong>
+                </p>
+                <p>
+                  <span>Dirección</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.direccion) }}</strong>
+                </p>
+                <p>
+                  <span>Teléfono</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.telefono) }}</strong>
+                </p>
+                <p>
+                  <span>Correo</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.correo) }}</strong>
+                </p>
+                <p>
+                  <span>Contacto</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.contacto_nombre) }}</strong>
+                </p>
+                <p>
+                  <span>Cargo de contacto</span>
+                  <strong>{{ formatearCampo(practicaDetalle.centro_practica.contacto_cargo) }}</strong>
+                </p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      } @else if (errorPractica) {
+        <ion-card class="state-card state-card-warning">
+          <ion-card-content>
+            <p class="module-warning" role="alert">
+              {{ errorPractica }}
+            </p>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      <ng-template #registrationCard>
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP02 · Registro</p>
+            <ion-card-title>Registro de práctica profesional</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            @if (ctx.practica_actual) {
+              <p class="module-success">
+                Tu práctica ya fue registrada correctamente.
+              </p>
+            } @else if (ctx.perfil) {
+              <p>
+                Ingresa los antecedentes de la empresa, las fechas, las horas
+                y las funciones que realizarás durante tu práctica.
+              </p>
+
+              <div class="registration-details">
+                <span>Perfil: {{ ctx.perfil.rut }}</span>
+                <span>Estado inicial: REGISTRADA</span>
+              </div>
+
+              <ion-button
+                expand="block"
+                (click)="registrarPractica()">
+                Comenzar registro
+              </ion-button>
+            } @else {
+              <p class="module-warning" role="alert">
+                Tu usuario todavía no tiene un perfil de estudiante asociado.
+                Completa tus datos antes de registrar una práctica.
+              </p>
+
+              <ion-button
+                expand="block"
+                (click)="completarPerfil()">
+                Completar mi perfil
+              </ion-button>
+            }
+          </ion-card-content>
+        </ion-card>
+      </ng-template>
+
+      @if (puedeRevisarPracticas()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP03 · Revisión</p>
+            <ion-card-title>Solicitudes de práctica</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Consulta los antecedentes y resuelve las solicitudes pendientes.</p>
+            <ion-button expand="block" (click)="revisarPracticas()">
+              Ver solicitudes
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+
+      @if (esAdministrador()) {
+        <ion-card class="registration-card">
+          <ion-card-header>
+            <p class="module-label">EP01 · Administración</p>
+            <ion-card-title>Gestión de usuarios</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Crea cuentas, asigna roles y habilita o deshabilita usuarios.</p>
+            <ion-button expand="block" (click)="gestionarUsuarios()">
+              Administrar usuarios
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      }
+      @if (mensajeInteraccion) {
+        <p class="interaction-message" role="status">{{ mensajeInteraccion }}</p>
+      }
+      </section>
+      }
+
+      <div class="secondary-action">
+        <ion-button
+          expand="block"
+          fill="outline"
+          (click)="cerrarSesion()">
+          Cerrar sesión
+        </ion-button>
+      </div>
+
+    }
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-modal
+    [isOpen]="modalPerfilAbierto"
+    [backdropDismiss]="!guardandoPerfil"
+    (didDismiss)="cerrarModalPerfil()">
+    <ng-template>
+      <div class="profile-modal">
+        <div class="profile-modal-header">
+          <p class="module-label">Perfil de estudiante</p>
+          <h2>Completa tus datos</h2>
+          <p>Necesitamos esta información antes de registrar tu práctica.</p>
+        </div>
+
+        <ion-item>
+          <ion-label position="stacked">RUT *</ion-label>
+          <ion-input [(ngModel)]="rutPerfil" maxlength="12" autocapitalize="characters" placeholder="12.345.678-5"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Carrera *</ion-label>
+          <ion-input [(ngModel)]="carreraPerfil" maxlength="150"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Sede *</ion-label>
+          <ion-input [(ngModel)]="sedePerfil" maxlength="100"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Teléfono</ion-label>
+          <ion-input
+            type="tel"
+            inputmode="tel"
+            [(ngModel)]="telefonoPerfil"
+            maxlength="20">
+          </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Dirección</ion-label>
+          <ion-input [(ngModel)]="direccionPerfil" maxlength="255"></ion-input>
+        </ion-item>
+
+        @if (errorPerfil) {
+          <p class="profile-error" role="alert">{{ errorPerfil }}</p>
+        }
+
+        <div class="profile-modal-actions">
+          <ion-button
+            fill="outline"
+            [disabled]="guardandoPerfil"
+            (click)="cerrarModalPerfil()">
+            Cancelar
+          </ion-button>
+          <ion-button
+            [disabled]="guardandoPerfil"
+            (click)="guardarPerfil()">
+            @if (guardandoPerfil) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              Guardar perfil
+            }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Legacy inline modal moved to SolicitudesPendientesModal. -->
+  <!--
+  <ion-modal
+    class="requests-modal"
+    [isOpen]="modalSolicitudesAbierto"
+    (didDismiss)="cerrarSolicitudesPendientes()">
+    <ng-template>
+      <section class="requests-modal-content">
+        <div class="requests-modal-heading">
+          <div>
+            <p class="module-label">Administración</p>
+            <h2>Solicitudes pendientes</h2>
+            <p>Prácticas que requieren revisión o seguimiento.</p>
+          </div>
+          <ion-button fill="clear" (click)="cerrarSolicitudesPendientes()">Cerrar</ion-button>
+        </div>
+
+        @if (solicitudesPendientesLista().length) {
+          <ion-list lines="full">
+            @for (solicitud of solicitudesPendientesLista(); track solicitud.id_practica) {
+              <ion-item button detail="true" (click)="revisarPracticas()">
+                <ion-label>
+                  <h3>{{ solicitud.estudiante }}</h3>
+                  <p>{{ solicitud.centro_practica }}</p>
+                  <p>Registrada: {{ formatearFechaUltimoCambio(solicitud.fecha_registro) }}</p>
+                </ion-label>
+                <ion-note slot="end" class="request-state">{{ solicitud.estado }}</ion-note>
+              </ion-item>
+            }
+          </ion-list>
+        } @else {
+          <p class="empty-state">No hay solicitudes pendientes.</p>
+        }
+
+        <ion-button expand="block" (click)="revisarPracticas()">Ir a revisiones</ion-button>
+      </section>
+    </ng-template>
+  </ion-modal>
+  -->
+</ion-content>

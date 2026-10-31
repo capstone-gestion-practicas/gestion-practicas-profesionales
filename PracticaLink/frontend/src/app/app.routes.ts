@@ -1,0 +1,82 @@
+ import { Routes } from '@angular/router';
+
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login')
+        .then(m => m.Login)
+  },
+  {
+    path: 'home',
+    canActivate: [authGuard, roleGuard],
+    data: {
+      roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR']
+    },
+    loadComponent: () =>
+      import('./pages/home/home')
+        .then(m => m.Home)
+  },
+  {
+    path: 'usuarios',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+  },
+  {
+    path: 'revisiones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revisiones/revisiones').then(m => m.Revisiones)
+  },
+  {
+    path: 'revisiones/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/revision-detalle/revision-detalle')
+        .then(m => m.RevisionDetalle)
+  },
+  {
+    path: 'practicas',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
+  },
+  {
+    path: 'practicas/:id/seguimiento/nuevo',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'seguimiento' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
+  },
+  {
+    path: 'practicas/:id/incidencias/nueva',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'incidencia' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
+  },
+  {
+    path: 'practicas/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practica-detalle/practica-detalle').then(m => m.PracticaDetalle)
+  },
+  {
+    path: '**',
+    redirectTo: 'login'
+  }
+];

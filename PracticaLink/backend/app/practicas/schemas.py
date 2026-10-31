@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.schemas.validators import normalizar_rut
 
@@ -65,10 +66,6 @@ class EstadoPracticaLectura(BaseModel):
     es_final: bool
 
 
-class EstadoPracticaDetalle(EstadoPracticaLectura):
-    descripcion: str | None = None
-
-
 class CentroPracticaLectura(BaseModel):
     id_centro: int
     nombre: str
@@ -80,26 +77,21 @@ class CentroPracticaLectura(BaseModel):
     contacto_cargo: str | None = None
 
 
-CentroPracticaDetalle = CentroPracticaLectura
-
-
 class PracticaDetalleResponse(BaseModel):
     id_practica: int
     fecha_registro: datetime
-    fecha_actualizacion: datetime | None = Field(
-        default=None,
-        exclude_if=lambda valor: valor is None,
-    )
+    fecha_ultimo_cambio_estado: datetime | None = None
     estado: EstadoPracticaLectura
     centro_practica: CentroPracticaLectura
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = None
-    horas_semanales: int | None = Field(
-        default=None,
-        exclude_if=lambda valor: valor is None,
-    )
+    horas_semanales: int | None = None
     cargo_funcion: str | None = None
+    descripcion: str | None = None
+
+
+class EstadoPracticaDetalle(EstadoPracticaLectura):
     descripcion: str | None = None
 
 
@@ -185,3 +177,92 @@ class EstadoPracticaActualResponse(BaseModel):
     id_practica: int
     fecha_actualizacion: datetime
     estado: EstadoPracticaDetalle
+
+
+class EstudiantePracticaResumen(BaseModel):
+    id_estudiante: int
+    nombre: str
+
+
+class PracticaResumen(BaseModel):
+    id_practica: int
+    estudiante: EstudiantePracticaResumen
+    centro_practica: str
+    fecha_registro: datetime
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime | None
+
+
+class PracticasListadoResponse(BaseModel):
+    items: list[PracticaResumen]
+    limit: int
+    offset: int
+    hay_mas: bool
+
+
+class CentroPracticaResumen(BaseModel):
+    id_centro: int
+    nombre: str
+
+
+class PracticaDetalleGestionResponse(BaseModel):
+    id_practica: int
+    estudiante: EstudiantePracticaResumen
+    centro_practica: CentroPracticaResumen
+    fecha_registro: datetime
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime | None
+    fecha_inicio: date | None
+    fecha_termino: date | None
+    horas: int | None
+    cargo_funcion: str | None
+    descripcion: str | None
+
+
+class EstadoHistorial(BaseModel):
+    id_estado: int
+    nombre: str
+
+
+class ResponsableHistorial(BaseModel):
+    id_usuario: int
+    nombre: str
+
+
+class EventoHistorial(BaseModel):
+    id_historial: int
+    estado_anterior: EstadoHistorial | None
+    estado_nuevo: EstadoHistorial
+    fecha_cambio: datetime
+    responsable: ResponsableHistorial
+    observacion: str | None
+
+
+class HistorialPracticaResponse(BaseModel):
+    id_practica: int
+    items: list[EventoHistorial]
+    limit: int
+    offset: int
+    hay_mas: bool
+
+
+class IniciarPracticaRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    estado: Literal["EN_CURSO"]
+    observacion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("observacion", mode="before")
+    @classmethod
+    def normalizar_observacion(cls, valor):
+        # Mismo btrim de espacios que la función PostgreSQL versionada.
+        return (valor.strip(" ") or None) if isinstance(valor, str) else valor
+
+
+class IniciarPracticaResponse(BaseModel):
+    id_practica: int
+    estado_anterior: EstadoHistorial
+    estado: EstadoPracticaLectura
+    fecha_ultimo_cambio_estado: datetime
+    id_historial: int
+    mensaje: str

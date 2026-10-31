@@ -1,6 +1,6 @@
 import os
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from fastapi.routing import APIRoute
@@ -330,9 +330,65 @@ class PracticasRouteTests(unittest.TestCase):
                     )
 
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.json(), expected_response)
+                self.assertEqual(response.json(), {**expected_response, "fecha_ultimo_cambio_estado": None})
                 obtener_mock.assert_called_once_with(db, 123)
                 obtener_contexto_usuario.assert_called()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_get_my_practice_serializes_non_null_state_date_for_authenticated_user(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 777,
+            "fecha_registro": "2026-09-01T10:30:00",
+            "fecha_ultimo_cambio_estado": datetime(2026, 10, 17, 12, 30, tzinfo=timezone.utc),
+            "estado": {
+                "id_estado": 1,
+                "nombre": "REGISTRADA",
+                "es_final": False,
+            },
+            "centro_practica": {
+                "id_centro": 888,
+                "nombre": "Centro de prueba",
+                "rut_empresa": "12.345.678-5",
+                "direccion": "Av. Siempre Viva 123",
+                "telefono": "+56 9 1234 5678",
+                "correo": "contacto@empresa.cl",
+                "contacto_nombre": "Maria Perez",
+                "contacto_cargo": "Jefa de practica",
+            },
+            "fecha_inicio": "2026-03-02",
+            "fecha_termino": "2026-06-30",
+            "horas": 360,
+            "cargo_funcion": "Desarrollador",
+            "descripcion": "Practica de caracterizacion",
+        }
+
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 123
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ESTUDIANTE"]},
+            ) as obtener_contexto_usuario, patch(
+                "app.practicas.routes.obtener_practica_del_estudiante",
+                return_value=expected_response,
+            ) as obtener_mock:
+                with TestClient(app) as client:
+                    response = client.get(
+                        "/practicas/me?id_practica=999",
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), {
+                    **expected_response,
+                    "fecha_ultimo_cambio_estado": "2026-10-17T12:30:00Z",
+                })
+                obtener_mock.assert_called_once_with(db, 123)
+                obtener_contexto_usuario.assert_called_once_with(db=db, id_usuario=123)
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)

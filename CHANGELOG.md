@@ -16,18 +16,6 @@ Primera versión consolidada, disponible en la rama `release-1.1`. Incluye EP01
 
 ### Agregado
 
-- Proyecto Android de PracticaLink generado con Capacitor para la release 1.1.
-- Guía completa para configurar Android Studio, ejecutar en emulador o teléfono,
-  generar APK de QA y versiones firmadas, y resolver errores frecuentes.
-- Configuración del proyecto para permitir su ejecución mediante `ionic serve`.
-- Versión Android actualizada a `1.1.0` con código interno de build `2`.
-- Sincronización automática de la versión de `package.json` con Gradle antes de
-  ejecutar `build-android:qa`.
-- Comando `npm run build-android:qa` para compilar el frontend QA, sincronizar
-  Capacitor y abrir el proyecto directamente en Android Studio.
-- Configuración de ambientes Angular para usar FastAPI local durante desarrollo
-  y `https://practicalink-api-qa.onrender.com` en builds QA/Android.
-- Soporte CORS del backend para los orígenes utilizados por Capacitor Android.
 - Buscador de empresas por RUT dentro del modal de registro de práctica.
 - Integración backend con Chile RUT Empresa mediante una API key de entorno.
 - Tabla `empresa` y funciones `fn_obtener_empresa_cache` y
