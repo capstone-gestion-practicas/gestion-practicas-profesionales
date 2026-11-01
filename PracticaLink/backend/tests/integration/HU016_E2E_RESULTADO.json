@@ -1,0 +1,2066 @@
+{
+  "head": "775a711",
+  "checks": [
+    {
+      "name": "privilegios mínimos e2e_incidence",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_read",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_write",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_main",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "EXECUTE del ejecutor HU016 sobre fn_cambiar_estado_incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "EXECUTE del ejecutor HU016 sobre fn_consultar_historial_incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "sin DML directo del ejecutor sobre historial_estado_incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "login GESTOR mediante formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 I1 pendiente a en ",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 I2 pendiente a res",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 I3 en atencion a r",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 API validaciones",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 regresion POST HU0",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 concurrencia",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 practica finalizad",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "evento inicial I1",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial I2",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial I3",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial API",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial REG",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial B",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento inicial F",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "práctica F finalizada y histórico incompatible sembrado (fixture de laboratorio)",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "PENDIENTE->EN_ATENCION HTTP 200 tras commit",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "PENDIENTE->EN_ATENCION: estado e historial atómicos, comentario recortado",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "evento de cambio no anterior al inicial (fecha de servidor)",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "historial en navegador: responsable y fecha America/Santiago",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": "Responsable: Usuario #101 · 01/11/2026, 15:17"
+    },
+    {
+      "name": "persistencia del estado EN_ATENCION tras recarga",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "RESUELTA con comentario solo espacios: rechazado sin PATCH",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "RESUELTA con 2001 caracteres: rechazado sin PATCH",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "PENDIENTE->RESUELTA persistido con responsable y comentario",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "RESUELTA: fecha de resolución igual a la del evento de historial",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "listado muestra responsable y comentario de resolución",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "PENDIENTE->EN_ATENCION sin comentario (opcional)",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "EN_ATENCION->RESUELTA con 2001 caracteres: rechazado sin PATCH",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "EN_ATENCION->RESUELTA con exactamente 2000 caracteres aceptado",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "API comentario de 2001 caracteres rechazado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 422
+    },
+    {
+      "name": "API RESUELTA con comentario solo espacios rechazado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 422
+    },
+    {
+      "name": "API campo de identidad enviado por el cliente rechazado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 422
+    },
+    {
+      "name": "API estado esperado desactualizado rechazado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "validaciones API no alteraron la incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "RESUELTA sin controles de transición en interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "RESUELTA terminal rechaza RESUELTA->PENDIENTE",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "RESUELTA terminal rechaza RESUELTA->EN_ATENCION",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "RESUELTA terminal rechaza RESUELTA->RESUELTA",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "RESUELTA terminal: sin cambios ni eventos adicionales",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "historial en navegador: evento inicial, cambios, responsable y comentario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "paginación en navegador: con 3 eventos, Siguiente deshabilitado",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "paginación API limit=1 recorre 3 eventos sin duplicados",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": [
+        [
+          200,
+          1,
+          true
+        ],
+        [
+          200,
+          1,
+          true
+        ],
+        [
+          200,
+          1,
+          false
+        ],
+        [
+          200,
+          0,
+          false
+        ]
+      ]
+    },
+    {
+      "name": "historial devuelve el último estado primero con valores reales",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": null
+    },
+    {
+      "name": "concurrencia: primera sesión confirma (200)",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "concurrencia: segunda sesión recibe 409",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        409
+      ]
+    },
+    {
+      "name": "concurrencia: segunda sesión consulta el estado real tras 409",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "concurrencia: sin evento duplicado ni transición obsoleta",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "regresión HU015 GET: incidencia registrada por POST aparece tras consulta",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "regresión HU013/HU014 en navegador",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "seguimiento persistido en PostgreSQL",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "login ADMINISTRADOR mediante formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "POST 201 registro E2E-HU016 administrador",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "ADMINISTRADOR cambia estado; responsable del historial es su identidad",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "ADMINISTRADOR consulta incidencias de otros gestores",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "práctica finalizada: incidencia moderna existente sí se gestiona",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "histórico incompatible visible en solo lectura (sin controles)",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "histórico incompatible consultable por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 200
+    },
+    {
+      "name": "histórico incompatible: transición rechazada por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "histórico incompatible sin conversión ni alteración de datos",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "práctica finalizada: alta bloqueada en interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "práctica finalizada: alta rechazada por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "práctica finalizada: sin nuevas incidencias",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE redirigido desde ?vista=incidencias",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE redirigido desde /incidencias/nueva",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE rechazado GET historial",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "ESTUDIANTE rechazado PATCH estado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "ESTUDIANTE sin efecto en la incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "usuario inactivo con JWT previo rechazado GET historial",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo con JWT previo rechazado PATCH estado",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo sin efecto en la incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "usuario inactivo expulsado de la interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "login de usuario inactivo rechazado",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin accesos localStorage durante la ejecución principal",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "sin accesos localStorage durante la ejecución concurrente",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    }
+  ],
+  "http_browser": [
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/2/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/3/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/2/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/2/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/3/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/3/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/4/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/4/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 422
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 422
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 422
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/3/estado",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/3/estado",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/3/estado",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=1&offset=3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias/7/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2/incidencias/7/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias/7/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/2/incidencias/7/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/seguimientos",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/seguimientos",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/9/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/9/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias/9/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/9/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias/8/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias/8/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias/8/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/3/incidencias/8/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3/incidencias/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias/1/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/3/incidencias/1/estado",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/3/incidencias",
+      "status": 409
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/1/incidencias/4/historial?limit=50&offset=0",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/1/incidencias/5/estado",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias/7/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/incidencias/7/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias/7/estado",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "PATCH",
+      "path": "/practicas/2/incidencias/7/estado",
+      "status": 409
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "concurrente",
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    }
+  ],
+  "cleanup": true,
+  "browser": "Chrome/155.0.8059.84",
+  "database_summary": {
+    "incidencias_A": 6,
+    "incidencias_B": 1,
+    "incidencias_F": 2,
+    "eventos_historial": 15
+  },
+  "resources": [
+    {
+      "kind": "network",
+      "name": "ep06-e2e-hu016-5f687c00ae224009bb2e4a62-net"
+    },
+    {
+      "kind": "volume",
+      "name": "ep06-e2e-hu016-5f687c00ae224009bb2e4a62-data"
+    },
+    {
+      "kind": "container",
+      "name": "ep06-e2e-hu016-5f687c00ae224009bb2e4a62"
+    }
+  ]
+}
