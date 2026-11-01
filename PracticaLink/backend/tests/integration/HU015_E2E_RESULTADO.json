@@ -1,0 +1,776 @@
+{
+  "head": "b9efd33",
+  "checks": [
+    {
+      "name": "privilegios mínimos e2e_incidence",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_read",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_write",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_main",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "login GESTOR mediante formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "POST 201 desde formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "incidencia confirmada con práctica y autor",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": {
+        "id_incidencia": 2,
+        "id_practica": 1,
+        "id_usuario": 101,
+        "estado": "PENDIENTE"
+      }
+    },
+    {
+      "name": "fecha PostgreSQL presentada America/Santiago",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": "01/11/2026, 12:34"
+    },
+    {
+      "name": "evento inicial atómico",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "GET real al volver al detalle",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "persistencia tras recarga",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "persistencia tras cerrar y abrir sesión",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "separación y lista vacía B",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "navegación rápida A/B sin mezcla",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "históricos finalizados y descripción extensa",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "histórico intacto",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "alta finalizada bloqueada en interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "alta finalizada rechazada API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 409
+    },
+    {
+      "name": "doble envío: una sola fila",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "regresión HU013/HU014 en navegador",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "seguimiento en PostgreSQL",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "POST 201 desde formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin acceso localStorage en página",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "ADMINISTRADOR registra y consulta",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE bloqueado interfaz ?vista=incidencias",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE bloqueado interfaz /incidencias/nueva",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE rechazado GET",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "ESTUDIANTE rechazado POST",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo con JWT previo GET",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo con JWT previo POST",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo expulsado de interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "login inactivo rechazado",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin accesos localStorage durante toda la ejecución",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    }
+  ],
+  "http_browser": [
+    {
+      "method": "OPTIONS",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/3/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/3/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/3/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/3/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/3",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/3/incidencias",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/3/incidencias",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/2",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/2/incidencias",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/2/incidencias",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/1/seguimientos",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/1/seguimientos",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/practicas/1/incidencias",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/practicas/1/incidencias",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401
+    }
+  ],
+  "cleanup": true,
+  "browser": "Chrome/155.0.8059.84",
+  "database_summary": {
+    "incidencias_A": 2,
+    "incidencias_B": 1,
+    "historicos": 1,
+    "eventos_iniciales": 3
+  },
+  "resources": [
+    {
+      "kind": "network",
+      "name": "ep06-e2e-66b511593016e26973537a39-net"
+    },
+    {
+      "kind": "volume",
+      "name": "ep06-e2e-66b511593016e26973537a39-data"
+    },
+    {
+      "kind": "container",
+      "name": "ep06-e2e-66b511593016e26973537a39"
+    }
+  ]
+}
