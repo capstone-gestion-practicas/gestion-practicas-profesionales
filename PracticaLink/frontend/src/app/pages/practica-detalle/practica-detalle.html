@@ -124,7 +124,7 @@
 
       @if (historialHabilitado) {
         <section class="tabs-panel history-section" aria-labelledby="historial-titulo"
-          aria-live="polite" [attr.aria-busy]="vistaHistorial === 'seguimientos' ? cargandoSeguimientos : cargandoHistorial">
+          aria-live="polite" [attr.aria-busy]="vistaHistorial === 'seguimientos' ? cargandoSeguimientos : vistaHistorial === 'incidencias' ? cargandoIncidencias : cargandoHistorial">
           <div class="tabs" role="tablist" aria-label="Información de seguimiento">
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'seguimientos'"
@@ -185,7 +185,56 @@
               </nav>
             }
           } @else if (vistaHistorial === 'incidencias') {
-            <p class="empty-state">La consulta del historial persistente de incidencias está pendiente de implementación. Los datos locales de demostración no se muestran ni se migran.</p>
+            @if (cargandoIncidencias) {
+              <div class="loading"><ion-spinner></ion-spinner><p>Cargando incidencias...</p></div>
+            } @else if (errorIncidencias) {
+              <p role="alert">{{ errorIncidencias }}</p>
+              @if (puedeConsultarIncidencias) {
+                <ion-button fill="outline" (click)="cargarIncidencias()">Reintentar incidencias</ion-button>
+              }
+            } @else if (incidenciasConsultadas) {
+              @if (registrosIncidencia.length === 0) {
+                <p class="empty-state">{{ offsetIncidencias === 0
+                  ? 'No hay incidencias registradas para esta práctica'
+                  : 'No hay incidencias en esta página.' }}</p>
+              } @else {
+                <ol class="timeline">
+                  @for (registro of registrosIncidencia; track registro.id_incidencia) {
+                    <li class="timeline-item">
+                      <span class="timeline-marker" aria-hidden="true"></span>
+                      <article class="timeline-content">
+                        <div class="event-head">
+                          <h3>{{ registro.sin_tipo_registrado ? 'Sin tipo registrado' : (registro.tipo ?? 'Sin tipo registrado') }}</h3>
+                          <time class="event-date">{{ formatearFechaIncidencia(registro.fecha) }}</time>
+                        </div>
+                        <p>Estado: {{ registro.estado }}</p>
+                        <p class="history-observation">{{ registro.descripcion }}</p>
+                        <p class="event-foot">Autor: Usuario #{{ registro.id_usuario }}</p>
+                        @if (registro.fecha_resolucion !== null) {
+                          <p>Fecha de resolución: {{ formatearFechaIncidencia(registro.fecha_resolucion) }}</p>
+                        }
+                        @if (registro.resolucion; as resolucion) {
+                          <p>Responsable de resolución: Usuario #{{ resolucion.id_usuario }}</p>
+                          <p>Fecha del evento de resolución: {{ formatearFechaIncidencia(resolucion.fecha) }}</p>
+                          @if (resolucion.comentario !== null) {
+                            <p class="history-observation">Comentario: {{ resolucion.comentario }}</p>
+                          }
+                        }
+                      </article>
+                    </li>
+                  }
+                </ol>
+              }
+            }
+            @if (incidenciasConsultadas || cargandoIncidencias || (errorIncidencias && puedeConsultarIncidencias)) {
+              <nav class="history-pagination" aria-label="Paginación de incidencias">
+                <ion-button fill="outline" [disabled]="cargandoIncidencias || offsetIncidencias === 0"
+                  (click)="anteriorIncidencias()">Anterior</ion-button>
+                <span>Página {{ offsetIncidencias / limitIncidencias + 1 }}</span>
+                <ion-button fill="outline" [disabled]="cargandoIncidencias || !hayMasIncidencias"
+                  (click)="siguienteIncidencias()">Siguiente</ion-button>
+              </nav>
+            }
           } @else if (cargandoHistorial) {
             <div class="loading"><ion-spinner></ion-spinner><p>Cargando antecedentes...</p></div>
           } @else if (errorHistorial) {

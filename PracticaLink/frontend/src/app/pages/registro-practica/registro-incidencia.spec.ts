@@ -54,7 +54,7 @@ describe('HU015 formulario remoto', () => {
     expect(element.querySelector('select#estado-incidencia')).toBeNull();
     expect(element.querySelector('input[type=date]')).toBeNull();
     expect(element.textContent).not.toContain('DEMO NO MOSTRAR');
-    expect(element.textContent).toContain('historial persistente de incidencias está pendiente');
+    expect(element.textContent).toContain('Consulta las incidencias guardadas');
     expect(component.fechaIncidencia).toBe('');
   });
 

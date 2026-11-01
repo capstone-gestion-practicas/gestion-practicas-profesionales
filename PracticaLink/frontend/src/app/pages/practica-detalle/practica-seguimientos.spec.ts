@@ -143,7 +143,7 @@ describe('HU014 seguimientos persistidos', () => {
       expect(fixture.nativeElement.textContent).not.toContain('Demo ignorada');
       component.seleccionarVista('incidencias'); fixture.detectChanges();
       expect(fixture.nativeElement.textContent).not.toContain('Incidencia conservada');
-      expect(fixture.nativeElement.textContent).toContain('historial persistente de incidencias está pendiente');
+      expect(fixture.nativeElement.textContent).toContain('Acceso denegado al historial de incidencias');
       expect(localStorage.getItem(key)).toBe(stored);
     } finally {
       if (previous === null) localStorage.removeItem(key); else localStorage.setItem(key, previous);

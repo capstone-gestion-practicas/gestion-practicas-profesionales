@@ -1,3 +1,4 @@
+import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -23,6 +24,14 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   error = '';
   permiteReintentar = false;
   eventos: EventoHistorial[] = [];
+  registrosIncidencia: IncidenciaHistorialItem[] = [];
+  readonly limitIncidencias = 50;
+  offsetIncidencias = 0;
+  hayMasIncidencias = false;
+  cargandoIncidencias = false;
+  incidenciasConsultadas = false;
+  errorIncidencias = '';
+  private consultaIncidencias?: Subscription;
   registrosSeguimiento: SeguimientoHistorialItem[] = [];
   readonly limitSeguimientos = 50;
   offsetSeguimientos = 0;
@@ -95,6 +104,13 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       this.cargandoSeguimientos = false;
       this.seguimientosConsultados = false;
       this.errorSeguimientos = '';
+      this.consultaIncidencias?.unsubscribe();
+      this.registrosIncidencia = [];
+      this.offsetIncidencias = 0;
+      this.hayMasIncidencias = false;
+      this.cargandoIncidencias = false;
+      this.incidenciasConsultadas = false;
+      this.errorIncidencias = '';
       this.idPractica = parametros.get('id') ?? '';
       this.vistaHistorial = 'seguimientos';
       this.cargar();
@@ -102,11 +118,15 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       if (this.historialHabilitado) {
         this.cargarHistorial(0);
         this.cargarSeguimientos(0);
+        if (this.route.snapshot?.queryParamMap?.get('vista') === 'incidencias') {
+          this.seleccionarVista('incidencias');
+        }
       }
     });
   }
 
   ngOnDestroy(): void {
+    this.consultaIncidencias?.unsubscribe();
     this.consultaSeguimientos?.unsubscribe();
     this.operacionInicio?.unsubscribe();
     this.parametros?.unsubscribe();
@@ -225,6 +245,9 @@ export class PracticaDetalle implements OnInit, OnDestroy {
 
   seleccionarVista(vista: 'seguimientos' | 'incidencias' | 'antecedentes'): void {
     this.vistaHistorial = vista;
+    if (vista === 'incidencias' && !this.incidenciasConsultadas && !this.errorIncidencias) {
+      this.cargarIncidencias();
+    }
   }
 
   formatearFechaRegistro(fecha: string): string {
@@ -304,6 +327,70 @@ export class PracticaDetalle implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  get puedeConsultarIncidencias(): boolean {
+    return (this.auth.contexto()?.roles ?? [])
+      .some(rol => rol === 'GESTOR' || rol === 'ADMINISTRADOR');
+  }
+
+  formatearFechaIncidencia(fecha: string): string {
+    return Number.isFinite(Date.parse(fecha)) ? formatearFechaHoraChile(fecha) : fecha;
+  }
+
+  cargarIncidencias(offset = this.offsetIncidencias): void {
+    if (!this.idValido() || this.cargandoIncidencias) return;
+    if (!this.puedeConsultarIncidencias) {
+      this.errorIncidencias = 'Acceso denegado al historial de incidencias.';
+      return;
+    }
+    this.consultaIncidencias?.unsubscribe();
+    this.offsetIncidencias = offset;
+    this.registrosIncidencia = [];
+    this.hayMasIncidencias = false;
+    this.incidenciasConsultadas = false;
+    this.errorIncidencias = '';
+    this.cargandoIncidencias = true;
+    this.consultaIncidencias = this.practicas.obtenerIncidencias(
+      this.idPractica, this.limitIncidencias, offset
+    ).subscribe({
+      next: historial => {
+        this.registrosIncidencia = historial.items;
+        this.hayMasIncidencias = historial.hay_mas;
+        this.cargandoIncidencias = false;
+        this.incidenciasConsultadas = true;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.cargandoIncidencias = false;
+        const mensajes: Record<number, string> = {
+          401: 'Tu sesión no es válida. Inicia sesión nuevamente.',
+          403: 'Acceso denegado al historial de incidencias.',
+          404: 'La práctica no está disponible.',
+          422: 'Los parámetros de consulta no son válidos.',
+          500: 'El servidor no pudo consultar las incidencias.',
+          503: 'El servicio de incidencias está temporalmente no disponible.'
+        };
+        this.errorIncidencias = mensajes[error.status]
+          ?? 'No fue posible conectar para consultar las incidencias.';
+        if (error.status === 401) {
+          sessionStorage.removeItem('access_token');
+          this.auth.limpiar();
+          this.router.navigate(['/login']);
+        }
+      }
+    });
+  }
+
+  anteriorIncidencias(): void {
+    if (!this.cargandoIncidencias && this.offsetIncidencias > 0) {
+      this.cargarIncidencias(Math.max(0, this.offsetIncidencias - this.limitIncidencias));
+    }
+  }
+
+  siguienteIncidencias(): void {
+    if (!this.cargandoIncidencias && this.hayMasIncidencias) {
+      this.cargarIncidencias(this.offsetIncidencias + this.limitIncidencias);
+    }
   }
 
   anteriorSeguimientos(): void {

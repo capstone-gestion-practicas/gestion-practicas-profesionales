@@ -375,7 +375,7 @@ perdidas, desplazamientos de offset y pérdida de precisión de BIGINT como numb
 fuera de ±(2^53−1); esta corrección no rediseña esos contratos.
 
 
-### EP06 / HU015: registro Angular persistente
+### EP06 / HU015: registro Angular persistente (etapa histórica anterior al GET)
 
 El formulario compartido `/practicas/:id/incidencias/nueva` utiliza
 `PracticaService.registrarIncidencia()` y el interceptor JWT existente para
@@ -414,3 +414,43 @@ HTTP está simulado mediante HttpTestingController; no se ejecutó E2E con backe
 Karma necesitó ejecución fuera del sandbox por EPERM en el puerto 9876.
 Persisten las advertencias de presupuesto del bundle inicial y CSS home/detalle.
 No se instalaron dependencias ni se modificaron FastAPI o SQL.
+
+### EP06 / HU015: consulta Angular persistente (vigente)
+
+La pestaña Incidencias usa PracticaService.obtenerIncidencias mediante
+GET /practicas/{id}/incidencias?limit=50&offset=0 e interceptor JWT existente.
+Consulta al abrir la pestaña, solo con contexto GESTOR/ADMINISTRADOR.
+El contexto frontend no expone un indicador activo: la comprobación definitiva
+de usuario/rol activo permanece en FastAPI/PostgreSQL, sin permisos nuevos.
+
+Contrato: id_practica, items, limit, offset, hay_mas. Los items conservan
+id_incidencia, id_practica, id_usuario, tipo nullable, descripcion, estado,
+fecha, sin_tipo_registrado, fecha_resolucion nullable y resolucion nullable
+(id_historial, id_usuario, fecha, comentario nullable). El autor se muestra por
+ID porque la API no devuelve su nombre. No se aplican restricciones de creación
+a la lectura: se conservan estados antiguos, descripciones extensas, tipo ausente
+y resolución parcial. Las fechas se presentan en America/Santiago sin cambiar
+el valor recibido; infinity/-infinity se muestran literalmente.
+
+La lista respeta el orden servidor. Las páginas usan 50 registros, offset y
+hay_mas; no hay total inventado. Carga, error, éxito y vacío son estados distintos.
+Los errores 401/403/404/422/500/503 no muestran detalles internos. El reintento es
+manual; cambiar de pestaña no reintenta un error. 401 limpia sesión y contexto.
+Se impiden cargas simultáneas y se cancelan consultas y limpian datos al cambiar
+de práctica o destruir el componente.
+
+Tras POST 201 se conserva la confirmación y fecha del servidor en el formulario.
+Volver al detalle abre ?vista=incidencias y ejecuta un GET nuevo. No se incorpora
+el cuerpo del POST a la lista ni se simulan resultados. Esta etapa sustituye el
+aviso de consulta pendiente descrito en la etapa histórica anterior.
+No se lee, escribe, migra ni elimina localStorage.
+
+Validación: suite Angular completa 166/166 con ChromeHeadless y build de producción
+aprobado. Pruebas de contrato/JWT con HttpTestingController, componentes con
+servicios simulados y retorno de formulario mediante RouterTestingHarness.
+No se ejecutó E2E contra FastAPI/PostgreSQL en esta tarea. Karma requirió permiso
+para abrir el puerto local 9876 fuera del sandbox. Persisten advertencias de
+presupuesto: bundle inicial 857,31 kB; CSS detalle 5,27 kB y home 6,37 kB.
+Persisten los límites de precisión BIGINT/number, desplazamiento de offset por
+inserciones concurrentes y falta de idempotencia de escrituras.
+HU016/HU017 permanecen fuera de alcance.

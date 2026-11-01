@@ -106,6 +106,10 @@ export class RegistroPractica implements OnInit, OnDestroy {
   }
 
   cancelar(): void {
+    if (this.esIncidencia && this.fechaIncidencia) {
+      this.router.navigate(['/practicas', this.idPractica], { queryParams: { vista: 'incidencias' } });
+      return;
+    }
     this.router.navigate(['/practicas', this.idPractica]);
   }
 

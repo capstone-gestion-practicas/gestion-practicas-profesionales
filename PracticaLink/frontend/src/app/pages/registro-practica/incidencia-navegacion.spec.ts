@@ -1,5 +1,7 @@
+import { PracticaDetalle } from '../practica-detalle/practica-detalle';
+import { AuthStore } from '../../core/store/auth.store';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { HttpResponse } from '@angular/common/http';
 import { of, Subject } from 'rxjs';
@@ -19,14 +21,41 @@ const detalle = (id: number): PracticaDetalleGestionResponse => ({
 describe('HU015 navegación con Router real', () => {
   let service: jasmine.SpyObj<PracticaService>;
   beforeEach(() => {
-    service = jasmine.createSpyObj('PracticaService', ['obtenerDetalle', 'registrarIncidencia']);
+    service = jasmine.createSpyObj('PracticaService', ['obtenerDetalle', 'registrarIncidencia', 'obtenerSeguimientos', 'obtenerHistorial', 'obtenerIncidencias']);
     service.obtenerDetalle.and.callFake(id => of(detalle(Number(id))));
     service.registrarIncidencia.and.returnValue(new Subject<HttpResponse<IncidenciaResponse>>());
     TestBed.configureTestingModule({ providers: [
-      provideRouter([{ path: 'practicas/:id/incidencias/nueva', component: RegistroPractica,
+      provideRouter([{ path: 'practicas/:id', component: PracticaDetalle }, { path: 'practicas/:id/incidencias/nueva', component: RegistroPractica,
         data: { tipoRegistro: 'incidencia' } }]),
       { provide: PracticaService, useValue: service }
     ] });
+  });
+
+  it('returns after POST 201 and fetches the persisted list without injecting the POST body', async () => {
+    const page = { id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false };
+    service.obtenerSeguimientos.and.returnValue(of(page));
+    service.obtenerHistorial.and.returnValue(of(page));
+    service.obtenerIncidencias.and.returnValue(of(page));
+    TestBed.inject(AuthStore).setContexto({
+      usuario: { id_usuario: 101, nombre: 'Gestor', apellido: 'Sintético', correo: 'test@example.invalid' },
+      roles: ['GESTOR'], perfil: null, practica_actual: null
+    });
+    service.registrarIncidencia.and.returnValue(of(new HttpResponse({ status: 201, body: {
+      id_incidencia: 42, id_practica: 15, id_usuario: 101, tipo: 'SALUD',
+      descripcion: 'Texto', estado: 'PENDIENTE', fecha: '2026-07-02T03:30:00Z'
+    } as IncidenciaResponse })));
+    const harness = await RouterTestingHarness.create();
+    const form = await harness.navigateByUrl('/practicas/15/incidencias/nueva', RegistroPractica);
+    form.tipoIncidencia = 'SALUD'; form.descripcionIncidencia = 'Texto'; form.guardar();
+    expect(form.mensaje).toContain('Incidencia registrada correctamente');
+    expect(service.obtenerIncidencias).not.toHaveBeenCalled();
+    form.cancelar();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/practicas/15?vista=incidencias');
+    expect(service.obtenerIncidencias).toHaveBeenCalledOnceWith('15', 50, 0);
+    expect(harness.routeNativeElement?.textContent).toContain('No hay incidencias registradas');
+    expect(harness.routeNativeElement?.textContent).not.toContain('Texto');
   });
 
   it('reuses the component but sends only to B and clears A state', async () => {

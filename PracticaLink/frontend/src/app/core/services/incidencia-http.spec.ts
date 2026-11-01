@@ -36,6 +36,17 @@ describe('HU015 HTTP contract', () => {
     req.flush({}, { status: 201, statusText: 'Created' });
   });
 
+  it('queries the selected practice with pagination and the existing JWT interceptor', () => {
+    const page = { id_practica: 16, items: [], limit: 50, offset: 50, hay_mas: false };
+    TestBed.inject(PracticaService).obtenerIncidencias('16', 50, 50)
+      .subscribe(response => expect(response).toEqual(page));
+    const req = http.expectOne('http://127.0.0.1:8000/practicas/16/incidencias?limit=50&offset=50');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
+    expect(req.request.body).toBeNull();
+    req.flush(page);
+  });
+
   it('does not retry a failed write', () => {
     TestBed.inject(PracticaService).registrarIncidencia('15', {
       tipo: 'OTRO', descripcion: 'Texto'
