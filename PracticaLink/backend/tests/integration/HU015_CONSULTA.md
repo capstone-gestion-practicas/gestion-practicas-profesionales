@@ -116,3 +116,8 @@ read-only. Se comparan incidencia/historial/alerta/catálogo antes y después.
 No se ejecutó HTTP ni navegador en esta etapa. La función necesita un futuro
 endpoint GET y su integración Angular. Las pruebas locales no acreditan permisos
 ni migraciones en Supabase.
+
+Actualización posterior: GET FastAPI implementado en app/incidencias/ usando la
+misma conexión restringida EP06 y una transacción read-only por consulta. Ver
+HU015_HTTP.md para sus pruebas reales. La referencia anterior al endpoint futuro
+corresponde al cierre de la etapa exclusivamente SQL; Angular sigue pendiente.

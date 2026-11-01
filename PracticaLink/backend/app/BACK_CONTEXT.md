@@ -717,3 +717,41 @@ No hay idempotencia ni integración Angular EP06 en este incremento.
 Orden SQL previo: EP04, EP05-01 a EP05-05, EP06-01 a EP06-03; ver
 `tests/integration/HU015_PERSISTENCIA.md` y `tests/integration/HU015_HTTP.md`.
 Los scripts validados no se modifican en esta implementación backend.
+
+### EP06 / HU015: consulta HTTP de incidencias
+
+`GET /practicas/{id_practica}/incidencias?limit=50&offset=0` reutiliza
+`app/incidencias/` y la conexión `INCIDENCIAS_DATABASE_URL`. Requiere EP06-04
+además de los tres scripts de registro. No amplía permisos ni ejecuta migraciones.
+
+GESTOR/ADMINISTRADOR activos se autorizan mediante JWT y contexto confiable antes
+de consultar; PostgreSQL repite la autorización. Identidad nunca desde query/body.
+Parámetros: id positivo BIGINT, limit 1–100 (50), offset 0–BIGINT máximo (0).
+Solo se admiten parámetros query limit y offset. POST conserva su contrato cerrado.
+
+El servicio activa SET TRANSACTION READ ONLY en una sesión nueva antes de llamar
+exclusivamente a fn_consultar_incidencias con parámetros vinculados. No hace commit,
+no reintenta ni utiliza fallback; el cierre de sesión revierte la transacción y
+restablece el uso normal del pool para POST. El login mantiene EXECUTE de alta y
+consulta, pero no SELECT directo: read-only se aplica a la transacción GET, no a
+la conexión global. Los permisos reales requieren auditoría en despliegue.
+
+Respuesta: id_practica, items, limit, offset, hay_mas. Cada item conserva
+id_incidencia, id_practica, id_usuario, tipo nullable, descripcion sin límite de
+creación, estado libre, fecha, sin_tipo_registrado, fecha_resolucion nullable y
+resolucion nullable (id_historial, id_usuario, fecha, comentario nullable).
+Los esquemas históricos son independientes del alta. No inventan tipos ni datos
+de resolución, no traducen estados antiguos ni excluyen prácticas finalizadas.
+Se conservan timestamps con zona y los literales PostgreSQL infinity/-infinity.
+El servicio comprueba práctica/paginación y la práctica de cada item antes de
+responder. Conserva el orden SQL fecha DESC,id_incidencia DESC y hay_mas.
+Offset no garantiza estabilidad entre páginas ante inserciones concurrentes.
+
+Errores SQL de negocio: USUARIO_NO_AUTORIZADO→403, PRACTICA_NO_ENCONTRADA→404,
+PAGINACION_INVALIDA→422. Conexión requerida ausente/indisponible→503;
+JSON inesperado, SQL desconocido u otro fallo→500 genérico. Autenticación conserva
+su comportamiento existente. Rollback se intenta sin sustituir el error original.
+Una colección vacía solo representa una consulta exitosa, nunca un error.
+
+Ver tests/integration/HU015_HTTP.md para reproducción del GET y regresión POST,
+EP04 y EP05. La integración Angular de la consulta sigue pendiente.

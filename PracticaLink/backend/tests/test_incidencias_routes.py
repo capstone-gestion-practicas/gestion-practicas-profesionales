@@ -128,7 +128,7 @@ class IncidenciaRoutesTests(unittest.TestCase):
     def test_openapi_only_post_and_closed_body(self):
         schema = app.openapi()
         endpoint = schema['paths']['/practicas/{id_practica}/incidencias']
-        self.assertEqual(set(endpoint), {'post'})
+        self.assertEqual(set(endpoint), {'post', 'get'})
         self.assertIn('201',endpoint['post']['responses'])
         body = schema['components']['schemas']['IncidenciaCreate']
         self.assertFalse(body['additionalProperties'])

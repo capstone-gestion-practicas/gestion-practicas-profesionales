@@ -9,6 +9,8 @@ from unittest.mock import patch
 from run_historial_seguimiento import connection, suite as read_sql, SafeResult
 from run_registro_seguimiento import SeguimientoPostgres, make_suite as write_sql
 from run_registro_incidencia import suite as incidence_sql
+from run_consulta_incidencias import suite as incidence_read_sql
+from incidencias_lectura_http import read_http_suite as incidence_read_http
 from run_seguimiento_http import http_suite as write_http
 from run_historial_seguimiento_http import read_http_suite
 
@@ -129,15 +131,16 @@ def main():
             legacy=db.execute("INSERT INTO practica(id_estudiante,id_centro,id_estado_actual) SELECT 100,100,id_estado FROM estado_practica WHERE nombre='FINALIZADA' RETURNING id_practica").fetchone()[0]
             for medium,description in [(None,''),('Antiguo','x'*2001)]:
                 db.execute("INSERT INTO seguimiento(id_practica,id_usuario,fecha,tipo,observacion) VALUES(%s,102,'2026-07-01 02:30:00+00',%s,%s)",(legacy,medium,description))
-        old=write_sql(pg); read=read_sql(pg,legacy); new=incidence_sql(pg)
+        old=write_sql(pg); read=read_sql(pg,legacy); new=incidence_sql(pg); new_read=incidence_read_sql(pg)
         runner=unittest.TextTestRunner(verbosity=2,resultclass=SafeResult)
-        if runner.run(unittest.TestSuite([new,read,old])).wasSuccessful():
+        if runner.run(unittest.TestSuite([new_read,new,read,old])).wasSuccessful():
             with ExitStack() as stack:
                 # Este helper aísla entorno/cwd antes de importar FastAPI.
                 old_http=write_http(pg,stack)
                 read_http=read_http_suite(pg,stack,legacy)
                 new_http=http_suite(pg,stack)
-                result=runner.run(unittest.TestSuite([new_http,read_http,old_http]))
+                new_read_http=incidence_read_http(pg)
+                result=runner.run(unittest.TestSuite([new_read_http,new_http,read_http,old_http]))
                 code=0 if result.wasSuccessful() else 1
     except (Exception,KeyboardInterrupt) as error:
         print('Integración HU015 no completada:',type(error).__name__,file=sys.stderr)

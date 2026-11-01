@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -6,8 +6,10 @@ from app.core.database import get_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.core.incidencias_database import get_incidencias_db
-from app.incidencias.schemas import IncidenciaCreate, IncidenciaCreateResponse
-from app.incidencias.service import RegistroIncidenciaError, registrar_incidencia
+from app.incidencias.schemas import IncidenciaCreate, IncidenciaCreateResponse, IncidenciasHistorialResponse
+from app.incidencias.service import (
+    RegistroIncidenciaError, registrar_incidencia, ConsultaIncidenciasError, consultar_incidencias
+)
 
 
 router = APIRouter(prefix='/practicas', tags=['Incidencias'])
@@ -64,4 +66,44 @@ def crear_incidencia(
             'CONEXION_NO_DISPONIBLE': (503, 'No se pudo confirmar el registro; no reenvíe automáticamente la solicitud'),
         }
         codigo, mensaje = errores.get(error.codigo, (500, 'No se pudo confirmar el registro de la incidencia'))
+        raise HTTPException(codigo, mensaje) from None
+
+
+# Separada del POST: permite únicamente paginación, nunca identidad del cliente.
+def lector_autenticado(
+    request: Request,
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> int:
+    try:
+        contexto = _verificar_roles(user_id=id_usuario, db=db)
+    except SQLAlchemyError:
+        raise HTTPException(503, 'No fue posible verificar los permisos') from None
+    if (not isinstance(contexto, dict) or not isinstance(contexto.get('usuario'), dict)
+            or contexto['usuario'].get('id_usuario') != id_usuario
+            or not 1 <= id_usuario <= 9223372036854775807):
+        raise HTTPException(403, 'No tiene permisos para consultar incidencias')
+    if set(request.query_params) - {'limit', 'offset'}:
+        raise HTTPException(422, 'Parámetros de consulta no admitidos')
+    return id_usuario
+
+
+@router.get('/{id_practica}/incidencias', response_model=IncidenciasHistorialResponse)
+def obtener_incidencias(
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=9223372036854775807),
+    id_usuario: int = Depends(lector_autenticado),
+    db: Session = Depends(get_incidencias_db),
+):
+    try:
+        return consultar_incidencias(db, id_practica, id_usuario, limit, offset)
+    except ConsultaIncidenciasError as error:
+        errores = {
+            'USUARIO_NO_AUTORIZADO': (403, 'No tiene permisos para consultar incidencias'),
+            'PRACTICA_NO_ENCONTRADA': (404, 'La práctica no existe'),
+            'PAGINACION_INVALIDA': (422, 'La paginación no es válida'),
+            'CONEXION_NO_DISPONIBLE': (503, 'La consulta de incidencias no está disponible'),
+        }
+        codigo, mensaje = errores.get(error.codigo, (500, 'No fue posible consultar las incidencias'))
         raise HTTPException(codigo, mensaje) from None

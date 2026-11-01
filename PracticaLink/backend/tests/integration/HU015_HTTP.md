@@ -35,3 +35,28 @@ No acredita despliegue Supabase. Falta integración Angular y no hay idempotenci
 ante pérdida de respuesta. La eliminación de históricos permanece prohibida.
 Ante SIGKILL o interrupción del daemon, revisar solo los recursos exclusivos
 identificados en la salida; nunca limpiar otros laboratorios.
+
+## Ampliación: GET persistente
+
+El mismo comando instala ahora EP06-04, ejecuta las 56 pruebas SQL de registro y
+consulta, y añade los casos `incidencias_lectura_http.py` a las suites HTTP previas.
+El laboratorio comprueba POST→GET→POST, ausencia de modificaciones en GET,
+contexto real, roles inactivos, paginación, aislamiento, práctica finalizada con
+históricos, valores de resolución conservados y conexión ausente/EXECUTE revocado.
+
+La prueba de transacción utiliza la misma sesión restringida y el servicio GET:
+SHOW transaction_read_only debe devolver on; invocar la función de registro en
+esa transacción debe fallar con SQLSTATE 25006. Después se comprueba que POST
+sigue pudiendo confirmar usando el pool. No se conceden permisos adicionales.
+
+Contrato HTTP: GET /practicas/{id_practica}/incidencias?limit=50&offset=0.
+Devuelve la estructura documentada en HU015_CONSULTA.md con HTTP 200, también
+para items vacío. Conserva tipo null, estados antiguos y descripciones extensas.
+No mezcla fecha_resolucion con la fecha del evento de resolución. El futuro
+consumidor no debe aplicar el esquema de creación a estos registros históricos.
+Paginación offset sujeta a desplazamientos entre peticiones concurrentes.
+
+Errores: autenticación existente, 403 autorización, 404 inexistente, 422 parámetros,
+503 configuración/conexión y 500 fallo inesperado. No devuelve mensajes SQL.
+La consulta no hace commit; la sesión se cierra al terminar. Sin fallback ni
+reintentos automáticos. Angular y los scripts SQL aprobados permanecen intactos.
