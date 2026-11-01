@@ -1,0 +1,49 @@
+<section class="panel" aria-live="polite" [attr.aria-busy]="cargando || guardando">
+  <h3>Incidencia #{{ incidencia.id_incidencia }} · Historial de estados</h3>
+  <p>Estado actual: {{ incidencia.estado }}</p>
+  @if (cargando) {
+    <ion-spinner></ion-spinner><p>Cargando historial de la incidencia...</p>
+  } @else if (error) {
+    <p role="alert">{{ error }}</p>
+    @if (autorizado && identificadoresSeguros) {
+      <ion-button fill="outline" (click)="cargar()">Reintentar historial</ion-button>
+    }
+  } @else if (consultado) {
+    @if (eventos.length === 0) {
+      <p>{{ offset === 0 ? 'No hay cambios de estado registrados para esta incidencia.' : 'No hay eventos en esta página.' }}</p>
+    } @else {
+      <ol>
+        @for (evento of eventos; track evento.id_historial) {
+          <li>
+            <strong>{{ evento.estado_anterior ?? 'Sin estado anterior' }} → {{ evento.estado_nuevo }}</strong>
+            <p>Responsable: Usuario #{{ evento.id_usuario }} · {{ fecha(evento.fecha) }}</p>
+            @if (evento.comentario !== null) { <p class="comentario">{{ evento.comentario }}</p> }
+          </li>
+        }
+      </ol>
+    }
+  }
+  @if (consultado || cargando || error) {
+    <nav aria-label="Paginación del historial de incidencia">
+      <ion-button fill="outline" [disabled]="cargando || guardando || offset === 0" (click)="anterior()">Anterior</ion-button>
+      <span>Página {{ offset / limit + 1 }}</span>
+      <ion-button fill="outline" [disabled]="cargando || guardando || !hayMas" (click)="siguiente()">Siguiente</ion-button>
+    </nav>
+  }
+  @if (transiciones.length > 0) {
+    <form (ngSubmit)="guardar()">
+      <label for="estado-destino">Nuevo estado</label>
+      <select id="estado-destino" name="destino" [(ngModel)]="destino" [disabled]="guardando || cargando">
+        <option value="" disabled>Selecciona una transición</option>
+        @for (estado of transiciones; track estado) { <option [value]="estado">{{ estado }}</option> }
+      </select>
+      <label for="comentario-estado">Comentario {{ destino === 'RESUELTA' ? '(obligatorio)' : '(opcional)' }}</label>
+      <textarea id="comentario-estado" name="comentario" rows="4" [(ngModel)]="comentario" [disabled]="guardando || cargando"></textarea>
+      <small>Máximo 2.000 caracteres. La fecha y el responsable se registran en el servidor.</small>
+      <ion-button type="submit" [disabled]="guardando || cargando || !destino">{{ guardando ? 'Guardando...' : 'Confirmar cambio' }}</ion-button>
+    </form>
+  } @else if (consultado && autorizado) {
+    <p>Esta incidencia se mantiene en solo lectura.</p>
+  }
+  @if (errorCambio) { <p role="alert">{{ errorCambio }}</p> }
+</section>

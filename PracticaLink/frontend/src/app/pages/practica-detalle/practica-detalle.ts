@@ -1,3 +1,4 @@
+import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
 import { CommonModule } from '@angular/common';
@@ -15,7 +16,7 @@ import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/ut
 
 @Component({
   selector: 'app-practica-detalle', standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner],
+  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado],
   templateUrl: './practica-detalle.html', styleUrl: './practica-detalle.scss'
 })
 export class PracticaDetalle implements OnInit, OnDestroy {
@@ -24,6 +25,9 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   error = '';
   permiteReintentar = false;
   eventos: EventoHistorial[] = [];
+  incidenciaSeleccionada: IncidenciaHistorialItem | null = null;
+  gestionPendiente = false;
+  mensajeGestion = '';
   registrosIncidencia: IncidenciaHistorialItem[] = [];
   readonly limitIncidencias = 50;
   offsetIncidencias = 0;
@@ -55,7 +59,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   requiereConsultaEstado = false;
   private operacionInicio?: Subscription;
   private consultaHistorial?: Subscription;
-  private idPractica = '';
+  idPractica = '';
   private consulta?: Subscription;
   private parametros?: Subscription;
   readonly formatearFechaHora = formatearFechaHoraChile;
@@ -104,6 +108,9 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       this.cargandoSeguimientos = false;
       this.seguimientosConsultados = false;
       this.errorSeguimientos = '';
+      this.incidenciaSeleccionada = null;
+      this.gestionPendiente = false;
+      this.mensajeGestion = '';
       this.consultaIncidencias?.unsubscribe();
       this.registrosIncidencia = [];
       this.offsetIncidencias = 0;
@@ -339,11 +346,12 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   }
 
   cargarIncidencias(offset = this.offsetIncidencias): void {
-    if (!this.idValido() || this.cargandoIncidencias) return;
+    if (!this.idValido() || this.cargandoIncidencias || this.gestionPendiente) return;
     if (!this.puedeConsultarIncidencias) {
       this.errorIncidencias = 'Acceso denegado al historial de incidencias.';
       return;
     }
+    this.incidenciaSeleccionada = null;
     this.consultaIncidencias?.unsubscribe();
     this.offsetIncidencias = offset;
     this.registrosIncidencia = [];
@@ -379,6 +387,18 @@ export class PracticaDetalle implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  seleccionarIncidencia(incidencia: IncidenciaHistorialItem): void {
+    if (!this.puedeConsultarIncidencias || this.gestionPendiente) return;
+    this.mensajeGestion = '';
+    this.incidenciaSeleccionada = incidencia;
+  }
+
+  actualizarIncidencias(mensaje: string): void {
+    this.gestionPendiente = false;
+    this.mensajeGestion = mensaje;
+    this.cargarIncidencias();
   }
 
   anteriorIncidencias(): void {

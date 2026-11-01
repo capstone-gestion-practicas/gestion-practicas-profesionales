@@ -55,6 +55,26 @@ describe('HU015 HTTP contract', () => {
       .flush({}, { status: 503, statusText: 'Unavailable' });
   });
 
+  it('HU016 PATCH sends only state/comment with JWT and preserves HTTP status', () => {
+    const data = { estado_esperado: 'PENDIENTE' as const, estado_nuevo: 'RESUELTA' as const,
+      comentario: 'Texto', id_usuario: 999, fecha: 'inventada' };
+    TestBed.inject(PracticaService).cambiarEstadoIncidencia('15', '42', data)
+      .subscribe(r => expect(r.status).toBe(200));
+    const req = http.expectOne('http://127.0.0.1:8000/practicas/15/incidencias/42/estado');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
+    expect(req.request.body).toEqual({ estado_esperado: 'PENDIENTE', estado_nuevo: 'RESUELTA', comentario: 'Texto' });
+    req.flush({}, { status: 200, statusText: 'OK' });
+  });
+
+  it('HU016 history uses JWT, selected identifiers and pagination', () => {
+    TestBed.inject(PracticaService).obtenerHistorialIncidencia('16', '43', 50, 50).subscribe();
+    const req = http.expectOne('http://127.0.0.1:8000/practicas/16/incidencias/43/historial?limit=50&offset=50');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
+    req.flush({});
+  });
+
   it('preserves authentication and management role guards', () => {
     const route = routes.find(item => item.path === 'practicas/:id/incidencias/nueva')!;
     expect(route.canActivate).toEqual([authGuard, roleGuard]);

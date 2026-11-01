@@ -454,3 +454,63 @@ presupuesto: bundle inicial 857,31 kB; CSS detalle 5,27 kB y home 6,37 kB.
 Persisten los límites de precisión BIGINT/number, desplazamiento de offset por
 inserciones concurrentes y falta de idempotencia de escrituras.
 HU016/HU017 permanecen fuera de alcance.
+
+### EP06 / HU016: gestión Angular e historial completo (vigente)
+
+La pestaña Incidencias incorpora el panel IncidenciaEstado para la selección actual.
+Reutiliza PracticaService, HttpClient, interceptor JWT y contexto AuthStore.
+No modifica backend, SQL ni los contratos anteriores de HU013/HU014/HU015.
+
+PATCH /practicas/{practica}/incidencias/{incidencia}/estado envía exclusivamente
+estado_esperado, estado_nuevo y comentario. El servicio selecciona esos campos
+explícitamente y observa HttpResponse para exigir status 200. No envía autor,
+fecha, prioridad ni datos de resolución. No hay reintentos de escritura.
+
+GET /practicas/{practica}/incidencias/{incidencia}/historial usa limit=50 y offset.
+Respeta el orden recibido id_historial DESC y hay_mas, sin total ficticio.
+Presenta origen/destino, ID del responsable, fecha en America/Santiago y comentario
+solo cuando existe. Preserva null, textos extensos, estados antiguos y fechas
+infinity/-infinity. Carga, vacío y error son estados diferentes; reintento manual.
+
+Los controles requieren GESTOR/ADMINISTRADOR del contexto existente, IDs numéricos
+seguros, campos compatibles y cadena inicial coherente consultada desde el servidor.
+La comprobación de cadena usa una copia en orden inverso, sin reordenar el listado.
+No se infiere elegibilidad solo por tipo presente. Sin evento inicial, cadena
+incompatible o RESUELTA, el panel permanece de solo lectura. PostgreSQL conserva
+la validación definitiva, incluida actividad del usuario/rol; el contexto Angular
+no expone un indicador activo independiente.
+
+Ofrece PENDIENTE→EN_ATENCION/RESUELTA y EN_ATENCION→RESUELTA. No exige práctica
+EN_CURSO para gestión: se verificó una incidencia moderna de práctica FINALIZADA.
+El comentario sigue btrim U+0020 de borde, whitespace sin contenido→null,
+máximo 2000 puntos de código Unicode tras normalización; RESUELTA exige contenido.
+
+Antes de 200 no cambia el estado visible. Comprueba correspondencia del resultado
+y solicita recarga del listado mediante GET, sin insertar ni modificar filas
+simuladas. Responsable, fecha y comentario de resolución se muestran desde ese GET.
+409 informa conflicto o historial incompatible y fuerza recarga. Red/5xx o respuesta
+inesperada se presentan como resultado incierto y fuerzan consulta, nunca como
+confirmación de fallo o éxito. Mientras se consulta, no quedan filas antiguas
+gestionables; si GET falla se ofrece reintento de lectura.
+
+Durante PATCH bloquea doble envío, selección de otra incidencia, paginación y
+cambio de pestaña. Al cambiar de práctica o selección se limpian estado/formulario
+y se cancelan suscripciones; las respuestas anteriores no actualizan la nueva
+selección. Cancelar HTTP no garantiza revertir una escritura ya recibida.
+No se accede a localStorage ni se migran o eliminan demostraciones.
+
+BIGINT sigue representado como number en los contratos existentes. El panel
+rechaza nuevas consultas/transiciones si los identificadores de recurso no son
+enteros positivos seguros o no corresponden a la práctica. Esto evita construir
+URLs con IDs redondeados; no recupera precisión ya perdida ni migra el resto de
+contratos a string. Resolver ese límite global requiere un cambio posterior.
+
+Validación ejecutada: 190/190 pruebas Angular con ChromeHeadless, incluidos
+contrato HTTP/JWT, panel, retorno al listado por GET, finalizadas y regresiones.
+Build de producción aprobado; git diff --check sin errores. Karma requirió permiso
+fuera del sandbox para el puerto 9876. Se corrigió un literal tipado del fixture
+durante compilación de tests, sin cambiar contratos.
+Advertencias de presupuesto existentes: bundle inicial 857,33 kB,
+CSS detalle 5,27 kB y home 6,37 kB. No se instalaron dependencias.
+HTTP se simula mediante mocks/HttpTestingController: E2E HU016 queda pendiente.
+Persisten límites de idempotencia y offset. HU017 permanece fuera de alcance.

@@ -1,4 +1,4 @@
-import { IncidenciaCreate, IncidenciaResponse, IncidenciasHistorialResponse } from '../models/incidencia.models';
+import { IncidenciaEstadoRequest, IncidenciaEstadoResponse, IncidenciaEstadosHistorialResponse, IncidenciaCreate, IncidenciaResponse, IncidenciasHistorialResponse } from '../models/incidencia.models';
 import { SeguimientoCreate, SeguimientoResponse, SeguimientosHistorialResponse } from '../models/seguimiento.models';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -34,6 +34,21 @@ export class PracticaService {
     return this.http.post<SeguimientoResponse>(
       `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`,
       { fecha, tipo, observacion }, { observe: 'response' }
+    );
+  }
+
+  cambiarEstadoIncidencia(idPractica: string, idIncidencia: string, datos: IncidenciaEstadoRequest): Observable<HttpResponse<IncidenciaEstadoResponse>> {
+    const { estado_esperado, estado_nuevo, comentario } = datos;
+    return this.http.patch<IncidenciaEstadoResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/incidencias/${encodeURIComponent(idIncidencia)}/estado`,
+      { estado_esperado, estado_nuevo, comentario }, { observe: 'response' }
+    );
+  }
+
+  obtenerHistorialIncidencia(idPractica: string, idIncidencia: string, limit = 50, offset = 0): Observable<IncidenciaEstadosHistorialResponse> {
+    const params = new HttpParams().set('limit', limit).set('offset', offset);
+    return this.http.get<IncidenciaEstadosHistorialResponse>(
+      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/incidencias/${encodeURIComponent(idIncidencia)}/historial`, { params }
     );
   }
 

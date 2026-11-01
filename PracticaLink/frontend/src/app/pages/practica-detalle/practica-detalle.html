@@ -129,7 +129,7 @@
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'seguimientos'"
               [attr.aria-selected]="vistaHistorial === 'seguimientos'"
-              (click)="seleccionarVista('seguimientos')">Seguimientos
+              [disabled]="gestionPendiente" (click)="seleccionarVista('seguimientos')">Seguimientos
               @if (seguimientosConsultados) {
                 <span class="tab-count" title="Registros en esta página">{{ registrosSeguimiento.length }}</span>
               }
@@ -137,13 +137,13 @@
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'incidencias'"
               [attr.aria-selected]="vistaHistorial === 'incidencias'"
-              (click)="seleccionarVista('incidencias')">Incidencias
+              [disabled]="gestionPendiente" (click)="seleccionarVista('incidencias')">Incidencias
 
             </button>
             <button class="tab" type="button" role="tab"
               [class.active]="vistaHistorial === 'antecedentes'"
               [attr.aria-selected]="vistaHistorial === 'antecedentes'"
-              (click)="seleccionarVista('antecedentes')">Antecedentes</button>
+              [disabled]="gestionPendiente" (click)="seleccionarVista('antecedentes')">Antecedentes</button>
           </div>
 
           @if (vistaHistorial === 'seguimientos') {
@@ -185,6 +185,7 @@
               </nav>
             }
           } @else if (vistaHistorial === 'incidencias') {
+            @if (mensajeGestion) { <p role="status">{{ mensajeGestion }}</p> }
             @if (cargandoIncidencias) {
               <div class="loading"><ion-spinner></ion-spinner><p>Cargando incidencias...</p></div>
             } @else if (errorIncidencias) {
@@ -220,18 +221,26 @@
                             <p class="history-observation">Comentario: {{ resolucion.comentario }}</p>
                           }
                         }
+                        @if (puedeConsultarIncidencias) {
+                          <ion-button fill="outline" [disabled]="gestionPendiente"
+                            (click)="seleccionarIncidencia(registro)">Historial y gestión</ion-button>
+                        }
                       </article>
                     </li>
                   }
                 </ol>
               }
             }
+            @if (incidenciaSeleccionada; as seleccionada) {
+              <app-incidencia-estado [practica]="idPractica" [incidencia]="seleccionada"
+                (ocupado)="gestionPendiente = $event" (recargar)="actualizarIncidencias($event)" />
+            }
             @if (incidenciasConsultadas || cargandoIncidencias || (errorIncidencias && puedeConsultarIncidencias)) {
               <nav class="history-pagination" aria-label="Paginación de incidencias">
-                <ion-button fill="outline" [disabled]="cargandoIncidencias || offsetIncidencias === 0"
+                <ion-button fill="outline" [disabled]="gestionPendiente || cargandoIncidencias || offsetIncidencias === 0"
                   (click)="anteriorIncidencias()">Anterior</ion-button>
                 <span>Página {{ offsetIncidencias / limitIncidencias + 1 }}</span>
-                <ion-button fill="outline" [disabled]="cargandoIncidencias || !hayMasIncidencias"
+                <ion-button fill="outline" [disabled]="gestionPendiente || cargandoIncidencias || !hayMasIncidencias"
                   (click)="siguienteIncidencias()">Siguiente</ion-button>
               </nav>
             }

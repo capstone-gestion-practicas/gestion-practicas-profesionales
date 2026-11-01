@@ -1,3 +1,6 @@
+import { By } from '@angular/platform-browser';
+import { HttpResponse } from '@angular/common/http';
+import { IncidenciaEstado } from './incidencia-estado';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
@@ -24,7 +27,7 @@ describe('HU015 consulta persistente', () => {
     ]
   };
   beforeEach(async () => {
-    service = jasmine.createSpyObj('PracticaService', ['obtenerDetalle', 'obtenerHistorial', 'obtenerSeguimientos', 'obtenerIncidencias']);
+    service = jasmine.createSpyObj('PracticaService', ['obtenerDetalle', 'obtenerHistorial', 'obtenerSeguimientos', 'obtenerIncidencias', 'obtenerHistorialIncidencia', 'cambiarEstadoIncidencia']);
     service.obtenerDetalle.and.returnValue(of({
       id_practica: 15, estudiante: { id_estudiante: 7, nombre: 'Sintético' },
       centro_practica: { id_centro: 1, nombre: 'Centro' },
@@ -54,6 +57,34 @@ describe('HU015 consulta persistente', () => {
   function abrir(): void {
     component.seleccionarVista('incidencias'); fixture.detectChanges();
   }
+
+  it('HU016 refreshes the actual GET after 200 even on a finalized practice', () => {
+    const original = historial.items[0];
+    service.obtenerHistorialIncidencia.and.returnValue(of({
+      id_practica: 15, id_incidencia: 9, limit: 50, offset: 0, hay_mas: false,
+      items: [{ id_historial: 1, id_usuario: 101, estado_anterior: null,
+        estado_nuevo: 'PENDIENTE', fecha: original.fecha, comentario: null }]
+    }));
+    service.cambiarEstadoIncidencia.and.returnValue(of(new HttpResponse({ status: 200, body: {
+      id_practica: 15, id_incidencia: 9, id_historial: 2, id_usuario: 101,
+      estado_anterior: 'PENDIENTE' as const, estado_nuevo: 'RESUELTA' as const, comentario: 'Resuelto',
+      fecha: '2026-07-03T12:00:00Z'
+    } })));
+    abrir();
+    component.seleccionarIncidencia(original); fixture.detectChanges();
+    const panel = fixture.debugElement.query(By.directive(IncidenciaEstado)).componentInstance as IncidenciaEstado;
+    expect(panel.transiciones).toContain('RESUELTA');
+    service.obtenerIncidencias.and.returnValue(of({ ...historial, items: [{
+      ...original, estado: 'RESUELTA', fecha_resolucion: '2026-07-03T12:00:00Z',
+      resolucion: { id_historial: 2, id_usuario: 101, fecha: '2026-07-03T12:00:00Z', comentario: 'Resuelto' }
+    }] }));
+    panel.destino = 'RESUELTA'; panel.comentario = 'Resuelto'; panel.guardar(); fixture.detectChanges();
+    expect(service.obtenerIncidencias).toHaveBeenCalledTimes(2);
+    expect(component.incidenciaSeleccionada).toBeNull();
+    expect(component.registrosIncidencia[0].estado).toBe('RESUELTA');
+    expect(fixture.nativeElement.textContent).toContain('Responsable de resolución: Usuario #101');
+    expect(original.estado).toBe('PENDIENTE');
+  });
 
   it('renders server order, historical data and Santiago time for finalized practices', () => {
     abrir();
