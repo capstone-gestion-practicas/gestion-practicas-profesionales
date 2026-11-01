@@ -1,9 +1,16 @@
 import { Injectable, signal } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { AlertController } from '@ionic/angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { ActionPerformed, PushNotifications, Token } from '@capacitor/push-notifications';
 
 import { NotificacionApiService } from './notificacion-api.service';
+
+interface FirebaseStatusPlugin {
+  checkConfigured(): Promise<{ configured: boolean }>;
+}
+
+const FirebaseStatus = registerPlugin<FirebaseStatusPlugin>('FirebaseStatus');
 
 @Injectable({ providedIn: 'root' })
 export class NotificacionPushService {
@@ -14,33 +21,81 @@ export class NotificacionPushService {
   readonly notificacionAbiertaPorPush = signal<number | null>(null);
   private pushListenersRegistrados = false;
   private timeoutRegistroPush: number | null = null;
+  private readonly decisionesPushEnCurso = new Set<number>();
 
-  constructor(private readonly api: NotificacionApiService) {}
+  constructor(
+    private readonly api: NotificacionApiService,
+    private readonly alertController: AlertController
+  ) {}
 
   esAndroid(): boolean {
     return Capacitor.getPlatform() === 'android';
   }
 
-  async iniciarPush(): Promise<void> {
+  async iniciarPush(idUsuario: number): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
+    if (!await this.firebaseConfigurado()) {
+      this.estadoRegistroPush.set('error');
+      return;
+    }
     await this.asegurarListenersPush();
     await this.prepararNotificacionesAndroid();
-    await this.registrarTokenSiAutorizado();
+    const clavePreferencia = this.clavePreferenciaPush(idUsuario);
+    const preferencia = localStorage.getItem(clavePreferencia);
+    if (preferencia === 'no') return;
+    if (preferencia === 'si') {
+      await this.pedirPermisoPush(idUsuario);
+      return;
+    }
+    if (this.decisionesPushEnCurso.has(idUsuario)) return;
+
+    this.decisionesPushEnCurso.add(idUsuario);
+    try {
+      const alerta = await this.alertController.create({
+        header: 'Notificaciones en este dispositivo',
+        message: '¿Quieres recibir notificaciones push de PracticaLink en este dispositivo?',
+        buttons: [
+          { text: 'Ahora no', role: 'cancel' },
+          { text: 'Sí, recibir aquí', role: 'confirm' }
+        ],
+        backdropDismiss: false
+      });
+      await alerta.present();
+      const { role } = await alerta.onDidDismiss();
+      if (role !== 'confirm') localStorage.setItem(clavePreferencia, 'no');
+      if (role === 'confirm') await this.pedirPermisoPush(idUsuario);
+    } finally {
+      this.decisionesPushEnCurso.delete(idUsuario);
+    }
   }
 
-  async pedirPermisoPush(): Promise<boolean> {
+  async pedirPermisoPush(idUsuario: number): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) return false;
-    await this.asegurarListenersPush();
-    await this.prepararNotificacionesAndroid();
-    let permiso = await PushNotifications.checkPermissions();
-    if (permiso.receive === 'prompt' || permiso.receive === 'prompt-with-rationale') {
-      permiso = await PushNotifications.requestPermissions();
+    try {
+      if (!await this.firebaseConfigurado()) {
+        throw new Error('Firebase no está configurado en esta versión de la app.');
+      }
+      await this.asegurarListenersPush();
+      await this.prepararNotificacionesAndroid();
+      let permiso = await PushNotifications.checkPermissions();
+      if (permiso.receive === 'prompt' || permiso.receive === 'prompt-with-rationale') {
+        permiso = await PushNotifications.requestPermissions();
+      }
+      if (permiso.receive === 'granted') {
+        localStorage.setItem(this.clavePreferenciaPush(idUsuario), 'si');
+        await this.registrarPush();
+        return true;
+      }
+      localStorage.removeItem(this.clavePreferenciaPush(idUsuario));
+      this.estadoRegistroPush.set('inactivo');
+      return false;
+    } catch (error) {
+      localStorage.removeItem(this.clavePreferenciaPush(idUsuario));
+      this.dispositivoPushRegistrado.set(false);
+      this.estadoRegistroPush.set('error');
+      console.error('[Push] No fue posible consultar permisos o iniciar el registro.', error);
+      throw error;
     }
-    if (permiso.receive === 'granted') {
-      await this.registrarPush();
-      return true;
-    }
-    return false;
   }
 
   desregistrarPush(): void {
@@ -50,9 +105,13 @@ export class NotificacionPushService {
     });
   }
 
-  private async registrarTokenSiAutorizado(): Promise<void> {
-    const permiso = await PushNotifications.checkPermissions();
-    if (permiso.receive === 'granted') await this.registrarPush();
+  private clavePreferenciaPush(idUsuario: number): string {
+    return `practicalink-push-preferencia:${idUsuario}`;
+  }
+
+  private async firebaseConfigurado(): Promise<boolean> {
+    const resultado = await FirebaseStatus.checkConfigured();
+    return resultado.configured;
   }
 
   private async registrarPush(): Promise<void> {

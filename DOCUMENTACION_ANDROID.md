@@ -129,7 +129,9 @@ npm run android:open
 
 ## Configurar notificaciones push
 
-La app registra un token FCM por usuario autenticado. El permiso se solicita
+Al iniciar sesión por primera vez en cada dispositivo, la app pregunta si quieres
+recibir notificaciones push allí. Si aceptas, solicita el permiso de Android y
+registra el token FCM de ese dispositivo para tu cuenta. También puedes habilitarlas
 desde **Notificaciones > Activar push en este dispositivo**. Para recibir avisos:
 
 1. En Firebase Console, registra `cl.practicalink.app` y descarga
@@ -142,13 +144,18 @@ desde **Notificaciones > Activar push en este dispositivo**. Para recibir avisos
    con el contenido JSON completo de la cuenta de servicio de Firebase autorizada para enviar mensajes FCM. En Render, escribe el nombre en **Key** y pega solo el objeto JSON (desde `{` hasta `}`) en **Value**, sin `FIREBASE_SERVICE_ACCOUNT_JSON=`. Guarda y vuelve a desplegar el backend. No publiques la clave ni la guardes en Git.
 3. Instala dependencias actualizadas (`npm.cmd ci`) y ejecuta
    `pip install -r requirements.txt` en el backend.
-4. Aplica `PracticaLink/supabase/migrations/20261028070000_push_devices.sql`.
+4. Aplica las migraciones de Supabase pendientes, incluida
+   `PracticaLink/supabase/migrations/20261101131500_push_un_solo_dispositivo_activo.sql`.
 5. Ejecuta `npm.cmd run apk:sync` y recompila la app Android. El plugin Gradle
    de Google Services procesa el JSON durante la compilación.
 
 El canal Android `practicalink-notificaciones` se crea al iniciar la app y se declara también como canal predeterminado de FCM. Si ya existe en el dispositivo, su importancia y sonido se controlan desde los ajustes de notificaciones de Android.
 
 Sin la configuración de Firebase no se generan tokens ni se envían pushes.
+La APK debe compilarse con ese archivo presente; si falta, la app deshabilita
+el registro push y muestra un aviso en lugar de cerrarse.
+Solo el último dispositivo que registra su token queda activo para recibir
+pushes de esa cuenta; los tokens anteriores se desactivan automáticamente.
 Las notificaciones siguen persistidas en el centro y usan Realtime cuando la
 app está abierta. Si Android recibe un push mientras la app está abierta, se
 muestra también una notificación en el sistema; con la app en segundo plano o

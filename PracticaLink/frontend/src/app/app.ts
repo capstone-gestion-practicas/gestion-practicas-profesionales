@@ -41,7 +41,7 @@ export class App implements OnInit {
       }
 
       usuarioActual = contexto.usuario.id_usuario;
-      void this.notificacionService.iniciarPush().catch(error =>
+      void this.notificacionService.iniciarPush(contexto.usuario.id_usuario).catch(error =>
         console.warn('[Push] No se pudo iniciar el registro.', error)
       );
       if (this.notificacionService.notificacionAbiertaPorPush() !== null) {

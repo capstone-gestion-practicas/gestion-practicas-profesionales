@@ -26,12 +26,12 @@ export class NotificacionService {
     return this.pushService.esAndroid();
   }
 
-  iniciarPush(): Promise<void> {
-    return this.pushService.iniciarPush();
+  iniciarPush(idUsuario: number): Promise<void> {
+    return this.pushService.iniciarPush(idUsuario);
   }
 
-  pedirPermisoPush(): Promise<boolean> {
-    return this.pushService.pedirPermisoPush();
+  pedirPermisoPush(idUsuario: number): Promise<boolean> {
+    return this.pushService.pedirPermisoPush(idUsuario);
   }
 
   desregistrarPush(): void {

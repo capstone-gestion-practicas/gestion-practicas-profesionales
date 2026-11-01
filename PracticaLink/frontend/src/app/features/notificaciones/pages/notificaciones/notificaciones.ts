@@ -16,6 +16,7 @@ import {
 
 import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
+import { AuthStore } from '../../../../core/store/auth.store';
 
 @Component({
   selector: 'app-notificaciones',
@@ -34,6 +35,7 @@ export class Notificaciones implements OnInit {
 
   constructor(
     readonly servicio: NotificacionService,
+    private readonly authStore: AuthStore,
     private readonly router: Router
   ) {}
 
@@ -48,12 +50,21 @@ export class Notificaciones implements OnInit {
       return;
     }
     try {
-      const habilitado = await this.servicio.pedirPermisoPush();
+      const idUsuario = this.authStore.obtenerContextoActual()?.usuario.id_usuario;
+      if (!idUsuario) {
+        this.mensajePush = 'Inicia sesión para activar las notificaciones push.';
+        return;
+      }
+      const habilitado = await this.servicio.pedirPermisoPush(idUsuario);
       this.mensajePush = habilitado
         ? 'Permiso concedido. Registrando el dispositivo con el servidor…'
         : 'Permiso denegado. Activa las notificaciones de PracticaLink en los ajustes de Android.';
-    } catch {
-      this.mensajePush = 'No fue posible activar las notificaciones push.';
+    } catch (error) {
+      console.warn('[Push] No fue posible activar las notificaciones desde la pantalla.', error);
+      this.mensajePush = error instanceof Error
+        && error.message.includes('Firebase no está configurado')
+        ? 'Esta versión de la app no tiene Firebase configurado. No se pueden activar las notificaciones push.'
+        : 'No fue posible iniciar las notificaciones push. Revisa los permisos de Android y vuelve a intentarlo.';
     }
   }
 

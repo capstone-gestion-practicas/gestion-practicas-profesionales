@@ -24,7 +24,7 @@
       <p class="send-success" role="status">Este dispositivo quedó registrado para recibir push.</p>
     } @else if (servicio.estadoRegistroPush() === 'error') {
       <p class="error-text" role="alert">
-        Se concedió el permiso, pero no fue posible registrar el dispositivo. Verifica tu conexión e inténtalo nuevamente.
+        No fue posible activar las notificaciones push. Revisa el mensaje indicado y vuelve a intentarlo.
       </p>
     } @else if (mensajePush) {
       <p role="status">{{ mensajePush }}</p>
