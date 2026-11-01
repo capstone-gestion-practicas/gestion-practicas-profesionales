@@ -92,3 +92,83 @@ def consultar_incidencias(db: Session, id_practica: int, id_usuario: int,
             if error.connection_invalidated or (isinstance(codigo_sql, str) and codigo_sql.startswith('08')):
                 raise ConsultaIncidenciasError('CONEXION_NO_DISPONIBLE') from None
         raise ConsultaIncidenciasError('FALLO_INESPERADO') from None
+
+
+class GestionEstadoIncidenciaError(Exception):
+    def __init__(self, codigo: str):
+        self.codigo = codigo
+
+
+def _error_estado(resultado):
+    if isinstance(resultado, dict) and 'error' in resultado:
+        codigo = resultado['error']
+        if set(resultado) != {'error'} or not isinstance(codigo, str):
+            codigo = 'FALLO_INESPERADO'
+        raise GestionEstadoIncidenciaError(codigo)
+
+
+def _revertir_estado(db, error, escritura=False):
+    try:
+        db.rollback()
+    except SQLAlchemyError:
+        pass
+    if isinstance(error, GestionEstadoIncidenciaError):
+        raise error
+    if isinstance(error, DBAPIError):
+        codigo = getattr(error.orig, 'sqlstate', None)
+        if error.connection_invalidated or (isinstance(codigo, str) and codigo.startswith('08')):
+            raise GestionEstadoIncidenciaError('CONEXION_NO_DISPONIBLE') from None
+        if escritura and codigo in ('40001', '40P01', '55P03'):
+            raise GestionEstadoIncidenciaError('CONFLICTO_CONCURRENTE') from None
+    raise GestionEstadoIncidenciaError('FALLO_INESPERADO') from None
+
+
+def cambiar_estado_incidencia(db: Session, id_practica: int, id_incidencia: int,
+                              id_usuario: int, datos):
+    from app.incidencias.schemas import IncidenciaEstadoResponse
+    try:
+        resultado = db.execute(text("""
+            SELECT incidencias_privadas.fn_cambiar_estado_incidencia(
+                :id_practica, :id_incidencia, :id_usuario,
+                :estado_esperado, :estado_nuevo, :comentario)
+        """), {'id_practica': id_practica, 'id_incidencia': id_incidencia,
+               'id_usuario': id_usuario, **datos.model_dump()}).scalar_one()
+        _error_estado(resultado)
+        respuesta = IncidenciaEstadoResponse.model_validate(resultado)
+        if (respuesta.id_practica != id_practica or respuesta.id_incidencia != id_incidencia
+                or respuesta.id_usuario != id_usuario
+                or respuesta.estado_anterior != datos.estado_esperado
+                or respuesta.estado_nuevo != datos.estado_nuevo
+                or respuesta.comentario != datos.comentario
+                or (respuesta.estado_anterior, respuesta.estado_nuevo) not in {
+                    ('PENDIENTE', 'EN_ATENCION'), ('PENDIENTE', 'RESUELTA'),
+                    ('EN_ATENCION', 'RESUELTA')}):
+            raise GestionEstadoIncidenciaError('FALLO_INESPERADO')
+        db.commit()
+        return respuesta
+    except Exception as error:
+        _revertir_estado(db, error, escritura=True)
+
+
+def consultar_historial_incidencia(db: Session, id_practica: int, id_incidencia: int,
+                                  id_usuario: int, limit: int, offset: int):
+    from app.incidencias.schemas import IncidenciaEstadosHistorialResponse
+    try:
+        db.execute(text('SET TRANSACTION READ ONLY'))
+        resultado = db.execute(text("""
+            SELECT incidencias_privadas.fn_consultar_historial_incidencia(
+                :id_practica, :id_incidencia, :id_usuario,
+                CAST(:limit AS INTEGER), CAST(:offset AS BIGINT))
+        """), {'id_practica': id_practica, 'id_incidencia': id_incidencia,
+               'id_usuario': id_usuario, 'limit': limit, 'offset': offset}).scalar_one()
+        _error_estado(resultado)
+        respuesta = IncidenciaEstadosHistorialResponse.model_validate(resultado)
+        ids = [item.id_historial for item in respuesta.items]
+        if (respuesta.id_practica != id_practica or respuesta.id_incidencia != id_incidencia
+                or respuesta.limit != limit or respuesta.offset != offset
+                or len(ids) > limit or (respuesta.hay_mas and len(ids) != limit)
+                or any(a <= b for a, b in zip(ids, ids[1:]))):
+            raise GestionEstadoIncidenciaError('FALLO_INESPERADO')
+        return respuesta  # Sin commit; el cierre revierte la transacción de lectura.
+    except Exception as error:
+        _revertir_estado(db, error)

@@ -755,3 +755,34 @@ Una colección vacía solo representa una consulta exitosa, nunca un error.
 
 Ver tests/integration/HU015_HTTP.md para reproducción del GET y regresión POST,
 EP04 y EP05. La integración Angular de la consulta sigue pendiente.
+
+### EP06 / HU016: gestión HTTP de estados e historial (vigente)
+
+HU015 ya cuenta con integración Angular y E2E local; las referencias anteriores
+a Angular pendiente describen cierres de etapas previas.
+
+Se incorporan PATCH /practicas/{id_practica}/incidencias/{id_incidencia}/estado
+y GET /practicas/{id_practica}/incidencias/{id_incidencia}/historial.
+Reutilizan app/incidencias y la conexión restringida INCIDENCIAS_DATABASE_URL,
+sin fallback. Requieren EP06-05/06/07; no aplican migraciones automáticamente.
+
+PATCH recibe estado_esperado, estado_nuevo y comentario opcional, sin campos extra.
+Comentario normalizado con espacios de borde U+0020, máximo 2000 caracteres;
+RESUELTA exige contenido. Autor exclusivamente JWT/contexto, roles activos
+GESTOR/ADMINISTRADOR; PostgreSQL repite autorización y controla la cadena,
+asociación, estado esperado y transiciones. Permite incidencias modernas de
+prácticas finalizadas; históricos incompatibles permanecen solo lectura.
+Valida resultado antes del commit y solo entonces devuelve 200. Rollback ante
+errores; sin reintentos. Conflictos SQL/estado/historial devuelven 409.
+
+GET limita 1..100 (default 50), offset >=0 y conserva id_historial DESC.
+Transacción READ ONLY, sin commit. Conserva estados textuales, comentario/origen
+null, comentarios extensos y fechas históricas; no inventa eventos.
+Respuesta: id_practica, id_incidencia, items, limit, offset, hay_mas.
+Cada evento expone id_historial, id_usuario, estado_anterior, estado_nuevo,
+fecha y comentario. No se agregan datos personales.
+
+Ver tests/integration/HU016_HTTP.md para contratos, errores, ejemplos,
+reproducción, resultados y límites. Validación: backend 304/304 con mocks,
+SQL PostgreSQL 84/84 y HTTP + PostgreSQL 35/35 en Docker exclusivo.
+Angular HU016 y E2E de navegador permanecen pendientes.
