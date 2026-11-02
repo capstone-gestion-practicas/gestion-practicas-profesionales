@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -18,6 +20,12 @@ app = FastAPI(
     version="0.1.0"
 )
 
+frontend_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("FRONTEND_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 # CORS para permitir conexión desde Angular/Ionic
 app.add_middleware(
     CORSMiddleware,
@@ -29,6 +37,7 @@ app.add_middleware(
         "http://localhost",
         "https://localhost",
         "capacitor://localhost",
+        *frontend_origins,
     ],
     allow_credentials=False,
     allow_methods=["*"],
