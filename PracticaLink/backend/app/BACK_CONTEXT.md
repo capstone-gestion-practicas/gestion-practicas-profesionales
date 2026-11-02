@@ -786,3 +786,21 @@ Ver tests/integration/HU016_HTTP.md para contratos, errores, ejemplos,
 reproducción, resultados y límites. Validación: backend 304/304 con mocks,
 SQL PostgreSQL 84/84 y HTTP + PostgreSQL 35/35 en Docker exclusivo.
 Angular HU016 y E2E de navegador permanecen pendientes.
+
+### EP06 / HU017: resumen HTTP de prácticas con incidencias pendientes (vigente)
+
+GET /practicas/con-incidencias-pendientes?limit=50&offset=0 devuelve prácticas con al
+menos una incidencia `PENDIENTE`, con `pendientes`, `en_atencion` (separado, nunca
+sumado), `fecha_pendiente_antigua`, `limit`, `offset` y `hay_mas`. Orden:
+fecha ascendente y luego id_practica. Usa `fn_resumen_incidencias_pendientes` mediante
+la conexión restringida INCIDENCIAS_DATABASE_URL, sin fallback; la conexión principal
+solo valida roles. Solo GESTOR y ADMINISTRADOR activos; ESTUDIANTE e inactivos 403.
+Transacción READ ONLY, una sola llamada, sin commit ni reintentos. Históricos
+(ABIERTA, EN_REVISION, CERRADA) no cuentan como pendientes.
+
+`app/main.py` incluye `incidencias_router` antes que `practicas_router`: sin ese orden,
+`GET /practicas/{id_practica}` capturaba la ruta nueva y respondía 422.
+
+Ver tests/integration/HU017_HTTP.md para contrato, errores, enrutamiento y pruebas.
+Validación: backend unitario 327/327 (incluye 23 de HU017); HTTP + PostgreSQL 44/44
+y SQL 97/97 con regresiones en Docker exclusivo.

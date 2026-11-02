@@ -7,9 +7,11 @@ from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.core.incidencias_database import get_incidencias_db
 from app.incidencias.schemas import (IncidenciaCreate, IncidenciaCreateResponse, IncidenciasHistorialResponse,
-    IncidenciaEstadoRequest, IncidenciaEstadoResponse, IncidenciaEstadosHistorialResponse)
+    IncidenciaEstadoRequest, IncidenciaEstadoResponse, IncidenciaEstadosHistorialResponse,
+    ResumenIncidenciasPendientesResponse)
 from app.incidencias.service import (
     RegistroIncidenciaError, registrar_incidencia, ConsultaIncidenciasError, consultar_incidencias,
+    consultar_resumen_incidencias_pendientes,
     GestionEstadoIncidenciaError, cambiar_estado_incidencia, consultar_historial_incidencia
 )
 
@@ -104,6 +106,30 @@ def obtener_incidencias(
         errores = {
             'USUARIO_NO_AUTORIZADO': (403, 'No tiene permisos para consultar incidencias'),
             'PRACTICA_NO_ENCONTRADA': (404, 'La práctica no existe'),
+            'PAGINACION_INVALIDA': (422, 'La paginación no es válida'),
+            'CONEXION_NO_DISPONIBLE': (503, 'La consulta de incidencias no está disponible'),
+        }
+        codigo, mensaje = errores.get(error.codigo, (500, 'No fue posible consultar las incidencias'))
+        raise HTTPException(codigo, mensaje) from None
+
+
+# HU017: declarada en el router de incidencias y este router se incluye antes que
+# el de prácticas (ver app/main.py), para que no la capture GET /practicas/{id_practica}.
+@router.get('/con-incidencias-pendientes', response_model=ResumenIncidenciasPendientesResponse,
+            responses={403: {'description': 'Acceso denegado'},
+                       422: {'description': 'Paginación no válida'},
+                       503: {'description': 'Consulta no disponible'}})
+def obtener_resumen_incidencias_pendientes(
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=9223372036854775807),
+    id_usuario: int = Depends(lector_autenticado),
+    db: Session = Depends(get_incidencias_db),
+):
+    try:
+        return consultar_resumen_incidencias_pendientes(db, id_usuario, limit, offset)
+    except ConsultaIncidenciasError as error:
+        errores = {
+            'USUARIO_NO_AUTORIZADO': (403, 'No tiene permisos para consultar incidencias'),
             'PAGINACION_INVALIDA': (422, 'La paginación no es válida'),
             'CONEXION_NO_DISPONIBLE': (503, 'La consulta de incidencias no está disponible'),
         }

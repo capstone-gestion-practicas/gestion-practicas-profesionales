@@ -30,13 +30,15 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+# Incidencias antes que prácticas: GET /practicas/con-incidencias-pendientes (HU017)
+# no debe ser capturado por GET /practicas/{id_practica}. Sin solapamiento de rutas.
+app.include_router(incidencias_router)
 app.include_router(practicas_router)
 app.include_router(estudiantes_router)
 app.include_router(revisiones_router)
 app.include_router(usuarios_router)
 app.include_router(empresas_router)
 app.include_router(seguimientos_router)
-app.include_router(incidencias_router)
 
 
 @app.get("/")

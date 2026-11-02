@@ -65,6 +65,23 @@ class IncidenciasHistorialResponse(BaseModel):
     hay_mas: bool = Field(strict=True)
 
 
+class PracticaIncidenciasPendientesItem(BaseModel):
+    # pendientes cuenta solo estado PENDIENTE; en_atencion se informa aparte.
+    model_config = ConfigDict(extra='forbid')
+    id_practica: Identificador
+    pendientes: int = Field(strict=True, ge=1)
+    en_atencion: int = Field(strict=True, ge=0)
+    fecha_pendiente_antigua: AwareDatetime
+
+
+class ResumenIncidenciasPendientesResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    items: list[PracticaIncidenciasPendientesItem]
+    limit: int = Field(strict=True, ge=1, le=100)
+    offset: int = Field(strict=True, ge=0, le=9223372036854775807)
+    hay_mas: bool = Field(strict=True)
+
+
 EstadoIncidencia = Literal['PENDIENTE', 'EN_ATENCION', 'RESUELTA']
 
 

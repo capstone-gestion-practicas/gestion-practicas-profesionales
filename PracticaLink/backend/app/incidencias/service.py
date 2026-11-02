@@ -54,6 +54,49 @@ class ConsultaIncidenciasError(Exception):
         self.codigo = codigo
 
 
+def consultar_resumen_incidencias_pendientes(db: Session, id_usuario: int, limit: int, offset: int):
+    """HU017: prácticas con incidencias PENDIENTE. Una sola consulta de solo lectura.
+
+    Reutiliza ConsultaIncidenciasError porque los códigos de negocio son los del
+    contrato SQL EP06-08 (USUARIO_NO_AUTORIZADO, PAGINACION_INVALIDA).
+    """
+    from app.incidencias.schemas import ResumenIncidenciasPendientesResponse
+
+    try:
+        # Primera sentencia de la sesión nueva: toda la transacción es de solo lectura.
+        db.execute(text('SET TRANSACTION READ ONLY'))
+        resultado = db.execute(text('''
+            SELECT incidencias_privadas.fn_resumen_incidencias_pendientes(
+                :id_usuario, CAST(:limit AS INTEGER), CAST(:offset AS BIGINT)
+            )
+        '''), {'id_usuario': id_usuario, 'limit': limit, 'offset': offset}).scalar_one()
+        if isinstance(resultado, dict) and 'error' in resultado:
+            codigo = resultado['error']
+            if set(resultado) != {'error'} or not isinstance(codigo, str):
+                codigo = 'FALLO_INESPERADO'
+            raise ConsultaIncidenciasError(codigo)
+        respuesta = ResumenIncidenciasPendientesResponse.model_validate(resultado)
+        ids = [item.id_practica for item in respuesta.items]
+        claves = [(item.fecha_pendiente_antigua, item.id_practica) for item in respuesta.items]
+        if (respuesta.limit != limit or respuesta.offset != offset or len(respuesta.items) > limit
+                or (respuesta.hay_mas and len(respuesta.items) != limit)
+                or len(set(ids)) != len(ids) or claves != sorted(claves)):
+            raise ConsultaIncidenciasError('FALLO_INESPERADO')
+        return respuesta  # Sin commit: cerrar la sesión termina la transacción.
+    except Exception as error:
+        try:
+            db.rollback()
+        except SQLAlchemyError:
+            pass
+        if isinstance(error, ConsultaIncidenciasError):
+            raise
+        if isinstance(error, DBAPIError):
+            codigo_sql = getattr(error.orig, 'sqlstate', None)
+            if error.connection_invalidated or (isinstance(codigo_sql, str) and codigo_sql.startswith('08')):
+                raise ConsultaIncidenciasError('CONEXION_NO_DISPONIBLE') from None
+        raise ConsultaIncidenciasError('FALLO_INESPERADO') from None
+
+
 def consultar_incidencias(db: Session, id_practica: int, id_usuario: int,
                          limit: int, offset: int):
     from app.incidencias.schemas import IncidenciasHistorialResponse
