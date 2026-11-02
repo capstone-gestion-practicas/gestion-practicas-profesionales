@@ -21,6 +21,7 @@ import {
   IonSpinner
 } from '@ionic/angular';
 
+import { EmpresaLookup } from '../../core/models/practica.models';
 import { AuthService } from '../../core/services/auth.service';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
@@ -79,6 +80,9 @@ export class Login {
   confirmarPasswordSolicitud = '';
   consultandoEmpresa = false;
   mensajeConsultaEmpresa = '';
+  empresaVerificadaSolicitud: EmpresaLookup | null = null;
+  rutEmpresaSolicitudSinCoincidencia: string | null = null;
+  private consultaEmpresaSolicitudId = 0;
 
   cargando = false;
   error = '';
@@ -120,12 +124,35 @@ export class Login {
     this.modoSolicitudEmpresa = false;
     this.error = '';
     this.mensajeConsultaEmpresa = '';
+    this.consultandoEmpresa = false;
+    this.consultaEmpresaSolicitudId += 1;
+  }
+
+  get puedeCompletarSolicitudEmpresa(): boolean {
+    if (this.empresaVerificadaSolicitud) {
+      return this.rutEmpresaSolicitud === this.empresaVerificadaSolicitud.rut;
+    }
+    return this.rutValidoSolicitudActual()
+      && this.rutEmpresaSolicitudSinCoincidencia === formatearRut(this.rutEmpresaSolicitud);
+  }
+
+  actualizarRutEmpresaSolicitud(rut: string): void {
+    if (rut === this.rutEmpresaSolicitud) return;
+    this.rutEmpresaSolicitud = rut;
+    this.empresaVerificadaSolicitud = null;
+    this.rutEmpresaSolicitudSinCoincidencia = null;
+    this.razonSocialSolicitud = '';
+    this.mensajeConsultaEmpresa = '';
+    this.error = '';
+    this.consultandoEmpresa = false;
+    this.consultaEmpresaSolicitudId += 1;
   }
 
   buscarEmpresaSolicitud(): void {
     this.error = '';
     this.mensajeConsultaEmpresa = '';
-    if (!this.rutEmpresaSolicitud.trim()) return;
+    this.empresaVerificadaSolicitud = null;
+    this.rutEmpresaSolicitudSinCoincidencia = null;
     if (!rutValido(this.rutEmpresaSolicitud)) {
       this.error = 'Ingresa un RUT de empresa válido.';
       return;
@@ -133,17 +160,30 @@ export class Login {
 
     this.rutEmpresaSolicitud = formatearRut(this.rutEmpresaSolicitud);
     this.consultandoEmpresa = true;
-    this.laboralService.consultarEmpresaParaSolicitud(this.rutEmpresaSolicitud).subscribe({
+    const rutConsultado = this.rutEmpresaSolicitud;
+    const consultaId = ++this.consultaEmpresaSolicitudId;
+    this.laboralService.consultarEmpresaParaSolicitud(rutConsultado).subscribe({
       next: empresa => {
+        if (consultaId !== this.consultaEmpresaSolicitudId) return;
         this.consultandoEmpresa = false;
+        if (!empresa.found) {
+          this.permitirSolicitudManual(rutConsultado);
+          return;
+        }
+        this.empresaVerificadaSolicitud = empresa;
         this.razonSocialSolicitud = empresa.razon_social;
-        this.mensajeConsultaEmpresa = 'Datos encontrados. Puedes corregir la razón social si es necesario.';
+        this.mensajeConsultaEmpresa = empresa.cache_vigente
+          ? 'RUT verificado. Confirma los datos de la empresa para continuar.'
+          : 'Empresa encontrada, pero los datos de la consulta anterior están vencidos. La solicitud quedará sujeta a revisión.';
       },
       error: (error: HttpErrorResponse) => {
+        if (consultaId !== this.consultaEmpresaSolicitudId) return;
         this.consultandoEmpresa = false;
-        this.mensajeConsultaEmpresa = error.status === 404
-          ? 'No encontramos el RUT. Completa la razón social manualmente.'
-          : 'No fue posible consultar el RUT. Puedes ingresar la razón social manualmente.';
+        if (error.status === 404) {
+          this.permitirSolicitudManual(rutConsultado);
+          return;
+        }
+        this.mensajeConsultaEmpresa = 'No fue posible verificar el RUT. Inténtalo nuevamente para continuar.';
       }
     });
   }
@@ -151,8 +191,8 @@ export class Login {
   enviarSolicitudEmpresa(): void {
     this.error = '';
     this.mensaje = '';
-    if (!rutValido(this.rutEmpresaSolicitud)) {
-      this.error = 'Ingresa un RUT de empresa válido.';
+    if (!this.puedeCompletarSolicitudEmpresa) {
+      this.error = 'Verifica el RUT de la empresa antes de continuar. Si no se encuentra, completa la solicitud manual para revisión.';
       return;
     }
     if (!this.razonSocialSolicitud.trim()
@@ -320,6 +360,8 @@ export class Login {
   }
 
   private limpiarSolicitudEmpresa(): void {
+    this.consultaEmpresaSolicitudId += 1;
+    this.consultandoEmpresa = false;
     this.razonSocialSolicitud = '';
     this.rutEmpresaSolicitud = '';
     this.nombreContactoSolicitud = '';
@@ -330,5 +372,17 @@ export class Login {
     this.passwordSolicitud = '';
     this.confirmarPasswordSolicitud = '';
     this.mensajeConsultaEmpresa = '';
+    this.empresaVerificadaSolicitud = null;
+    this.rutEmpresaSolicitudSinCoincidencia = null;
+  }
+
+  private rutValidoSolicitudActual(): boolean {
+    return rutValido(this.rutEmpresaSolicitud);
+  }
+
+  private permitirSolicitudManual(rut: string): void {
+    this.rutEmpresaSolicitudSinCoincidencia = rut;
+    this.razonSocialSolicitud = '';
+    this.mensajeConsultaEmpresa = 'No encontramos una empresa asociada a ese RUT. Completa los datos manualmente; la solicitud será revisada por un administrador.';
   }
 }

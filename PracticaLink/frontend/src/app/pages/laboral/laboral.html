@@ -47,16 +47,27 @@
                   <ion-input [value]="rutEmpresa" readonly></ion-input>
                 } @else {
                   <ion-input
-                    [(ngModel)]="rutEmpresa"
+                    [ngModel]="rutEmpresa"
+                    (ngModelChange)="actualizarRutEmpresa($event)"
                     placeholder="76.123.456-0"
-                    maxlength="12"
-                    (ionBlur)="consultarRutEmpresa()">
+                    maxlength="12">
                   </ion-input>
                 }
                 @if (consultandoEmpresa) {
                   <ion-spinner name="crescent" aria-label="Consultando RUT"></ion-spinner>
                 }
               </ion-item>
+              @if (vista === 'gestion') {
+                <ion-button
+                  [disabled]="consultandoEmpresa || !rutEmpresa"
+                  (click)="consultarRutEmpresa()">
+                  @if (consultandoEmpresa) {
+                    <ion-spinner name="crescent"></ion-spinner>
+                  } @else {
+                    Verificar RUT
+                  }
+                </ion-button>
+              }
               @if (errorConsultaEmpresa) {
                 <p class="notice error wide" role="alert">{{ errorConsultaEmpresa }}</p>
               }
@@ -66,9 +77,16 @@
                   @if (empresa.giro) { <span>{{ empresa.giro }}</span> }
                   @if (empresa.rubro) { <span>{{ empresa.rubro }}</span> }
                   @if (ubicacionEmpresaConsultada) { <span>{{ ubicacionEmpresaConsultada }}</span> }
+                  @if (!empresa.cache_vigente) {
+                    <span role="status">Datos obtenidos de una consulta anterior; podrían estar desactualizados.</span>
+                  }
                 </section>
               }
             }
+          </div>
+          @if (empresaConsultada; as empresa) {
+            @if (empresa.found && empresa.rut === rutEmpresa) {
+          <div class="form-grid">
             <ion-item><ion-label position="stacked">Cargo de práctica *</ion-label>
               <ion-select
                 [value]="cargoSeleccionado"
@@ -152,6 +170,10 @@
             @if (guardando) { <ion-spinner name="crescent"></ion-spinner> }
             @else { {{ ofertaEditandoId ? 'Guardar cambios' : 'Publicar oferta' }} }
           </ion-button>
+            }
+          } @else if (!consultandoEmpresa && !errorConsultaEmpresa) {
+            <p class="notice" role="status">Verifica el RUT de la empresa para continuar con la oferta.</p>
+          }
         </section>
       }
 

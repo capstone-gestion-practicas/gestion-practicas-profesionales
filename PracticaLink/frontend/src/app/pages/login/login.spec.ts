@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
@@ -153,5 +154,80 @@ describe('Login', () => {
     });
     expect(component.modoSolicitudEmpresa).toBeFalse();
     expect(component.mensaje).toContain('Un administrador revisará');
+  });
+
+  it('requires a verified company RUT before submitting an account request', () => {
+    component.modoSolicitudEmpresa = true;
+    component.rutEmpresaSolicitud = '76.123.456-0';
+
+    component.enviarSolicitudEmpresa();
+
+    expect(component.error).toBe(
+      'Verifica el RUT de la empresa antes de continuar. Si no se encuentra, completa la solicitud manual para revisión.'
+    );
+    expect(laboralService.solicitarCuentaEmpresa).not.toHaveBeenCalled();
+  });
+
+  it('clears company verification when the RUT changes', () => {
+    component.empresaVerificadaSolicitud = {
+      found: true,
+      rut: '76.123.456-0',
+      dv: '0',
+      razon_social: 'Empresa Sintética',
+      fecha_inicio_actividades: null,
+      giro: null,
+      rubro: null,
+      subrubro: null,
+      categoria_tributaria: null,
+      afecta_iva: null,
+      actividades: [],
+      comuna: null,
+      region: null,
+      num_trabajadores: null,
+      fuente: 'Chile RUT Empresa',
+      consultado_en: null,
+      cache_vigente: true
+    };
+    component.razonSocialSolicitud = 'Empresa Sintética';
+
+    component.actualizarRutEmpresaSolicitud('77.111.222-3');
+
+    expect(component.empresaVerificadaSolicitud).toBeNull();
+    expect(component.razonSocialSolicitud).toBe('');
+  });
+
+  it('allows a manually entered company request after the RUT is not found', () => {
+    laboralService.consultarEmpresaParaSolicitud.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 404 }))
+    );
+    laboralService.solicitarCuentaEmpresa.and.returnValue(of({
+      id_solicitud: 42,
+      estado: 'PENDIENTE',
+      mensaje: 'Solicitud enviada para revisión'
+    }));
+
+    component.modoSolicitudEmpresa = true;
+    component.rutEmpresaSolicitud = '76.123.456-0';
+    component.buscarEmpresaSolicitud();
+
+    expect(component.puedeCompletarSolicitudEmpresa).toBeTrue();
+    expect(component.mensajeConsultaEmpresa).toContain('revisada por un administrador');
+
+    component.razonSocialSolicitud = 'Empresa Ingresada Manualmente';
+    component.nombreContactoSolicitud = 'Ana';
+    component.apellidoContactoSolicitud = 'Prueba';
+    component.correoSolicitud = 'ana@example.com';
+    component.telefonoSolicitud = '+56912345678';
+    component.cargoContactoSolicitud = 'Encargada';
+    component.passwordSolicitud = 'synthetic-password';
+    component.confirmarPasswordSolicitud = 'synthetic-password';
+    component.enviarSolicitudEmpresa();
+
+    expect(laboralService.solicitarCuentaEmpresa).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        razon_social: 'Empresa Ingresada Manualmente',
+        rut_empresa: '76.123.456-0'
+      })
+    );
   });
 });

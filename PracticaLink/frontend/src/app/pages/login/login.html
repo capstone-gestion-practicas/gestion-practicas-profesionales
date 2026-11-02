@@ -93,71 +93,100 @@
           <ion-item>
             <ion-label position="stacked">RUT de la empresa *</ion-label>
             <ion-input
-              [(ngModel)]="rutEmpresaSolicitud"
+              [ngModel]="rutEmpresaSolicitud"
+              (ngModelChange)="actualizarRutEmpresaSolicitud($event)"
               maxlength="12"
-              placeholder="76.123.456-7"
-              (ionBlur)="buscarEmpresaSolicitud()">
+              placeholder="76.123.456-7">
             </ion-input>
           </ion-item>
+          <ion-button
+            expand="block"
+            fill="outline"
+            [disabled]="consultandoEmpresa || !rutEmpresaSolicitud"
+            (click)="buscarEmpresaSolicitud()">
+            @if (consultandoEmpresa) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              Verificar RUT
+            }
+          </ion-button>
           @if (consultandoEmpresa) {
             <p class="access-hint">Consultando datos de empresa...</p>
           }
           @if (mensajeConsultaEmpresa) {
             <p class="access-hint" role="status">{{ mensajeConsultaEmpresa }}</p>
           }
-          <ion-item>
-            <ion-label position="stacked">Razón social *</ion-label>
-            <ion-input [(ngModel)]="razonSocialSolicitud" maxlength="255"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Nombre de contacto *</ion-label>
-            <ion-input [(ngModel)]="nombreContactoSolicitud" maxlength="100" autocomplete="given-name"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Apellido de contacto *</ion-label>
-            <ion-input [(ngModel)]="apellidoContactoSolicitud" maxlength="100" autocomplete="family-name"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Correo de acceso *</ion-label>
-            <ion-input
-              type="email"
-              [(ngModel)]="correoSolicitud"
-              maxlength="150"
-              inputmode="email"
-              autocapitalize="off"
-              spellcheck="false"
-              autocomplete="email"
-              placeholder="correo@ejemplo.cl">
-            </ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Teléfono *</ion-label>
-            <ion-input [(ngModel)]="telefonoSolicitud" maxlength="30" type="tel" autocomplete="tel"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Cargo del contacto *</ion-label>
-            <ion-input [(ngModel)]="cargoContactoSolicitud" maxlength="100" autocomplete="organization-title"></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Contraseña para la cuenta *</ion-label>
-            <ion-input
-              type="password"
-              [(ngModel)]="passwordSolicitud"
-              minlength="8"
-              maxlength="128"
-              autocomplete="new-password">
-            </ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Confirmar contraseña *</ion-label>
-            <ion-input
-              type="password"
-              [(ngModel)]="confirmarPasswordSolicitud"
-              minlength="8"
-              maxlength="128"
-              autocomplete="new-password">
-            </ion-input>
-          </ion-item>
+          @if (empresaVerificadaSolicitud; as empresa) {
+            <section class="company-summary" aria-label="Datos de la empresa verificada">
+              <strong>{{ empresa.razon_social }}</strong>
+              @if (empresa.giro) { <span>{{ empresa.giro }}</span> }
+              @if (empresa.rubro) { <span>{{ empresa.rubro }}</span> }
+              @if (empresa.comuna || empresa.region) {
+                <span>{{ empresa.comuna }}{{ empresa.comuna && empresa.region ? ', ' : '' }}{{ empresa.region }}</span>
+              }
+            </section>
+          }
+          @if (puedeCompletarSolicitudEmpresa) {
+            <ion-item>
+              <ion-label position="stacked">Razón social *</ion-label>
+              <ion-input
+                [(ngModel)]="razonSocialSolicitud"
+                maxlength="255"
+                [readonly]="!!empresaVerificadaSolicitud">
+              </ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Nombre de contacto *</ion-label>
+              <ion-input [(ngModel)]="nombreContactoSolicitud" maxlength="100" autocomplete="given-name"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Apellido de contacto *</ion-label>
+              <ion-input [(ngModel)]="apellidoContactoSolicitud" maxlength="100" autocomplete="family-name"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Correo de acceso *</ion-label>
+              <ion-input
+                type="email"
+                [(ngModel)]="correoSolicitud"
+                maxlength="150"
+                inputmode="email"
+                autocapitalize="off"
+                spellcheck="false"
+                autocomplete="email"
+                placeholder="correo@ejemplo.cl">
+              </ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Teléfono *</ion-label>
+              <ion-input [(ngModel)]="telefonoSolicitud" maxlength="30" type="tel" autocomplete="tel"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Cargo del contacto *</ion-label>
+              <ion-input [(ngModel)]="cargoContactoSolicitud" maxlength="100" autocomplete="organization-title"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Contraseña para la cuenta *</ion-label>
+              <ion-input
+                type="password"
+                [(ngModel)]="passwordSolicitud"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password">
+              </ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Confirmar contraseña *</ion-label>
+              <ion-input
+                type="password"
+                [(ngModel)]="confirmarPasswordSolicitud"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password">
+              </ion-input>
+            </ion-item>
+          } @else {
+            <p class="access-hint">Verifica el RUT para mostrar y completar los datos de la solicitud.</p>
+          }
         }
 
         @if (!modoSolicitudEmpresa) {
@@ -214,7 +243,7 @@
           expand="block"
           class="login-button"
           [disabled]="cargando || (modoSolicitudEmpresa
-            ? (!rutEmpresaSolicitud || !razonSocialSolicitud || !nombreContactoSolicitud
+            ? (!puedeCompletarSolicitudEmpresa || !rutEmpresaSolicitud || !razonSocialSolicitud || !nombreContactoSolicitud
               || !apellidoContactoSolicitud || !correoSolicitud || !telefonoSolicitud
               || !cargoContactoSolicitud || !passwordSolicitud || !confirmarPasswordSolicitud
               || consultandoEmpresa)

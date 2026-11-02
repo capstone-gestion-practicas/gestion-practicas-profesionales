@@ -237,18 +237,34 @@ export class Laboral implements OnDestroy, OnInit {
 
     this.rutEmpresa = formatearRut(this.rutEmpresa);
     this.consultandoEmpresa = true;
-    this.laboralService.consultarEmpresa(this.rutEmpresa).subscribe({
+    const rutConsultado = this.rutEmpresa;
+    this.laboralService.consultarEmpresa(rutConsultado).subscribe({
       next: empresa => {
-        this.empresaConsultada = empresa;
+        if (this.rutEmpresa !== rutConsultado) return;
         this.consultandoEmpresa = false;
+        if (!empresa.found) {
+          this.errorConsultaEmpresa = 'No encontramos una empresa asociada a ese RUT.';
+          return;
+        }
+        this.empresaConsultada = empresa;
       },
       error: (error: HttpErrorResponse) => {
+        if (this.rutEmpresa !== rutConsultado) return;
         this.consultandoEmpresa = false;
         this.errorConsultaEmpresa = error.status === 404
           ? 'No encontramos una empresa asociada a ese RUT.'
           : this.detalleError(error, 'No fue posible validar el RUT de la empresa.');
       }
     });
+  }
+
+  actualizarRutEmpresa(rut: string): void {
+    if (rut === this.rutEmpresa) return;
+    this.rutEmpresa = rut;
+    this.empresaConsultada = null;
+    this.consultandoEmpresa = false;
+    this.errorConsultaEmpresa = '';
+    this.errorFormulario = '';
   }
 
   seleccionarCargo(cargo: string): void {
@@ -352,7 +368,8 @@ export class Laboral implements OnDestroy, OnInit {
       this.errorFormulario = 'Ingresa el RUT de la empresa asociada.';
       return;
     }
-    if (!this.empresaConsultada) {
+    if (!this.empresaConsultada?.found
+      || this.empresaConsultada.rut !== formatearRut(this.rutEmpresa)) {
       this.errorFormulario = 'Consulta y valida el RUT de la empresa antes de continuar.';
       return;
     }

@@ -102,9 +102,11 @@ de estudiante innecesario.
 
 Desde el acceso `Empresas`, cualquier solicitante puede enviar una solicitud
 con RUT, razón social, datos de contacto y una contraseña elegida por quien
-solicita. El formulario consulta los datos tributarios del RUT y permite
-completar manualmente la razón social cuando la consulta no encuentra datos o
-no está disponible. Enviar el formulario no crea una cuenta.
+solicita. Primero se consulta el RUT y solo entonces se muestran los demás
+campos. Si no se encuentra la empresa, se permite completar sus datos
+manualmente y enviar la solicitud para revisión administrativa. Si el servicio
+de consulta no está disponible, se debe reintentar; el formulario no habilita
+el envío manual en ese caso. Enviar el formulario no crea una cuenta.
 
 ## Gestión administrativa de usuarios (EP01)
 
@@ -160,10 +162,11 @@ El backend expone los servicios de este flujo bajo `/laboral`:
 - `GET /laboral/postulaciones/{id}/historial`: historial accesible según estudiante, RUT asociado o rol de gestión.
 
 En las ofertas, el cargo se elige de una lista de funciones de práctica o se
-ingresa como otro cargo. El RUT se valida y consulta para mostrar los datos
-tributarios disponibles antes de guardar. La ubicación acepta texto manual o
-sugerencias de calles de Photon/OpenStreetMap; el navegador envía la consulta
-de dirección al proveedor externo.
+ingresa como otro cargo. El formulario solicita primero el RUT y solo muestra
+los campos de la oferta tras encontrar la empresa en la consulta tributaria.
+Los datos de caché vencida se identifican como potencialmente desactualizados.
+La ubicación acepta texto manual o sugerencias de calles de Photon/OpenStreetMap;
+el navegador envía la consulta de dirección al proveedor externo.
 
 La migración versionada es `supabase/migrations/20261102180000_portal_laboral.sql`.
 Debe aplicarse y validarse en el entorno PostgreSQL autorizado antes de desplegar
