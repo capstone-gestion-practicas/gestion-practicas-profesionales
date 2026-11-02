@@ -202,14 +202,17 @@ export class GestionEstados implements OnInit {
     const estadoSeleccionado = this.estados.find(
       estado => estado.id_estado === idEstado
     );
-    const operacion = (estadoSeleccionado?.nombre === 'EN_CURSO'
+    const operacion = estadoSeleccionado?.nombre === 'EN_CURSO'
       ? this.practicaService.iniciarPractica(
         practica.id_practica, this.observacion.trim() || null
-      )
+      ).pipe(map(respuesta => ({
+        id_practica: respuesta.id_practica,
+        mensaje: respuesta.mensaje
+      })))
       : this.practicaService.actualizarEstado(
         practica.id_practica, idEstado,
         this.observacion.trim() || null
-      )).pipe(map(respuesta => ({
+      ).pipe(map(respuesta => ({
         id_practica: respuesta.id_practica,
         mensaje: respuesta.mensaje
       })));
