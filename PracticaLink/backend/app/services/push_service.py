@@ -47,12 +47,19 @@ def enviar_push_notificacion(db: Session, id_notificacion: int, id_usuario: int)
                 ), app=app)
                 enviados += 1
             except Exception as error:
-                logger.exception("No se pudo enviar push a un dispositivo registrado.")
-                if "registration-token-not-registered" in str(error) or "invalid-registration-token" in str(error):
+                token_no_registrado = (
+                    error.__class__.__name__ == "UnregisteredError"
+                    or "registration-token-not-registered" in str(error)
+                    or "invalid-registration-token" in str(error)
+                )
+                if token_no_registrado:
+                    logger.warning("El token FCM ya no está registrado; se desactiva el dispositivo.")
                     db.execute(text("""
                         UPDATE public.dispositivo_push SET activo = FALSE
                         WHERE token = :token
                     """), {"token": token})
+                else:
+                    logger.exception("No se pudo enviar push a un dispositivo registrado.")
         db.commit()
         return enviados
     except Exception:

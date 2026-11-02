@@ -1,4 +1,4 @@
- import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -26,6 +26,22 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./features/notificaciones/pages/notificaciones/notificaciones')
+        .then(m => m.Notificaciones)
+  },
+  {
+    path: 'envio-notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./features/notificaciones/pages/envio-notificaciones/envio-notificaciones')
+        .then(m => m.EnvioNotificaciones)
+  },
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },
@@ -48,32 +64,26 @@ export const routes: Routes = [
         .then(m => m.RevisionDetalle)
   },
   {
-    path: 'practicas',
+    path: 'gestion-estados',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
     loadComponent: () =>
-      import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
+      import('./pages/gestion-estados/gestion-estados')
+        .then(m => m.GestionEstados)
   },
   {
-    path: 'practicas/:id/seguimiento/nuevo',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'seguimiento' },
-    loadComponent: () =>
-      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
-  },
-  {
-    path: 'practicas/:id/incidencias/nueva',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'incidencia' },
-    loadComponent: () =>
-      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
-  },
-  {
-    path: 'practicas/:id',
+    path: 'seguimientos',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
     loadComponent: () =>
-      import('./pages/practica-detalle/practica-detalle').then(m => m.PracticaDetalle)
+      import('./pages/seguimientos/seguimientos').then(m => m.Seguimientos)
+  },
+  {
+    path: 'incidencias',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/incidencias/incidencias').then(m => m.Incidencias)
   },
   {
     path: '**',

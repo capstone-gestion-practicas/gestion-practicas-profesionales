@@ -1,0 +1,40 @@
+.send-notifications-content { --background: var(--cream); }
+.send-notifications-wrapper { max-width: 760px; margin: 0 auto; padding: 24px; --ion-grid-padding: 0; --ion-grid-column-padding: 0; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 0 0 22px; }
+.page-heading h1 { margin: 6px 0; color: var(--ink); font-size: 2rem; }
+.page-heading p:not(.module-label) { margin: 0; color: var(--ink-muted); }
+.module-label { margin: 0; color: var(--ion-color-primary); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.back-home-button { --color: var(--ion-color-primary); --border-color: #9db8a4; --border-radius: 12px; font-weight: 800; }
+.send-notifications-card { margin: 0; }
+.form-intro { margin: 0 0 20px; color: var(--ink-muted); }
+.send-notifications-card form { display: grid; gap: 9px; }
+.send-notifications-card label { margin-top: 8px; color: var(--ink); font-size: .9rem; font-weight: 700; }
+.send-notifications-card input,
+.send-notifications-card textarea,
+.send-notifications-card select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+.send-notifications-card input:focus,
+.send-notifications-card textarea:focus,
+.send-notifications-card select:focus { outline: 3px solid rgba(36, 90, 69, .16); border-color: var(--ion-color-primary); }
+.send-notifications-card textarea { resize: vertical; }
+.broadcast-notice { padding: 12px 14px; border: 1px solid #d5e5d7; border-radius: 10px; background: #edf4ef; color: var(--ink); line-height: 1.5; }
+.broadcast-notice strong { color: var(--ion-color-primary); }
+.form-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.loading-state { display: flex; align-items: center; gap: 10px; padding: 12px 0; color: var(--ink-muted); }
+.empty-state { padding: 14px; border-radius: 10px; background: var(--cream-muted); color: var(--ink-muted); }
+.error-text { color: #b42318; }
+.send-success { padding: 12px; border-radius: 9px; background: #e4efe5; color: var(--ion-color-primary); font-weight: 700; }
+@media (max-width: 640px) {
+  .send-notifications-wrapper { padding: 16px; }
+  .page-heading { align-items: flex-start; flex-direction: column; }
+  .page-heading h1 { font-size: 1.7rem; }
+  .form-actions ion-button { width: 100%; }
+}

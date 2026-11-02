@@ -27,9 +27,23 @@ describe('Login', () => {
 
   it('should create', () => expect(component).toBeTruthy());
 
+  it('dismisses the release notes before navigating home', () => {
+    component.novedadesAbiertas = true;
+    spyOn(localStorage, 'setItem');
+
+    component.continuarDespuesDeNovedades();
+
+    expect(component.novedadesAbiertas).toBeFalse();
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'practicalink-version-novedades',
+      component.appVersion
+    );
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/home']);
+  });
+
   it('does not register when passwords differ', () => {
     component.correo = 'usuario@practicalink.cl';
-    component.password = 'synthetic-login-test-only';
+    component.password = '123456.abc';
     component.confirmarPassword = 'otra-clave';
     component.registrarse();
     expect(component.error).toBe('Las contraseñas no coinciden.');
@@ -45,11 +59,11 @@ describe('Login', () => {
     component.nombre = 'Ana';
     component.apellido = 'Pérez';
     component.correo = 'ana@practicalink.cl';
-    component.password = 'synthetic-login-test-only';
-    component.confirmarPassword = 'synthetic-login-test-only';
+    component.password = '123456.abc';
+    component.confirmarPassword = '123456.abc';
     component.registrarse();
     expect(authService.registrar).toHaveBeenCalledWith({
-      nombre: 'Ana', apellido: 'Pérez', correo: 'ana@practicalink.cl', password: 'synthetic-login-test-only'
+      nombre: 'Ana', apellido: 'Pérez', correo: 'ana@practicalink.cl', password: '123456.abc'
     });
     expect(component.modoRegistro).toBeFalse();
   });

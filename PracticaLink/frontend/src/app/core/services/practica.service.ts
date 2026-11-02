@@ -1,67 +1,31 @@
-import { SeguimientoCreate, SeguimientoResponse, SeguimientosHistorialResponse } from '../models/seguimiento.models';
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 import {
   PracticaDetalleResponse,
-  PracticaDetalleGestionResponse,
-  HistorialPracticaResponse,
-  PracticasListadoResponse,
   PracticaCreate,
   PracticaCreateResponse,
   EmpresaLookup,
-  IniciarPracticaRequest,
-  IniciarPracticaResponse
+  EstudianteSinPractica,
+  EstadoPracticaDetalle,
+  HistorialEstadoPractica,
+  PracticaEstadoResumen,
+  ActualizarEstadoPracticaResponse,
+  SeguimientoPractica,
+  IncidenciaPractica,
+  EstadoIncidencia,
+  ActualizarEstadoIncidenciaResponse,
+  RecordatorioEstudianteResponse
 } from '../models/practica.models';
 
 @Injectable({ providedIn: 'root' })
 export class PracticaService {
-  private readonly apiUrl = 'http://127.0.0.1:8000';
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private readonly http: HttpClient) {}
-
-  obtenerSeguimientos(idPractica: string, limit = 50, offset = 0): Observable<SeguimientosHistorialResponse> {
-    const params = new HttpParams().set('limit', limit).set('offset', offset);
-    return this.http.get<SeguimientosHistorialResponse>(
-      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`, { params }
-    );
-  }
-
-  registrarSeguimiento(idPractica: string, datos: SeguimientoCreate): Observable<HttpResponse<SeguimientoResponse>> {
-    const { fecha, tipo, observacion } = datos;
-    return this.http.post<SeguimientoResponse>(
-      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/seguimientos`,
-      { fecha, tipo, observacion }, { observe: 'response' }
-    );
-  }
-
-  listar(limit = 50, offset = 0, rut?: string): Observable<PracticasListadoResponse> {
-    let params = new HttpParams().set('limit', limit).set('offset', offset);
-    if (rut) {
-      params = params.set('rut', rut);
-    }
-    return this.http.get<PracticasListadoResponse>(`${this.apiUrl}/practicas`, { params });
-  }
-
-  obtenerDetalle(idPractica: string): Observable<PracticaDetalleGestionResponse> {
-    return this.http.get<PracticaDetalleGestionResponse>(
-      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}`
-    );
-  }
-
-  iniciar(idPractica: string, datos: IniciarPracticaRequest): Observable<IniciarPracticaResponse> {
-    return this.http.patch<IniciarPracticaResponse>(
-      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/estado`, datos
-    );
-  }
-
-  obtenerHistorial(idPractica: string, limit = 50, offset = 0): Observable<HistorialPracticaResponse> {
-    const params = new HttpParams().set('limit', limit).set('offset', offset);
-    return this.http.get<HistorialPracticaResponse>(
-      `${this.apiUrl}/practicas/${encodeURIComponent(idPractica)}/historial`, { params }
-    );
-  }
 
   registrar(datos: PracticaCreate): Observable<PracticaCreateResponse> {
     return this.http.post<PracticaCreateResponse>(
@@ -78,5 +42,93 @@ export class PracticaService {
 
   obtenerMiPractica(): Observable<PracticaDetalleResponse> {
     return this.http.get<PracticaDetalleResponse>(`${this.apiUrl}/practicas/me`);
+  }
+
+  listarEstados(): Observable<EstadoPracticaDetalle[]> {
+    return this.http.get<EstadoPracticaDetalle[]>(`${this.apiUrl}/practicas/estados`);
+  }
+
+  listarPracticasParaGestion(): Observable<PracticaEstadoResumen[]> {
+    return this.http.get<PracticaEstadoResumen[]>(`${this.apiUrl}/practicas/gestion-estados`);
+  }
+
+  listarEstudiantesSinPractica(): Observable<EstudianteSinPractica[]> {
+    return this.http.get<EstudianteSinPractica[]>(
+      `${this.apiUrl}/practicas/estudiantes-sin-practica`
+    );
+  }
+
+  enviarRecordatorioEstudiante(idUsuario: number): Observable<RecordatorioEstudianteResponse> {
+    return this.http.post<RecordatorioEstudianteResponse>(
+      `${this.apiUrl}/practicas/estudiantes/${idUsuario}/recordatorio`,
+      {}
+    );
+  }
+
+  obtenerHistorialEstados(idPractica: number): Observable<HistorialEstadoPractica[]> {
+    return this.http.get<HistorialEstadoPractica[]>(
+      `${this.apiUrl}/practicas/${idPractica}/historial-estados`
+    );
+  }
+
+  actualizarEstado(
+    idPractica: number,
+    idEstado: number,
+    observacion: string | null
+  ): Observable<ActualizarEstadoPracticaResponse> {
+    return this.http.patch<ActualizarEstadoPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/estado`,
+      { id_estado: idEstado, observacion }
+    );
+  }
+
+  responderObservacion(idPractica: number, respuesta: string): Observable<ActualizarEstadoPracticaResponse> {
+    return this.http.patch<ActualizarEstadoPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/respuesta-observacion`,
+      { respuesta }
+    );
+  }
+
+  listarSeguimientos(idPractica: number): Observable<SeguimientoPractica[]> {
+    return this.http.get<SeguimientoPractica[]>(
+      `${this.apiUrl}/practicas/${idPractica}/seguimientos`
+    );
+  }
+
+  registrarSeguimiento(
+    idPractica: number,
+    fecha: string,
+    observacion: string
+  ): Observable<SeguimientoPractica> {
+    return this.http.post<SeguimientoPractica>(
+      `${this.apiUrl}/practicas/${idPractica}/seguimientos`,
+      { fecha, observacion }
+    );
+  }
+
+  listarIncidencias(): Observable<IncidenciaPractica[]> {
+    return this.http.get<IncidenciaPractica[]>(`${this.apiUrl}/incidencias`);
+  }
+
+  registrarIncidencia(
+    idPractica: number,
+    fecha: string,
+    descripcion: string,
+    prioridad: IncidenciaPractica['prioridad']
+  ): Observable<IncidenciaPractica> {
+    return this.http.post<IncidenciaPractica>(
+      `${this.apiUrl}/practicas/${idPractica}/incidencias`,
+      { fecha, descripcion, prioridad }
+    );
+  }
+
+  actualizarEstadoIncidencia(
+    idIncidencia: number,
+    estado: EstadoIncidencia
+  ): Observable<ActualizarEstadoIncidenciaResponse> {
+    return this.http.patch<ActualizarEstadoIncidenciaResponse>(
+      `${this.apiUrl}/incidencias/${idIncidencia}/estado`,
+      { estado }
+    );
   }
 }

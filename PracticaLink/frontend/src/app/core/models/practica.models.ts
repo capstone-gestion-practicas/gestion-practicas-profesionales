@@ -13,6 +13,7 @@ export interface PracticaCreate {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales?: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
 }
@@ -27,6 +28,7 @@ export interface PracticaCreateResponse {
 export interface EstadoPracticaDetalle {
   id_estado: number;
   nombre: string;
+  descripcion?: string | null;
   es_final: boolean;
 }
 
@@ -44,14 +46,100 @@ export interface CentroPracticaDetalle {
 export interface PracticaDetalleResponse {
   id_practica: number;
   fecha_registro: string;
-  fecha_ultimo_cambio_estado: string | null;
+  fecha_actualizacion?: string;
   estado: EstadoPracticaDetalle;
   centro_practica: CentroPracticaDetalle;
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas: number | null;
+  horas_semanales?: number | null;
   cargo_funcion: string | null;
   descripcion: string | null;
+}
+
+export interface PracticaEstadoResumen {
+  id_practica: number;
+  fecha_registro: string;
+  fecha_actualizacion: string;
+  id_estado: number;
+  estado: string;
+  descripcion_estado: string | null;
+  es_final: boolean;
+  estudiante: string;
+  rut_estudiante: string;
+  centro_practica: string;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  horas_semanales: number | null;
+}
+
+export interface EstudianteSinPractica {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  tiene_perfil: boolean;
+  tiene_practica: boolean;
+  recordatorio_enviado_hoy: boolean;
+}
+
+export interface RecordatorioEstudianteResponse {
+  id_usuario: number;
+  mensaje: string;
+  correo_enviado: boolean;
+  recordatorio_enviado_hoy: boolean;
+}
+
+export interface HistorialEstadoPractica {
+  id_historial: number;
+  id_practica: number;
+  id_estado: number;
+  estado: string;
+  es_final: boolean;
+  id_usuario: number;
+  usuario: string;
+  fecha_cambio: string;
+  observacion: string | null;
+}
+
+export interface SeguimientoPractica {
+  id_seguimiento: number;
+  id_practica: number;
+  id_usuario: number;
+  usuario: string;
+  fecha: string;
+  observacion: string;
+}
+
+export type PrioridadIncidencia = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
+export type EstadoIncidencia = 'ABIERTA' | 'EN_REVISION' | 'RESUELTA' | 'CERRADA';
+
+export interface IncidenciaPractica {
+  id_incidencia: number;
+  id_practica: number;
+  id_usuario: number;
+  usuario: string;
+  fecha: string;
+  descripcion: string;
+  prioridad: PrioridadIncidencia;
+  estado: EstadoIncidencia;
+  fecha_resolucion: string | null;
+  alerta: boolean;
+  estudiante: string | null;
+  correo_estudiante: string | null;
+  centro_practica: string | null;
+}
+
+export interface ActualizarEstadoIncidenciaResponse {
+  id_incidencia: number;
+  estado: EstadoIncidencia;
+  mensaje: string;
+}
+
+export interface ActualizarEstadoPracticaResponse {
+  id_practica: number;
+  id_estado: number;
+  estado: string;
+  mensaje: string;
 }
 
 export interface EmpresaLookup {
@@ -79,78 +167,4 @@ export interface ActividadEmpresa {
   descripcion: string;
   afecta_iva: string | null;
   categoria: string | null;
-}
-
-
-export interface PracticaResumen {
-  id_practica: number;
-  estudiante: { id_estudiante: number; nombre: string };
-  centro_practica: string;
-  fecha_registro: string;
-  estado: EstadoPracticaDetalle;
-  fecha_ultimo_cambio_estado: string | null;
-}
-
-export interface PracticasListadoResponse {
-  items: PracticaResumen[];
-  limit: number;
-  offset: number;
-  hay_mas: boolean;
-}
-
-
-export interface PracticaDetalleGestionResponse {
-  id_practica: number;
-  estudiante: { id_estudiante: number; nombre: string };
-  centro_practica: { id_centro: number; nombre: string };
-  fecha_registro: string;
-  estado: EstadoPracticaDetalle;
-  fecha_ultimo_cambio_estado: string | null;
-  fecha_inicio: string | null;
-  fecha_termino: string | null;
-  horas: number | null;
-  cargo_funcion: string | null;
-  descripcion: string | null;
-}
-
-
-export interface EstadoHistorial {
-  id_estado: number;
-  nombre: string;
-}
-
-export interface ResponsableHistorial {
-  id_usuario: number;
-  nombre: string;
-}
-
-export interface EventoHistorial {
-  id_historial: number;
-  estado_anterior: EstadoHistorial | null;
-  estado_nuevo: EstadoHistorial;
-  fecha_cambio: string;
-  responsable: ResponsableHistorial;
-  observacion: string | null;
-}
-
-export interface HistorialPracticaResponse {
-  id_practica: number;
-  items: EventoHistorial[];
-  limit: number;
-  offset: number;
-  hay_mas: boolean;
-}
-
-export interface IniciarPracticaRequest {
-  estado: 'EN_CURSO';
-  observacion?: string | null;
-}
-
-export interface IniciarPracticaResponse {
-  id_practica: number;
-  estado_anterior: EstadoHistorial;
-  estado: EstadoPracticaDetalle;
-  fecha_ultimo_cambio_estado: string;
-  id_historial: number;
-  mensaje: string;
 }

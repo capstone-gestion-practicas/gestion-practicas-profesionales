@@ -1,0 +1,38 @@
+.incidents-content { --background: var(--cream); }
+.incidents-wrapper { max-width: 1100px; margin: 0 auto; padding: 24px; --ion-grid-padding: 0; --ion-grid-column-padding: 0; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.module-label { margin: 0 0 6px; color: var(--ion-color-primary); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.page-heading h1 { margin: 0 0 8px; color: var(--ink); font-size: 2rem; }
+.heading-subtitle { margin: 0; color: var(--ink-muted); line-height: 1.5; }
+.pending-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding: 16px 18px; border: 1px solid #e9c8c4; border-radius: 14px; background: #fff5f4; color: #713c38; }
+.pending-summary > div { display: flex; align-items: center; gap: 12px; }
+.pending-summary p { margin: 3px 0 0; color: #805d59; font-size: .85rem; }
+.pending-number { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: #b42318; color: white; font-size: 1.15rem; font-weight: 800; }
+.create-card { margin: 0 0 22px; }
+.create-card ion-card-title { color: var(--ink); font-size: 1.2rem; }
+.form-grid { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) minmax(140px, 1fr); gap: 12px; margin-bottom: 12px; }
+.form-grid ion-select, .form-grid ion-input, .create-card ion-textarea { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--cream-surface); }
+.form-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+.incident-section { margin-top: 22px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.section-heading h2 { margin: 0; color: var(--ink); font-size: 1.2rem; }
+.section-heading span { color: var(--ink-muted); font-size: .85rem; }
+.incident-list { display: grid; gap: 12px; }
+.incident-card { margin: 0; }
+.incident-pending { border-left: 4px solid #b42318; }
+.incident-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.incident-heading ion-card-title { color: var(--ink); font-size: 1.05rem; }
+.incident-id { margin: 0 0 5px; color: var(--ink-muted); font-size: .78rem; font-weight: 700; }
+.student-email { margin: 5px 0 0; color: var(--ink-muted); font-size: .86rem; overflow-wrap: anywhere; }
+.priority-tag { padding: 6px 9px; border-radius: 999px; background: var(--cream-muted); color: var(--ink); font-size: .72rem; font-weight: 800; white-space: nowrap; }
+.priority-high { background: #fee4e2; color: #b42318; }
+.incident-description { margin: 0; color: var(--ink); line-height: 1.5; white-space: pre-wrap; }
+.incident-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; color: var(--ink-muted); font-size: .82rem; }
+.state-actions { display: flex; align-items: flex-end; gap: 12px; margin-top: 14px; }
+.state-actions ion-select { min-width: 170px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--cream-surface); }
+.success-message, .error-message { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; font-weight: 600; }
+.success-message { background: #e4efe5; color: var(--ion-color-primary); }
+.error-message { background: #fbebe8; color: #a23d34; }
+.center-state { display: flex; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: var(--ink-muted); }
+.center-state p { margin: 0; }
+@media (max-width: 720px) { .incidents-wrapper { padding: 16px; } .page-heading { align-items: flex-start; } .page-heading h1 { font-size: 1.55rem; } .form-grid { grid-template-columns: 1fr; } .state-actions { align-items: stretch; flex-direction: column; } .state-actions ion-select { width: 100%; } .pending-summary { align-items: flex-start; flex-direction: column; } }

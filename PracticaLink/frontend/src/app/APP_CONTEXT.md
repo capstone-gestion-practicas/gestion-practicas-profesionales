@@ -52,9 +52,23 @@ src/app/
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
+- `/notificaciones`: muestra la bandeja persistente del usuario autenticado.
+- `/envio-notificaciones`: permite a gestores y administradores enviar avisos push a un estudiante o a todos los estudiantes activos.
 - `/usuarios`: panel de gestión de cuentas exclusivo para el rol `ADMINISTRADOR`.
 
 Las rutas están declaradas en `app.routes.ts`.
+
+El inicio prioriza tareas según el rol: gestores ven solicitudes pendientes y
+accesos directos a revisión, estados, seguimientos, incidencias y envío de
+avisos; estudiantes ven el paso que necesitan completar y el estado de su
+práctica. Las cuentas con ambos roles pueden cambiar de espacio desde el encabezado.
+
+Al registrar una práctica, se puede informar la jornada semanal (1 a 45 horas).
+La estimación de horas transcurridas usa esa jornada y se detiene en la fecha de
+término cuando ya pasó; si no se informó, la estimación lo indica.
+
+Si el estado es `OBSERVADA`, el estudiante puede enviar una respuesta que queda
+en el historial junto al cambio del estado a `EN_REVISION`.
 
 ## Flujo de autenticación
 
@@ -135,10 +149,11 @@ El store vive únicamente en memoria. Al recargar el navegador, `Home` vuelve a 
 
 ## Comunicación con el backend
 
-El servicio de autenticación usa actualmente:
+Los servicios usan una URL centralizada por ambiente:
 
 ```text
-http://127.0.0.1:8000
+Desarrollo: http://127.0.0.1:8000
+Producción/Android: https://practicalink-api-qa.onrender.com
 ```
 
 Endpoints consumidos:
@@ -147,13 +162,19 @@ Endpoints consumidos:
 - `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
+- `GET /practicas/{id}/seguimientos`: lista los seguimientos de una práctica para gestores y administradores.
+- `POST /practicas/{id}/seguimientos`: registra fecha y observación durante el desarrollo de la práctica.
+- `GET /incidencias`: lista las incidencias y su prioridad, estado y práctica asociada para gestores y administradores.
+- `POST /practicas/{id}/incidencias`: registra una incidencia; las prioridades altas y críticas generan alertas.
+- `PATCH /incidencias/{id}/estado`: actualiza el estado de una incidencia.
 - `GET /empresas/consulta/{rut}`: consulta antecedentes tributarios con caché de backend.
 - `GET /usuarios`: lista usuarios para el administrador.
 - `GET /usuarios/roles`: lista roles activos.
 - `POST /usuarios`: crea una cuenta y asigna sus roles.
 - `PATCH /usuarios/{id}`: actualiza datos, estado y roles.
 
-El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introduce configuración por ambientes, reemplazar la URL fija de `AuthService` por una configuración centralizada.
+Los archivos de `src/environments` determinan la URL usada en cada build. El
+proyecto nativo vive en `frontend/android` y se sincroniza con `npm run apk:sync`.
 
 ## Responsabilidad de cada pieza
 
@@ -166,6 +187,8 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
+- `pages/seguimientos`: registro y consulta del historial EP05 por práctica.
+- `pages/incidencias`: registro, gestión de estado y detección de incidencias pendientes EP06.
 - `practica-form`: modal de registro, búsqueda por RUT e ingreso manual del centro.
 - `practica.service.ts`: registro de prácticas y consulta de empresas.
 - `usuario.service.ts`: comunicación con los endpoints administrativos.
@@ -195,6 +218,21 @@ Las pruebas actuales cubren guards, store de autenticación, componentes base y 
 
 ## Estado actual y límites conocidos
 
+El centro de notificaciones mantiene Realtime y avisos emergentes con la app
+abierta. En Android nativo, permite registrar un token Firebase Cloud Messaging
+por usuario para recibir avisos push cuando la app está en segundo plano o
+cerrada. El usuario habilita el permiso desde el centro de notificaciones.
+FCM requiere `google-services.json` en Android y la variable
+`FIREBASE_SERVICE_ACCOUNT_JSON` configurada en el backend.
+Cuando la app Android está abierta, el push recibido también se presenta como
+una notificación local del sistema; en segundo plano, Android presenta el push
+de FCM directamente.
+Gestores y administradores envían desde `/envio-notificaciones` un mensaje
+personalizado a un estudiante activo o a todos los estudiantes activos; el
+aviso queda en la bandeja del destinatario y se envía por FCM si habilitó push.
+También pueden elegir broadcast para enviar el mensaje a todos los estudiantes
+activos; la interfaz pide confirmación antes de realizar el envío.
+
 - `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.
 - No existe configuración separada para desarrollo y producción.
@@ -202,174 +240,3 @@ Las pruebas actuales cubren guards, store de autenticación, componentes base y 
 - La API está configurada con una URL local fija.
 
 Cuando se implemente una de estas capacidades, actualizar este archivo para que continúe representando el comportamiento real de la aplicación.
-
-
-## EP04 / HU04.1: consulta general de prácticas
-
-`/practicas` es una pantalla de solo lectura protegida por authGuard y roleGuard
-para GESTOR y ADMINISTRADOR. Home muestra el acceso exclusivamente a esos roles.
-Consume `GET /practicas` mediante `PracticaService.listar(limit, offset, rut?)`;
-los modelos `PracticasListadoResponse` y `PracticaResumen` reflejan el backend.
-Incluye todos los estados, fechas en America/Santiago y paginación de 50 elementos.
-
-El RUT se ingresa como texto, con autocomplete desactivado, sin puntos y con guion y verificador; solo se
-comprueba formato básico. La API valida módulo 11. Los errores 422 se muestran
-sin reproducir entradas personales. El filtro y la paginación viven únicamente
-en el componente; no se guardan en almacenamiento ni en la navegación Angular.
-El parámetro rut solo se envía al backend cuando existe un filtro. Las consultas
-anteriores se cancelan al iniciar otra y al destruir el componente.
-El listado no usa RevisionService ni ofrece acciones de revisión/cambio de estado.
-
-El listado indica discretamente si hay un filtro aplicado sin mostrar el RUT.
-Reintentar repite la consulta HTTP fallida con el filtro aplicado y el offset
-conservado, independientemente del texto editado en el buscador. Los errores
-locales de formato no ofrecen reintento HTTP.
-
-
-### Detalle general de gestión
-
-Ver antecedentes abre `/practicas/:id`, protegido por authGuard y roleGuard para
-GESTOR y ADMINISTRADOR. El componente standalone practica-detalle consume
-PracticaService.obtenerDetalle(id) y el contrato PracticaDetalleGestionResponse.
-No expone RUT, correo, teléfono ni contactos. Muestra estado actual/final,
-fechas, horas, cargo y descripción. No modifica el flujo de revisión EP03.
-
-Listado y detalle comparten core/utils/fechas.ts: timestamps en America/Santiago
-con horario de verano; fechas DATE por partes de calendario sin cambio de zona.
-Existen estados de carga, 404, acceso denegado 401/403 y error general con
-reintento. Se cancelan consultas anteriores al cambiar id o destruir la vista.
-Volver navega al listado completo sin restaurar filtro ni paginación.
-
-
-### EP04 / HU04.3: historial de estados en detalle
-
-La sección Historial de estados en `/practicas/:id` consume
-PracticaService.obtenerHistorial(id, limit, offset), con contratos
-HistorialPracticaResponse y EventoHistorial compatibles con el backend.
-Mantiene el orden recibido de la API (fecha_cambio, id_historial ascendentes),
-eventos repetidos y estado anterior null como Sin estado anterior registrado.
-No interpreta automáticamente ningún evento como registro inicial.
-
-La sección tiene carga, error, vacío, reintento y paginación de 50 eventos
-independientes de los antecedentes. Reintentar conserva la práctica y página.
-Cambiar de práctica reinicia la paginación y cancela las peticiones anteriores;
-al destruir la vista se cancelan ambas consultas. Usa el formateador compartido
-America/Santiago. Observaciones por interpolación de texto, sin innerHTML.
-Solo los roles de gestión existentes pueden abrir la pantalla; no se añade
-acceso del estudiante ni acciones de revisión en el historial.
-
-### EP04 / HU04.2: iniciar práctica
-
-El detalle muestra Iniciar práctica solo a GESTOR/ADMINISTRADOR con APROBADA no
-final. Solicita confirmación explícita y observación opcional; normaliza espacios
-en extremos como PostgreSQL y valida hasta 500 caracteres Unicode. PracticaService
-envía PATCH con destino EN_CURSO, sin identificador de responsable en el cuerpo.
-Mientras se envía, bloquea confirmación/cancelación y evita solicitudes duplicadas.
-Solo confirma éxito después del servidor y recarga antecedentes e historial desde
-la primera página. Ante 409 explica el conflicto y refresca ambas consultas.
-Ante 503 o resultado incierto ofrece consultar nuevamente el estado, sin reintentar
-la escritura automáticamente. Una consulta fallida mantiene bloqueado un nuevo
-intento. Cambiar de práctica o destruir la vista cancela la suscripción local;
-esto no garantiza cancelar una escritura que ya llegó al servidor. No usa EP03.
-
-En la simulación local de corte abrupto, Angular invocó una sola vez el servicio
-y se observó un único `XHR.send()`, pero Firefox produjo dos solicitudes HTTP
-PATCH. También se reprodujo con XHR nativo sin Angular; no se verificó en otros
-navegadores. La aplicación no implementa reintentos automáticos. PostgreSQL
-protege contra una transición repetida mediante bloqueo y validación del estado:
-una segunda operación sobre EN_CURSO se rechaza sin añadir otro evento.
-
-### EP05 / HU013: registrar seguimiento mediante FastAPI
-
-Nota histórica: este apartado describe el incremento HU013; el estado vigente de
-la consulta está en HU014, más abajo.
-
-RegistroPractica conserva el componente compartido y la apariencia existente.
-Para seguimientos usa PracticaService.registrarSeguimiento y POST
-`/practicas/{id}/seguimientos`, enviando solo fecha, tipo y observacion. El
-interceptor existente agrega el JWT de sessionStorage; las rutas conservan
-los guards de autenticación y los roles GESTOR/ADMINISTRADOR. No envía autor.
-
-Valida fecha calendario no futura en America/Santiago (también la fecha inicial),
-los cinco medios existentes y observación con contenido de hasta 2000 puntos de
-código Unicode, sin recortar el texto enviado. No usa maxlength HTML para este
-campo porque cuenta unidades UTF-16, distinto del contrato Python/PostgreSQL.
-Se retiró próxima fecha del formulario de seguimiento: no forma parte del contrato.
-
-Bloquea envíos simultáneos. Solo HTTP 201 con cuerpo confirma éxito y deja un
-mensaje en el formulario; no navega a un historial que aún no consulta el servidor.
-Presenta errores diferenciados para 401/403/404/409/422/500/503. No muestra detalles
-internos recibidos ni reintenta escrituras. Ante error de red, 500/503 u otro
-resultado incierto bloquea un nuevo envío en esa instancia y pide verificarlo.
-Este bloqueo no persiste tras recargar: no constituye idempotencia. Destruir la
-vista cancela la suscripción, no garantiza cancelar una escritura en el servidor.
-
-Los registros locales anteriores permanecen sin migración ni asignación de autor.
-La pestaña existente los rotula como demostración; no consulta ni simula datos
-PostgreSQL y no representa HU014 implementada. Los nuevos seguimientos no se
-escriben en localStorage. El guardado local de incidencias EP06 y su servicio
-compartido permanecen sin cambios de comportamiento.
-
-Validación de este incremento: 110 pruebas Angular aprobadas con Chromium
-Headless y build de producción aprobado. Se probaron HTTP/JWT con HttpTestingController,
-formulario, fechas chilenas, errores, doble envío y ausencia de escritura local.
-No se ejecutó una prueba de extremo a extremo Angular/FastAPI/PostgreSQL en esta
-sesión. El build advierte sobre el presupuesto inicial y estilos de home/detalle;
-no se modificaron presupuestos ni dependencias para ocultar esas advertencias.
-
-### EP05 / HU014: historial de seguimientos persistidos
-
-La pestaña Seguimientos de `/practicas/:id` ya consulta exclusivamente
-`GET /practicas/{id}/seguimientos?limit=50&offset=0` mediante PracticaService y el
-interceptor JWT existente. Sustituye la visualización local descrita en la etapa
-HU013 anterior. Los guards de gestión permanecen: no añade acceso ESTUDIANTE.
-
-SeguimientosHistorialResponse y SeguimientoHistorialItem son contratos de lectura
-independientes del contrato de creación: medio nullable o histórico, observación
-vacía o extensa y responsable con ID/nombre actual, incluso inactivo. Conserva
-el orden recibido, sin sort; usa formatearFechaCalendario para DATE. Texto por
-interpolación, sin innerHTML ni truncado; tipo null se presenta como Medio no registrado.
-
-La carga de seguimientos es independiente del historial de estados EP04. Tiene
-carga, error, respuesta vacía confirmada y paginación limit/offset con hay_mas.
-El contador de la pestaña representa filas de la página, no el total del historial.
-Una página posterior vacía no afirma que toda la práctica carece de seguimientos.
-Durante solicitudes pendientes no inicia otra lectura de seguimientos; cancela
-la anterior y borra datos/paginación al cambiar de práctica o destruir la vista.
-Cambiar de pestaña no reintenta lecturas fallidas. Reintentar conserva la página
-fallida y requiere acción explícita. Las páginas se reemplazan, no se acumulan.
-
-401 limpia access_token y AuthStore mediante limpiar() y navega a login, como
-el mecanismo de sesión existente. 403/404/422/500/503 presentan mensajes propios
-sin reproducir detalles internos. Fallos de red no recurren al almacenamiento local.
-
-El detalle utiliza RegistroPracticaService solo para los registros de incidencias;
-los seguimientos locales antiguos se ignoran, sin migrarlos, borrarlos ni atribuir
-responsables. EP06 mantiene su almacenamiento y presentación. HU013 conserva su
-POST y bloqueo ante resultados inciertos; únicamente se actualizaron sus mensajes
-para indicar que ahora se puede consultar el historial al volver al detalle.
-
-Validación 30-10-2026: 123/123 pruebas Angular con Chromium Headless, build de
-producción y git diff --check aprobados. Karma requirió ejecución fuera del sandbox
-por bloqueo del puerto 9876. No se instalaron dependencias. Advertencias de tamaño
-inicial y estilos de home/practica-detalle, sin cambiar presupuestos.
-Pruebas de HTTP simuladas: no se ejecutó el recorrido completo navegador→FastAPI→
-PostgreSQL en esta sesión. Offset puede desplazarse ante inserciones concurrentes.
-
-
-### EP05: navegación y límites vigentes
-
-El formulario de registro observa paramMap: navegar entre prácticas con la misma
-instancia cancela suscripciones anteriores, reinicia campos, mensajes y bloqueos,
-y carga la práctica nueva. Una cancelación local no deshace una escritura que ya
-alcanzó PostgreSQL. La prueba de Router real conserva este escenario como regresión.
-HU014 está integrada; sus datos proceden exclusivamente de FastAPI.
-
-Las conexiones de servidor SEGUIMIENTOS_DATABASE_URL (escritura) y
-SEGUIMIENTOS_LECTURA_DATABASE_URL (lectura) nunca se configuran en Angular. Su
-separación, orden SQL y verificación de permisos están en
-[la guía de instalación](../../../../DOCUMENTACION_INSTALACION.md). Si falta una
-conexión, su endpoint responde 503 sin fallback. Migraciones y privilegios no se
-han validado en despliegue. Persisten la falta de idempotencia ante respuestas
-perdidas, desplazamientos de offset y pérdida de precisión de BIGINT como number
-fuera de ±(2^53−1); esta corrección no rediseña esos contratos.
