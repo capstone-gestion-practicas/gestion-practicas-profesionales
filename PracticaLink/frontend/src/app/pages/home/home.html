@@ -16,6 +16,7 @@
             <button type="button" (click)="gestionarEstados()">Estados</button>
             <button type="button" (click)="gestionarSeguimientos()">Seguimientos</button>
             <button type="button" (click)="gestionarIncidencias()">Incidencias</button>
+            <button type="button" (click)="gestionarOfertas()">Ofertas</button>
             <button type="button" (click)="enviarNotificaciones()">Enviar avisos</button>
           </nav>
         }
@@ -28,6 +29,11 @@
             <span class="notification-count">{{ notificacionesNoLeidas() }}</span>
           }
         </button>
+        @if (esEstudiante() && (!puedeRevisarPracticas() || mostrarPanelEstudiante)) {
+          <button class="offers-switch" type="button" (click)="explorarOfertas()">
+            Ofertas laborales
+          </button>
+        }
         @if (tieneEspacioEstudiante()) {
           <button
             class="workspace-switch"

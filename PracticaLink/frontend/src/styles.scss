@@ -248,7 +248,8 @@ button.notification-mark:focus-visible {
   font-weight: 800;
 }
 
-.workspace-switch {
+.workspace-switch,
+.offers-switch {
   min-height: 34px;
   margin-right: 12px;
   padding: 0 11px;
@@ -264,7 +265,9 @@ button.notification-mark:focus-visible {
 }
 
 .workspace-switch:hover,
-.workspace-switch:focus-visible {
+.workspace-switch:focus-visible,
+.offers-switch:hover,
+.offers-switch:focus-visible {
   outline: none;
   background: rgba(255, 255, 255, .2);
 }
@@ -316,7 +319,8 @@ ion-modal.practice-details-modal {
 .student-brand-header .notification-mark { color: #245a45; }
 .student-brand-header .notification-mark:hover,
 .student-brand-header .notification-mark:focus-visible { background: #edf5ef; }
-.student-brand-header .workspace-switch { border-color: #b9cabb; background: #edf5ef; color: #245a45; }
+.student-brand-header .workspace-switch,
+.student-brand-header .offers-switch { border-color: #b9cabb; background: #edf5ef; color: #245a45; }
 .student-dashboard { gap: 22px; }
 .student-sidebar { gap: 18px; }
 .student-dashboard .welcome-card {

@@ -5,28 +5,38 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
-  IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
+  IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol,
+  IonTextarea
 } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 
+import {
+  SolicitudCuentaEmpresa,
+  SolicitudCuentaEmpresaResuelta
+} from '../../core/models/laboral.models';
 import { Rol, UsuarioAdministrable } from '../../core/models/usuario.models';
+import { LaboralService } from '../../core/services/laboral.service';
 import { UsuarioService } from '../../core/services/usuario.service';
+import { rutValido } from '../../core/validators/rut.validator';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
   imports: [
     CommonModule, FormsModule, IonButton, IonCard, IonCardContent, IonCheckbox,
-    IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
+    IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle,
+    IonGrid, IonRow, IonCol, IonTextarea
   ],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss'
 })
 export class Usuarios implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
+  private readonly laboralService = inject(LaboralService);
   private readonly router = inject(Router);
 
   usuarios: UsuarioAdministrable[] = [];
+  solicitudesEmpresa: SolicitudCuentaEmpresa[] = [];
   roles: Rol[] = [];
   cargando = true;
   error = '';
@@ -39,7 +49,14 @@ export class Usuarios implements OnInit {
   password = '';
   activo = true;
   rolesSeleccionados: string[] = [];
+  rutEmpresa = '';
   errorModal = '';
+  mensaje = '';
+  solicitudRevision: SolicitudCuentaEmpresa | null = null;
+  estadoRevision: 'APROBADA' | 'RECHAZADA' = 'APROBADA';
+  observacionRevision = '';
+  guardandoRevision = false;
+  errorRevision = '';
 
   ngOnInit(): void { this.cargar(); }
 
@@ -48,11 +65,13 @@ export class Usuarios implements OnInit {
     this.error = '';
     forkJoin({
       usuarios: this.usuarioService.listar(),
-      roles: this.usuarioService.listarRoles()
+      roles: this.usuarioService.listarRoles(),
+      solicitudes: this.laboralService.listarSolicitudesEmpresa()
     }).subscribe({
-      next: ({ usuarios, roles }) => {
+      next: ({ usuarios, roles, solicitudes }) => {
         this.usuarios = usuarios;
         this.roles = roles;
+        this.solicitudesEmpresa = solicitudes;
         this.cargando = false;
       },
       error: () => {
@@ -70,6 +89,7 @@ export class Usuarios implements OnInit {
     this.password = '';
     this.activo = true;
     this.rolesSeleccionados = [];
+    this.rutEmpresa = '';
     this.errorModal = '';
     this.modalAbierto = true;
   }
@@ -82,20 +102,71 @@ export class Usuarios implements OnInit {
     this.password = '';
     this.activo = usuario.activo;
     this.rolesSeleccionados = [...usuario.roles];
+    this.rutEmpresa = usuario.rut_empresa ?? '';
     this.errorModal = '';
     this.modalAbierto = true;
   }
 
   alternarRol(rol: string, seleccionado: boolean): void {
-    this.rolesSeleccionados = seleccionado
-      ? [...new Set([...this.rolesSeleccionados, rol])]
-      : this.rolesSeleccionados.filter(actual => actual !== rol);
+    if (seleccionado && rol === 'EMPRESA') {
+      this.rolesSeleccionados = ['EMPRESA'];
+    } else if (seleccionado) {
+      this.rolesSeleccionados = [...new Set([
+        ...this.rolesSeleccionados.filter(actual => actual !== 'EMPRESA'),
+        rol
+      ])];
+    } else {
+      this.rolesSeleccionados = this.rolesSeleccionados.filter(actual => actual !== rol);
+    }
   }
 
   tieneRol(rol: string): boolean { return this.rolesSeleccionados.includes(rol); }
+  get esCuentaEmpresa(): boolean { return this.tieneRol('EMPRESA'); }
+  get solicitudesPendientes(): number {
+    return this.solicitudesEmpresa.filter(solicitud => solicitud.estado === 'PENDIENTE').length;
+  }
 
   cerrarModal(): void {
     if (!this.guardando) this.modalAbierto = false;
+  }
+
+  abrirRevision(
+    solicitud: SolicitudCuentaEmpresa,
+    estado: 'APROBADA' | 'RECHAZADA'
+  ): void {
+    this.solicitudRevision = solicitud;
+    this.estadoRevision = estado;
+    this.observacionRevision = '';
+    this.errorRevision = '';
+  }
+
+  cerrarRevision(): void {
+    if (!this.guardandoRevision) this.solicitudRevision = null;
+  }
+
+  confirmarRevision(): void {
+    if (!this.solicitudRevision || this.guardandoRevision) return;
+    this.guardandoRevision = true;
+    this.errorRevision = '';
+    this.laboralService.resolverSolicitudEmpresa(this.solicitudRevision.id_solicitud, {
+      estado: this.estadoRevision,
+      observacion: this.observacionRevision.trim() || null
+    }).subscribe({
+      next: (resultado: SolicitudCuentaEmpresaResuelta) => {
+        this.guardandoRevision = false;
+        this.solicitudRevision = null;
+        this.mensaje = resultado.id_usuario
+          ? `${resultado.mensaje}. ID de cuenta creada: ${resultado.id_usuario}.`
+          : resultado.mensaje;
+        this.cargar();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.guardandoRevision = false;
+        this.errorRevision = typeof error.error?.detail === 'string'
+          ? error.error.detail
+          : 'No fue posible resolver la solicitud.';
+      }
+    });
   }
 
   guardar(): void {
@@ -111,18 +182,24 @@ export class Usuarios implements OnInit {
       this.errorModal = 'Ingresa un correo válido de máximo 150 caracteres.';
       return;
     }
+    if (this.esCuentaEmpresa && !rutValido(this.rutEmpresa)) {
+      this.errorModal = 'Ingresa un RUT de empresa válido.';
+      return;
+    }
 
     this.guardando = true;
     this.errorModal = '';
     const solicitud = this.usuarioEditando
       ? this.usuarioService.actualizar(this.usuarioEditando.id_usuario, {
           nombre: this.nombre.trim(), apellido: this.apellido.trim(),
-          activo: this.activo, roles: this.rolesSeleccionados
+          activo: this.activo, roles: this.rolesSeleccionados,
+          rut_empresa: this.esCuentaEmpresa ? this.rutEmpresa.trim() : null
         })
       : this.usuarioService.crear({
           nombre: this.nombre.trim(), apellido: this.apellido.trim(),
           correo: this.correo.trim().toLowerCase(), password: this.password,
-          roles: this.rolesSeleccionados
+          roles: this.rolesSeleccionados,
+          rut_empresa: this.esCuentaEmpresa ? this.rutEmpresa.trim() : null
         });
 
     solicitud.subscribe({

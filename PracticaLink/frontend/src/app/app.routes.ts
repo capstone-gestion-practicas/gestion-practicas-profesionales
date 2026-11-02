@@ -49,6 +49,27 @@ export const routes: Routes = [
       import('./pages/usuarios/usuarios').then(m => m.Usuarios)
   },
   {
+    path: 'portal-empresa',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['EMPRESA'] },
+    loadComponent: () =>
+      import('./pages/laboral/laboral').then(m => m.Laboral)
+  },
+  {
+    path: 'ofertas',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE'] },
+    loadComponent: () =>
+      import('./pages/laboral/laboral').then(m => m.Laboral)
+  },
+  {
+    path: 'gestion-ofertas',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/laboral/laboral').then(m => m.Laboral)
+  },
+  {
     path: 'revisiones',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['GESTOR', 'ADMINISTRADOR'] },

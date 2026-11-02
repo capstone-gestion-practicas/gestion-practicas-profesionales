@@ -22,8 +22,10 @@ import {
 } from '@ionic/angular';
 
 import { AuthService } from '../../core/services/auth.service';
+import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { environment } from '../../../environments/environment';
+import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 
 @Component({
   selector: 'app-login',
@@ -58,12 +60,25 @@ export class Login {
     'Gestores pueden enviar mensajes personalizados a un estudiante o a todos los estudiantes activos.'
   ];
   novedadesAbiertas = false;
+  modoEmpresa = false;
   modoRegistro = false;
+  modoSolicitudEmpresa = false;
   nombre = '';
   apellido = '';
   correo = '';
   password = '';
   confirmarPassword = '';
+  razonSocialSolicitud = '';
+  rutEmpresaSolicitud = '';
+  nombreContactoSolicitud = '';
+  apellidoContactoSolicitud = '';
+  correoSolicitud = '';
+  telefonoSolicitud = '';
+  cargoContactoSolicitud = '';
+  passwordSolicitud = '';
+  confirmarPasswordSolicitud = '';
+  consultandoEmpresa = false;
+  mensajeConsultaEmpresa = '';
 
   cargando = false;
   error = '';
@@ -71,11 +86,13 @@ export class Login {
 
   constructor(
     private readonly authService: AuthService,
+    private readonly laboralService: LaboralService,
     private readonly authStore: AuthStore,
     private readonly router: Router
   ) {}
 
   alternarModo(): void {
+    if (this.modoEmpresa) return;
     this.modoRegistro = !this.modoRegistro;
     this.password = '';
     this.confirmarPassword = '';
@@ -83,7 +100,110 @@ export class Login {
     this.mensaje = '';
   }
 
+  alternarAccesoEmpresa(): void {
+    this.modoEmpresa = !this.modoEmpresa;
+    this.modoRegistro = false;
+    this.modoSolicitudEmpresa = false;
+    this.password = '';
+    this.error = '';
+    this.mensaje = '';
+  }
+
+  abrirSolicitudEmpresa(): void {
+    this.modoSolicitudEmpresa = true;
+    this.error = '';
+    this.mensaje = '';
+    this.mensajeConsultaEmpresa = '';
+  }
+
+  cancelarSolicitudEmpresa(): void {
+    this.modoSolicitudEmpresa = false;
+    this.error = '';
+    this.mensajeConsultaEmpresa = '';
+  }
+
+  buscarEmpresaSolicitud(): void {
+    this.error = '';
+    this.mensajeConsultaEmpresa = '';
+    if (!this.rutEmpresaSolicitud.trim()) return;
+    if (!rutValido(this.rutEmpresaSolicitud)) {
+      this.error = 'Ingresa un RUT de empresa válido.';
+      return;
+    }
+
+    this.rutEmpresaSolicitud = formatearRut(this.rutEmpresaSolicitud);
+    this.consultandoEmpresa = true;
+    this.laboralService.consultarEmpresaParaSolicitud(this.rutEmpresaSolicitud).subscribe({
+      next: empresa => {
+        this.consultandoEmpresa = false;
+        this.razonSocialSolicitud = empresa.razon_social;
+        this.mensajeConsultaEmpresa = 'Datos encontrados. Puedes corregir la razón social si es necesario.';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.consultandoEmpresa = false;
+        this.mensajeConsultaEmpresa = error.status === 404
+          ? 'No encontramos el RUT. Completa la razón social manualmente.'
+          : 'No fue posible consultar el RUT. Puedes ingresar la razón social manualmente.';
+      }
+    });
+  }
+
+  enviarSolicitudEmpresa(): void {
+    this.error = '';
+    this.mensaje = '';
+    if (!rutValido(this.rutEmpresaSolicitud)) {
+      this.error = 'Ingresa un RUT de empresa válido.';
+      return;
+    }
+    if (!this.razonSocialSolicitud.trim()
+      || !this.nombreContactoSolicitud.trim()
+      || !this.apellidoContactoSolicitud.trim()
+      || !this.telefonoSolicitud.trim()
+      || !this.cargoContactoSolicitud.trim()) {
+      this.error = 'Completa los datos de la empresa y de la persona de contacto.';
+      return;
+    }
+    if (!this.correoValido(this.correoSolicitud)) {
+      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      return;
+    }
+    if (this.passwordSolicitud.length < 8 || this.passwordSolicitud.length > 128) {
+      this.error = 'La contraseña debe tener entre 8 y 128 caracteres.';
+      return;
+    }
+    if (this.passwordSolicitud !== this.confirmarPasswordSolicitud) {
+      this.error = 'Las contraseñas no coinciden.';
+      return;
+    }
+
+    this.cargando = true;
+    this.laboralService.solicitarCuentaEmpresa({
+      razon_social: this.razonSocialSolicitud.trim(),
+      rut_empresa: formatearRut(this.rutEmpresaSolicitud),
+      nombre_contacto: this.nombreContactoSolicitud.trim(),
+      apellido_contacto: this.apellidoContactoSolicitud.trim(),
+      correo: this.normalizarCorreo(this.correoSolicitud),
+      telefono: this.telefonoSolicitud.trim(),
+      cargo_contacto: this.cargoContactoSolicitud.trim(),
+      password: this.passwordSolicitud
+    }).subscribe({
+      next: () => {
+        this.cargando = false;
+        this.modoSolicitudEmpresa = false;
+        this.limpiarSolicitudEmpresa();
+        this.mensaje = 'Solicitud enviada. Un administrador revisará los datos antes de crear la cuenta.';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.cargando = false;
+        this.error = typeof error.error?.detail === 'string'
+          ? error.error.detail
+          : 'No fue posible enviar la solicitud.';
+      }
+    });
+  }
+
   registrarse(): void {
+    if (this.modoEmpresa) return;
     this.error = '';
     this.mensaje = '';
 
@@ -150,8 +270,19 @@ export class Login {
 
         this.authService.obtenerContexto().subscribe({
           next: (contexto) => {
+            const esEmpresa = contexto.roles.includes('EMPRESA');
+            if (this.modoEmpresa && !esEmpresa) {
+              sessionStorage.removeItem('access_token');
+              this.cargando = false;
+              this.error = 'Esta cuenta no está habilitada como empresa.';
+              return;
+            }
             this.authStore.setContexto(contexto);
             this.cargando = false;
+            if (esEmpresa) {
+              this.router.navigate(['/portal-empresa']);
+              return;
+            }
             const versionVista = localStorage.getItem('practicalink-version-novedades');
             if (versionVista === this.appVersion) {
               this.router.navigate(['/home']);
@@ -186,5 +317,18 @@ export class Login {
 
   private normalizarCorreo(correo: string): string {
     return correo.trim().toLowerCase();
+  }
+
+  private limpiarSolicitudEmpresa(): void {
+    this.razonSocialSolicitud = '';
+    this.rutEmpresaSolicitud = '';
+    this.nombreContactoSolicitud = '';
+    this.apellidoContactoSolicitud = '';
+    this.correoSolicitud = '';
+    this.telefonoSolicitud = '';
+    this.cargoContactoSolicitud = '';
+    this.passwordSolicitud = '';
+    this.confirmarPasswordSolicitud = '';
+    this.mensajeConsultaEmpresa = '';
   }
 }

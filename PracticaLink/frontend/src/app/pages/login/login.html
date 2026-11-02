@@ -28,10 +28,45 @@
         <p class="subtitle">
           @if (modoRegistro) {
             Crea tu cuenta
+          } @else if (modoSolicitudEmpresa) {
+            Solicitud de cuenta empresa
+          } @else if (modoEmpresa) {
+            Acceso para empresas
           } @else {
             Gestión de prácticas profesionales
           }
         </p>
+
+        @if (!modoRegistro && !modoSolicitudEmpresa) {
+          <div class="access-options" aria-label="Tipo de acceso">
+            <ion-button
+              fill="clear"
+              [class.selected]="!modoEmpresa"
+              [disabled]="cargando"
+              (click)="modoEmpresa ? alternarAccesoEmpresa() : null">
+              Estudiantes y equipo
+            </ion-button>
+            <ion-button
+              fill="clear"
+              [class.selected]="modoEmpresa"
+              [disabled]="cargando"
+              (click)="!modoEmpresa ? alternarAccesoEmpresa() : null">
+              Empresas
+            </ion-button>
+          </div>
+          @if (modoEmpresa) {
+            <p class="access-hint">
+              Inicia sesión si tu cuenta ya fue autorizada o solicita una cuenta para tu empresa.
+            </p>
+            <ion-button
+              expand="block"
+              fill="outline"
+              [disabled]="cargando"
+              (click)="abrirSolicitudEmpresa()">
+              Solicitar cuenta empresa
+            </ion-button>
+          }
+        }
 
         @if (modoRegistro) {
           <ion-item>
@@ -54,40 +89,113 @@
 
         }
 
-        <ion-item>
-          <ion-label position="stacked">Correo</ion-label>
-          <ion-input
-            type="email"
-            [(ngModel)]="correo"
-            maxlength="150"
-            inputmode="email"
-            autocapitalize="off"
-            spellcheck="false"
-            autocomplete="email"
-            placeholder="correo@ejemplo.cl">
-          </ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Contraseña</ion-label>
-          <ion-input
-            type="password"
-            [(ngModel)]="password"
-            maxlength="128"
-            [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
-          </ion-input>
-        </ion-item>
-
-        @if (modoRegistro) {
+        @if (modoSolicitudEmpresa) {
           <ion-item>
-            <ion-label position="stacked">Confirmar contraseña</ion-label>
+            <ion-label position="stacked">RUT de la empresa *</ion-label>
+            <ion-input
+              [(ngModel)]="rutEmpresaSolicitud"
+              maxlength="12"
+              placeholder="76.123.456-7"
+              (ionBlur)="buscarEmpresaSolicitud()">
+            </ion-input>
+          </ion-item>
+          @if (consultandoEmpresa) {
+            <p class="access-hint">Consultando datos de empresa...</p>
+          }
+          @if (mensajeConsultaEmpresa) {
+            <p class="access-hint" role="status">{{ mensajeConsultaEmpresa }}</p>
+          }
+          <ion-item>
+            <ion-label position="stacked">Razón social *</ion-label>
+            <ion-input [(ngModel)]="razonSocialSolicitud" maxlength="255"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Nombre de contacto *</ion-label>
+            <ion-input [(ngModel)]="nombreContactoSolicitud" maxlength="100" autocomplete="given-name"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Apellido de contacto *</ion-label>
+            <ion-input [(ngModel)]="apellidoContactoSolicitud" maxlength="100" autocomplete="family-name"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Correo de acceso *</ion-label>
+            <ion-input
+              type="email"
+              [(ngModel)]="correoSolicitud"
+              maxlength="150"
+              inputmode="email"
+              autocapitalize="off"
+              spellcheck="false"
+              autocomplete="email"
+              placeholder="correo@ejemplo.cl">
+            </ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Teléfono *</ion-label>
+            <ion-input [(ngModel)]="telefonoSolicitud" maxlength="30" type="tel" autocomplete="tel"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Cargo del contacto *</ion-label>
+            <ion-input [(ngModel)]="cargoContactoSolicitud" maxlength="100" autocomplete="organization-title"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Contraseña para la cuenta *</ion-label>
             <ion-input
               type="password"
-              [(ngModel)]="confirmarPassword"
+              [(ngModel)]="passwordSolicitud"
+              minlength="8"
               maxlength="128"
               autocomplete="new-password">
             </ion-input>
           </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Confirmar contraseña *</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="confirmarPasswordSolicitud"
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password">
+            </ion-input>
+          </ion-item>
+        }
+
+        @if (!modoSolicitudEmpresa) {
+          <ion-item>
+            <ion-label position="stacked">Correo</ion-label>
+            <ion-input
+              type="email"
+              [(ngModel)]="correo"
+              maxlength="150"
+              inputmode="email"
+              autocapitalize="off"
+              spellcheck="false"
+              autocomplete="email"
+              placeholder="correo@ejemplo.cl">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="password"
+              maxlength="128"
+              [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
+            </ion-input>
+          </ion-item>
+
+          @if (modoRegistro) {
+            <ion-item>
+              <ion-label position="stacked">Confirmar contraseña</ion-label>
+              <ion-input
+                type="password"
+                [(ngModel)]="confirmarPassword"
+                maxlength="128"
+                autocomplete="new-password">
+              </ion-input>
+            </ion-item>
+          }
         }
 
         @if (error) {
@@ -105,26 +213,46 @@
         <ion-button
           expand="block"
           class="login-button"
-          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
-          (click)="modoRegistro ? registrarse() : iniciarSesion()">
+          [disabled]="cargando || (modoSolicitudEmpresa
+            ? (!rutEmpresaSolicitud || !razonSocialSolicitud || !nombreContactoSolicitud
+              || !apellidoContactoSolicitud || !correoSolicitud || !telefonoSolicitud
+              || !cargoContactoSolicitud || !passwordSolicitud || !confirmarPasswordSolicitud
+              || consultandoEmpresa)
+            : (!correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))))"
+          (click)="modoSolicitudEmpresa
+            ? enviarSolicitudEmpresa()
+            : modoRegistro ? registrarse() : iniciarSesion()">
 
           @if (cargando) {
             <ion-spinner name="crescent"></ion-spinner>
           } @else {
-            {{ modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
+            {{ modoSolicitudEmpresa
+              ? 'Enviar solicitud'
+              : modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
           }
 
         </ion-button>
 
-        <ion-button
-          expand="block"
-          fill="clear"
-          [disabled]="cargando"
-          (click)="alternarModo()">
-          {{ modoRegistro
-            ? 'Ya tengo una cuenta'
-            : 'Registrarme' }}
-        </ion-button>
+        @if (!modoEmpresa) {
+          <ion-button
+            expand="block"
+            fill="clear"
+            [disabled]="cargando"
+            (click)="alternarModo()">
+            {{ modoRegistro
+              ? 'Ya tengo una cuenta'
+              : 'Registrarme' }}
+          </ion-button>
+        }
+        @if (modoSolicitudEmpresa) {
+          <ion-button
+            expand="block"
+            fill="clear"
+            [disabled]="cargando"
+            (click)="cancelarSolicitudEmpresa()">
+            Volver al acceso empresarial
+          </ion-button>
+        }
 
         <p class="app-build" aria-label="Versión de la aplicación">
           Versión {{ appVersion }} · Build {{ androidVersionCode }}

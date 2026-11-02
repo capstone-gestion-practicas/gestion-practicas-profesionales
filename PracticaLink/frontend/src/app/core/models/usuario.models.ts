@@ -11,6 +11,7 @@ export interface UsuarioAdministrable {
   correo: string;
   activo: boolean;
   roles: string[];
+  rut_empresa: string | null;
 }
 
 export interface UsuarioCrear {
@@ -19,6 +20,7 @@ export interface UsuarioCrear {
   correo: string;
   password: string;
   roles: string[];
+  rut_empresa: string | null;
 }
 
 export interface UsuarioActualizar {
@@ -26,6 +28,7 @@ export interface UsuarioActualizar {
   apellido: string;
   activo: boolean;
   roles: string[];
+  rut_empresa: string | null;
 }
 
 export interface OperacionUsuario {

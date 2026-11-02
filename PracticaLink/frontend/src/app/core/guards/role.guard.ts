@@ -29,7 +29,9 @@ export const roleGuard: CanActivateFn = (
 
     return tieneRol
       ? true
-      : router.createUrlTree(['/home']);
+      : router.createUrlTree(
+        contextoActual.roles.includes('EMPRESA') ? ['/portal-empresa'] : ['/home']
+      );
   }
 
   const token = sessionStorage.getItem('access_token');
@@ -48,7 +50,9 @@ export const roleGuard: CanActivateFn = (
 
       return tieneRol
         ? true
-        : router.createUrlTree(['/home']);
+        : router.createUrlTree(
+          contexto.roles.includes('EMPRESA') ? ['/portal-empresa'] : ['/home']
+        );
     }),
     catchError(() => {
       sessionStorage.removeItem('access_token');

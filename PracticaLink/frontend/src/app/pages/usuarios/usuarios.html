@@ -8,6 +8,61 @@
       </div>
     </header>
 
+    @if (mensaje) {
+      <p class="success" role="status">{{ mensaje }}</p>
+    }
+
+    @if (!cargando && !error) {
+      <section class="company-requests" aria-label="Solicitudes de cuentas empresariales">
+        <div class="section-heading">
+          <div>
+            <p class="module-label">Portal laboral</p>
+            <h2>Solicitudes de cuentas empresa</h2>
+          </div>
+          <span>{{ solicitudesPendientes }} pendientes</span>
+        </div>
+        @if (solicitudesEmpresa.length === 0) {
+          <ion-card><ion-card-content>No hay solicitudes empresariales.</ion-card-content></ion-card>
+        } @else {
+          <div class="user-grid">
+            @for (solicitud of solicitudesEmpresa; track solicitud.id_solicitud) {
+              <ion-card>
+                <ion-card-content>
+                  <div class="user-title">
+                    <div>
+                      <h3>{{ solicitud.razon_social }}</h3>
+                      <p>RUT: {{ solicitud.rut_empresa }}</p>
+                    </div>
+                    <span class="status" [class.inactive]="solicitud.estado === 'RECHAZADA'">
+                      {{ solicitud.estado }}
+                    </span>
+                  </div>
+                  <p><strong>Contacto:</strong> {{ solicitud.nombre_contacto }} {{ solicitud.apellido_contacto }}</p>
+                  <p><strong>Correo:</strong> {{ solicitud.correo }}</p>
+                  <p><strong>Teléfono:</strong> {{ solicitud.telefono }}</p>
+                  <p><strong>Cargo:</strong> {{ solicitud.cargo_contacto }}</p>
+                  <p><strong>Enviada:</strong> {{ solicitud.fecha_solicitud | date:'short' }}</p>
+                  @if (solicitud.observacion_revision) {
+                    <p><strong>Observación:</strong> {{ solicitud.observacion_revision }}</p>
+                  }
+                  @if (solicitud.estado === 'PENDIENTE') {
+                    <div class="modal-actions">
+                      <ion-button fill="outline" (click)="abrirRevision(solicitud, 'RECHAZADA')">
+                        Rechazar
+                      </ion-button>
+                      <ion-button (click)="abrirRevision(solicitud, 'APROBADA')">
+                        Aprobar y crear cuenta
+                      </ion-button>
+                    </div>
+                  }
+                </ion-card-content>
+              </ion-card>
+            }
+          </div>
+        }
+      </section>
+    }
+
     @if (cargando) {
       <div class="center"><ion-spinner></ion-spinner></div>
     } @else if (error) {
@@ -28,6 +83,9 @@
               <div class="roles">
                 @for (rol of usuario.roles; track rol) { <span>{{ rol }}</span> }
               </div>
+              @if (usuario.rut_empresa) {
+                <p>RUT empresa: {{ usuario.rut_empresa }}</p>
+              }
               <ion-button expand="block" fill="outline" (click)="abrirEditar(usuario)">
                 Editar usuario
               </ion-button>
@@ -60,11 +118,51 @@
             </ion-item>
           }
         </fieldset>
+        @if (esCuentaEmpresa) {
+          <ion-item>
+            <ion-label position="stacked">RUT de la empresa *</ion-label>
+            <ion-input [(ngModel)]="rutEmpresa" maxlength="12" placeholder="76.123.456-7"></ion-input>
+          </ion-item>
+          <p class="helper-text">
+            La cuenta solo tendrá acceso a las prácticas y ofertas vinculadas a este RUT.
+          </p>
+        }
         @if (errorModal) { <p class="error" role="alert">{{ errorModal }}</p> }
         <div class="modal-actions">
           <ion-button fill="outline" [disabled]="guardando" (click)="cerrarModal()">Cancelar</ion-button>
           <ion-button [disabled]="guardando" (click)="guardar()">
             @if (guardando) { <ion-spinner></ion-spinner> } @else { Guardar }
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    [isOpen]="!!solicitudRevision"
+    [backdropDismiss]="!guardandoRevision"
+    (didDismiss)="cerrarRevision()">
+    <ng-template>
+      <div class="user-modal">
+        <p class="module-label">Revisión de solicitud</p>
+        <h2>{{ estadoRevision === 'APROBADA' ? 'Aprobar y crear cuenta' : 'Rechazar solicitud' }}</h2>
+        @if (solicitudRevision) {
+          <p>{{ solicitudRevision.razon_social }} · {{ solicitudRevision.rut_empresa }}</p>
+          <p>Se creará una cuenta activa con rol EMPRESA y el correo {{ solicitudRevision.correo }}.</p>
+        }
+        <ion-item>
+          <ion-label position="stacked">Observación para el registro (opcional)</ion-label>
+          <ion-textarea [(ngModel)]="observacionRevision" maxlength="2000" autoGrow="true"></ion-textarea>
+        </ion-item>
+        @if (errorRevision) { <p class="error" role="alert">{{ errorRevision }}</p> }
+        <div class="modal-actions">
+          <ion-button fill="outline" [disabled]="guardandoRevision" (click)="cerrarRevision()">Cancelar</ion-button>
+          <ion-button
+            [color]="estadoRevision === 'RECHAZADA' ? 'danger' : 'primary'"
+            [disabled]="guardandoRevision"
+            (click)="confirmarRevision()">
+            @if (guardandoRevision) { <ion-spinner></ion-spinner> }
+            @else { {{ estadoRevision === 'APROBADA' ? 'Aprobar y crear' : 'Confirmar rechazo' }} }
           </ion-button>
         </div>
       </div>

@@ -242,6 +242,14 @@ export class Home implements OnInit {
     this.router.navigate(['/incidencias']);
   }
 
+  explorarOfertas(): void {
+    this.router.navigate(['/ofertas']);
+  }
+
+  gestionarOfertas(): void {
+    this.router.navigate(['/gestion-ofertas']);
+  }
+
   enviarNotificaciones(): void {
     this.router.navigate(['/envio-notificaciones']);
   }

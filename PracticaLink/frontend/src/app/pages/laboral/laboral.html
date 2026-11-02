@@ -1,0 +1,251 @@
+<ion-content class="laboral-content">
+  <main class="laboral-shell">
+    <header class="laboral-header">
+      <div>
+        <p class="eyebrow">PracticaLink · Portal laboral</p>
+        <h1>
+          @if (vista === 'empresa') { Portal de empresa }
+          @else if (vista === 'gestion') { Gestión de ofertas }
+          @else { Ofertas laborales }
+        </h1>
+        <p>
+          @if (vista === 'empresa') {
+            Publica oportunidades y consulta las prácticas vinculadas a tu RUT.
+          } @else if (vista === 'gestion') {
+            Administra ofertas y revisa las postulaciones recibidas.
+          } @else {
+            Explora oportunidades y sigue el estado de tus postulaciones.
+          }
+        </p>
+      </div>
+      <div class="header-actions">
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+        <ion-button fill="clear" (click)="cerrarSesion()">Cerrar sesión</ion-button>
+      </div>
+    </header>
+
+    @if (error) { <p class="notice error" role="alert">{{ error }}</p> }
+    @if (mensaje) { <p class="notice success" role="status">{{ mensaje }}</p> }
+    @if (cargando) {
+      <div class="loading"><ion-spinner name="crescent"></ion-spinner><p>Cargando portal...</p></div>
+    } @else {
+      @if (vista === 'empresa' || vista === 'gestion') {
+        <section class="offer-editor">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">{{ ofertaEditandoId ? 'Editar publicación' : 'Nueva publicación' }}</p>
+              <h2>{{ ofertaEditandoId ? 'Actualiza tu oferta' : 'Publica una oferta laboral' }}</h2>
+            </div>
+            @if (ofertaEditandoId) {
+              <ion-button fill="clear" (click)="nuevaOferta()">Cancelar edición</ion-button>
+            }
+          </div>
+          <div class="form-grid">
+            @if (vista === 'gestion') {
+              <ion-item><ion-label position="stacked">RUT empresa *</ion-label>
+                <ion-input [(ngModel)]="rutEmpresa" placeholder="76.123.456-0"></ion-input>
+              </ion-item>
+            }
+            <ion-item><ion-label position="stacked">Cargo *</ion-label>
+              <ion-input [(ngModel)]="cargo" maxlength="150"></ion-input>
+            </ion-item>
+            <ion-item><ion-label position="stacked">Ubicación *</ion-label>
+              <ion-input [(ngModel)]="ubicacion" maxlength="150"></ion-input>
+            </ion-item>
+            <ion-item><ion-label position="stacked">Modalidad *</ion-label>
+              <ion-select [(ngModel)]="modalidad">
+                @for (opcion of modalidades; track opcion) {
+                  <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-item><ion-label position="stacked">Jornada *</ion-label>
+              <ion-select [(ngModel)]="jornada">
+                @for (opcion of jornadas; track opcion) {
+                  <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-item><ion-label position="stacked">Fecha de cierre</ion-label>
+              <ion-input type="date" [(ngModel)]="fechaCierre"></ion-input>
+            </ion-item>
+            <ion-item><ion-label position="stacked">Estado</ion-label>
+              <ion-select [(ngModel)]="estado">
+                @for (opcion of estadosOferta; track opcion) {
+                  <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-item class="wide"><ion-label position="stacked">Descripción *</ion-label>
+              <ion-textarea [(ngModel)]="descripcion" rows="4" maxlength="10000"></ion-textarea>
+            </ion-item>
+            <ion-item class="wide"><ion-label position="stacked">Requisitos *</ion-label>
+              <ion-textarea [(ngModel)]="requisitos" rows="3" maxlength="10000"></ion-textarea>
+            </ion-item>
+          </div>
+          @if (errorFormulario) { <p class="notice error" role="alert">{{ errorFormulario }}</p> }
+          <ion-button [disabled]="guardando" (click)="guardarOferta()">
+            @if (guardando) { <ion-spinner name="crescent"></ion-spinner> }
+            @else { {{ ofertaEditandoId ? 'Guardar cambios' : 'Publicar oferta' }} }
+          </ion-button>
+        </section>
+      }
+
+      @if (vista === 'empresa') {
+        <section class="practice-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">Solo lectura</p><h2>Prácticas asociadas a tu RUT</h2></div>
+            <span class="count">{{ practicas.length }}</span>
+          </div>
+          @if (!practicas.length) {
+            <p class="empty-state">No hay prácticas asociadas a este RUT.</p>
+          } @else {
+            <div class="practice-grid">
+              @for (practica of practicas; track practica.id_practica) {
+                <article class="practice-card">
+                  <div class="card-title"><h3>{{ practica.estudiante.nombre }} {{ practica.estudiante.apellido }}</h3>
+                    <span class="status">{{ practica.estado }}</span></div>
+                  <p>{{ practica.estudiante.carrera }} · {{ practica.estudiante.sede }}</p>
+                  <dl>
+                    <div><dt>RUT</dt><dd>{{ practica.estudiante.rut }}</dd></div>
+                    <div><dt>Correo</dt><dd>{{ practica.estudiante.correo }}</dd></div>
+                    <div><dt>Centro</dt><dd>{{ practica.centro_practica }}</dd></div>
+                    <div><dt>Función</dt><dd>{{ practica.cargo_funcion || 'Sin indicar' }}</dd></div>
+                    <div><dt>Inicio</dt><dd>{{ practica.fecha_inicio || 'Sin definir' }}</dd></div>
+                    <div><dt>Término</dt><dd>{{ practica.fecha_termino || 'Sin definir' }}</dd></div>
+                  </dl>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (vista === 'estudiante') {
+        <section class="applications-section">
+          <div class="section-heading"><div><p class="eyebrow">Seguimiento</p><h2>Mis postulaciones</h2></div>
+            <span class="count">{{ misPostulaciones.length }}</span></div>
+          @if (misPostulaciones.length) {
+            <div class="application-grid">
+              @for (postulacion of misPostulaciones; track postulacion.id_postulacion) {
+                <article class="application-card">
+                  <div><h3>{{ postulacion.cargo }}</h3><span class="status">{{ postulacion.estado }}</span></div>
+                  <p>{{ postulacion.empresa }} · {{ postulacion.ubicacion }}</p>
+                  <small>Enviada: {{ postulacion.fecha_postulacion | date:'mediumDate' }}</small>
+                  <ion-button fill="clear" (click)="verHistorial(postulacion.id_postulacion)">Ver historial</ion-button>
+                  @if (historialAbiertoId === postulacion.id_postulacion) {
+                    @if (cargandoHistorialId === postulacion.id_postulacion) {
+                      <ion-spinner name="crescent"></ion-spinner>
+                    } @else {
+                      <ol class="history-list">
+                        @for (evento of historiales.get(postulacion.id_postulacion) ?? []; track $index) {
+                          <li>{{ evento.estado_nuevo }} · {{ evento.fecha_cambio | date:'short' }} · {{ evento.usuario }}
+                            @if (evento.observacion) { <p>{{ evento.observacion }}</p> }
+                          </li>
+                        }
+                      </ol>
+                    }
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">Todavía no has enviado postulaciones.</p>
+          }
+        </section>
+      }
+
+      <section class="offers-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">
+              @if (vista === 'estudiante') { Catálogo }
+              @else { Publicaciones }
+            </p>
+            <h2>
+              @if (vista === 'estudiante') { Ofertas disponibles }
+              @else { Ofertas laborales }
+            </h2>
+          </div>
+          <span class="count">{{ ofertasFiltradas.length }}</span>
+        </div>
+        <ion-item class="search-item">
+          <ion-label position="stacked">Buscar por cargo, empresa o ubicación</ion-label>
+          <ion-input [(ngModel)]="busqueda"></ion-input>
+        </ion-item>
+        @if (!ofertasFiltradas.length) {
+          <p class="empty-state">No hay ofertas que coincidan con la búsqueda.</p>
+        } @else {
+          <div class="offer-grid">
+            @for (oferta of ofertasFiltradas; track oferta.id_oferta) {
+              <ion-card class="offer-card">
+                <ion-card-content>
+                  <div class="card-title"><div><p class="eyebrow">{{ oferta.empresa }}</p><h3>{{ oferta.cargo }}</h3></div>
+                    <span class="status" [class.closed]="oferta.estado !== 'PUBLICADA'">{{ oferta.estado }}</span></div>
+                  <p>{{ oferta.ubicacion }} · {{ oferta.modalidad }} · {{ oferta.jornada }}</p>
+                  <p>{{ oferta.descripcion }}</p>
+                  <p><strong>Requisitos:</strong> {{ oferta.requisitos }}</p>
+                  <small>Cierre: {{ oferta.fecha_cierre || 'Sin fecha límite' }}</small>
+                  @if (vista === 'estudiante') {
+                    @if (yaPostulo(oferta.id_oferta)) {
+                      <p class="success">Ya postulaste a esta oferta.</p>
+                    } @else {
+                      <ion-button [disabled]="oferta.estado !== 'PUBLICADA'" (click)="abrirFormularioPostulacion(oferta.id_oferta)">
+                        Postular
+                      </ion-button>
+                    }
+                    @if (postulacionActivaId === oferta.id_oferta) {
+                      <ion-item><ion-label position="stacked">Carta de presentación (opcional)</ion-label>
+                        <ion-textarea [(ngModel)]="cartaPresentacion" maxlength="5000" rows="4"></ion-textarea>
+                      </ion-item>
+                      <ion-button [disabled]="guardando" (click)="postular(oferta)">
+                        @if (guardando) { <ion-spinner name="crescent"></ion-spinner> } @else { Enviar postulación }
+                      </ion-button>
+                    }
+                  } @else {
+                    <div class="offer-actions">
+                      <ion-button fill="outline" (click)="editarOferta(oferta)">Editar</ion-button>
+                      @if (oferta.estado !== 'CERRADA') {
+                        <ion-button fill="outline" color="danger" (click)="cerrarOferta(oferta)">Cerrar</ion-button>
+                      }
+                      <ion-button (click)="verPostulaciones(oferta)">Postulaciones ({{ oferta.total_postulaciones }})</ion-button>
+                    </div>
+                    @if (postulacionesAbiertasId === oferta.id_oferta) {
+                      @if (cargandoPostulacionesId === oferta.id_oferta) {
+                        <ion-spinner name="crescent"></ion-spinner>
+                      } @else if (!(postulaciones.get(oferta.id_oferta) ?? []).length) {
+                        <p class="empty-state">Aún no hay postulaciones.</p>
+                      } @else {
+                        @for (postulacion of postulaciones.get(oferta.id_oferta) ?? []; track postulacion.id_postulacion) {
+                          <article class="candidate-card">
+                            <h4>{{ postulacion.nombre }} {{ postulacion.apellido }}</h4>
+                            <p>{{ postulacion.rut }} · {{ postulacion.carrera }} · {{ postulacion.sede }}</p>
+                            <p>{{ postulacion.correo }}</p>
+                            @if (postulacion.carta_presentacion) { <p>{{ postulacion.carta_presentacion }}</p> }
+                            <ion-item><ion-label position="stacked">Estado</ion-label>
+                              <ion-select [value]="postulacion.estado" (ionChange)="cambiarEstadoPostulacion(postulacion, $event.detail.value)">
+                                @for (opcion of estadosPostulacion; track opcion) {
+                                  <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+                                }
+                              </ion-select>
+                            </ion-item>
+                            <ion-button fill="clear" (click)="verHistorial(postulacion.id_postulacion)">Ver historial</ion-button>
+                            @if (historialAbiertoId === postulacion.id_postulacion) {
+                              @for (evento of historiales.get(postulacion.id_postulacion) ?? []; track $index) {
+                                <small>{{ evento.estado_nuevo }} · {{ evento.fecha_cambio | date:'short' }} · {{ evento.usuario }}</small>
+                              }
+                            }
+                          </article>
+                        }
+                      }
+                    }
+                  }
+                </ion-card-content>
+              </ion-card>
+            }
+          </div>
+        }
+      </section>
+    }
+  </main>
+</ion-content>

@@ -49,6 +49,9 @@ src/app/
 - `/`: redirige a `/login`.
 - `/login`: muestra el formulario de autenticación.
 - `/home`: muestra el contexto del usuario autenticado y exige uno de los roles conocidos.
+- `/portal-empresa`: portal de cuentas `EMPRESA`, asociadas por administración a un RUT.
+- `/ofertas`: catálogo de ofertas publicadas y postulaciones del estudiante.
+- `/gestion-ofertas`: administración de ofertas y postulaciones para gestores y administradores.
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
@@ -97,6 +100,12 @@ El registro público no solicita datos académicos. Esto permite que una cuenta
 pueda promoverse posteriormente a `GESTOR` o `ADMINISTRADOR` sin crear un perfil
 de estudiante innecesario.
 
+Desde el acceso `Empresas`, cualquier solicitante puede enviar una solicitud
+con RUT, razón social, datos de contacto y una contraseña elegida por quien
+solicita. El formulario consulta los datos tributarios del RUT y permite
+completar manualmente la razón social cuando la consulta no encuentra datos o
+no está disponible. Enviar el formulario no crea una cuenta.
+
 ## Gestión administrativa de usuarios (EP01)
 
 El Home muestra el acceso al panel solamente cuando el contexto contiene el rol
@@ -108,6 +117,10 @@ El panel permite:
 - Listar usuarios, estados y roles asignados.
 - Crear cuentas mediante un modal.
 - Editar nombre, apellido, estado y roles mediante un modal.
+- Crear y mantener cuentas `EMPRESA` con un único RUT válido; este rol es exclusivo.
+- Revisar solicitudes empresariales pendientes. Al aprobar una solicitud se crea
+  la cuenta activa con el correo y la contraseña elegidos por el solicitante;
+  rechazarla no crea una cuenta.
 - Evitar que el administrador conectado se desactive o se quite su propio rol.
 
 La cuenta administradora inicial debe obtenerse promoviendo una cuenta existente
@@ -115,6 +128,39 @@ directamente en la base de datos. Después de ese bootstrap, las demás cuentas
 administrativas pueden crearse desde el panel.
 
 No guardar contraseñas, secretos JWT ni credenciales de base de datos en el frontend.
+
+## Portal laboral
+
+Las cuentas de empresa no tienen registro público: un administrador las crea o
+edita desde `/usuarios` y les asocia un RUT único. Tras iniciar sesión, una
+cuenta con rol `EMPRESA` entra a `/portal-empresa`, donde administra ofertas de
+su RUT, consulta las postulaciones recibidas y ve en solo lectura las prácticas
+asociadas a ese RUT. La asignación de supervisores empresariales no forma parte
+de este flujo.
+
+La gestión administrativa de usuarios incluye la revisión de solicitudes
+empresariales. Las solicitudes se mantienen pendientes hasta una decisión
+administrativa; la decisión y observación quedan visibles en el panel. No se
+envían correos automáticos de aprobación/rechazo: el correo y teléfono del
+contacto quedan disponibles para su seguimiento.
+
+Los estudiantes consultan ofertas publicadas en `/ofertas`, envían una
+postulación y revisan sus postulaciones e historial. Gestores y administradores
+pueden crear ofertas para un RUT, revisar postulaciones y actualizar su estado
+desde `/gestion-ofertas`.
+
+El backend expone los servicios de este flujo bajo `/laboral`:
+
+- `GET /laboral/practicas`: prácticas asociadas al RUT de la cuenta `EMPRESA`.
+- `GET /laboral/ofertas` y `GET /laboral/postulaciones/mias`: catálogo y postulaciones propias del estudiante.
+- `POST /laboral/ofertas` y `PUT /laboral/ofertas/{id}`: guardar ofertas como empresa o gestión.
+- `POST /laboral/ofertas/{id}/postulaciones`: postular como estudiante.
+- `GET /laboral/ofertas/gestion`, `GET /laboral/ofertas/{id}/postulaciones` y `PATCH /laboral/postulaciones/{id}`: gestión de ofertas y postulaciones.
+- `GET /laboral/postulaciones/{id}/historial`: historial accesible según estudiante, RUT asociado o rol de gestión.
+
+La migración versionada es `supabase/migrations/20261102180000_portal_laboral.sql`.
+Debe aplicarse y validarse en el entorno PostgreSQL autorizado antes de desplegar
+el backend que consume estas tablas y funciones; no se aplica automáticamente.
 
 ## Contexto del usuario
 

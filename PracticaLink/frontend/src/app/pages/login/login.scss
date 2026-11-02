@@ -142,6 +142,33 @@ ion-card-title {
   color: var(--ink-muted);
 }
 
+.access-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.access-options ion-button {
+  margin: 0;
+  --color: var(--ink-muted);
+}
+
+.access-options ion-button.selected {
+  border-radius: 9px;
+  background: rgba(18, 102, 100, .1);
+  --color: var(--ion-color-primary);
+}
+
+.access-hint {
+  margin: 0 0 12px;
+  color: var(--ink-muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
 .login-button {
   margin-top: 24px;
 }
