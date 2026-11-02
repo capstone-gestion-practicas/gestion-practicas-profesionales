@@ -1,0 +1,1655 @@
+{
+  "head": "8fd039c",
+  "checks": [
+    {
+      "name": "privilegios mínimos e2e_incidence",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_read",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_follow_write",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "privilegios mínimos e2e_main",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "tres históricos sembrados antes de EP06",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "login GESTOR mediante formulario",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 A pendiente 1",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 A pendiente 2",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 A en atención",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 A resuelta",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 B en atención",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 C resuelta",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "registro POST 201 E2E-HU017 D finalizada pendiente",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "A: PENDIENTE->EN_ATENCION por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 200
+    },
+    {
+      "name": "A: PENDIENTE->RESUELTA por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 200
+    },
+    {
+      "name": "B: PENDIENTE->EN_ATENCION por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 200
+    },
+    {
+      "name": "C: PENDIENTE->RESUELTA por API",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 200
+    },
+    {
+      "name": "práctica D finalizada por fixture de laboratorio",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "resumen solicitado en páginas de 100 (offset 0 y 100)",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": [
+        "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+        "/practicas/con-incidencias-pendientes?limit=100&offset=100"
+      ]
+    },
+    {
+      "name": "sin petición de detalle por práctica durante el listado",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": []
+    },
+    {
+      "name": "práctica A muestra Pendientes: 2 y En gestión: 1",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        2,
+        1
+      ]
+    },
+    {
+      "name": "práctica B: EN_ATENCION no cuenta como pendiente",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "DEFECTO-001 cerrado: práctica B solo EN_ATENCION muestra En gestión 1",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "resumen API: B con pendientes 0, en gestión 1 y fecha null",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": {
+        "id_practica": 122,
+        "pendientes": 0,
+        "en_atencion": 1,
+        "fecha_pendiente_antigua": null
+      }
+    },
+    {
+      "name": "resumen API: C (solo RESUELTA) y E (solo históricos) ausentes",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": "API real (fetch)"
+    },
+    {
+      "name": "práctica C: solo RESUELTA no aparece como pendiente",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "práctica D finalizada conserva Pendientes: 1",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        1,
+        0
+      ]
+    },
+    {
+      "name": "práctica E con históricos incompatibles no cuenta",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "práctica X de otro estudiante con 1 pendiente",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        1,
+        0
+      ]
+    },
+    {
+      "name": "pendientes página 1 coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión página 1 coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "fecha pendiente desde de D en America/Santiago",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": "02/11/2026, 11:31"
+    },
+    {
+      "name": "búsqueda por RUT conserva el resumen correcto de la práctica filtrada",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": {
+        "126": [
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "name": "búsqueda por RUT no vuelve a pedir el resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "limpiar búsqueda restaura indicadores",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "limpiar búsqueda no vuelve a pedir el resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "pendientes página 2 coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión página 2 coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "cambio de página no vuelve a pedir el resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "A1 cambia PENDIENTE->EN_ATENCION por interfaz HU016",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "estado en PostgreSQL tras HU016",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "volver al listado muestra Pendientes: 1 y En gestión: 2",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "volver al listado vuelve a solicitar el resumen (nuevo montaje)",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": 2
+    },
+    {
+      "name": "pendientes tras HU016 PENDIENTE->EN_ATENCION coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras HU016 PENDIENTE->EN_ATENCION coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "EN_ATENCION->RESUELTA por interfaz HU016",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "tras EN_ATENCION->RESUELTA: A deja de contar la resuelta como pendiente ni en gestión",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "pendientes tras HU016 EN_ATENCION->RESUELTA coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras HU016 EN_ATENCION->RESUELTA coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "pendientes tras recarga completa coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras recarga completa coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "recarga reconstruye contadores desde PostgreSQL",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "error del resumen: el listado sigue visible con sus tarjetas",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "error del resumen: mensaje visible y sin ceros falsos",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "error del resumen: respuesta HTTP 500 saneada",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 500
+    },
+    {
+      "name": "pendientes tras reintento coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras reintento coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "reintento manual recupera el resumen real",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "pendientes vista ADMINISTRADOR coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión vista ADMINISTRADOR coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "ADMINISTRADOR consulta y visualiza el resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE redirigido desde /practicas",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE: Angular no solicita el resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "ESTUDIANTE: llamada directa al resumen devuelve 403",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "regresión HU015: registro POST 201 en práctica E",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "pendientes tras registro HU015 coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras registro HU015 coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "regresión HU015: incidencia persistida visible en su práctica",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "regresión HU016: cambio y historial visibles",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "regresión HU016: historial consultado en navegador",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "regresión HU013: seguimiento registrado y visible",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "regresión HU013 persistida en PostgreSQL",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "pendientes tras regresiones coinciden con PostgreSQL",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "tarjetas": 50,
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "en gestión tras regresiones coincide con PostgreSQL en todas las tarjetas",
+      "passed": true,
+      "layer": "Chromium + PostgreSQL",
+      "detail": {
+        "discrepancias": 0
+      }
+    },
+    {
+      "name": "históricos ABIERTA/EN_REVISION/CERRADA intactos tras HU017",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "históricos no cuentan en la vista de E",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        1,
+        0
+      ]
+    },
+    {
+      "name": "ejecutor sin SELECT/DML directo sobre incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "ejecutor con EXECUTE sobre el resumen",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "RLS activo sobre incidencia",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "el resumen no modifica filas (sin DML)",
+      "passed": true,
+      "layer": "PostgreSQL",
+      "detail": null
+    },
+    {
+      "name": "usuario inactivo con JWT previo: resumen devuelve 403",
+      "passed": true,
+      "layer": "API real (fetch)",
+      "detail": 403
+    },
+    {
+      "name": "usuario inactivo: respuesta sin datos de resumen",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "usuario inactivo expulsado de la interfaz",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": null
+    },
+    {
+      "name": "sin accesos localStorage durante la ejecución",
+      "passed": true,
+      "layer": "Chromium",
+      "detail": [
+        0
+      ]
+    }
+  ],
+  "http_browser": [
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/121/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/121/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/121/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/121/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/122",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/122",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/122/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/122/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/123",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/123",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/123/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/123/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/124",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/124",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/124/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/124/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/127/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/121/incidencias/127/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/128/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/121/incidencias/128/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/122/incidencias/129/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/122/incidencias/129/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/123/incidencias/130/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/123/incidencias/130/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas?limit=50&offset=0&rut=22222222-2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0&rut=22222222-2",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas?limit=50&offset=50",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=50",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/125/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias/125/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/125/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/121/incidencias/125/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias/125/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/121/incidencias/125/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 500
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/usuarios",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/revisiones/solicitudes",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/me",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125/incidencias",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/125/incidencias",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/125/incidencias/132/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/125/incidencias/132/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/126/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias/126/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/incidencias/126/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "PATCH",
+      "path": "/practicas/121/incidencias/126/estado",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/seguimientos?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121/incidencias/126/historial?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/121",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "OPTIONS",
+      "path": "/practicas/121/seguimientos",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/practicas/121/seguimientos",
+      "status": 201
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas?limit=50&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=100",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 200
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/practicas/con-incidencias-pendientes?limit=100&offset=0",
+      "status": 403
+    },
+    {
+      "sesion": "principal",
+      "method": "GET",
+      "path": "/auth/context",
+      "status": 403
+    }
+  ],
+  "cleanup": true,
+  "browser": "Chrome/155.0.8059.84",
+  "volver_listado_solicitudes_resumen": 2,
+  "resumen_solicitudes_get": 22,
+  "resources": [
+    {
+      "kind": "network",
+      "name": "ep06-e2e-hu017-05e6c51a3277da6acda1c06f-net"
+    },
+    {
+      "kind": "volume",
+      "name": "ep06-e2e-hu017-05e6c51a3277da6acda1c06f-data"
+    },
+    {
+      "kind": "container",
+      "name": "ep06-e2e-hu017-05e6c51a3277da6acda1c06f"
+    }
+  ]
+}
