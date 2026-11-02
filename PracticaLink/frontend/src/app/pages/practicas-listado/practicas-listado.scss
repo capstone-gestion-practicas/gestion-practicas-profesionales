@@ -10,4 +10,11 @@ dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
 dt { font-weight: 600; } dd { margin: 4px 0 0; overflow-wrap: anywhere; }
 .loading { display: flex; align-items: center; gap: 12px; }
 [role='alert'] { color: var(--ion-color-danger); }
+.resumen-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.resumen-incidencias { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.badge { padding: 4px 10px; border-radius: 999px; font-size: 0.9rem; font-weight: 600; }
+.badge-pendiente { color: var(--ion-color-light); background: var(--ion-color-danger); }
+.badge-pendiente.sin-pendientes { color: inherit; background: transparent; border: 1px solid var(--ion-color-medium); }
+.badge-gestion { color: inherit; border: 1px solid var(--ion-color-medium); }
+.resumen-no-disponible, .resumen-cargando { color: var(--ion-color-medium); font-size: 0.9rem; }
 @media (max-width: 600px) { dl { grid-template-columns: 1fr; } .controls { justify-content: center; } }

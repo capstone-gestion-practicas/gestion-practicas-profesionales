@@ -98,6 +98,21 @@ export interface PracticasListadoResponse {
   hay_mas: boolean;
 }
 
+// HU017: pendientes = solo estado PENDIENTE; en_atencion se informa aparte.
+export interface PracticaIncidenciasPendientesItem {
+  id_practica: number;
+  pendientes: number;
+  en_atencion: number;
+  fecha_pendiente_antigua: string;
+}
+
+export interface ResumenIncidenciasPendientesResponse {
+  items: PracticaIncidenciasPendientesItem[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
 
 export interface PracticaDetalleGestionResponse {
   id_practica: number;

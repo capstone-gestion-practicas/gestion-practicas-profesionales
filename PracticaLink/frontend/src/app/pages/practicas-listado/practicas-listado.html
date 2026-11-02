@@ -18,6 +18,12 @@
     @if (filtroAplicado) {
       <p class="module-label" role="status">Filtro por estudiante aplicado</p>
     }
+    @if (puedeVerResumen && resumenEstado === 'error') {
+      <div class="resumen-error">
+        <p role="alert">{{ resumenError }}</p>
+        <ion-button fill="outline" (click)="reintentarResumen()">Reintentar incidencias</ion-button>
+      </div>
+    }
     <section aria-label="Resultados" aria-live="polite" [attr.aria-busy]="cargando">
       @if (cargando) {
         <div class="loading"><ion-spinner></ion-spinner><p>Cargando prácticas...</p></div>
@@ -38,6 +44,22 @@
               <div><dt>Fecha de registro</dt><dd>{{ formatearFecha(practica.fecha_registro) }}</dd></div>
               <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
             </dl>
+            @if (puedeVerResumen) {
+              <div class="resumen-incidencias" aria-live="polite">
+                @if (resumenEstado === 'cargando') {
+                  <span class="resumen-cargando" role="status">Cargando incidencias…</span>
+                } @else if (resumenEstado === 'listo' && identificadorSeguro(practica.id_practica)) {
+                  <span class="badge badge-pendiente" [class.sin-pendientes]="pendientesDe(practica.id_practica) === 0">
+            Pendientes: {{ pendientesDe(practica.id_practica) }}</span>
+                  <span class="badge badge-gestion">En gestión: {{ enGestionDe(practica.id_practica) }}</span>
+                  @if (fechaPendienteDe(practica.id_practica); as fecha) {
+                    <small>Pendiente desde {{ formatearFecha(fecha) }}</small>
+                  }
+                } @else if (resumenEstado !== 'inactivo') {
+                  <span class="resumen-no-disponible">Incidencias no disponibles</span>
+                }
+              </div>
+            }
             <ion-button expand="block" (click)="verAntecedentes(practica.id_practica)"
               [attr.aria-label]="'Abrir seguimiento de la práctica ' + practica.id_practica">
               Abrir seguimiento

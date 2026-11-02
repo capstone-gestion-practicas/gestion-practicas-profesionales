@@ -9,6 +9,7 @@ import {
   PracticaDetalleGestionResponse,
   HistorialPracticaResponse,
   PracticasListadoResponse,
+  ResumenIncidenciasPendientesResponse,
   PracticaCreate,
   PracticaCreateResponse,
   EmpresaLookup,
@@ -73,6 +74,14 @@ export class PracticaService {
       params = params.set('rut', rut);
     }
     return this.http.get<PracticasListadoResponse>(`${this.apiUrl}/practicas`, { params });
+  }
+
+  // Solo paginación: sin id_usuario, roles ni filtros. Identidad desde el JWT.
+  obtenerResumenIncidenciasPendientes(limit = 100, offset = 0): Observable<ResumenIncidenciasPendientesResponse> {
+    const params = new HttpParams().set('limit', limit).set('offset', offset);
+    return this.http.get<ResumenIncidenciasPendientesResponse>(
+      `${this.apiUrl}/practicas/con-incidencias-pendientes`, { params }
+    );
   }
 
   obtenerDetalle(idPractica: string): Observable<PracticaDetalleGestionResponse> {

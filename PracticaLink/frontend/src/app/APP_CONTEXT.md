@@ -225,6 +225,41 @@ Reintentar repite la consulta HTTP fallida con el filtro aplicado y el offset
 conservado, independientemente del texto editado en el buscador. Los errores
 locales de formato no ofrecen reintento HTTP.
 
+#### HU017: indicador de incidencias pendientes en el listado
+
+Para GESTOR y ADMINISTRADOR, cada tarjeta muestra `Pendientes: N` y `En gestión: N`
+como valores separados (nunca sumados). `Pendientes` cuenta solo estado `PENDIENTE`.
+Si existe `fecha_pendiente_antigua`, se muestra como `Pendiente desde …` en
+America/Santiago. Las prácticas finalizadas con pendientes también se muestran.
+
+El resumen se obtiene con `PracticaService.obtenerResumenIncidenciasPendientes(limit, offset)`,
+que envía solo `limit` y `offset` (sin identidad, roles ni filtros) mediante el
+interceptor JWT existente. Modelos: `PracticaIncidenciasPendientesItem` y
+`ResumenIncidenciasPendientesResponse`.
+
+Estrategia: el backend ordena el resumen por antigüedad de la incidencia pendiente y no
+admite filtrar por ids ni por RUT; sus offsets no corresponden a las páginas del listado.
+Por eso no se emparejan páginas. El componente carga el resumen completo una sola vez,
+en páginas de 100, y lo cruza por `id_practica` con la página visible. Cambiar de
+página o buscar por RUT no vuelve a pedir el resumen. Un nuevo montaje del componente
+(o el reintento manual) sí lo recarga. Cuantitativamente: 1 petición de listado y
+1 + ⌈N/100⌉ de resumen, donde N es el número de prácticas con pendientes. No hay
+petición por práctica.
+
+Validación del resumen antes de usarlo: `limit` y `offset` coherentes, `hay_mas`
+consistente con una página completa, ids y contadores enteros seguros, fechas válidas
+y sin ids duplicados. Cualquier fallo, incluido un id fuera del rango seguro de
+JavaScript, deja el resumen en error. No se presentan ceros: una práctica ausente
+cuenta como cero solo tras un resumen completo y válido.
+
+Estados: cargando (`Cargando incidencias…`), listo y error. Un error del resumen muestra
+un aviso con reintento manual y no oculta ni altera el listado de prácticas. Para
+roles distintos de GESTOR/ADMINISTRADOR el resumen no se solicita. La UI no es una
+barrera de seguridad: la autorización definitiva es del backend.
+
+Sin localStorage. Sin lógica frontend para históricos (`ABIERTA`, `EN_REVISION`,
+`CERRADA`): el backend ya los excluye.
+
 
 ### Detalle general de gestión
 
