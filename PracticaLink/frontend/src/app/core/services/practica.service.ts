@@ -14,6 +14,10 @@ import {
   HistorialEstadoPractica,
   PracticaEstadoResumen,
   ActualizarEstadoPracticaResponse,
+  AsignarGestorPracticaResponse,
+  CerrarPracticaResponse,
+  GestorPractica,
+  IniciarPracticaResponse,
   SeguimientoPractica,
   IncidenciaPractica,
   EstadoIncidencia,
@@ -52,6 +56,30 @@ export class PracticaService {
     return this.http.get<PracticaEstadoResumen[]>(`${this.apiUrl}/practicas/gestion-estados`);
   }
 
+  listarGestores(): Observable<GestorPractica[]> {
+    return this.http.get<GestorPractica[]>(`${this.apiUrl}/practicas/gestores`);
+  }
+
+  asignarGestor(
+    idPractica: number,
+    idGestor: number | null
+  ): Observable<AsignarGestorPracticaResponse> {
+    return this.http.patch<AsignarGestorPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/gestor`,
+      { id_gestor: idGestor }
+    );
+  }
+
+  cerrarPractica(
+    idPractica: number,
+    observacion: string | null
+  ): Observable<CerrarPracticaResponse> {
+    return this.http.post<CerrarPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/cierre`,
+      { observacion }
+    );
+  }
+
   listarEstudiantesSinPractica(): Observable<EstudianteSinPractica[]> {
     return this.http.get<EstudianteSinPractica[]>(
       `${this.apiUrl}/practicas/estudiantes-sin-practica`
@@ -77,8 +105,18 @@ export class PracticaService {
     observacion: string | null
   ): Observable<ActualizarEstadoPracticaResponse> {
     return this.http.patch<ActualizarEstadoPracticaResponse>(
-      `${this.apiUrl}/practicas/${idPractica}/estado`,
+      `${this.apiUrl}/practicas/${idPractica}/estado/actualizacion`,
       { id_estado: idEstado, observacion }
+    );
+  }
+
+  iniciarPractica(
+    idPractica: number,
+    observacion: string | null
+  ): Observable<IniciarPracticaResponse> {
+    return this.http.patch<IniciarPracticaResponse>(
+      `${this.apiUrl}/practicas/${idPractica}/estado`,
+      { estado: 'EN_CURSO', observacion }
     );
   }
 

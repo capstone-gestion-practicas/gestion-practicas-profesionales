@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, map } from 'rxjs';
 import {
   IonBadge,
   IonButton,
@@ -27,10 +27,12 @@ import {
 
 import {
   EstadoPracticaDetalle,
+  GestorPractica,
   HistorialEstadoPractica,
   PracticaEstadoResumen
 } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
+import { AuthStore } from '../../core/store/auth.store';
 
 @Component({
   selector: 'app-gestion-estados',
@@ -63,6 +65,8 @@ import { PracticaService } from '../../core/services/practica.service';
 export class GestionEstados implements OnInit {
   practicas: PracticaEstadoResumen[] = [];
   estados: EstadoPracticaDetalle[] = [];
+  gestores: GestorPractica[] = [];
+  readonly gestorSeleccionado = new Map<number, number | null>();
   readonly historiales = new Map<number, HistorialEstadoPractica[]>();
   cargando = true;
   error = '';
@@ -77,12 +81,20 @@ export class GestionEstados implements OnInit {
   practicaSeleccionada: PracticaEstadoResumen | null = null;
   idEstadoSeleccionado: number | null = null;
   observacion = '';
+  errorGestores = '';
+  guardandoAsignacionId: number | null = null;
+  guardandoCierreId: number | null = null;
+  readonly esAdministrador: boolean;
 
   constructor(
     private readonly practicaService: PracticaService,
+    authStore: AuthStore,
     private readonly route: ActivatedRoute,
     private readonly router: Router
-  ) {}
+  ) {
+    this.esAdministrador = authStore.obtenerContextoActual()?.roles
+      .some(rol => rol.toUpperCase() === 'ADMINISTRADOR') ?? false;
+  }
 
   ngOnInit(): void {
     this.filtroEstado = this.route.snapshot.queryParamMap.get('estado')?.toUpperCase() ?? null;
@@ -99,7 +111,12 @@ export class GestionEstados implements OnInit {
       next: ({ practicas, estados }) => {
         this.practicas = practicas;
         this.estados = estados;
+        this.gestorSeleccionado.clear();
+        practicas.forEach(practica =>
+          this.gestorSeleccionado.set(practica.id_practica, practica.id_gestor)
+        );
         this.cargando = false;
+        if (this.esAdministrador) this.cargarGestores();
       },
       error: () => {
         this.error = 'No fue posible cargar las prácticas y los estados disponibles.';
@@ -141,7 +158,12 @@ export class GestionEstados implements OnInit {
     const hoyIso = [hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate()]
       .map((parte, indice) => indice === 0 ? String(parte) : String(parte).padStart(2, '0'))
       .join('-');
-    return fechaTermino.slice(0, 10) < hoyIso;
+    return fechaTermino.slice(0, 10) <= hoyIso;
+  }
+
+  puedeFinalizar(practica: PracticaEstadoResumen): boolean {
+    return practica.estado === 'EN_CURSO'
+      && this.fechaTerminoVencida(practica.fecha_termino);
   }
 
   nombreEstado(estado: string): string {
@@ -171,15 +193,27 @@ export class GestionEstados implements OnInit {
   }
 
   guardarCambio(): void {
-    if (!this.practicaSeleccionada || this.idEstadoSeleccionado === null) return;
+    const practica = this.practicaSeleccionada;
+    const idEstado = this.idEstadoSeleccionado;
+    if (!practica || idEstado === null) return;
 
     this.guardando = true;
     this.error = '';
-    this.practicaService.actualizarEstado(
-      this.practicaSeleccionada.id_practica,
-      this.idEstadoSeleccionado,
-      this.observacion.trim() || null
-    ).subscribe({
+    const estadoSeleccionado = this.estados.find(
+      estado => estado.id_estado === idEstado
+    );
+    const operacion = (estadoSeleccionado?.nombre === 'EN_CURSO'
+      ? this.practicaService.iniciarPractica(
+        practica.id_practica, this.observacion.trim() || null
+      )
+      : this.practicaService.actualizarEstado(
+        practica.id_practica, idEstado,
+        this.observacion.trim() || null
+      )).pipe(map(respuesta => ({
+        id_practica: respuesta.id_practica,
+        mensaje: respuesta.mensaje
+      })));
+    operacion.subscribe({
       next: respuesta => {
         this.mensaje = respuesta.mensaje;
         this.guardando = false;
@@ -191,6 +225,47 @@ export class GestionEstados implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.guardando = false;
         this.error = error.error?.detail ?? 'No fue posible actualizar el estado.';
+      }
+    });
+  }
+
+  guardarAsignacion(practica: PracticaEstadoResumen): void {
+    if (!this.esAdministrador) return;
+    this.guardandoAsignacionId = practica.id_practica;
+    this.errorGestores = '';
+    this.practicaService.asignarGestor(
+      practica.id_practica,
+      this.gestorSeleccionado.get(practica.id_practica) ?? null
+    ).subscribe({
+      next: respuesta => {
+        this.mensaje = respuesta.mensaje;
+        this.guardandoAsignacionId = null;
+        this.historiales.delete(practica.id_practica);
+        this.cargar();
+        this.mostrarMensajeTemporal();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.guardandoAsignacionId = null;
+        this.errorGestores = error.error?.detail ?? 'No fue posible asignar el gestor.';
+      }
+    });
+  }
+
+  finalizarPractica(practica: PracticaEstadoResumen): void {
+    if (!this.puedeFinalizar(practica)) return;
+    this.guardandoCierreId = practica.id_practica;
+    this.error = '';
+    this.practicaService.cerrarPractica(practica.id_practica, null).subscribe({
+      next: respuesta => {
+        this.mensaje = respuesta.mensaje;
+        this.guardandoCierreId = null;
+        this.historiales.delete(practica.id_practica);
+        this.cargar();
+        this.mostrarMensajeTemporal();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.guardandoCierreId = null;
+        this.error = error.error?.detail ?? 'No fue posible finalizar la práctica.';
       }
     });
   }
@@ -229,5 +304,16 @@ export class GestionEstados implements OnInit {
 
   private mostrarMensajeTemporal(): void {
     window.setTimeout(() => this.mensaje = '', 5000);
+  }
+
+  private cargarGestores(): void {
+    this.errorGestores = '';
+    this.practicaService.listarGestores().subscribe({
+      next: gestores => this.gestores = gestores,
+      error: (error: HttpErrorResponse) => {
+        this.errorGestores = error.error?.detail
+          ?? 'No fue posible cargar los gestores disponibles.';
+      }
+    });
   }
 }

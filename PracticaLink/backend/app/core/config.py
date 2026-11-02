@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     seguimientos_database_url: str | None = None
 
     seguimientos_lectura_database_url: str | None = None
+    ep07_reminder_task_token: str | None = None
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"

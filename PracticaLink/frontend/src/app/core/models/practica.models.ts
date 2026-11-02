@@ -71,6 +71,39 @@ export interface PracticaEstadoResumen {
   fecha_inicio: string | null;
   fecha_termino: string | null;
   horas_semanales: number | null;
+  id_gestor: number | null;
+  gestor: string | null;
+}
+
+export interface GestorPractica {
+  id_usuario: number;
+  nombre: string;
+  correo: string;
+}
+
+export interface AsignarGestorPracticaResponse {
+  id_practica: number;
+  id_gestor: number | null;
+  gestor: string | null;
+  mensaje: string;
+}
+
+export interface CerrarPracticaResponse {
+  id_practica: number;
+  id_cierre: number;
+  id_historial: number;
+  estado: 'FINALIZADA';
+  fecha_cierre: string;
+  mensaje: string;
+}
+
+export interface IniciarPracticaResponse {
+  id_practica: number;
+  estado_anterior: { id_estado: number; nombre: string };
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string;
+  id_historial: number;
+  mensaje: string;
 }
 
 export interface EstudianteSinPractica {

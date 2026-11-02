@@ -12,6 +12,9 @@
     @if (mensaje) {
       <p class="success-message" role="status">{{ mensaje }}</p>
     }
+    @if (errorGestores) {
+      <p class="error-text" role="alert">{{ errorGestores }}</p>
+    }
 
     <ion-searchbar
       class="practice-search"
@@ -60,8 +63,41 @@
                   </div>
                   <p><strong>Centro:</strong> {{ practica.centro_practica }}</p>
                   <p><strong>Fecha de término:</strong> {{ practica.fecha_termino | date:'dd/MM/yyyy' }}</p>
+                  @if (esAdministrador) {
+                    <ion-item>
+                      <ion-label position="stacked">Gestor asignado</ion-label>
+                      <ion-select
+                        [ngModel]="gestorSeleccionado.get(practica.id_practica)"
+                        (ngModelChange)="gestorSeleccionado.set(practica.id_practica, $event)"
+                        interface="popover"
+                        placeholder="Selecciona un gestor">
+                        <ion-select-option [value]="null">Sin asignar</ion-select-option>
+                        @for (gestor of gestores; track gestor.id_usuario) {
+                          <ion-select-option [value]="gestor.id_usuario">
+                            {{ gestor.nombre }}
+                          </ion-select-option>
+                        }
+                      </ion-select>
+                    </ion-item>
+                    <ion-button
+                      fill="outline"
+                      [disabled]="guardandoAsignacionId === practica.id_practica || !!errorGestores"
+                      (click)="guardarAsignacion(practica)">
+                      {{ guardandoAsignacionId === practica.id_practica ? 'Guardando...' : 'Guardar gestor' }}
+                    </ion-button>
+                  } @else if (practica.gestor) {
+                    <p><strong>Gestor asignado:</strong> {{ practica.gestor }}</p>
+                  }
                   <div class="practice-actions">
                     <ion-button (click)="abrirCambio(practica)">Revisar y actualizar estado</ion-button>
+                    @if (puedeFinalizar(practica)) {
+                      <ion-button
+                        color="success"
+                        [disabled]="guardandoCierreId === practica.id_practica"
+                        (click)="finalizarPractica(practica)">
+                        {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
+                      </ion-button>
+                    }
                     <ion-button fill="outline" (click)="alternarHistorial(practica)">
                       {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
                     </ion-button>
@@ -119,12 +155,44 @@
                 <p><span>Centro</span><strong>{{ practica.centro_practica }}</strong></p>
                 <p><span>Última actualización</span><strong>{{ practica.fecha_actualizacion | date:'dd/MM/yyyy HH:mm' }}</strong></p>
                 <p><span>Periodo</span><strong>{{ practica.fecha_inicio ? (practica.fecha_inicio | date:'dd/MM/yyyy') : 'Pendiente' }} – {{ practica.fecha_termino ? (practica.fecha_termino | date:'dd/MM/yyyy') : 'Pendiente' }}</strong></p>
+                <p><span>Gestor</span><strong>{{ practica.gestor || 'Sin asignar' }}</strong></p>
               </div>
+              @if (esAdministrador && !practica.es_final) {
+                <ion-item>
+                  <ion-label position="stacked">Asignar gestor</ion-label>
+                  <ion-select
+                    [ngModel]="gestorSeleccionado.get(practica.id_practica)"
+                    (ngModelChange)="gestorSeleccionado.set(practica.id_practica, $event)"
+                    interface="popover"
+                    placeholder="Selecciona un gestor">
+                    <ion-select-option [value]="null">Sin asignar</ion-select-option>
+                    @for (gestor of gestores; track gestor.id_usuario) {
+                      <ion-select-option [value]="gestor.id_usuario">
+                        {{ gestor.nombre }}
+                      </ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+                <ion-button
+                  fill="outline"
+                  [disabled]="guardandoAsignacionId === practica.id_practica || !!errorGestores"
+                  (click)="guardarAsignacion(practica)">
+                  {{ guardandoAsignacionId === practica.id_practica ? 'Guardando...' : 'Guardar gestor' }}
+                </ion-button>
+              }
               @if (practica.descripcion_estado) {
                 <p class="state-description">{{ practica.descripcion_estado }}</p>
               }
               <div class="practice-actions">
                 <ion-button (click)="abrirCambio(practica)">Actualizar estado</ion-button>
+                @if (puedeFinalizar(practica)) {
+                  <ion-button
+                    color="success"
+                    [disabled]="guardandoCierreId === practica.id_practica"
+                    (click)="finalizarPractica(practica)">
+                    {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
+                  </ion-button>
+                }
                 <ion-button fill="outline" (click)="alternarHistorial(practica)">
                   {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
                 </ion-button>
@@ -173,7 +241,11 @@
           <ion-label position="stacked">Nuevo estado</ion-label>
           <ion-select [(ngModel)]="idEstadoSeleccionado" interface="popover" placeholder="Selecciona un estado">
             @for (estado of estados; track estado.id_estado) {
-              <ion-select-option [value]="estado.id_estado">{{ estado.nombre }}</ion-select-option>
+              <ion-select-option
+                [value]="estado.id_estado"
+                [disabled]="estado.nombre === 'FINALIZADA'">
+                {{ estado.nombre }}
+              </ion-select-option>
             }
           </ion-select>
         </ion-item>

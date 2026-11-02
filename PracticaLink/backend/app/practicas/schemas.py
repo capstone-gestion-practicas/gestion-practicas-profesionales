@@ -109,6 +109,54 @@ class PracticaEstadoResumen(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas_semanales: int | None = None
+    id_gestor: int | None = None
+    gestor: str | None = None
+
+
+class GestorPracticaResponse(BaseModel):
+    id_usuario: int
+    nombre: str
+    correo: EmailStr
+
+
+class AsignarGestorPracticaRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id_gestor: int | None = Field(default=None, gt=0)
+
+
+class AsignarGestorPracticaResponse(BaseModel):
+    id_practica: int
+    id_gestor: int | None
+    gestor: str | None
+    mensaje: str
+
+
+class CerrarPracticaRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    observacion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("observacion", mode="before")
+    @classmethod
+    def limpiar_observacion_cierre(cls, valor: str | None) -> str | None:
+        if valor is None:
+            return None
+        limpio = valor.strip()
+        return limpio or None
+
+
+class CerrarPracticaResponse(BaseModel):
+    id_practica: int
+    id_cierre: int
+    id_historial: int
+    estado: Literal["FINALIZADA"]
+    fecha_cierre: datetime
+    mensaje: str
+
+
+class RecordatoriosCierreResponse(BaseModel):
+    practicas_notificadas: int
 
 
 class EstudianteSinPractica(BaseModel):

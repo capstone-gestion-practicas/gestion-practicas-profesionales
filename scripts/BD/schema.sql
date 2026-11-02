@@ -101,6 +101,7 @@ CREATE TABLE practica (
     id_estudiante BIGINT NOT NULL,
     id_centro BIGINT NOT NULL,
     id_estado_actual BIGINT NOT NULL,
+    id_gestor BIGINT,
     fecha_inicio DATE,
     fecha_termino DATE,
     horas INTEGER,
@@ -114,6 +115,8 @@ CREATE TABLE practica (
         REFERENCES centro_practica (id_centro) ON DELETE RESTRICT,
     CONSTRAINT fk_practica_estado FOREIGN KEY (id_estado_actual)
         REFERENCES estado_practica (id_estado) ON DELETE RESTRICT,
+    CONSTRAINT fk_practica_gestor FOREIGN KEY (id_gestor)
+        REFERENCES usuario (id_usuario) ON DELETE RESTRICT,
     CONSTRAINT chk_practica_fechas CHECK (
         fecha_termino IS NULL OR fecha_inicio IS NULL OR fecha_termino >= fecha_inicio
     ),
@@ -229,6 +232,13 @@ CREATE TABLE cierre_practica (
     CONSTRAINT chk_cierre_resultado CHECK (
         resultado IN ('APROBADA', 'REPROBADA', 'ANULADA')
     )
+);
+
+CREATE TABLE recordatorio_cierre_practica (
+    id_practica BIGINT PRIMARY KEY,
+    fecha_recordatorio TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_recordatorio_cierre_practica FOREIGN KEY (id_practica)
+        REFERENCES practica (id_practica) ON DELETE CASCADE
 );
 
 -- Catalogos iniciales necesarios para operar la aplicacion.
