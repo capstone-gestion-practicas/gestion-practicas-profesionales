@@ -117,6 +117,18 @@ class Ep07PracticasTests(unittest.TestCase):
                 self.db.rollback.assert_called_once()
                 self.db.commit.assert_not_called()
 
+    def test_generic_status_update_cannot_bypass_assigned_start_flow(self):
+        self.db.execute.return_value.scalar_one.return_value = {
+            "error": "INICIO_RESTRINGIDO_REQUERIDO"
+        }
+        response = self.client.patch(
+            "/practicas/55/estado/actualizacion", json={"id_estado": 5}
+        )
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("flujo de inicio", response.json()["detail"])
+        self.db.rollback.assert_called_once()
+        self.db.commit.assert_not_called()
+
     def test_reminder_task_requires_configured_header_token(self):
         with (
             patch.object(settings, "ep07_reminder_task_token", "unit-test-task-token"),

@@ -134,7 +134,14 @@ class LocalPostgres:
         bindings = json.loads(docker('inspect', container_id).stdout)[0]['HostConfig']['PortBindings']
         if not info['Internal'] or bindings or not self.host:
             raise RuntimeError('El aislamiento Docker no cumple las condiciones requeridas')
-        for path in ['scripts/BD/schema.sql', 'scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql',
+        self.sql("""
+            CREATE ROLE anon NOLOGIN;
+            CREATE ROLE authenticated NOLOGIN;
+            CREATE ROLE service_role NOLOGIN;
+        """)
+        for path in ['scripts/BD/schema.sql',
+                     'PracticaLink/supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql',
+                     'scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql',
                      'scripts/BD/fixes/ep04-fn-iniciar-practica.sql']:
             self.sql((ROOT / path).read_text())
         self.sql(f"""
@@ -144,10 +151,12 @@ class LocalPostgres:
             INSERT INTO usuario(id_usuario,nombre,apellido,correo,password_hash) VALUES
                 (100,'Estudiante','Sintetico','student@example.invalid','synthetic-hash'),
                 (101,'Gestor','Sintetico','manager@example.invalid','synthetic-hash'),
-                (102,'Admin','Sintetico','admin@example.invalid','synthetic-hash');
+                (102,'Admin','Sintetico','admin@example.invalid','synthetic-hash'),
+                (103,'Otro Gestor','Sintetico','other-manager@example.invalid','synthetic-hash');
             INSERT INTO usuario_rol SELECT 100,id_rol FROM rol WHERE nombre='ESTUDIANTE';
             INSERT INTO usuario_rol SELECT 101,id_rol FROM rol WHERE nombre='GESTOR';
             INSERT INTO usuario_rol SELECT 102,id_rol FROM rol WHERE nombre='ADMINISTRADOR';
+            INSERT INTO usuario_rol SELECT 103,id_rol FROM rol WHERE nombre='GESTOR';
             INSERT INTO estudiante(id_estudiante,id_usuario,rut,carrera,sede)
                 VALUES(100,100,'12345678-5','Carrera sintetica','Sede sintetica');
             INSERT INTO centro_practica(id_centro,nombre) VALUES(100,'Centro sintetico');
@@ -334,11 +343,11 @@ def make_suite(pg):
             app.dependency_overrides.clear()
             app.dependency_overrides.update(previous)
 
-        def fixture(self, state='APROBADA', history='APROBADA'):
+        def fixture(self, state='APROBADA', history='APROBADA', gestor=101):
             allowed = {'REGISTRADA', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'EN_CURSO', 'FINALIZADA', 'RECHAZADA'}
             self.assertIn(state, allowed)
             self.assertTrue(history is None or history in allowed)
-            identifier = int(pg.sql(f"INSERT INTO practica(id_estudiante,id_centro,id_estado_actual) SELECT 100,100,id_estado FROM estado_practica WHERE nombre='{state}' RETURNING id_practica").stdout.strip())
+            identifier = int(pg.sql(f"INSERT INTO practica(id_estudiante,id_centro,id_estado_actual,id_gestor) SELECT 100,100,id_estado,{gestor if gestor is not None else 'NULL'} FROM estado_practica WHERE nombre='{state}' RETURNING id_practica").stdout.strip())
             if history:
                 pg.sql(f"INSERT INTO historial_estado(id_practica,id_estado,id_usuario,fecha_cambio) SELECT {identifier},id_estado,101,clock_timestamp()-interval '1 minute' FROM estado_practica WHERE nombre='{history}'")
             return identifier
@@ -390,6 +399,28 @@ def make_suite(pg):
             self.actor, self.roles = 100, ['GESTOR']
             identifier = self.fixture()
             self.assertEqual(self.request(identifier).status_code, 403)
+            self.assertEqual(self.snapshot(identifier), {'estado':'APROBADA','eventos':1})
+
+        def test_assigned_active_manager_is_required_to_start(self):
+            unassigned = self.fixture(gestor=None)
+            self.assertEqual(self.request(unassigned).status_code, 409)
+            self.assertEqual(self.snapshot(unassigned), {'estado':'APROBADA','eventos':1})
+
+            assigned_to_other = self.fixture(gestor=101)
+            self.actor, self.roles = 103, ['GESTOR']
+            self.assertEqual(self.request(assigned_to_other).status_code, 403)
+            self.assertEqual(self.snapshot(assigned_to_other), {'estado':'APROBADA','eventos':1})
+
+        def test_generic_status_function_cannot_bypass_restricted_start(self):
+            identifier = self.fixture()
+            result = json.loads(pg.sql(f"""
+                SELECT public.fn_actualizar_estado_practica(
+                    {identifier}, 101,
+                    (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'),
+                    NULL
+                )
+            """).stdout)
+            self.assertEqual(result, {'error': 'INICIO_RESTRINGIDO_REQUERIDO'})
             self.assertEqual(self.snapshot(identifier), {'estado':'APROBADA','eventos':1})
 
         def test_invalid_transitions_history_and_repetition(self):

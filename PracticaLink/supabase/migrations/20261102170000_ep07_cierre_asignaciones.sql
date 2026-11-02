@@ -34,6 +34,7 @@ REVOKE ALL ON TABLE public.recordatorio_cierre_practica
 CREATE OR REPLACE FUNCTION public.fn_ep07_exigir_cierre_registrado()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $$
 BEGIN
@@ -95,6 +96,9 @@ BEGIN
     END IF;
     IF v_nombre_estado = 'FINALIZADA' THEN
         RETURN pg_catalog.jsonb_build_object('error', 'CIERRE_MANUAL_REQUERIDO');
+    END IF;
+    IF v_nombre_estado = 'EN_CURSO' THEN
+        RETURN pg_catalog.jsonb_build_object('error', 'INICIO_RESTRINGIDO_REQUERIDO');
     END IF;
 
     IF v_estado_actual <> p_id_estado THEN

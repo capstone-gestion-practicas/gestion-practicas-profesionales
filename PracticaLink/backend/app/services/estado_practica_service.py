@@ -20,6 +20,10 @@ class PracticaNoObservadaError(Exception):
 class CierreManualRequeridoError(Exception):
     pass
 
+
+class InicioRestringidoRequeridoError(Exception):
+    pass
+
 def obtener_practica_estudiante(db: Session, id_usuario: int) -> dict | None:
     return db.execute(text("""
         SELECT public.fn_practica_estudiante(:id_usuario)
@@ -174,6 +178,8 @@ def actualizar_estado_practica(
         raise EstadoPracticaNoDisponibleError
     if error == "CIERRE_MANUAL_REQUERIDO":
         raise CierreManualRequeridoError
+    if error == "INICIO_RESTRINGIDO_REQUERIDO":
+        raise InicioRestringidoRequeridoError
     db.commit()
     return resultado
 

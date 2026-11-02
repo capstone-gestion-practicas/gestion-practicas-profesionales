@@ -256,8 +256,11 @@ explícita y revisión humana específica del despliegue:
 2. Verificar facultades del instalador para roles, políticas, esquema privado y
    transferencia de propiedad. Los scripts fallan ante objetos ya existentes;
    no son una migración idempotente ni deben sobrescribir objetos sin revisión.
-3. Revisar orden de instalación: esquema base para una base vacía; bootstrap
-   `ep04-01-permisos-iniciar-practica.sql`; función `ep04-fn-iniciar-practica.sql`.
+3. Revisar orden de instalación: esquema base para una base vacía; migración EP07
+   `20261102170000_ep07_cierre_asignaciones.sql` para añadir `practica.id_gestor`;
+   bootstrap `ep04-01-permisos-iniciar-practica.sql`; función
+   `ep04-fn-iniciar-practica.sql`. En un esquema existente, revisar y aplicar solo
+   la migración versionada; no ejecutar `schema.sql` como actualización.
    No ejecutar `schema.sql` sobre la base existente como actualización.
 4. Mantener propietario técnico NOLOGIN, sin privilegios administrativos ni
    BYPASSRLS, no propietario de tablas, con los permisos mínimos y políticas RLS
@@ -277,6 +280,10 @@ explícita y revisión humana específica del despliegue:
 Sin configuración restringida, HU04.2 devuelve 503; los endpoints previos siguen
 usando su conexión existente. La identidad del actor SQL es una afirmación del
 backend de confianza obtenida del JWT, no una validación JWT dentro de PostgreSQL.
+El inicio requiere un gestor activo asignado a la práctica. GESTOR solo puede
+iniciar su propia asignación; ADMINISTRADOR puede iniciar la práctica si la
+asignación activa existe. La suite de integración debe cubrir práctica sin gestor,
+gestor distinto y administrador.
 
 ## Evidencias y decisiones pendientes para cierre académico
 

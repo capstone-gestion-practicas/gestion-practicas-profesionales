@@ -122,6 +122,7 @@ class InicioPracticaTests(unittest.TestCase):
 
     def test_business_errors_rollback_without_commit(self):
         errors = {'USUARIO_NO_AUTORIZADO': 403, 'PRACTICA_NO_ENCONTRADA': 404,
+                  'GESTOR_NO_ASIGNADO': 409,
                   'ESTADO_FINAL': 409, 'TRANSICION_NO_PERMITIDA': 409,
                   'HISTORIAL_INCONSISTENTE': 409, 'OBSERVACION_INVALIDA': 422,
                   'ESTADO_DESTINO_NO_VALIDO': 500, 'UNKNOWN_INTERNAL_SECRET': 500}

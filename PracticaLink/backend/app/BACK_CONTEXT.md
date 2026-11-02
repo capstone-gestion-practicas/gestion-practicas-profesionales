@@ -716,10 +716,29 @@ no ofrece selección de resultado.
 El recordatorio se genera una sola vez cuando han transcurrido 24 horas desde la
 fecha de término, mientras la práctica siga EN_CURSO. Se guarda en la bandeja de
 notificaciones del gestor asignado y de los administradores activos y se intenta
-enviar push con el servicio FCM existente. No hay un scheduler configurado por la
-migración: el despliegue debe configurar `EP07_REMINDER_TASK_TOKEN` como secreto
-del backend y programar un POST periódico a
-`/practicas/tareas/recordatorios-cierre`, enviando el mismo secreto en el header
-`X-Task-Token`. La llamada es idempotente por práctica; puede ejecutarse, por
-ejemplo, cada 15 minutos. Sin token la ruta devuelve 503. La ejecución periódica,
-la migración y el envío real de push no se verifican en pruebas unitarias.
+enviar push con el servicio FCM existente. Para el despliegue previsto en Render,
+crear un **Cron Job** separado con programación `*/15 * * * *`, URL base del
+backend en `API_BASE_URL` y `EP07_REMINDER_TASK_TOKEN` como variable secreta.
+Render interpreta la expresión de cron en UTC.
+Comando del job:
+
+```sh
+curl --fail --silent --show-error --request POST \
+  "$API_BASE_URL/practicas/tareas/recordatorios-cierre" \
+  --header "X-Task-Token: $EP07_REMINDER_TASK_TOKEN"
+```
+
+El endpoint valida el secreto con comparación constante. Sin configuración
+devuelve 503 y ante fallo HTTP el job debe finalizar con error. No hay un
+servicio Render configurado desde el repositorio: crear el Cron Job y cargar
+ambas variables sigue siendo una operación de despliegue pendiente. La llamada
+es idempotente por práctica. La ejecución periódica, la migración y el envío real
+de push no se verifican en pruebas unitarias.
+
+El inicio `PATCH /practicas/{id_practica}/estado` requiere ahora un gestor activo
+asignado. Un GESTOR solo puede iniciar las prácticas asignadas a su usuario;
+ADMINISTRADOR puede iniciar si la práctica tiene un GESTOR activo asignado.
+La función SQL `practicas_privadas.fn_iniciar_practica` verifica esta regla bajo
+la sesión restringida y devuelve 409 si falta la asignación. El bootstrap EP04
+también necesita permiso de lectura de la columna `practica.id_gestor`. El cambio
+genérico de estado no permite iniciar EN_CURSO y no puede eludir ese flujo.

@@ -14,6 +14,7 @@
 -- TRANSICION_NO_PERMITIDA     -> HTTP 409 (incluye EN_CURSO -> EN_CURSO).
 -- HISTORIAL_INCONSISTENTE     -> HTTP 409 (ausente, diferente o fecha futura).
 -- ESTADO_DESTINO_NO_VALIDO    -> HTTP 500 (EN_CURSO ausente/inactivo/final).
+-- GESTOR_NO_ASIGNADO          -> HTTP 409 (la practica requiere un gestor activo asignado).
 -- OBSERVACION_INVALIDA        -> HTTP 422 (mas de 500 caracteres).
 -- INICIO_NO_CONFIRMADO (excepcion) -> HTTP 500 y rollback obligatorio.
 -- Excepciones SQL inesperadas: propagar; FastAPI debe hacer rollback, sin
@@ -118,6 +119,8 @@ DECLARE
     v_autorizado BOOLEAN := FALSE;
     v_estado RECORD;
     v_destino_valido BOOLEAN := FALSE;
+    v_id_gestor BIGINT;
+    v_es_administrador BOOLEAN := FALSE;
 BEGIN
     IF NOT EXISTS (
         SELECT 1
@@ -160,19 +163,38 @@ BEGIN
         IF v_rol.activo AND v_rol.nombre IN ('GESTOR', 'ADMINISTRADOR') THEN
             v_autorizado := TRUE;
         END IF;
+        IF v_rol.activo AND v_rol.nombre = 'ADMINISTRADOR' THEN
+            v_es_administrador := TRUE;
+        END IF;
     END LOOP;
     IF NOT v_autorizado THEN
         RETURN pg_catalog.jsonb_build_object('error', 'USUARIO_NO_AUTORIZADO');
     END IF;
 
-    SELECT p.id_estado_actual
-    INTO v_id_estado_anterior
+    SELECT p.id_estado_actual, p.id_gestor
+    INTO v_id_estado_anterior, v_id_gestor
     FROM public.practica p
     WHERE p.id_practica = p_id_practica
     FOR UPDATE OF p;
 
     IF NOT FOUND THEN
         RETURN pg_catalog.jsonb_build_object('error', 'PRACTICA_NO_ENCONTRADA');
+    END IF;
+
+    IF v_id_gestor IS NULL OR NOT EXISTS (
+        SELECT 1
+        FROM public.usuario u
+        JOIN public.usuario_rol ur ON ur.id_usuario = u.id_usuario
+        JOIN public.rol r ON r.id_rol = ur.id_rol
+        WHERE u.id_usuario = v_id_gestor
+          AND u.activo
+          AND r.activo
+          AND r.nombre = 'GESTOR'
+    ) THEN
+        RETURN pg_catalog.jsonb_build_object('error', 'GESTOR_NO_ASIGNADO');
+    END IF;
+    IF NOT v_es_administrador AND v_id_gestor <> p_id_usuario THEN
+        RETURN pg_catalog.jsonb_build_object('error', 'USUARIO_NO_AUTORIZADO');
     END IF;
 
     -- Bloquear ambas filas en orden estable, sin filtrar activo/es_final:

@@ -58,6 +58,7 @@ from app.services.correo_service import (
 from app.services.estado_practica_service import (
     CierreManualRequeridoError,
     EstadoPracticaNoDisponibleError,
+    InicioRestringidoRequeridoError,
     PracticaEstadoNoEncontradaError,
     PracticaNoObservadaError,
     actualizar_estado_practica,
@@ -99,6 +100,7 @@ def iniciar_estado_practica(
         errores = {
             "USUARIO_NO_AUTORIZADO": (403, "No tiene permisos para iniciar la práctica"),
             "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
+            "GESTOR_NO_ASIGNADO": (409, "Asigna un gestor activo antes de iniciar la práctica"),
             "ESTADO_FINAL": (409, "La práctica está en un estado final"),
             "TRANSICION_NO_PERMITIDA": (409, "La transición de estado no está permitida"),
             "HISTORIAL_INCONSISTENTE": (409, "El historial de estados es inconsistente"),
@@ -531,6 +533,12 @@ def actualizar_estado_general(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Use la acción de cierre manual para finalizar la práctica",
+        ) from error
+    except InicioRestringidoRequeridoError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Use el flujo de inicio de práctica con un gestor asignado",
         ) from error
 
 

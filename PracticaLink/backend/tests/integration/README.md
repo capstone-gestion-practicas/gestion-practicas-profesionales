@@ -5,6 +5,10 @@ Suite optativa `unittest` para el endpoint real
 Usa FastAPI/TestClient, SQLAlchemy y PostgreSQL reales; solo simula identidad,
 contexto de permisos y la dependencia principal de lectura. No simula la sesión
 restringida, la función PostgreSQL, commit ni rollback.
+La suite verifica también que la práctica tenga un GESTOR activo asignado, y que
+un gestor distinto no pueda iniciarla; el administrador conserva el permiso de
+inicio si existe una asignación activa. También comprueba que la función genérica
+de cambio de estado no pueda eludir el flujo restringido para llegar a EN_CURSO.
 
 ## Requisitos de un checkout limpio
 
@@ -50,8 +54,9 @@ Comprueba colisiones y verifica la propiedad de cada objeto tras crearlo, antes
 de usarlo. Aplica, en este orden, exclusivamente dentro del contenedor:
 
 1. `scripts/BD/schema.sql`.
-2. `scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql`.
-3. `scripts/BD/fixes/ep04-fn-iniciar-practica.sql`.
+2. `PracticaLink/supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql`.
+3. `scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql`.
+4. `scripts/BD/fixes/ep04-fn-iniciar-practica.sql`.
 
 Genera contraseñas sintéticas en memoria y un login miembro únicamente de
 `pl_ep04_executor`. La conexión principal apunta a un destino sintético sin uso

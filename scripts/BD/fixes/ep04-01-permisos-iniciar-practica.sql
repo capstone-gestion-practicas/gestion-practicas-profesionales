@@ -27,7 +27,7 @@ GRANT SELECT(id_usuario, activo) ON public.usuario TO pl_ep04_owner;
 GRANT SELECT(id_usuario, id_rol) ON public.usuario_rol TO pl_ep04_owner;
 GRANT SELECT(id_rol, nombre, activo) ON public.rol TO pl_ep04_owner;
 GRANT SELECT(id_estado, nombre, activo, es_final) ON public.estado_practica TO pl_ep04_owner;
-GRANT SELECT(id_practica, id_estado_actual) ON public.practica TO pl_ep04_owner;
+GRANT SELECT(id_practica, id_estado_actual, id_gestor) ON public.practica TO pl_ep04_owner;
 GRANT SELECT(id_historial, id_practica, id_estado, fecha_cambio)
     ON public.historial_estado TO pl_ep04_owner;
 
@@ -94,7 +94,7 @@ BEGIN
             WHEN 'estado_practica' THEN
                 v_select := ARRAY['id_estado','nombre','activo','es_final']; v_update := ARRAY['id_estado']; v_insert := ARRAY[]::TEXT[];
             WHEN 'practica' THEN
-                v_select := ARRAY['id_practica','id_estado_actual']; v_update := ARRAY['id_estado_actual','fecha_actualizacion']; v_insert := ARRAY[]::TEXT[];
+                v_select := ARRAY['id_practica','id_estado_actual','id_gestor']; v_update := ARRAY['id_estado_actual','fecha_actualizacion']; v_insert := ARRAY[]::TEXT[];
             WHEN 'historial_estado' THEN
                 v_select := ARRAY['id_historial','id_practica','id_estado','fecha_cambio']; v_update := ARRAY[]::TEXT[];
                 v_insert := ARRAY['id_practica','id_estado','id_usuario','fecha_cambio','observacion'];
