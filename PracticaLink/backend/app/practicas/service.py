@@ -121,6 +121,7 @@ def obtener_practica_del_estudiante(
                 p.fecha_inicio,
                 p.fecha_termino,
                 p.horas,
+                p.horas_semanales,
                 p.cargo_funcion,
                 p.descripcion,
                 ep.id_estado,
@@ -169,6 +170,7 @@ def obtener_practica_del_estudiante(
         "fecha_inicio": practica["fecha_inicio"],
         "fecha_termino": practica["fecha_termino"],
         "horas": practica["horas"],
+        "horas_semanales": practica["horas_semanales"],
         "cargo_funcion": practica["cargo_funcion"],
         "descripcion": practica["descripcion"],
     }

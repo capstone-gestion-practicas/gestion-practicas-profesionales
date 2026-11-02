@@ -3,11 +3,7 @@ import json
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.security import (
-    create_access_token,
-    hash_password,
-    verify_password
-)
+from app.core.security import create_access_token, hash_password, verify_password
 
 
 def registrar_usuario(
@@ -15,87 +11,46 @@ def registrar_usuario(
     nombre: str,
     apellido: str,
     correo: str,
-    password: str
+    password: str,
 ):
-    correo_normalizado = correo.strip().lower()
-    resultado = db.execute(
-        text("""
-            SELECT fn_registrar_usuario_estudiante(
-                CAST(:datos AS JSONB),
-                :password_hash
-            )
-        """),
-        {
-            "datos": json.dumps({
-                "nombre": nombre.strip(),
-                "apellido": apellido.strip(),
-                "correo": correo_normalizado,
-            }),
-            "password_hash": hash_password(password),
-        },
-    ).scalar_one()
-
+    datos = {
+        "nombre": nombre,
+        "apellido": apellido,
+        "correo": correo,
+    }
+    resultado = db.execute(text("""
+        SELECT public.fn_registrar_usuario_estudiante(
+            CAST(:datos AS JSONB), :password_hash
+        )
+    """), {
+        "datos": json.dumps(datos, ensure_ascii=False),
+        "password_hash": hash_password(password),
+    }).scalar_one()
     if resultado.get("error") == "CORREO_EXISTENTE":
         db.rollback()
         return None
-
-    if resultado.get("error") == "ROL_ESTUDIANTE_NO_CONFIGURADO":
+    if resultado.get("error"):
         db.rollback()
-        raise RuntimeError("El rol ESTUDIANTE no está configurado")
-
+        raise RuntimeError("No fue posible registrar el usuario")
     db.commit()
     return resultado
 
 
-def autenticar_usuario(
-    db: Session,
-    correo: str,
-    password: str
-):
-    query = text("""
-        SELECT
-            id_usuario,
-            correo,
-            password_hash,
-            activo
-        FROM usuario
-        WHERE correo = :correo
-        LIMIT 1
-    """)
-
-    usuario = db.execute(
-        query,
-        {"correo": correo.strip().lower()}
-    ).mappings().first()
-
-    if usuario is None:
+def autenticar_usuario(db: Session, correo: str, password: str):
+    usuario = db.execute(text("""
+        SELECT public.fn_obtener_datos_login(:correo)
+    """), {"correo": correo.strip().lower()}).scalar_one_or_none()
+    if not usuario or not usuario.get("activo"):
         return None
-
-    if not usuario["activo"]:
-        return None
-
     if not verify_password(password, usuario["password_hash"]):
         return None
-
-    access_token = create_access_token(
-        usuario["id_usuario"]
-    )
-
     return {
-        "access_token": access_token,
-        "token_type": "bearer"
+        "access_token": create_access_token(usuario["id_usuario"]),
+        "token_type": "bearer",
     }
 
 
-def obtener_contexto_usuario(
-    db: Session,
-    id_usuario: int
-):
-    query = text("""
-        SELECT fn_contexto_usuario(:id_usuario)
-    """)
-
-    return db.execute(
-        query,
-        {"id_usuario": id_usuario}
-    ).scalar_one_or_none()
+def obtener_contexto_usuario(db: Session, id_usuario: int):
+    return db.execute(text("""
+        SELECT public.fn_contexto_usuario(:id_usuario)
+    """), {"id_usuario": id_usuario}).scalar_one_or_none()

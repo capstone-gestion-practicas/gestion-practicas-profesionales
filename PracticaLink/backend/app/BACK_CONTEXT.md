@@ -4,7 +4,7 @@ Este archivo entrega contexto técnico y funcional a desarrolladores y asistente
 
 ## Propósito
 
-El backend de PracticaLink expone una API para autenticar usuarios y consultar su contexto dentro del proceso de práctica profesional. Actualmente contiene la base del módulo de autenticación y se conecta a PostgreSQL alojado en Supabase.
+El backend de PracticaLink expone una API modular para autenticación, prácticas, revisiones, seguimientos, incidencias y notificaciones. FastAPI centraliza las rutas y los módulos organizan esquemas y servicios por responsabilidad. La persistencia usa PostgreSQL alojado en Supabase.
 
 ## Tecnologías y reglas generales
 
@@ -25,16 +25,17 @@ No incorporar credenciales, URL reales de base de datos, contraseñas ni claves 
 app/
 ├── api/
 │   └── routes/
-│       └── auth.py
+│       ├── incidencias.py
+│       └── notificaciones.py
+├── auth/
+├── empresas/
 ├── core/
-│   ├── config.py
-│   ├── database.py
-│   ├── permissions.py
-│   └── security.py
+├── estudiantes/
+├── practicas/
+├── revisiones/
 ├── schemas/
-│   └── auth.py
 ├── services/
-│   └── auth_service.py
+└── usuarios/
 ├── BACK_CONTEXT.md
 └── main.py
 ```
@@ -43,10 +44,15 @@ app/
 
 `main.py` crea la instancia de FastAPI, configura CORS, registra las rutas de autenticación y expone comprobaciones de estado.
 
-Orígenes locales permitidos actualmente:
+Orígenes locales y de la aplicación Android permitidos actualmente:
 
 - `http://localhost:4200`
 - `http://127.0.0.1:4200`
+- `http://localhost:8100`
+- `http://127.0.0.1:8100`
+- `http://localhost`
+- `https://localhost`
+- `capacitor://localhost`
 
 Ejecución local desde `PracticaLink/backend`:
 
@@ -103,6 +109,11 @@ Errores de negocio: 403/404/409/422; catálogo inválido o fallo inesperado: 500
 conexión restringida ausente o indisponible: 503. No se exponen errores SQL.
 La integración desde FastAPI con PostgreSQL y el despliegue siguen pendientes;
 las pruebas backend con mocks no acreditan privilegios ni atomicidad reales.
+
+La actualización general de estado de una práctica se expone en
+`PATCH /practicas/{id_practica}/estado/actualizacion`. Se mantiene
+`PATCH /practicas/{id_practica}/estado` exclusivamente para el inicio restringido
+de práctica (HU04.2), evitando colisiones entre contratos.
 
 ### Convención para inserciones
 

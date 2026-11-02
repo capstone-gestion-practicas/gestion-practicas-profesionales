@@ -74,6 +74,7 @@ class PracticaActualContext(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = None
+    horas_semanales: int | None = None
     cargo_funcion: str | None = None
 
 

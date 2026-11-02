@@ -36,6 +36,7 @@ class PracticaCreate(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = Field(default=None, gt=0)
+    horas_semanales: int | None = Field(default=None, ge=1, le=45)
     cargo_funcion: str | None = Field(default=None, max_length=150)
     descripcion: str | None = None
 
@@ -85,8 +86,97 @@ class PracticaDetalleResponse(BaseModel):
     fecha_inicio: date | None = None
     fecha_termino: date | None = None
     horas: int | None = None
+    horas_semanales: int | None = None
     cargo_funcion: str | None = None
     descripcion: str | None = None
+
+
+class EstadoPracticaDetalle(EstadoPracticaLectura):
+    descripcion: str | None = None
+
+
+class PracticaEstadoResumen(BaseModel):
+    id_practica: int
+    fecha_registro: datetime
+    fecha_actualizacion: datetime
+    id_estado: int
+    estado: str
+    descripcion_estado: str | None = None
+    es_final: bool
+    estudiante: str
+    rut_estudiante: str
+    centro_practica: str
+    fecha_inicio: date | None = None
+    fecha_termino: date | None = None
+    horas_semanales: int | None = None
+
+
+class EstudianteSinPractica(BaseModel):
+    id_usuario: int
+    nombre: str
+    apellido: str
+    tiene_perfil: bool
+    tiene_practica: bool
+    recordatorio_enviado_hoy: bool
+
+
+class RecordatorioEstudianteResponse(BaseModel):
+    id_usuario: int
+    mensaje: str
+    correo_enviado: bool
+    recordatorio_enviado_hoy: bool
+
+
+class ActualizarEstadoPracticaRequest(BaseModel):
+    id_estado: int = Field(gt=0)
+    observacion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("observacion", mode="before")
+    @classmethod
+    def limpiar_observacion(cls, valor: str | None) -> str | None:
+        if valor is None:
+            return None
+        limpio = valor.strip()
+        return limpio or None
+
+
+class ResponderObservacionPracticaRequest(BaseModel):
+    respuesta: str = Field(min_length=1, max_length=500)
+
+    @field_validator("respuesta", mode="before")
+    @classmethod
+    def limpiar_respuesta(cls, valor: str) -> str:
+        if not isinstance(valor, str):
+            raise ValueError("Debe ingresar una respuesta")
+        limpio = valor.strip()
+        if not limpio:
+            raise ValueError("Debe ingresar una respuesta")
+        return limpio
+
+
+class ActualizarEstadoPracticaResponse(BaseModel):
+    id_practica: int
+    id_estado: int
+    estado: str
+    mensaje: str
+
+
+class HistorialEstadoPractica(BaseModel):
+    id_historial: int
+    id_practica: int
+    id_estado: int
+    estado: str
+    es_final: bool
+    id_usuario: int
+    usuario: str
+    fecha_cambio: datetime
+    observacion: str | None = None
+
+
+class EstadoPracticaActualResponse(BaseModel):
+    id_practica: int
+    fecha_actualizacion: datetime
+    estado: EstadoPracticaDetalle
 
 
 class EstudiantePracticaResumen(BaseModel):
