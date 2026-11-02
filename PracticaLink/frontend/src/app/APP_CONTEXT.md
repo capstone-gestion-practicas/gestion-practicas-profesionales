@@ -488,8 +488,9 @@ No se ejecutó E2E contra FastAPI/PostgreSQL en esta tarea. Karma requirió perm
 para abrir el puerto local 9876 fuera del sandbox. Persisten advertencias de
 presupuesto: bundle inicial 857,31 kB; CSS detalle 5,27 kB y home 6,37 kB.
 Persisten los límites de precisión BIGINT/number, desplazamiento de offset por
-inserciones concurrentes y falta de idempotencia de escrituras.
-HU016/HU017 permanecen fuera de alcance.
+inserciones concurrentes y falta de idempotencia de escrituras. Esta referencia
+a HU016/HU017 fuera de alcance corresponde al cierre histórico de HU015; ambas
+historias fueron implementadas y validadas posteriormente.
 
 ### EP06 / HU016: gestión Angular e historial completo (vigente)
 
@@ -548,5 +549,7 @@ fuera del sandbox para el puerto 9876. Se corrigió un literal tipado del fixtur
 durante compilación de tests, sin cambiar contratos.
 Advertencias de presupuesto existentes: bundle inicial 857,33 kB,
 CSS detalle 5,27 kB y home 6,37 kB. No se instalaron dependencias.
-HTTP se simula mediante mocks/HttpTestingController: E2E HU016 queda pendiente.
-Persisten límites de idempotencia y offset. HU017 permanece fuera de alcance.
+HTTP se simula mediante mocks/HttpTestingController en esta etapa de integración
+Angular. El E2E real de HU016 fue ejecutado posteriormente con resultado 91/91.
+Persisten límites de idempotencia y offset. HU017 fue implementada y validada
+posteriormente, incluido su E2E real 84/84.

@@ -754,7 +754,8 @@ su comportamiento existente. Rollback se intenta sin sustituir el error original
 Una colección vacía solo representa una consulta exitosa, nunca un error.
 
 Ver tests/integration/HU015_HTTP.md para reproducción del GET y regresión POST,
-EP04 y EP05. La integración Angular de la consulta sigue pendiente.
+EP04 y EP05. Esta referencia corresponde al cierre de la etapa backend de HU015;
+la integración Angular y su validación E2E fueron completadas posteriormente.
 
 ### EP06 / HU016: gestión HTTP de estados e historial (vigente)
 
@@ -783,9 +784,10 @@ Cada evento expone id_historial, id_usuario, estado_anterior, estado_nuevo,
 fecha y comentario. No se agregan datos personales.
 
 Ver tests/integration/HU016_HTTP.md para contratos, errores, ejemplos,
-reproducción, resultados y límites. Validación: backend 304/304 con mocks,
-SQL PostgreSQL 84/84 y HTTP + PostgreSQL 35/35 en Docker exclusivo.
-Angular HU016 y E2E de navegador permanecen pendientes.
+reproducción, resultados y límites. Validación de la etapa backend: backend
+304/304 con mocks, SQL PostgreSQL 84/84 y HTTP + PostgreSQL 35/35 en Docker
+exclusivo. La integración Angular de HU016 fue completada posteriormente y el
+flujo E2E real quedó validado 91/91.
 
 ### EP06 / HU017: resumen HTTP de prácticas con incidencias pendientes (vigente)
 
