@@ -60,6 +60,10 @@ class OfertaGuardadaResponse(BaseModel):
     mensaje: str
 
 
+class CuentaEmpresaResponse(BaseModel):
+    rut_empresa: str
+
+
 class PracticaEmpresaEstudiante(BaseModel):
     nombre: str
     apellido: str

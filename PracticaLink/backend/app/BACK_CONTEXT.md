@@ -299,6 +299,8 @@ Entre las tablas base se encuentran:
 La consulta `GET /empresas/consulta/{rut}` implementa una estrategia cache-aside:
 usa registros con menos de 30 días, consulta Chile RUT Empresa cuando no existen
 o están vencidos y conserva datos antiguos como respaldo si el proveedor falla.
+Se permite a `ESTUDIANTE`, `GESTOR`, `EMPRESA` y `ADMINISTRADOR`; las ofertas
+laborales usan esta consulta para validar el RUT y mostrar datos de la empresa.
 
 Las funciones de autenticación, contexto, perfil, registro y revisión están
 versionadas en `scripts/BD/schema.sql`.
@@ -777,6 +779,7 @@ Endpoints principales:
 | `POST /laboral/solicitudes-empresa` | Público | Registra una solicitud pendiente, sin crear una cuenta |
 | `GET /laboral/solicitudes-empresa` | `ADMINISTRADOR` | Lista solicitudes y estados |
 | `PATCH /laboral/solicitudes-empresa/{id}` | `ADMINISTRADOR` | Aprueba y crea la cuenta, o rechaza la solicitud |
+| `GET /laboral/empresa/cuenta` | `EMPRESA` | Obtiene el RUT de la cuenta autenticada para mostrar la empresa vinculada |
 | `GET /laboral/practicas` | `EMPRESA` | Consulta de prácticas asociadas al RUT empresarial, en solo lectura |
 | `GET /laboral/ofertas` | `ESTUDIANTE` | Catálogo de ofertas publicadas |
 | `GET /laboral/postulaciones/mias` | `ESTUDIANTE` | Postulaciones propias |
@@ -785,6 +788,13 @@ Endpoints principales:
 | `POST /laboral/ofertas/{id}/postulaciones` | `ESTUDIANTE` | Enviar una postulación |
 | `GET /laboral/ofertas/{id}/postulaciones`, `PATCH /laboral/postulaciones/{id}` | `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Revisar postulaciones y actualizar su estado |
 | `GET /laboral/postulaciones/{id}/historial` | `ESTUDIANTE`, `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Leer historial sujeto a autorización por usuario/RUT/rol |
+
+En la creación de ofertas, el backend valida el formato y dígito verificador
+del RUT. El frontend consulta los datos tributarios con
+`GET /empresas/consulta/{rut}` antes de habilitar el guardado. Para la ubicación,
+el navegador consulta Photon con datos de OpenStreetMap para sugerir calles;
+esta búsqueda ocurre directamente desde el frontend y el campo admite ingreso
+manual cuando el proveedor no está disponible.
 
 La migración `supabase/migrations/20261102180000_portal_laboral.sql`, posterior
 a `20261102170000_ep07_cierre_asignaciones.sql`, crea las

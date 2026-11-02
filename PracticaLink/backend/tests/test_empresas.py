@@ -306,8 +306,11 @@ class EmpresasRouteTests(EmpresasAisladasTests):
         self.contexto_mock.assert_called_with(db=self.db, id_usuario=55)
         return response
 
-    def test_student_admin_and_combined_roles_receive_200_from_cache(self):
-        for roles in (["ESTUDIANTE"], ["ADMINISTRADOR"], ["GESTOR", "ESTUDIANTE"]):
+    def test_student_company_manager_admin_and_combined_roles_receive_200_from_cache(self):
+        for roles in (
+            ["ESTUDIANTE"], ["EMPRESA"], ["GESTOR"], ["ADMINISTRADOR"],
+            ["GESTOR", "ESTUDIANTE"],
+        ):
             with self.subTest(roles=roles):
                 self.db.reset_mock()
                 self.contexto_mock.return_value = {"roles": roles}
@@ -324,8 +327,8 @@ class EmpresasRouteTests(EmpresasAisladasTests):
                 self.http_mock.assert_not_called()
                 self.assert_no_writes()
 
-    def test_gestor_or_missing_roles_receive_403_before_sql_or_http(self):
-        for contexto in ({"roles": ["GESTOR"]}, {"roles": []}, None):
+    def test_unrelated_or_missing_roles_receive_403_before_sql_or_http(self):
+        for contexto in ({"roles": ["OTRO"]}, {"roles": []}, None):
             with self.subTest(contexto=contexto):
                 self.contexto_mock.return_value = contexto
                 response = self._get()

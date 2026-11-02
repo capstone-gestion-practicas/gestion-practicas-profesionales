@@ -13,6 +13,7 @@ from app.empresas.service import (
 )
 from app.laboral.schemas import (
     ActualizarPostulacionRequest,
+    CuentaEmpresaResponse,
     HistorialPostulacionResponse,
     OfertaGuardadaResponse,
     OfertaLaboralRequest,
@@ -39,6 +40,7 @@ from app.laboral.service import (
     listar_postulaciones,
     listar_practicas_empresa,
     listar_solicitudes_empresa,
+    obtener_cuenta_empresa as consultar_cuenta_empresa,
     obtener_oferta,
     postular,
     resolver_solicitud_empresa,
@@ -166,6 +168,21 @@ def obtener_practicas_empresa(
 ):
     try:
         return listar_practicas_empresa(db, id_usuario)
+    except LaboralError as error:
+        raise _http_error(error) from error
+
+
+@router.get(
+    "/empresa/cuenta",
+    response_model=CuentaEmpresaResponse,
+    dependencies=[Depends(require_roles("EMPRESA"))],
+)
+def obtener_cuenta_empresa_actual(
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        return consultar_cuenta_empresa(db, id_usuario)
     except LaboralError as error:
         raise _http_error(error) from error
 

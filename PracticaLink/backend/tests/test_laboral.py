@@ -90,6 +90,16 @@ class LaboralRoutesTests(unittest.TestCase):
         self.assertEqual(self.db.execute.call_args.args[1], {"id_usuario": 23})
         self.assertIn("fn_laboral_practicas_empresa", str(self.db.execute.call_args.args[0]))
 
+    def test_company_account_rut_comes_from_authenticated_account(self):
+        self.contexto.return_value = {"roles": ["EMPRESA"]}
+        self.db.execute.return_value.scalar_one_or_none.return_value = "76.123.456-0"
+
+        response = self.client.get("/laboral/empresa/cuenta")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"rut_empresa": "76.123.456-0"})
+        self.assertEqual(self.db.execute.call_args.args[1], {"id_usuario": 23})
+
     def test_student_cannot_read_company_practice_list(self):
         response = self.client.get("/laboral/practicas")
 
