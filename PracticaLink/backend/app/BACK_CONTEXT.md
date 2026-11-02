@@ -4,7 +4,7 @@ Este archivo entrega contexto técnico y funcional a desarrolladores y asistente
 
 ## Propósito
 
-El backend de PracticaLink expone una API modular para autenticación, prácticas, revisiones, seguimientos, incidencias y notificaciones. FastAPI centraliza las rutas y los módulos organizan esquemas y servicios por responsabilidad. La persistencia usa PostgreSQL alojado en Supabase.
+El backend de PracticaLink expone una API modular para autenticación, prácticas, revisiones, seguimientos, incidencias, notificaciones y el portal laboral. FastAPI centraliza las rutas y los módulos organizan esquemas y servicios por responsabilidad. La persistencia usa PostgreSQL alojado en Supabase.
 
 ## Tecnologías y reglas generales
 
@@ -749,3 +749,48 @@ La función SQL `practicas_privadas.fn_iniciar_practica` verifica esta regla baj
 la sesión restringida y devuelve 409 si falta la asignación. El bootstrap EP04
 también necesita permiso de lectura de la columna `practica.id_gestor`. El cambio
 genérico de estado no permite iniciar EN_CURSO y no puede eludir ese flujo.
+
+## Portal laboral
+
+El módulo `app/laboral` expone las operaciones laborales; las rutas validan roles,
+los servicios llaman funciones PostgreSQL con el identificador autenticado y las
+funciones limitan las prácticas, ofertas y postulaciones al estudiante, RUT o
+rol de gestión que corresponda. El rol `EMPRESA` es exclusivo y sus cuentas se
+crean desde la gestión administrativa de usuarios con un RUT único.
+
+Las solicitudes de cuenta empresarial son públicas y no crean usuarios al
+recibirse. `POST /laboral/solicitudes-empresa` valida los datos, normaliza el RUT
+y guarda la contraseña únicamente como hash mientras está pendiente. Al
+resolverla, una función PostgreSQL verifica al administrador, crea de manera
+atómica el usuario activo, el rol `EMPRESA`, la asociación al RUT y el registro
+empresarial si aún no existe; luego elimina el hash de la solicitud. El rechazo
+también elimina el hash. No existe envío automático de correo de resultado.
+`GET /laboral/solicitudes-empresa/consulta/{rut}` permite buscar los datos del
+RUT para el formulario, sin requerir sesión; si la fuente no encuentra el RUT o
+no está disponible, el solicitante puede ingresar la razón social manualmente.
+
+Endpoints principales:
+
+| Método y ruta | Roles | Operación |
+| --- | --- | --- |
+| `GET /laboral/solicitudes-empresa/consulta/{rut}` | Público | Consulta los datos tributarios para el formulario |
+| `POST /laboral/solicitudes-empresa` | Público | Registra una solicitud pendiente, sin crear una cuenta |
+| `GET /laboral/solicitudes-empresa` | `ADMINISTRADOR` | Lista solicitudes y estados |
+| `PATCH /laboral/solicitudes-empresa/{id}` | `ADMINISTRADOR` | Aprueba y crea la cuenta, o rechaza la solicitud |
+| `GET /laboral/practicas` | `EMPRESA` | Consulta de prácticas asociadas al RUT empresarial, en solo lectura |
+| `GET /laboral/ofertas` | `ESTUDIANTE` | Catálogo de ofertas publicadas |
+| `GET /laboral/postulaciones/mias` | `ESTUDIANTE` | Postulaciones propias |
+| `POST /laboral/ofertas`, `PUT /laboral/ofertas/{id}` | `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Crear o actualizar ofertas |
+| `GET /laboral/ofertas/gestion` | `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Listar ofertas propias o de gestión |
+| `POST /laboral/ofertas/{id}/postulaciones` | `ESTUDIANTE` | Enviar una postulación |
+| `GET /laboral/ofertas/{id}/postulaciones`, `PATCH /laboral/postulaciones/{id}` | `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Revisar postulaciones y actualizar su estado |
+| `GET /laboral/postulaciones/{id}/historial` | `ESTUDIANTE`, `EMPRESA`, `GESTOR`, `ADMINISTRADOR` | Leer historial sujeto a autorización por usuario/RUT/rol |
+
+La migración `supabase/migrations/20261102180000_portal_laboral.sql`, posterior
+a `20261102170000_ep07_cierre_asignaciones.sql`, crea las
+tablas, restricciones, RLS y funciones `fn_laboral_*`, y actualiza las funciones
+administrativas para incluir el RUT de la cuenta. Debe validarse y aplicarse en
+el entorno PostgreSQL autorizado antes del despliegue del backend. No se aplica
+desde pruebas unitarias; los tests con mocks no verifican RLS, permisos,
+atomicidad ni la integración real con PostgreSQL. La asignación empresarial de
+supervisores no está incluida.

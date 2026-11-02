@@ -421,6 +421,26 @@ class UsuariosSchemasTests(unittest.TestCase):
                 datos = UsuarioCrearRequest(**{**crear_payload(), "password": "x" * length})
                 self.assertEqual(len(datos.password), length)
 
+    def test_company_account_requires_exclusive_role_and_valid_rut(self):
+        payload = {
+            "nombre": "Cuenta",
+            "apellido": "Empresa",
+            "correo": "empresa@example.com",
+            "password": "synthetic-password",
+            "roles": ["empresa"],
+            "rut_empresa": "76123456-0",
+        }
+        datos = UsuarioCrearRequest(**payload)
+        self.assertEqual(datos.rut_empresa, "76.123.456-0")
+        for invalid in (
+            {**payload, "rut_empresa": None},
+            {**payload, "rut_empresa": "76.123.456-1"},
+            {**payload, "roles": ["EMPRESA", "GESTOR"]},
+        ):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValidationError):
+                    UsuarioCrearRequest(**invalid)
+
     def test_update_requires_name_surname_activation_and_roles(self):
         for campo in ("nombre", "apellido", "activo", "roles"):
             with self.subTest(campo=campo):
@@ -457,7 +477,11 @@ class UsuariosSchemasTests(unittest.TestCase):
         datos = UsuarioActualizarRequest(**{
             **actualizar_payload(), "correo": "other@example.org", "password": "synthetic-password",
         })
-        self.assertEqual(set(datos.model_dump()), {"nombre", "apellido", "activo", "roles"})
+        self.assertEqual(
+            set(datos.model_dump()),
+            {"nombre", "apellido", "activo", "roles", "rut_empresa"},
+        )
+        self.assertIsNone(datos.rut_empresa)
 
 
 if __name__ == "__main__":
