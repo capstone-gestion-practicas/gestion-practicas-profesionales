@@ -9,7 +9,7 @@ from app.usuarios.schemas import (
     UsuarioCrearRequest, UsuarioResponse,
 )
 from app.usuarios.service import (
-    AutogestionNoPermitidaError, RolesInvalidosError, UsuarioDuplicadoError,
+    AutogestionNoPermitidaError, RolesInvalidosError, RutEmpresaDuplicadoError, UsuarioDuplicadoError,
     UsuarioNoEncontradoError, actualizar_usuario, crear_usuario, listar_roles,
     listar_usuarios,
 )
@@ -44,6 +44,9 @@ def registrar_usuario(
     except RolesInvalidosError as error:
         db.rollback()
         raise HTTPException(status_code=400, detail="Debe seleccionar roles válidos") from error
+    except RutEmpresaDuplicadoError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="El RUT ya está asociado a otra cuenta empresa") from error
 
 
 @router.patch("/{id_usuario}", response_model=OperacionUsuarioResponse)
@@ -61,6 +64,9 @@ def modificar_usuario(
     except RolesInvalidosError as error:
         db.rollback()
         raise HTTPException(status_code=400, detail="Debe seleccionar roles válidos") from error
+    except RutEmpresaDuplicadoError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="El RUT ya está asociado a otra cuenta empresa") from error
     except AutogestionNoPermitidaError as error:
         db.rollback()
         raise HTTPException(

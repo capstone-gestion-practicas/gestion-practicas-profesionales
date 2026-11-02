@@ -235,7 +235,8 @@ CREATE TABLE cierre_practica (
 INSERT INTO rol (nombre, descripcion) VALUES
     ('ESTUDIANTE', 'Estudiante que realiza una práctica profesional'),
     ('GESTOR', 'Usuario encargado de gestionar y realizar seguimiento de prácticas'),
-    ('ADMINISTRADOR', 'Usuario con permisos de administración del sistema');
+    ('ADMINISTRADOR', 'Usuario con permisos de administración del sistema'),
+    ('EMPRESA', 'Cuenta empresarial para publicar ofertas y consultar prácticas asociadas');
 
 INSERT INTO estado_practica (nombre, descripcion, es_final) VALUES
     ('REGISTRADA', 'La práctica fue registrada por el estudiante', FALSE),

@@ -15,6 +15,10 @@ class RolesInvalidosError(Exception):
     pass
 
 
+class RutEmpresaDuplicadoError(Exception):
+    pass
+
+
 class UsuarioNoEncontradoError(Exception):
     pass
 
@@ -36,7 +40,7 @@ def listar_roles(db: Session) -> list[dict]:
 
 
 def crear_usuario(db: Session, id_admin: int, datos: UsuarioCrearRequest) -> dict:
-    campos = datos.model_dump(mode="json", exclude={"password"})
+    campos = datos.model_dump(mode="json", exclude={"password"}, exclude_none=True)
     resultado = db.execute(text("""
         SELECT public.fn_crear_usuario_admin(
             :id_admin, CAST(:datos AS JSONB), :password_hash
@@ -61,7 +65,7 @@ def actualizar_usuario(
     """), {
         "id_admin": id_admin,
         "id_usuario": id_usuario,
-        "datos": json.dumps(datos.model_dump(mode="json"), ensure_ascii=False),
+        "datos": json.dumps(datos.model_dump(mode="json", exclude_none=True), ensure_ascii=False),
     }).scalar_one()
     _validar_resultado_admin(resultado)
     db.commit()
@@ -72,8 +76,10 @@ def _validar_resultado_admin(resultado: dict) -> None:
     error = resultado.get("error")
     if error == "CORREO_EXISTENTE":
         raise UsuarioDuplicadoError
-    if error == "ROLES_INVALIDOS":
+    if error in {"ROLES_INVALIDOS", "SIN_ROLES"}:
         raise RolesInvalidosError
+    if error == "RUT_EMPRESA_EXISTENTE":
+        raise RutEmpresaDuplicadoError
     if error == "USUARIO_NO_ENCONTRADO":
         raise UsuarioNoEncontradoError
     if error == "AUTOGESTION_NO_PERMITIDA":
