@@ -1,9 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  from,
+  forkJoin,
+  map,
+  of,
+  switchMap,
+  takeUntil
+} from 'rxjs';
 import {
   IonButton,
   IonCard,
@@ -30,8 +41,27 @@ import {
   PostulacionEstudiante,
   PracticaEmpresa
 } from '../../core/models/laboral.models';
+import { EmpresaLookup } from '../../core/models/practica.models';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { formatearRut, rutValido } from '../../core/validators/rut.validator';
+
+interface PhotonFeature {
+  properties: {
+    street?: string;
+    housenumber?: string;
+    city?: string;
+    locality?: string;
+    district?: string;
+    state?: string;
+    country?: string;
+    countrycode?: string;
+  };
+}
+
+interface PhotonResponse {
+  features: PhotonFeature[];
+}
 
 @Component({
   selector: 'app-laboral',
@@ -44,11 +74,26 @@ import { AuthStore } from '../../core/store/auth.store';
   templateUrl: './laboral.html',
   styleUrl: './laboral.scss'
 })
-export class Laboral implements OnInit {
+export class Laboral implements OnDestroy, OnInit {
   private readonly laboralService = inject(LaboralService);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly consultasDireccion$ = new Subject<string>();
+  private readonly destruir$ = new Subject<void>();
 
+  readonly cargosPractica = [
+    'Administración',
+    'Analista de datos',
+    'Asistente contable',
+    'Atención al cliente',
+    'Desarrollo de software',
+    'Diseño gráfico',
+    'Gestión de personas',
+    'Marketing digital',
+    'Prevención de riesgos',
+    'Soporte TI',
+    'Ventas'
+  ];
   readonly modalidades: ModalidadOferta[] = ['PRESENCIAL', 'HIBRIDA', 'REMOTA'];
   readonly jornadas: JornadaOferta[] = ['COMPLETA', 'PARCIAL', 'PROYECTO', 'PRACTICA'];
   readonly estadosOferta: EstadoOferta[] = ['BORRADOR', 'PUBLICADA', 'CERRADA'];
@@ -77,9 +122,17 @@ export class Laboral implements OnInit {
   historialAbiertoId: number | null = null;
 
   rutEmpresa = '';
+  empresaConsultada: EmpresaLookup | null = null;
+  consultandoEmpresa = false;
+  errorConsultaEmpresa = '';
   cargo = '';
+  cargoSeleccionado = '';
+  cargoPersonalizado = '';
   descripcion = '';
   ubicacion = '';
+  sugerenciasUbicacion: string[] = [];
+  buscandoUbicacion = false;
+  errorUbicacion = '';
   modalidad: ModalidadOferta = 'PRESENCIAL';
   requisitos = '';
   jornada: JornadaOferta = 'COMPLETA';
@@ -87,6 +140,7 @@ export class Laboral implements OnInit {
   estado: EstadoOferta = 'PUBLICADA';
 
   ngOnInit(): void {
+    this.conectarBuscadorDirecciones();
     const contexto = this.authStore.obtenerContextoActual();
     if (!contexto) {
       this.router.navigate(['/login']);
@@ -106,6 +160,102 @@ export class Laboral implements OnInit {
     this.cargar();
   }
 
+  private conectarBuscadorDirecciones(): void {
+    this.consultasDireccion$.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      switchMap(texto => {
+        const consulta = texto.trim();
+        if (consulta.length < 4) {
+          this.buscandoUbicacion = false;
+          this.sugerenciasUbicacion = [];
+          this.errorUbicacion = '';
+          return of([] as string[]);
+        }
+
+        this.buscandoUbicacion = true;
+        this.errorUbicacion = '';
+        const url = new URL('https://photon.komoot.io/api/');
+        url.searchParams.set('q', consulta);
+        url.searchParams.set('limit', '8');
+        url.searchParams.set('lang', 'es');
+
+        return from(fetch(url, { headers: { Accept: 'application/json' } }).then(async respuesta => {
+          if (!respuesta.ok) throw new Error('No fue posible consultar OpenStreetMap.');
+          return await respuesta.json() as PhotonResponse;
+        })).pipe(
+          map(resultado => [...new Set(
+            (resultado.features ?? [])
+              .filter(lugar => lugar.properties.countrycode?.toUpperCase() === 'CL')
+              .map(lugar => this.formatearDireccion(lugar.properties))
+              .filter((direccion): direccion is string => direccion !== null)
+          )]),
+          catchError(() => {
+            this.errorUbicacion = 'No se pudieron cargar sugerencias. Puedes ingresar la calle manualmente.';
+            return of([] as string[]);
+          })
+        );
+      }),
+      takeUntil(this.destruir$)
+    ).subscribe(sugerencias => {
+      this.sugerenciasUbicacion = sugerencias;
+      this.buscandoUbicacion = false;
+    });
+  }
+
+  private formatearDireccion(
+    lugar: PhotonFeature['properties']
+  ): string | null {
+    if (!lugar.street) return null;
+    const calle = [lugar.street, lugar.housenumber].filter(Boolean).join(' ');
+    const comuna = lugar.city ?? lugar.locality ?? lugar.district;
+    return [calle, comuna, lugar.state]
+      .filter((parte, indice, partes) => !!parte && partes.indexOf(parte) === indice)
+      .join(', ');
+  }
+
+  actualizarUbicacion(evento: CustomEvent<{ value?: string | null }>): void {
+    this.ubicacion = evento.detail.value ?? '';
+    this.sugerenciasUbicacion = [];
+    this.errorUbicacion = '';
+    this.consultasDireccion$.next(this.ubicacion);
+  }
+
+  seleccionarUbicacion(direccion: string): void {
+    this.ubicacion = direccion;
+    this.sugerenciasUbicacion = [];
+    this.errorUbicacion = '';
+  }
+
+  consultarRutEmpresa(): void {
+    this.empresaConsultada = null;
+    this.errorConsultaEmpresa = '';
+    if (!rutValido(this.rutEmpresa)) {
+      this.errorConsultaEmpresa = 'Ingresa un RUT válido para consultar la empresa.';
+      return;
+    }
+
+    this.rutEmpresa = formatearRut(this.rutEmpresa);
+    this.consultandoEmpresa = true;
+    this.laboralService.consultarEmpresa(this.rutEmpresa).subscribe({
+      next: empresa => {
+        this.empresaConsultada = empresa;
+        this.consultandoEmpresa = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.consultandoEmpresa = false;
+        this.errorConsultaEmpresa = error.status === 404
+          ? 'No encontramos una empresa asociada a ese RUT.'
+          : this.detalleError(error, 'No fue posible validar el RUT de la empresa.');
+      }
+    });
+  }
+
+  seleccionarCargo(cargo: string): void {
+    this.cargoSeleccionado = cargo;
+    if (cargo !== 'OTRO') this.cargoPersonalizado = '';
+  }
+
   get ofertasFiltradas(): OfertaLaboral[] {
     const texto = this.busqueda.trim().toLocaleLowerCase();
     if (!texto) return this.ofertas;
@@ -113,6 +263,13 @@ export class Laboral implements OnInit {
       `${oferta.cargo} ${oferta.empresa} ${oferta.ubicacion}`
         .toLocaleLowerCase().includes(texto)
     );
+  }
+
+  get ubicacionEmpresaConsultada(): string {
+    if (!this.empresaConsultada) return '';
+    return [this.empresaConsultada.comuna, this.empresaConsultada.region]
+      .filter((parte): parte is string => !!parte)
+      .join(', ');
   }
 
   cargar(): void {
@@ -136,11 +293,14 @@ export class Laboral implements OnInit {
     if (this.vista === 'empresa') {
       forkJoin({
           ofertas: this.laboralService.listarOfertasGestion(),
-          practicas: this.laboralService.listarPracticasEmpresa()
+          practicas: this.laboralService.listarPracticasEmpresa(),
+          cuenta: this.laboralService.obtenerCuentaEmpresa()
       }).subscribe({
-        next: ({ ofertas, practicas }) => {
+        next: ({ ofertas, practicas, cuenta }) => {
           this.ofertas = ofertas;
           this.practicas = practicas;
+          this.rutEmpresa = cuenta.rut_empresa;
+          this.consultarRutEmpresa();
           this.cargando = false;
         },
         error: () => this.fallarCarga('No fue posible cargar el portal laboral.')
@@ -165,9 +325,18 @@ export class Laboral implements OnInit {
   editarOferta(oferta: OfertaLaboral): void {
     this.ofertaEditandoId = oferta.id_oferta;
     this.rutEmpresa = oferta.rut_empresa;
+    this.empresaConsultada = null;
+    this.errorConsultaEmpresa = '';
+    if (this.vista === 'gestion') this.consultarRutEmpresa();
     this.cargo = oferta.cargo;
+    this.cargoSeleccionado = this.cargosPractica.includes(oferta.cargo)
+      ? oferta.cargo
+      : 'OTRO';
+    this.cargoPersonalizado = this.cargoSeleccionado === 'OTRO' ? oferta.cargo : '';
     this.descripcion = oferta.descripcion;
     this.ubicacion = oferta.ubicacion;
+    this.consultasDireccion$.next('');
+    this.sugerenciasUbicacion = [];
     this.modalidad = oferta.modalidad;
     this.requisitos = oferta.requisitos;
     this.jornada = oferta.jornada;
@@ -183,15 +352,22 @@ export class Laboral implements OnInit {
       this.errorFormulario = 'Ingresa el RUT de la empresa asociada.';
       return;
     }
-    if (!this.cargo.trim() || !this.descripcion.trim()
+    if (!this.empresaConsultada) {
+      this.errorFormulario = 'Consulta y valida el RUT de la empresa antes de continuar.';
+      return;
+    }
+    const cargoFinal = this.cargoSeleccionado === 'OTRO'
+      ? this.cargoPersonalizado.trim()
+      : this.cargoSeleccionado.trim();
+    if (!cargoFinal || !this.descripcion.trim()
       || !this.ubicacion.trim() || !this.requisitos.trim()) {
       this.errorFormulario = 'Completa todos los campos obligatorios.';
       return;
     }
 
     const datos: OfertaLaboralInput = {
-      rut_empresa: this.vista === 'gestion' ? this.rutEmpresa.trim() : null,
-      cargo: this.cargo.trim(),
+      rut_empresa: this.vista === 'gestion' ? formatearRut(this.rutEmpresa) : null,
+      cargo: cargoFinal,
       descripcion: this.descripcion.trim(),
       ubicacion: this.ubicacion.trim(),
       modalidad: this.modalidad,
@@ -328,15 +504,30 @@ export class Laboral implements OnInit {
   private limpiarFormulario(): void {
     this.ofertaEditandoId = null;
     this.rutEmpresa = '';
+    this.empresaConsultada = null;
+    this.consultandoEmpresa = false;
+    this.errorConsultaEmpresa = '';
     this.cargo = '';
+    this.cargoSeleccionado = '';
+    this.cargoPersonalizado = '';
     this.descripcion = '';
     this.ubicacion = '';
+    this.consultasDireccion$.next('');
+    this.sugerenciasUbicacion = [];
+    this.buscandoUbicacion = false;
+    this.errorUbicacion = '';
     this.modalidad = 'PRESENCIAL';
     this.requisitos = '';
     this.jornada = 'COMPLETA';
     this.fechaCierre = '';
     this.estado = 'PUBLICADA';
     this.errorFormulario = '';
+  }
+
+  ngOnDestroy(): void {
+    this.destruir$.next();
+    this.destruir$.complete();
+    this.consultasDireccion$.complete();
   }
 
   private fallarCarga(mensaje: string): void {

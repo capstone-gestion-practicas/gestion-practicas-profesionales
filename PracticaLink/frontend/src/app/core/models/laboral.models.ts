@@ -39,6 +39,10 @@ export interface OfertaGuardada {
   mensaje: string;
 }
 
+export interface CuentaEmpresa {
+  rut_empresa: string;
+}
+
 export interface PracticaEmpresa {
   id_practica: number;
   rut_empresa: string;

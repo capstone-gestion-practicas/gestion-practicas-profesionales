@@ -135,7 +135,8 @@ Las cuentas de empresa no tienen registro público: un administrador las crea o
 edita desde `/usuarios` y les asocia un RUT único. Tras iniciar sesión, una
 cuenta con rol `EMPRESA` entra a `/portal-empresa`, donde administra ofertas de
 su RUT, consulta las postulaciones recibidas y ve en solo lectura las prácticas
-asociadas a ese RUT. La asignación de supervisores empresariales no forma parte
+asociadas a ese RUT. Su formulario muestra el RUT vinculado y los datos de
+empresa disponibles. La asignación de supervisores empresariales no forma parte
 de este flujo.
 
 La gestión administrativa de usuarios incluye la revisión de solicitudes
@@ -157,6 +158,12 @@ El backend expone los servicios de este flujo bajo `/laboral`:
 - `POST /laboral/ofertas/{id}/postulaciones`: postular como estudiante.
 - `GET /laboral/ofertas/gestion`, `GET /laboral/ofertas/{id}/postulaciones` y `PATCH /laboral/postulaciones/{id}`: gestión de ofertas y postulaciones.
 - `GET /laboral/postulaciones/{id}/historial`: historial accesible según estudiante, RUT asociado o rol de gestión.
+
+En las ofertas, el cargo se elige de una lista de funciones de práctica o se
+ingresa como otro cargo. El RUT se valida y consulta para mostrar los datos
+tributarios disponibles antes de guardar. La ubicación acepta texto manual o
+sugerencias de calles de Photon/OpenStreetMap; el navegador envía la consulta
+de dirección al proveedor externo.
 
 La migración versionada es `supabase/migrations/20261102180000_portal_laboral.sql`.
 Debe aplicarse y validarse en el entorno PostgreSQL autorizado antes de desplegar

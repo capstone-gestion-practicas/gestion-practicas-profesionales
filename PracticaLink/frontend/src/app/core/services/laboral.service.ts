@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   HistorialPostulacion,
+  CuentaEmpresa,
   OfertaGuardada,
   OfertaLaboral,
   OfertaLaboralInput,
@@ -30,6 +31,12 @@ export class LaboralService {
     return this.http.get<OfertaLaboral[]>(`${this.apiUrl}/ofertas`);
   }
 
+  consultarEmpresa(rut: string): Observable<EmpresaLookup> {
+    return this.http.get<EmpresaLookup>(
+      `${environment.apiUrl}/empresas/consulta/${encodeURIComponent(rut)}`
+    );
+  }
+
   listarOfertasGestion(): Observable<OfertaLaboral[]> {
     return this.http.get<OfertaLaboral[]>(`${this.apiUrl}/ofertas/gestion`);
   }
@@ -46,6 +53,10 @@ export class LaboralService {
 
   listarPracticasEmpresa(): Observable<PracticaEmpresa[]> {
     return this.http.get<PracticaEmpresa[]>(`${this.apiUrl}/practicas`);
+  }
+
+  obtenerCuentaEmpresa(): Observable<CuentaEmpresa> {
+    return this.http.get<CuentaEmpresa>(`${this.apiUrl}/empresa/cuenta`);
   }
 
   postular(idOferta: number, cartaPresentacion: string | null): Observable<OperacionPostulacion> {

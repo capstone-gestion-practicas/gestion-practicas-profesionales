@@ -41,17 +41,81 @@
             }
           </div>
           <div class="form-grid">
-            @if (vista === 'gestion') {
+            @if (vista === 'gestion' || vista === 'empresa') {
               <ion-item><ion-label position="stacked">RUT empresa *</ion-label>
-                <ion-input [(ngModel)]="rutEmpresa" placeholder="76.123.456-0"></ion-input>
+                @if (vista === 'empresa') {
+                  <ion-input [value]="rutEmpresa" readonly></ion-input>
+                } @else {
+                  <ion-input
+                    [(ngModel)]="rutEmpresa"
+                    placeholder="76.123.456-0"
+                    maxlength="12"
+                    (ionBlur)="consultarRutEmpresa()">
+                  </ion-input>
+                }
+                @if (consultandoEmpresa) {
+                  <ion-spinner name="crescent" aria-label="Consultando RUT"></ion-spinner>
+                }
+              </ion-item>
+              @if (errorConsultaEmpresa) {
+                <p class="notice error wide" role="alert">{{ errorConsultaEmpresa }}</p>
+              }
+              @if (empresaConsultada; as empresa) {
+                <section class="company-summary wide" aria-label="Datos de la empresa validada">
+                  <strong>{{ empresa.razon_social }}</strong>
+                  @if (empresa.giro) { <span>{{ empresa.giro }}</span> }
+                  @if (empresa.rubro) { <span>{{ empresa.rubro }}</span> }
+                  @if (ubicacionEmpresaConsultada) { <span>{{ ubicacionEmpresaConsultada }}</span> }
+                </section>
+              }
+            }
+            <ion-item><ion-label position="stacked">Cargo de práctica *</ion-label>
+              <ion-select
+                [value]="cargoSeleccionado"
+                placeholder="Selecciona un cargo"
+                (ionChange)="seleccionarCargo($event.detail.value)">
+                @for (opcion of cargosPractica; track opcion) {
+                  <ion-select-option [value]="opcion">{{ opcion }}</ion-select-option>
+                }
+                <ion-select-option value="OTRO">Otro</ion-select-option>
+              </ion-select>
+            </ion-item>
+            @if (cargoSeleccionado === 'OTRO') {
+              <ion-item><ion-label position="stacked">Especifica el cargo *</ion-label>
+                <ion-input [(ngModel)]="cargoPersonalizado" maxlength="150"></ion-input>
               </ion-item>
             }
-            <ion-item><ion-label position="stacked">Cargo *</ion-label>
-              <ion-input [(ngModel)]="cargo" maxlength="150"></ion-input>
-            </ion-item>
-            <ion-item><ion-label position="stacked">Ubicación *</ion-label>
-              <ion-input [(ngModel)]="ubicacion" maxlength="150"></ion-input>
-            </ion-item>
+            <div class="location-field">
+              <ion-item>
+                <ion-label position="stacked">Calle y ubicación *</ion-label>
+                <ion-input
+                  [ngModel]="ubicacion"
+                  maxlength="150"
+                  placeholder="Escribe una calle o dirección"
+                  (ionInput)="actualizarUbicacion($event)">
+                </ion-input>
+              </ion-item>
+              <small>Escribe para buscar una calle o ingrésala manualmente.</small>
+              <small>Búsqueda Photon · datos de © OpenStreetMap contributors</small>
+              @if (buscandoUbicacion) {
+                <small role="status">Buscando direcciones...</small>
+              }
+              @if (errorUbicacion) {
+                <small class="location-error" role="status">{{ errorUbicacion }}</small>
+              }
+              @if (sugerenciasUbicacion.length) {
+                <div class="location-suggestions" role="listbox" aria-label="Sugerencias de direcciones">
+                  @for (direccion of sugerenciasUbicacion; track direccion) {
+                    <button
+                      type="button"
+                      role="option"
+                      (click)="seleccionarUbicacion(direccion)">
+                      {{ direccion }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
             <ion-item><ion-label position="stacked">Modalidad *</ion-label>
               <ion-select [(ngModel)]="modalidad">
                 @for (opcion of modalidades; track opcion) {
