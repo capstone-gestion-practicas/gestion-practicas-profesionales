@@ -1,5 +1,31 @@
 # PracticalinkFrontend
 
+## Publicar en Render
+
+El repositorio incluye [`render.yaml`](../../render.yaml), que define un sitio
+estático para la aplicación Angular, publica el build de producción y configura
+el fallback de rutas para Angular Router.
+
+1. Publica en GitHub la rama que contiene esta configuración.
+2. En Render, selecciona **New > Blueprint** y conecta el repositorio.
+3. Render detectará `render.yaml`; revisa el servicio
+   `practicalink-frontend-qa` y selecciona **Apply**.
+4. Espera el primer deploy. Render asignará una URL HTTPS, por ejemplo
+   `https://practicalink-frontend-qa.onrender.com`.
+5. En el servicio del backend de Render, agrega la variable
+   `FRONTEND_ORIGINS` con el origen exacto del sitio (solo esquema y dominio,
+   sin ruta ni barra final), guarda el cambio y espera el redeploy del backend.
+6. Abre la URL del frontend y valida el inicio de sesión y las llamadas al API.
+
+El build de producción ya usa el backend QA
+`https://practicalink-api-qa.onrender.com`. No configures secretos del backend
+en el sitio estático. Para otro dominio, actualiza `FRONTEND_ORIGINS` en el
+backend con los orígenes permitidos separados por comas. No uses `*`.
+
+Si Render muestra un error de CORS antes de actualizar el backend, revisa que
+`FRONTEND_ORIGINS` coincida exactamente con el dominio asignado y que el backend
+haya terminado su redeploy.
+
 ## Android (release 1.1 QA)
 
 La guía completa se encuentra en

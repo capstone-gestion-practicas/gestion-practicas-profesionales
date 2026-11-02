@@ -694,6 +694,13 @@ como number en JavaScript pierden precisión fuera del rango seguro ±(2^53−1)
 
 ### EP07: asignación, cierre manual y recordatorio
 
+El frontend QA se publica como sitio estático de Render mediante el Blueprint
+`render.yaml` de la raíz. El backend debe tener `FRONTEND_ORIGINS` configurado
+con el origen HTTPS exacto que Render asigne al sitio; admite varios orígenes
+separados por coma. La URL del API QA está definida en el entorno de producción
+del frontend. Las instrucciones de publicación están en
+`PracticaLink/frontend/README.md`.
+
 La migración `supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql`
 agrega el gestor asignado a cada práctica, el listado de gestores activos y las
 funciones de asignación, cierre y procesamiento de recordatorios. No se aplicó
