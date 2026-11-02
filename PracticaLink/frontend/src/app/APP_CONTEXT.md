@@ -342,8 +342,8 @@ vista cancela la suscripción, no garantiza cancelar una escritura en el servido
 Los registros locales anteriores permanecen sin migración ni asignación de autor.
 La pestaña existente los rotula como demostración; no consulta ni simula datos
 PostgreSQL y no representa HU014 implementada. Los nuevos seguimientos no se
-escriben en localStorage. El guardado local de incidencias EP06 y su servicio
-compartido permanecen sin cambios de comportamiento.
+escriben en localStorage. El almacenamiento local de incidencias fue retirado
+posteriormente en EP06 y ya no forma parte del flujo productivo.
 
 Validación de este incremento: 110 pruebas Angular aprobadas con Chromium
 Headless y build de producción aprobado. Se probaron HTTP/JWT con HttpTestingController,
@@ -378,11 +378,12 @@ fallida y requiere acción explícita. Las páginas se reemplazan, no se acumula
 el mecanismo de sesión existente. 403/404/422/500/503 presentan mensajes propios
 sin reproducir detalles internos. Fallos de red no recurren al almacenamiento local.
 
-El detalle utiliza RegistroPracticaService solo para los registros de incidencias;
-los seguimientos locales antiguos se ignoran, sin migrarlos, borrarlos ni atribuir
-responsables. EP06 mantiene su almacenamiento y presentación. HU013 conserva su
-POST y bloqueo ante resultados inciertos; únicamente se actualizaron sus mensajes
-para indicar que ahora se puede consultar el historial al volver al detalle.
+En esta etapa histórica el detalle aún utilizaba almacenamiento local para
+incidencias, pero dicho comportamiento fue retirado posteriormente en EP06.
+Los seguimientos locales antiguos se ignoran, sin migrarlos, borrarlos ni atribuir
+responsables. HU013 conserva su POST y bloqueo ante resultados inciertos; únicamente
+se actualizaron sus mensajes para indicar que ahora se puede consultar el historial
+al volver al detalle.
 
 Validación 30-10-2026: 123/123 pruebas Angular con Chromium Headless, build de
 producción y git diff --check aprobados. Karma requirió ejecución fuera del sandbox
@@ -435,9 +436,9 @@ El bloqueo es local a la instancia: no proporciona idempotencia después de nave
 ni recargar. Continúa la limitación de precisión BIGINT representados como number.
 
 El formulario y la pestaña Incidencias del detalle ya no leen ni escriben
-RegistroPracticaService/localStorage. El almacenamiento antiguo permanece intacto
-como demostración, sin migración ni asignación de autor. La pestaña informa que
-la consulta persistente está pendiente y no muestra contador ni historial local.
+datos de incidencias en localStorage. El servicio local antiguo fue retirado y
+el flujo productivo utiliza persistencia mediante FastAPI y PostgreSQL. La consulta
+persistente, la gestión de estados y el historial quedaron implementados en EP06.
 Esto sustituye la presentación de incidencias descrita en las etapas históricas
 EP05 anteriores. HU013 y HU014 conservan sus contratos y operaciones.
 

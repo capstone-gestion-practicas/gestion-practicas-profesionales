@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { of, Subject, throwError } from 'rxjs';
 import { PracticaDetalleGestionResponse } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
-import { RegistroPracticaService } from '../../core/services/registro-practica.service';
 import { RegistroPractica } from './registro-practica';
 
 describe('RegistroPractica', () => {
@@ -13,7 +12,6 @@ describe('RegistroPractica', () => {
   let practicaService: jasmine.SpyObj<PracticaService>;
   let routeStub: { snapshot: { data: Record<string, string>; paramMap: ReturnType<typeof convertToParamMap> } };
   let router: jasmine.SpyObj<Router>;
-  let registros: RegistroPracticaService;
   const detalle: PracticaDetalleGestionResponse = {
     id_practica: 15,
     estudiante: { id_estudiante: 7, nombre: 'Estudiante de prueba' },
@@ -51,7 +49,6 @@ describe('RegistroPractica', () => {
     }).compileComponents();
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     spyOn(router, 'navigate');
-    registros = TestBed.inject(RegistroPracticaService);
     fixture = TestBed.createComponent(RegistroPractica);
     fixture.detectChanges();
   });
@@ -64,7 +61,6 @@ describe('RegistroPractica', () => {
   it('requires the mandatory follow-up fields', () => {
     fixture.componentInstance.guardar();
     expect(fixture.componentInstance.error).toContain('campos obligatorios');
-    expect(registros.listar('15')).toEqual([]);
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
@@ -77,7 +73,6 @@ describe('RegistroPractica', () => {
     completar();
     const pendiente = new Subject<HttpResponse<SeguimientoResponse>>();
     practicaService.registrarSeguimiento.and.returnValue(pendiente);
-    const guardarLocal = spyOn(registros, 'guardar');
     const escribir = spyOn(localStorage, 'setItem');
     fixture.componentInstance.guardar();
     fixture.componentInstance.guardar();
@@ -96,7 +91,6 @@ describe('RegistroPractica', () => {
     expect(fixture.componentInstance.guardando).toBeFalse();
     fixture.componentInstance.guardar();
     expect(practicaService.registrarSeguimiento).toHaveBeenCalledTimes(1);
-    expect(guardarLocal).not.toHaveBeenCalled();
     expect(escribir).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
   });
@@ -164,12 +158,12 @@ describe('RegistroPractica', () => {
       descripcion: 'Falta de asignación de tareas', estado: 'PENDIENTE' as const,
       fecha: '2026-10-30T15:00:00Z'
     } })));
-    const guardar = spyOn(registros, 'guardar');
+    const escribir = spyOn(localStorage, 'setItem');
     fixture.componentInstance.guardar();
     expect(practicaService.registrarIncidencia).toHaveBeenCalledOnceWith('15', {
       tipo: 'OTRO', descripcion: 'Falta de asignación de tareas'
     });
-    expect(guardar).not.toHaveBeenCalled();
+    expect(escribir).not.toHaveBeenCalled();
     expect(fixture.componentInstance.mensaje).toContain('Incidencia registrada correctamente');
     expect(router.navigate).not.toHaveBeenCalled();
   });
