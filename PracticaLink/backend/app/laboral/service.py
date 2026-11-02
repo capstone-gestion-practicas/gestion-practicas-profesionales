@@ -31,6 +31,21 @@ def listar_practicas_empresa(db: Session, id_usuario: int) -> list[dict]:
     """, {"id_usuario": id_usuario})
 
 
+def obtener_cuenta_empresa(db: Session, id_usuario: int) -> dict:
+    rut_empresa = db.execute(text("""
+        SELECT ce.rut_empresa
+        FROM public.cuenta_empresa ce
+        JOIN public.usuario u ON u.id_usuario = ce.id_usuario AND u.activo
+        JOIN public.usuario_rol ur ON ur.id_usuario = u.id_usuario
+        JOIN public.rol r ON r.id_rol = ur.id_rol
+            AND r.nombre = 'EMPRESA' AND r.activo
+        WHERE u.id_usuario = :id_usuario
+    """), {"id_usuario": id_usuario}).scalar_one_or_none()
+    if rut_empresa is None:
+        raise LaboralError("CUENTA_EMPRESA_NO_CONFIGURADA")
+    return {"rut_empresa": rut_empresa}
+
+
 def listar_ofertas(
     db: Session, id_usuario: int, solo_publicadas: bool
 ) -> list[dict]:

@@ -14,7 +14,7 @@ from app.empresas.service import (
 router = APIRouter(
     prefix="/empresas",
     tags=["Empresas"],
-    dependencies=[Depends(require_roles("ESTUDIANTE", "ADMINISTRADOR"))],
+    dependencies=[Depends(require_roles("ESTUDIANTE", "GESTOR", "EMPRESA", "ADMINISTRADOR"))],
 )
 
 
