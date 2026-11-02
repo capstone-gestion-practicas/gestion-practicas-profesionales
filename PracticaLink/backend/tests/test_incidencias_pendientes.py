@@ -119,9 +119,37 @@ class ResumenPendientesTests(unittest.TestCase):
         self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(42, 1, 0)])
         self.assertEqual(self.get().json()['items'][0]['id_practica'], 42)
 
-    def test_zero_pending_row_is_rejected_so_historical_states_never_leak(self):
-        # Un resultado con pendientes=0 significaría que SQL contó un estado no moderno.
-        self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(pendientes=0)])
+    def test_attention_only_row_accepted_with_null_date(self):
+        # DEFECTO-001 corregido: pendientes = 0 con en_atencion > 0 es válido y no lleva fecha.
+        self.db.execute.return_value.scalar_one.return_value = result(
+            items=[pendiente(9, 0, 2, None)])
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        item = response.json()['items'][0]
+        self.assertEqual((item['pendientes'], item['en_atencion']), (0, 2))
+        self.assertIsNone(item['fecha_pendiente_antigua'])
+
+    def test_both_counters_positive_accepted(self):
+        self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(5, 2, 3)])
+        self.assertEqual(self.get().json()['items'][0]['en_atencion'], 3)
+
+    def test_rows_without_any_counter_are_rejected(self):
+        # Fila con pendientes = 0 y en_atencion = 0: incoherente, nunca debe mostrarse.
+        self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(4, 0, 0, None)])
+        self.assertEqual(self.get().status_code, 500)
+
+    def test_date_must_match_pending_counter(self):
+        # pendientes > 0 exige fecha; pendientes = 0 exige fecha null.
+        self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(4, 2, 0, None)])
+        self.assertEqual(self.get().status_code, 500)
+        self.db.execute.return_value.scalar_one.return_value = result(items=[pendiente(4, 0, 2)])
+        self.assertEqual(self.get().status_code, 500)
+
+    def test_pending_practices_before_attention_only_practices(self):
+        ordered = [pendiente(3, 1, 0, '2026-01-02T00:00:00+00:00'), pendiente(7, 0, 2, None)]
+        self.db.execute.return_value.scalar_one.return_value = result(items=ordered)
+        self.assertEqual(self.get().status_code, 200)
+        self.db.execute.return_value.scalar_one.return_value = result(items=list(reversed(ordered)))
         self.assertEqual(self.get().status_code, 500)
 
     # ---------- errores y resultados inesperados ----------
@@ -144,7 +172,7 @@ class ResumenPendientesTests(unittest.TestCase):
             {**result(items=[pendiente(1, fecha='2026-01-05T00:00:00+00:00'),
                              pendiente(1, fecha='2026-02-01T00:00:00+00:00')])},  # id duplicado, orden válido
             {**result(items=[ok, other])},                  # orden incorrecto: 2026-10-20 antes que 2026-01-05
-            {**result(items=[pendiente(pendientes=0)])},    # sin pendientes
+            {**result(items=[pendiente(pendientes=0, en_atencion=0, fecha=None)])},  # ningún contador
             {**result(items=[pendiente(en_atencion=-1)])},  # contador negativo
             {**result(items=[{**ok, 'fecha_pendiente_antigua': '2026-01-01T00:00:00'}])},  # sin zona horaria
             {**result(items=[{**ok, 'fecha_pendiente_antigua': 'invalid'}])},

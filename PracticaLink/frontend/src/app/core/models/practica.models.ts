@@ -99,11 +99,12 @@ export interface PracticasListadoResponse {
 }
 
 // HU017: pendientes = solo estado PENDIENTE; en_atencion se informa aparte.
+// pendientes y en_atencion son independientes. fecha_pendiente_antigua es null si pendientes = 0.
 export interface PracticaIncidenciasPendientesItem {
   id_practica: number;
   pendientes: number;
   en_atencion: number;
-  fecha_pendiente_antigua: string;
+  fecha_pendiente_antigua: string | null;
 }
 
 export interface ResumenIncidenciasPendientesResponse {

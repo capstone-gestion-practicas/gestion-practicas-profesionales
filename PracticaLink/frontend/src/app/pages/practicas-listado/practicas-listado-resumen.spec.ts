@@ -27,7 +27,7 @@ function practica(id: number, nombre = 'EN_CURSO') {
 }
 
 function pendiente(id: number, pendientes = 3, enGestion = 1,
-                   fecha = '2026-10-20T15:10:00Z'): PracticaIncidenciasPendientesItem {
+                   fecha: string | null = '2026-10-20T15:10:00Z'): PracticaIncidenciasPendientesItem {
   return { id_practica: id, pendientes, en_atencion: enGestion, fecha_pendiente_antigua: fecha };
 }
 
@@ -158,6 +158,28 @@ describe('PracticasListado · resumen HU017', () => {
     expect(texto()).toContain('Pendientes: 0');
   });
 
+  // DEFECTO-001 corregido: práctica solo con EN_ATENCION llega con pendientes 0, fecha null y en gestión real.
+  it('shows Pendientes 0 and the real En gestión for an attention-only practice, without a date', () => {
+    service.obtenerResumenIncidenciasPendientes.and.returnValue(of(resumen([pendiente(2, 0, 1, null)])));
+    crear();
+    expect(component.resumenEstado).toBe('listo');
+    expect(component.pendientesDe(2)).toBe(0);
+    expect(component.enGestionDe(2)).toBe(1);
+    expect(component.fechaPendienteDe(2)).toBeNull();
+    // Práctica 2 es la segunda tarjeta del listado de prueba (FINALIZADA).
+    const tarjeta = fixture.nativeElement.querySelectorAll('ion-card')[1] as HTMLElement;
+    expect(tarjeta.textContent).toContain('Pendientes: 0');
+    expect(tarjeta.textContent).toContain('En gestión: 1');
+    expect(tarjeta.textContent).not.toContain('Pendiente desde');
+  });
+
+  it('rejects a row with neither pending nor attention counters as an error, not as zeros', () => {
+    service.obtenerResumenIncidenciasPendientes.and.returnValue(of(resumen([pendiente(2, 0, 0, null)])));
+    crear();
+    expect(component.resumenEstado).toBe('error');
+    expect(texto()).not.toContain('En gestión: 0');
+  });
+
   it('shows loading while the summary is in flight', () => {
     const pendienteRespuesta = new Subject<ResumenIncidenciasPendientesResponse>();
     service.obtenerResumenIncidenciasPendientes.and.returnValue(pendienteRespuesta.asObservable());
@@ -208,7 +230,8 @@ describe('PracticasListado · resumen HU017', () => {
     const malformed: ResumenIncidenciasPendientesResponse[] = [
       resumen([pendiente(1)], false, 50, 0),              // limit distinto
       resumen([pendiente(1)], false, 100, 10),            // offset distinto
-      resumen([pendiente(1, 0)]),                         // pendientes = 0
+      resumen([pendiente(1, 0)]),                         // pendientes = 0 con fecha: debe ser null
+      resumen([pendiente(1, 0, 0, null)]),                // ningún contador: incoherente
       resumen([pendiente(1, 1, -1)]),                     // contador negativo
       resumen([pendiente(1), pendiente(1)]),              // id duplicado
       resumen([{ ...pendiente(1), fecha_pendiente_antigua: 'no-es-fecha' }]),

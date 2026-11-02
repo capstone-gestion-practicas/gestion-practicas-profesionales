@@ -38,7 +38,9 @@ Campos exactos (`extra='forbid'`): `items[].id_practica`, `items[].pendientes`,
 
 ## Definición
 
-- `pendientes`: incidencias con `estado = 'PENDIENTE'`. Siempre ≥ 1.
+- `pendientes`: incidencias con `estado = 'PENDIENTE'`. ≥ 0.
+- Una práctica aparece si tiene `pendientes > 0` **o** `en_atencion > 0` (EP06-09). Con
+  `pendientes = 0`, `fecha_pendiente_antigua` es `null`. Ambos en 0 nunca se devuelve.
 - `en_atencion`: informativo, separado. **Nunca** se suma a `pendientes`.
 - `fecha_pendiente_antigua`: mínima fecha entre las `PENDIENTE` de la práctica.
 - Orden: `fecha_pendiente_antigua` ascendente, luego `id_practica` ascendente.
@@ -88,7 +90,8 @@ Se rechaza con 500 cualquier respuesta que:
 - tenga más elementos que `limit`, o `hay_mas=true` sin página completa;
 - repita `id_practica`;
 - no esté ordenada por `(fecha_pendiente_antigua, id_practica)`;
-- tenga `pendientes = 0` (un histórico nunca debe contarse como pendiente);
+- tenga `pendientes = 0` y `en_atencion = 0` (fila incoherente);
+- tenga `pendientes = 0` con fecha no nula, o `pendientes > 0` sin fecha;
 - tenga contadores negativos, fechas sin zona horaria o no válidas.
 
 ## Enrutamiento

@@ -790,9 +790,12 @@ Angular HU016 y E2E de navegador permanecen pendientes.
 ### EP06 / HU017: resumen HTTP de prácticas con incidencias pendientes (vigente)
 
 GET /practicas/con-incidencias-pendientes?limit=50&offset=0 devuelve prácticas con al
-menos una incidencia `PENDIENTE`, con `pendientes`, `en_atencion` (separado, nunca
-sumado), `fecha_pendiente_antigua`, `limit`, `offset` y `hay_mas`. Orden:
-fecha ascendente y luego id_practica. Usa `fn_resumen_incidencias_pendientes` mediante
+menos una incidencia `PENDIENTE` o `EN_ATENCION` (corrección DEFECTO-001, EP06-09),
+con `pendientes`, `en_atencion` (contadores independientes), `fecha_pendiente_antigua`
+(null si `pendientes = 0`), `limit`, `offset` y `hay_mas`. Orden: primero las prácticas
+con pendientes por fecha ascendente; después las solo EN_ATENCION; desempate por
+id_practica. Una fila con ambos contadores en 0 se rechaza como incoherente.
+Usa `fn_resumen_incidencias_pendientes` mediante
 la conexión restringida INCIDENCIAS_DATABASE_URL, sin fallback; la conexión principal
 solo valida roles. Solo GESTOR y ADMINISTRADOR activos; ESTUDIANTE e inactivos 403.
 Transacción READ ONLY, una sola llamada, sin commit ni reintentos. Históricos
@@ -802,5 +805,5 @@ Transacción READ ONLY, una sola llamada, sin commit ni reintentos. Históricos
 `GET /practicas/{id_practica}` capturaba la ruta nueva y respondía 422.
 
 Ver tests/integration/HU017_HTTP.md para contrato, errores, enrutamiento y pruebas.
-Validación: backend unitario 327/327 (incluye 23 de HU017); HTTP + PostgreSQL 44/44
-y SQL 97/97 con regresiones en Docker exclusivo.
+Validación tras DEFECTO-001: backend unitario 331/331; HTTP + PostgreSQL 44/44 y SQL
+101/101 con regresiones en Docker exclusivo; E2E real 84/84 (HU017_E2E.md).

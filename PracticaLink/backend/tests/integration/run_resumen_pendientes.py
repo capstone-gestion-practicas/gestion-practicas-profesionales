@@ -19,6 +19,8 @@ from run_consulta_incidencias import suite as consulta_suite, snapshot
 from run_estado_incidencia import suite as estado_suite
 
 SQL = ROOT / 'scripts/BD/fixes/ep06-08-resumen-pendientes.sql'
+# DEFECTO-001: corrección incremental. Incluye prácticas con PENDIENTE o EN_ATENCION.
+CORRECTION = ROOT / 'scripts/BD/fixes/ep06-09-corregir-resumen-pendientes.sql'
 CALL = 'SELECT incidencias_privadas.fn_resumen_incidencias_pendientes(%s,%s,%s)'
 REGISTER = 'SELECT incidencias_privadas.fn_registrar_incidencia(%s,%s,%s,%s)'
 FUNCTION = "incidencias_privadas.fn_resumen_incidencias_pendientes(bigint,integer,bigint)"
@@ -52,6 +54,7 @@ def suite(pg):
         admin.execute('ALTER DEFAULT PRIVILEGES GRANT EXECUTE ON FUNCTIONS TO ep05_test_client')
         try:
             admin.execute(SQL.read_text())
+            admin.execute(CORRECTION.read_text())
         finally:
             admin.execute('ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM ep05_test_client')
         assert before == snapshot(admin)
@@ -113,7 +116,7 @@ def suite(pg):
             self.admin.execute("UPDATE rol SET activo=true WHERE nombre='GESTOR'")
 
         # ---------- conteo ----------
-        def test_counts_only_pending_and_reports_attention_separately(self):
+        def test_counts_pending_and_attention_independently_and_excludes_resolved_or_empty(self):
             p1 = self.practice(); self.incidence(p1, 'PENDIENTE', '2026-01-01T12:00:00Z')
             p2 = self.practice()
             self.incidence(p2, 'PENDIENTE', '2026-01-02T12:00:00Z')
@@ -124,9 +127,43 @@ def suite(pg):
             p4 = self.practice(); self.incidence(p4, 'RESUELTA', '2026-01-01T12:00:00Z', resolved='2026-01-01T12:00:00Z')
             p5 = self.practice()
             rows = {r['id_practica']: r for r in self.rows_for([p1, p2, p3, p4, p5])}
-            self.assertEqual({k: (v['pendientes'], v['en_atencion']) for k, v in rows.items()}, {p1: (1, 0), p2: (2, 1)})
+            # DEFECTO-001 corregido: p3 (solo EN_ATENCION) entra con pendientes = 0.
+            # p4 (solo RESUELTA) y p5 (sin incidencias) siguen excluidas.
+            self.assertEqual({k: (v['pendientes'], v['en_atencion']) for k, v in rows.items()},
+                             {p1: (1, 0), p2: (2, 1), p3: (0, 1)})
             self.assertEqual(set(rows[p2].keys()), {'id_practica', 'pendientes', 'en_atencion', 'fecha_pendiente_antigua'})
             self.assertEqual(rows[p2]['fecha_pendiente_antigua'], '2026-01-02T12:00:00+00:00')
+            # Sin pendiente no se inventa fecha.
+            self.assertIsNone(rows[p3]['fecha_pendiente_antigua'])
+
+        def test_attention_only_practice_listed_with_zero_pending_and_null_date(self):
+            p = self.practice(); self.incidence(p, 'EN_ATENCION', '2026-03-01T12:00:00Z')
+            row = self.rows_for([p])[0]
+            self.assertEqual((row['pendientes'], row['en_atencion']), (0, 1))
+            self.assertIsNone(row['fecha_pendiente_antigua'])
+
+        def test_resolved_only_and_empty_practices_never_listed(self):
+            resolved = self.practice(); self.incidence(resolved, 'RESUELTA', '2026-03-01T12:00:00Z', resolved='2026-03-02T12:00:00Z')
+            empty = self.practice()
+            self.assertEqual(self.rows_for([resolved, empty]), [])
+
+        def test_attention_only_ordering_after_pending_and_deterministic(self):
+            pending = self.practice(); self.incidence(pending, 'PENDIENTE', '2026-09-01T12:00:00Z')
+            late = self.practice(); self.incidence(late, 'EN_ATENCION', '2026-05-01T12:00:00Z')
+            early = self.practice(); self.incidence(early, 'EN_ATENCION', '2026-04-01T12:00:00Z')
+            tie_a = self.practice(); self.incidence(tie_a, 'EN_ATENCION', '2026-06-01T12:00:00Z')
+            tie_b = self.practice(); self.incidence(tie_b, 'EN_ATENCION', '2026-06-01T12:00:00Z')
+            ids = [r['id_practica'] for r in self.rows_for([pending, late, early, tie_a, tie_b])]
+            # Primero prácticas con pendientes; luego EN_ATENCION por incidencia más antigua; desempate por id.
+            self.assertEqual(ids, [pending, early, late, tie_a, tie_b])
+            # Determinismo: una segunda lectura independiente devuelve el mismo orden.
+            again = [r['id_practica'] for r in self.rows_for([pending, late, early, tie_a, tie_b])]
+            self.assertEqual(again, ids)
+
+        def test_finalized_practice_with_attention_only_is_listed(self):
+            f = self.practice('FINALIZADA'); self.incidence(f, 'EN_ATENCION', '2026-03-01T12:00:00Z')
+            row = {r['id_practica']: r for r in self.rows_for([f])}[f]
+            self.assertEqual((row['pendientes'], row['en_atencion']), (0, 1))
 
         # ---------- históricos ----------
         def test_historical_states_never_count_as_pending(self):

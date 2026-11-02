@@ -111,8 +111,11 @@ def http_suite(pg, stack):
             p3 = self.practice(); self.incidence(p3, 'EN_ATENCION', '2026-01-01T12:00:00Z')
             p4 = self.practice(); self.incidence(p4, 'RESUELTA', '2026-01-01T12:00:00Z', '2026-01-01T12:00:00Z')
             rows = self.by_practice([p1, p2, p3, p4])
-            self.assertEqual({k: (v['pendientes'], v['en_atencion']) for k, v in rows.items()}, {p1: (1, 0), p2: (2, 1)})
+            # DEFECTO-001 corregido: p3 (solo EN_ATENCION) aparece con pendientes 0; p4 (solo RESUELTA) no.
+            self.assertEqual({k: (v['pendientes'], v['en_atencion']) for k, v in rows.items()},
+                             {p1: (1, 0), p2: (2, 1), p3: (0, 1)})
             self.assertEqual(rows[p2]['fecha_pendiente_antigua'], '2026-01-02T12:00:00Z')
+            self.assertIsNone(rows[p3]['fecha_pendiente_antigua'])
 
         def test_historical_states_excluded_and_rows_unchanged(self):
             legacy_practice = self.practice()
@@ -150,7 +153,12 @@ def http_suite(pg, stack):
             full = self.everything()
             n = len(full)
             self.assertGreaterEqual(n, 3)
-            keys = [(r['fecha_pendiente_antigua'], r['id_practica']) for r in full]
+            # Prácticas con pendientes primero, ordenadas por antigüedad; luego las solo EN_ATENCION.
+            first_sin_pendiente = next((i for i, r in enumerate(full) if r['pendientes'] == 0), len(full))
+            self.assertTrue(all(r['pendientes'] > 0 for r in full[:first_sin_pendiente]))
+            self.assertTrue(all(r['pendientes'] == 0 and r['fecha_pendiente_antigua'] is None
+                                for r in full[first_sin_pendiente:]))
+            keys = [(r['fecha_pendiente_antigua'], r['id_practica']) for r in full[:first_sin_pendiente]]
             self.assertEqual(keys, sorted(keys))
             for limit in (1, 2):
                 collected = []

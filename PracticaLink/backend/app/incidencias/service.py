@@ -76,11 +76,16 @@ def consultar_resumen_incidencias_pendientes(db: Session, id_usuario: int, limit
                 codigo = 'FALLO_INESPERADO'
             raise ConsultaIncidenciasError(codigo)
         respuesta = ResumenIncidenciasPendientesResponse.model_validate(resultado)
+        # Orden del contrato EP06-09: primero prácticas con pendientes (la más antigua antes);
+        # después las solo EN_ATENCION, cuyo orden interno no se devuelve.
+        con_pendientes = [item for item in respuesta.items if item.pendientes > 0]
+        sin_pendientes = [item for item in respuesta.items if item.pendientes == 0]
         ids = [item.id_practica for item in respuesta.items]
-        claves = [(item.fecha_pendiente_antigua, item.id_practica) for item in respuesta.items]
+        claves = [(item.fecha_pendiente_antigua, item.id_practica) for item in con_pendientes]
         if (respuesta.limit != limit or respuesta.offset != offset or len(respuesta.items) > limit
                 or (respuesta.hay_mas and len(respuesta.items) != limit)
-                or len(set(ids)) != len(ids) or claves != sorted(claves)):
+                or len(set(ids)) != len(ids) or claves != sorted(claves)
+                or respuesta.items != con_pendientes + sin_pendientes):
             raise ConsultaIncidenciasError('FALLO_INESPERADO')
         return respuesta  # Sin commit: cerrar la sesión termina la transacción.
     except Exception as error:

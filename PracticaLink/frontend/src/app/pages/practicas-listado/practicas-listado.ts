@@ -111,9 +111,13 @@ export class PracticasListado implements OnInit, OnDestroy {
     }
     return pagina.items.every(item =>
       Number.isSafeInteger(item.id_practica) && item.id_practica > 0
-      && Number.isSafeInteger(item.pendientes) && item.pendientes >= 1
+      && Number.isSafeInteger(item.pendientes) && item.pendientes >= 0
       && Number.isSafeInteger(item.en_atencion) && item.en_atencion >= 0
-      && Number.isFinite(Date.parse(item.fecha_pendiente_antigua)));
+      && (item.pendientes + item.en_atencion) > 0
+      && (item.pendientes > 0
+        ? typeof item.fecha_pendiente_antigua === 'string'
+          && Number.isFinite(Date.parse(item.fecha_pendiente_antigua))
+        : item.fecha_pendiente_antigua === null));
   }
 
   private fallarResumen(status: number): void {

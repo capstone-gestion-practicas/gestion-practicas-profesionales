@@ -243,7 +243,7 @@ Por eso no se emparejan páginas. El componente carga el resumen completo una so
 en páginas de 100, y lo cruza por `id_practica` con la página visible. Cambiar de
 página o buscar por RUT no vuelve a pedir el resumen. Un nuevo montaje del componente
 (o el reintento manual) sí lo recarga. Cuantitativamente: 1 petición de listado y
-1 + ⌈N/100⌉ de resumen, donde N es el número de prácticas con pendientes. No hay
+1 + ⌈N/100⌉ de resumen, donde N es el número de prácticas con pendientes o en gestión. No hay
 petición por práctica.
 
 Validación del resumen antes de usarlo: `limit` y `offset` coherentes, `hay_mas`

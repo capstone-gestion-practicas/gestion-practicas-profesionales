@@ -66,12 +66,22 @@ class IncidenciasHistorialResponse(BaseModel):
 
 
 class PracticaIncidenciasPendientesItem(BaseModel):
-    # pendientes cuenta solo estado PENDIENTE; en_atencion se informa aparte.
+    # pendientes (PENDIENTE) y en_atencion (EN_ATENCION) son contadores independientes.
+    # Una práctica aparece si uno de los dos es > 0; con pendientes = 0 la fecha es null.
     model_config = ConfigDict(extra='forbid')
     id_practica: Identificador
-    pendientes: int = Field(strict=True, ge=1)
+    pendientes: int = Field(strict=True, ge=0)
     en_atencion: int = Field(strict=True, ge=0)
-    fecha_pendiente_antigua: AwareDatetime
+    fecha_pendiente_antigua: AwareDatetime | None
+
+    @model_validator(mode='after')
+    def fila_coherente(self):
+        # PostgreSQL no debe devolver filas sin ningún contador: serían incoherentes.
+        if self.pendientes == 0 and self.en_atencion == 0:
+            raise ValueError('fila sin pendientes ni en gestión')
+        if (self.pendientes > 0) != (self.fecha_pendiente_antigua is not None):
+            raise ValueError('fecha de pendiente incoherente con el contador')
+        return self
 
 
 class ResumenIncidenciasPendientesResponse(BaseModel):

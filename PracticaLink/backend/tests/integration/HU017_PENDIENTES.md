@@ -8,7 +8,10 @@ modificado; el contrato HTTP y la UI quedan para fases posteriores.
 - **Pendiente** = `incidencia.estado = 'PENDIENTE'`, exacto.
 - `EN_ATENCION` se informa en el campo separado `en_atencion` y **nunca** se
   suma a `pendientes`.
-- Una práctica aparece solo si tiene al menos una incidencia `PENDIENTE`.
+- Una práctica aparece si tiene al menos una incidencia `PENDIENTE` **o** `EN_ATENCION`
+  (corrección DEFECTO-001, `ep06-09-corregir-resumen-pendientes.sql`). Los dos contadores
+  son independientes. Una práctica con ambos en 0 no aparece.
+- Sin pendientes, `fecha_pendiente_antigua` es `null`; no se inventa fecha.
 - `fecha_pendiente_antigua` = `MIN(fecha)` **únicamente** entre incidencias
   `PENDIENTE`. Una `EN_ATENCION` más antigua no altera ese valor.
 
