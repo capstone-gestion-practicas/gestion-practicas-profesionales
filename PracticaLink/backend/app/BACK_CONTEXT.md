@@ -870,10 +870,23 @@ genérico de estado no puede finalizar una práctica. Los cierres registran resu
 APROBADA; el esquema existente también admite REPROBADA y ANULADA, pero este flujo
 no ofrece selección de resultado.
 
-El recordatorio se genera una sola vez cuando han transcurrido 24 horas desde la
-fecha de término, mientras la práctica siga EN_CURSO. Se guarda en la bandeja de
-notificaciones del gestor asignado y de los administradores activos y se intenta
-enviar push con el servicio FCM existente. Para el despliegue previsto en Render,
+Comportamiento verificado (EP07 Corrección 6A, migración
+`20261103150000_ep07_corregir_recordatorios_cierre.sql`): la práctica es candidata
+si está EN_CURSO y ya comenzó el día siguiente a `fecha_termino` en `America/Santiago`
+(00:00 locales; función `fn_ep07_recordatorio_habilitado`). `fecha_termino` es fecha de
+calendario: la regla no depende de la zona horaria de la sesión PostgreSQL ni del
+servidor, y respeta el horario de verano e invierno de Chile. Destinatarios: el gestor asignado solo si está activo y tiene rol GESTOR activo;
+todos los ADMINISTRADORES activos, también cuando la práctica no tiene gestor. Un
+usuario inactivo no recibe. Idempotencia en PostgreSQL: la PK de
+`recordatorio_cierre_practica` reclama la práctica dentro de la transacción. Si no
+hay ningún destinatario, el reclamo se libera y una ejecución posterior lo entrega.
+La notificación se persiste y se confirma antes del envío push, que va fuera de la
+transacción; un fallo de FCM se contiene y no revierte ni duplica registros.
+Umbral comprobado: con `fecha_termino` 2026-06-30 la habilitación ocurre en
+2026-07-01 00:00 de Santiago (04:00 UTC) con independencia de la sesión UTC o
+`America/Santiago`; la prueba cubre medianoche exacta, justo antes, cambios de horario
+de Chile y que el resultado no varía con la sesión. El disparo lo realiza un job externo aún no configurado (Corrección 6B). No
+se desplegó en Supabase real. Para el despliegue previsto en Render,
 crear un **Cron Job** separado con programación `*/15 * * * *`, URL base del
 backend en `API_BASE_URL` y `EP07_REMINDER_TASK_TOKEN` como variable secreta.
 Render interpreta la expresión de cron en UTC.
