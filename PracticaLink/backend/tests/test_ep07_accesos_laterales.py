@@ -340,3 +340,76 @@ class IncidenciasRegresionEp06Tests(AccesosLateralesBase):
         self.assertEqual(len(rutas), len(set(rutas)))
         self.assertIn((("PATCH",), "/practicas/{id_practica}/incidencias/{id_incidencia}/estado"), rutas)
         self.assertIn((("GET",), "/practicas/con-incidencias-pendientes"), rutas)
+
+
+class EstadoActualAccesoTests(AccesosLateralesBase):
+    """E-A..E-H: GET /practicas/{id}/estado (EP07 2B.3)."""
+
+    def _estado(self, id_practica):
+        return {
+            "id_practica": id_practica,
+            "fecha_actualizacion": datetime(2026, 11, 3, 12, tzinfo=timezone.utc),
+            "estado": {"id_estado": 4, "nombre": "APROBADA", "descripcion": "Aprobada", "es_final": False},
+        }
+
+    def test_E_A_gestor_asignado_gets_200_with_scoped_flag(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        self.db.execute.return_value.scalar_one.return_value = True            # fn_puede_gestionar_practica
+        self.db.execute.return_value.scalar_one_or_none.return_value = self._estado(9401)
+        self.assertEqual(self.client.get("/practicas/9401/estado").status_code, 200)
+        self.assertEqual(self.db.execute.call_args_list[1].args[1],
+                         {"id_practica": 9401, "id_usuario": GESTOR_ASIGNADO, "puede_gestionar": True})
+
+    def test_E_B_gestor_ajeno_gets_403_without_state(self):
+        self.rol(["GESTOR"], GESTOR_AJENO)
+        self.db.execute.return_value.scalar_one.return_value = False
+        self.db.execute.return_value.scalar_one_or_none.return_value = None
+        self.db.execute.return_value.mappings.return_value.first.return_value = {"id_practica": 9401}
+        response = self.client.get("/practicas/9401/estado")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"detail": "No tiene permisos para consultar el estado de esta práctica"})
+        self.assertEqual(self.db.execute.call_args_list[1].args[1]["puede_gestionar"], False)
+        self.db.commit.assert_not_called()
+
+    def test_E_C_practice_without_gestor_is_403_for_gestor(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        self.db.execute.return_value.scalar_one.return_value = False
+        self.db.execute.return_value.scalar_one_or_none.return_value = None
+        self.db.execute.return_value.mappings.return_value.first.return_value = {"id_practica": 9403}
+        self.assertEqual(self.client.get("/practicas/9403/estado").status_code, 403)
+
+    def test_E_D_administrator_is_global_without_assignment_query(self):
+        self.rol(["ADMINISTRADOR"], ADMIN)
+        self.db.execute.return_value.scalar_one_or_none.return_value = self._estado(9403)
+        self.assertEqual(self.client.get("/practicas/9403/estado").status_code, 200)
+        self.assertEqual(self.db.execute.call_count, 1)
+        self.assertTrue(self.db.execute.call_args.args[1]["puede_gestionar"])
+
+    def test_E_E_nonexistent_practice_is_404_for_gestor_and_admin(self):
+        for rol, uid in [(["GESTOR"], GESTOR_ASIGNADO), (["ADMINISTRADOR"], ADMIN)]:
+            with self.subTest(rol=rol):
+                self.rol(rol, uid)
+                self.db.reset_mock()
+                self.db.execute.return_value.scalar_one.return_value = False
+                self.db.execute.return_value.scalar_one_or_none.return_value = None
+                self.db.execute.return_value.mappings.return_value.first.return_value = None
+                response = self.client.get("/practicas/999999/estado")
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(response.json(), {"detail": "No se encontró la práctica solicitada"})
+
+    def test_E_F_estudiante_owner_keeps_existing_sql_access(self):
+        self.rol(["ESTUDIANTE"], ESTUDIANTE)
+        self.db.execute.return_value.scalar_one_or_none.return_value = self._estado(9401)
+        self.assertEqual(self.client.get("/practicas/9401/estado").status_code, 200)
+        self.assertEqual(self.db.execute.call_count, 1)
+        self.assertFalse(self.db.execute.call_args.args[1]["puede_gestionar"])
+
+    def test_E_G_estudiante_non_owner_keeps_existing_404(self):
+        self.rol(["ESTUDIANTE"], ESTUDIANTE)
+        self.db.execute.return_value.scalar_one_or_none.return_value = None
+        self.assertEqual(self.client.get("/practicas/9401/estado").status_code, 404)
+
+    def test_E_H_inactive_or_roleless_user_is_denied_before_query(self):
+        self.rol([], GESTOR_AJENO)
+        self.assertEqual(self.client.get("/practicas/9401/estado").status_code, 403)
+        self.db.execute.assert_not_called()

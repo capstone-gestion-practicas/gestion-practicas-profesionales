@@ -906,6 +906,7 @@ aprobada en EP06 y no dependen de `id_gestor`.
 |---|---|---|---|
 | Historial general `GET /practicas/{id}/historial` | global | solo asignada (ajena o sin gestor: 403) | 403 (ruta) |
 | Historial de estados `GET /practicas/{id}/historial-estados` | global | solo asignada | propietario: permitido (SQL); ajeno: 404 |
+| Estado actual `GET /practicas/{id}/estado` (EP07 2B.3) | global | solo asignada (ajena o sin gestor: 403; inexistente: 404) | propietario: permitido (SQL); ajeno: 404 |
 | Seguimientos `GET` y `POST /practicas/{id}/seguimientos` | global | solo asignada (ajena o sin gestor: 403 sin escritura; inexistente: 404) | 403 (ruta) |
 | Incidencias EP06 (`/practicas/{id}/incidencias*`, `con-incidencias-pendientes`, `GET /incidencias`) | transversal | transversal (sin `id_gestor`) | 403 |
 

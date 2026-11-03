@@ -526,13 +526,20 @@ def consultar_estado(
     db: Session = Depends(get_db),
 ):
     roles = {str(rol).upper() for rol in contexto.get("roles", [])}
-    estado = obtener_estado_actual(
-        db,
-        id_practica,
-        id_usuario,
-        bool(roles.intersection({"GESTOR", "ADMINISTRADOR"})),
+    es_administrador = "ADMINISTRADOR" in roles
+    es_gestor = "GESTOR" in roles
+    # EP07 2B.3: el GESTOR solo consulta el estado de prácticas asignadas a él.
+    # El ESTUDIANTE conserva la rama de propietario de fn_consultar_estado_practica.
+    puede_gestionar = es_administrador or (
+        es_gestor and puede_gestionar_practica(db, id_practica, id_usuario)
     )
+    estado = obtener_estado_actual(db, id_practica, id_usuario, puede_gestionar)
     if estado is None:
+        if es_gestor and not es_administrador and existe_practica(db, id_practica):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permisos para consultar el estado de esta práctica",
+            )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No se encontró la práctica solicitada",
