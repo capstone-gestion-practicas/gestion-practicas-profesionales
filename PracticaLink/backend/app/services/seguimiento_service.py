@@ -8,6 +8,21 @@ class PracticaSeguimientoNoDisponibleError(Exception):
     pass
 
 
+class PracticaSeguimientoNoEncontradaError(Exception):
+    """La práctica no existe (EP07 2B.2): 404, sin escritura."""
+    pass
+
+
+class AccesoSeguimientoNoPermitidoError(Exception):
+    """Usuario sin rol activo o GESTOR que no tiene asignada la práctica (EP07 2B.2)."""
+    pass
+
+
+class SeguimientoOperacionError(Exception):
+    """Resultado no reconocido o inválido: nunca se confirma como éxito."""
+    pass
+
+
 def registrar_seguimiento(
     db: Session,
     id_practica: int,
@@ -24,8 +39,17 @@ def registrar_seguimiento(
         "fecha": datos.fecha,
         "observacion": datos.observacion,
     }).scalar_one()
-    if resultado.get("error") == "PRACTICA_NO_DISPONIBLE":
+    if not isinstance(resultado, dict):
+        raise SeguimientoOperacionError
+    error = resultado.get("error")
+    if error == "PRACTICA_NO_ENCONTRADA":
+        raise PracticaSeguimientoNoEncontradaError
+    if error == "PRACTICA_NO_DISPONIBLE":
         raise PracticaSeguimientoNoDisponibleError
+    if error == "USUARIO_NO_AUTORIZADO":
+        raise AccesoSeguimientoNoPermitidoError
+    if error is not None:
+        raise SeguimientoOperacionError
     db.commit()
     return resultado
 

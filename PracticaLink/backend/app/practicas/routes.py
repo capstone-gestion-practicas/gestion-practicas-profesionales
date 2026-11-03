@@ -43,6 +43,7 @@ from app.practicas.service import (
     existe_practica,
     listar_practicas,
     obtener_historial_practica,
+    puede_gestionar_practica,
     obtener_practica_del_estudiante,
     obtener_detalle_practica,
     registrar_practica,
@@ -78,7 +79,10 @@ from app.services.estado_practica_service import (
     responder_observacion_practica,
 )
 from app.services.seguimiento_service import (
+    AccesoSeguimientoNoPermitidoError,
     PracticaSeguimientoNoDisponibleError,
+    PracticaSeguimientoNoEncontradaError,
+    SeguimientoOperacionError,
     listar_seguimientos,
     registrar_seguimiento,
 )
@@ -213,16 +217,30 @@ def consultar_practicas(
 @router.get(
     "/{id_practica}/historial",
     response_model=HistorialPracticaResponse,
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
 )
 def consultar_historial_practica(
     id_practica: int = Path(ge=1, le=9223372036854775807),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
+    id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    historial = obtener_historial_practica(db, id_practica, limit=limit, offset=offset)
+    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
+    es_administrador = "ADMINISTRADOR" in roles
+    historial = obtener_historial_practica(
+        db,
+        id_practica,
+        limit=limit,
+        offset=offset,
+        id_gestor_asignado=None if es_administrador else id_usuario,
+    )
     if historial is None:
+        if not es_administrador and existe_practica(db, id_practica):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permisos para consultar el historial de esta práctica",
+            )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="La práctica no existe",
@@ -244,23 +262,55 @@ def crear_seguimiento(
 ):
     try:
         return registrar_seguimiento(db, id_practica, id_usuario, datos)
+    except PracticaSeguimientoNoEncontradaError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "La práctica no existe",
+        ) from error
     except PracticaSeguimientoNoDisponibleError as error:
         db.rollback()
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             "La práctica no existe o ya se encuentra finalizada",
         ) from error
+    except AccesoSeguimientoNoPermitidoError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "No tiene permisos para registrar seguimientos en esta práctica",
+        ) from error
+    except SeguimientoOperacionError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "No se pudo registrar el seguimiento de la práctica",
+        ) from error
 
 
 @router.get(
     "/{id_practica}/seguimientos",
     response_model=list[SeguimientoResponse],
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
 )
 def consultar_seguimientos(
     id_practica: int,
+    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
+    id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
+    # EP07 2B.2: GESTOR solo lee seguimientos de prácticas asignadas; ADMINISTRADOR global.
+    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
+    if "ADMINISTRADOR" not in roles and not puede_gestionar_practica(db, id_practica, id_usuario):
+        # Política 403/404 (EP07 2B.2): existente y no asignada -> 403; inexistente -> 404.
+        if not existe_practica(db, id_practica):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="La práctica no existe",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permisos para consultar los seguimientos de esta práctica",
+        )
     return listar_seguimientos(db, id_practica)
 
 
@@ -503,13 +553,20 @@ def consultar_historial_estados(
     db: Session = Depends(get_db),
 ):
     roles = {str(rol).upper() for rol in contexto.get("roles", [])}
-    historial = obtener_historial_estados(
-        db,
-        id_practica,
-        id_usuario,
-        bool(roles.intersection({"GESTOR", "ADMINISTRADOR"})),
+    es_administrador = "ADMINISTRADOR" in roles
+    es_gestor = "GESTOR" in roles
+    # EP07 2B.2: el GESTOR solo gestiona el historial de prácticas asignadas a él.
+    # El estudiante conserva el acceso a su propia práctica mediante la consulta SQL existente.
+    puede_gestionar = es_administrador or (
+        es_gestor and puede_gestionar_practica(db, id_practica, id_usuario)
     )
+    historial = obtener_historial_estados(db, id_practica, id_usuario, puede_gestionar)
     if historial is None:
+        if es_gestor and not es_administrador and existe_practica(db, id_practica):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permisos para consultar el historial de esta práctica",
+            )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No se encontró la práctica solicitada",

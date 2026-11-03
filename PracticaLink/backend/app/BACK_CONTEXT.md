@@ -574,8 +574,9 @@ con mocks no validan la ejecución SQL ni la consistencia de datos reales.
 
 ### EP04 / HU04.3: historial de estados para gestión
 
-`GET /practicas/{id_practica}/historial` permite lectura a GESTOR y ADMINISTRADOR;
-ESTUDIANTE recibe 403. No cambia permisos ni contratos de otros endpoints.
+`GET /practicas/{id_practica}/historial` permite lectura a ADMINISTRADOR (global) y a
+GESTOR solo de prácticas asignadas (EP07, Corrección 2B.2: práctica ajena o sin gestor
+→ 403; inexistente → 404). ESTUDIANTE recibe 403. No cambia contratos de otros endpoints.
 El identificador debe estar entre 1 y 9223372036854775807. Acepta limit de 1 a
 100 (50 predeterminado), y offset >= 0 (0 predeterminado). Entradas inválidas:
 422. Práctica inexistente: 404, "La práctica no existe". Práctica existente sin
@@ -603,10 +604,12 @@ pueden contener información sensible preexistente; no deben registrarse en logs
 
 ### EP05 / HU013: registro de seguimientos WEB
 
-`POST /practicas/{id_practica}/seguimientos` está organizado en
-`app/seguimientos/{routes,schemas,service}.py`. Autoriza GESTOR y ADMINISTRADOR
-mediante el JWT y el contexto existente, cuya función SQL filtra usuarios y
-roles activos. Comprueba que el usuario del contexto coincide con el JWT.
+`POST /practicas/{id_practica}/seguimientos` es atendido en la práctica por el handler de
+`app/practicas/routes.py` (ver colisión en la sección final de EP07 2B.2). Autoriza a
+ADMINISTRADOR (global) y a GESTOR solo de prácticas asignadas (EP07 2B.2): la regla vive
+en `fn_registrar_seguimiento` mediante `fn_puede_gestionar_practica`, con bloqueo
+compartido de la práctica. Rechazo: 403 sin escritura. El contexto de roles proviene
+de `fn_contexto_usuario`, filtrado por usuario y roles activos. Comprueba que el usuario del contexto coincide con el JWT.
 La función de escritura revalida actividad y roles bajo bloqueo.
 
 El cuerpo admite exclusivamente `fecha` (YYYY-MM-DD, no futura según
@@ -654,8 +657,8 @@ actualmente HU013 y HU014 están integradas en Angular. No se migran demostracio
 ### EP05 / HU014: consulta HTTP del historial de seguimientos
 
 `GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` amplía el módulo
-seguimientos. JWT y contexto deben coincidir; usuario activo GESTOR o ADMINISTRADOR
-accede a todas las prácticas según el PMV, incluidas finalizadas. SQL revalida
+seguimientos. JWT y contexto deben coincidir; ADMINISTRADOR accede a todas las
+prácticas; GESTOR solo a las asignadas (EP07 2B.2, 403 si no lo está). SQL revalida
 actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
 no identidad externa. No modifica la dependencia ni el POST HU013.
 
@@ -892,3 +895,41 @@ La función SQL `practicas_privadas.fn_iniciar_practica` verifica esta regla baj
 la sesión restringida y devuelve 409 si falta la asignación. El bootstrap EP04
 también necesita permiso de lectura de la columna `practica.id_gestor`. El cambio
 genérico de estado no permite iniciar EN_CURSO y no puede eludir ese flujo.
+
+### EP07 · Corrección 2B.2: accesos laterales a la práctica
+
+Política aplicada por ámbito. Las prácticas de gestión (historial y seguimientos)
+usan la regla de gestor asignado; las incidencias conservan la política transversal
+aprobada en EP06 y no dependen de `id_gestor`.
+
+| Ámbito | ADMINISTRADOR activo | GESTOR activo | ESTUDIANTE / sin rol / inactivo |
+|---|---|---|---|
+| Historial general `GET /practicas/{id}/historial` | global | solo asignada (ajena o sin gestor: 403) | 403 (ruta) |
+| Historial de estados `GET /practicas/{id}/historial-estados` | global | solo asignada | propietario: permitido (SQL); ajeno: 404 |
+| Seguimientos `GET` y `POST /practicas/{id}/seguimientos` | global | solo asignada (ajena o sin gestor: 403 sin escritura; inexistente: 404) | 403 (ruta) |
+| Incidencias EP06 (`/practicas/{id}/incidencias*`, `con-incidencias-pendientes`, `GET /incidencias`) | transversal | transversal (sin `id_gestor`) | 403 |
+
+- `fn_puede_gestionar_practica(id_practica, id_usuario)` (migración
+  `20261103120000_ep07_autorizacion_seguimientos.sql`) es la regla única para
+  seguimientos y para el historial de estados. Devuelve verdadero para ADMINISTRADOR
+  activo, o para GESTOR activo asignado.
+- `fn_registrar_seguimiento` aplica la regla dentro de su transacción, con
+  `FOR SHARE` sobre la práctica para serializar con la reasignación. Primero comprueba
+  existencia (`PRACTICA_NO_ENCONTRADA` → 404) y luego autorización
+  (`USUARIO_NO_AUTORIZADO` → 403). Ninguna escritura ocurre antes de ambas. Ambos
+  errores se traducen sin `commit`. Un código no
+  reconocido también se rechaza sin `commit` (500).
+- `fn_listar_seguimientos` no cambió de firma. La capa FastAPI aplica la misma regla
+  antes de listar.
+- Incidencias: sin cambios en SQL ni en rutas. Las pruebas de regresión EP06 viven en
+  `tests/test_ep07_accesos_laterales.py` (I-A a I-G).
+
+Colisión heredada de seguimientos (no corregida en esta fase): `POST` y `GET
+/practicas/{id}/seguimientos` están definidos en `practicas/routes.py` y en
+`seguimientos/routes.py`. `practicas` se registra antes que `seguimientos` en
+`app/main.py`, así que atiende todas las peticiones; los handlers de
+`seguimientos/routes.py` nunca se ejecutan. Ese router usa `get_seguimientos_db` y
+la función `seguimientos_privados.fn_registrar_seguimiento`, que no está en las
+migraciones versionadas del repositorio y no pudo auditarse aquí. Riesgo: si se
+elimina la colisión conservando el handler de `seguimientos`, su comprobación solo
+valida rol (no asignación), así que habría que portar la regla antes.

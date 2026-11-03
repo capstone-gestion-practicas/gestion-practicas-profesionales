@@ -313,17 +313,33 @@ def obtener_detalle_practica(
     }
 
 
+def puede_gestionar_practica(db: Session, id_practica: int, id_usuario: int) -> bool:
+    # Regla única en PostgreSQL: ADMINISTRADOR activo, o GESTOR activo asignado a la práctica.
+    resultado = db.execute(text("""
+        SELECT public.fn_puede_gestionar_practica(:id_practica, :id_usuario)
+    """), {"id_practica": id_practica, "id_usuario": id_usuario}).scalar_one()
+    return resultado is True
+
+
 def obtener_historial_practica(
     db: Session,
     id_practica: int,
     limit: int = 50,
     offset: int = 0,
+    id_gestor_asignado: int | None = None,
 ) -> dict | None:
-    existe = db.execute(text("""
+    # Con id_gestor_asignado, el historial solo se devuelve si la práctica es de ese gestor.
+    # None = sin restricción por gestor (ADMINISTRADOR).
+    filtro = "AND p.id_gestor = :id_gestor_asignado" if id_gestor_asignado is not None else ""
+    parametros = {"id_practica": id_practica}
+    if id_gestor_asignado is not None:
+        parametros["id_gestor_asignado"] = id_gestor_asignado
+    existe = db.execute(text(f"""
         SELECT p.id_practica
         FROM practica p
         WHERE p.id_practica = :id_practica
-    """), {"id_practica": id_practica}).mappings().first()
+        {filtro}
+    """), parametros).mappings().first()
     if existe is None:
         return None
 

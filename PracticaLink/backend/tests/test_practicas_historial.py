@@ -74,7 +74,10 @@ class HistorialPracticaTests(unittest.TestCase):
         response = self.client.get('/practicas/15/historial')
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'detail': 'La práctica no existe'})
-        self.db.execute.assert_called_once()
+        # EP07 2B.2: búsqueda acotada + comprobación de existencia (403 vs 404); nunca consulta el historial.
+        self.assertEqual(self.db.execute.call_count, 2)
+        for llamada in self.db.execute.call_args_list:
+            self.assertNotIn('historial_estado', str(llamada.args[0]))
 
     def test_invalid_identifier_and_pagination_do_not_reach_service(self):
         for identifier, params in [('abc', {}), ('0', {}), ('-1', {}), ('1.5', {}), ('9223372036854775808', {}), ('15', {'limit': 0}), ('15', {'limit': 101}), ('15', {'limit': 'abc'}), ('15', {'offset': -1}), ('15', {'offset': 'abc'})]:
