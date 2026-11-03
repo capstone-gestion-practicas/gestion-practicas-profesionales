@@ -258,9 +258,11 @@ explícita y revisión humana específica del despliegue:
    no son una migración idempotente ni deben sobrescribir objetos sin revisión.
 3. Revisar orden de instalación: esquema base para una base vacía; migración EP07
    `20261102170000_ep07_cierre_asignaciones.sql` para añadir `practica.id_gestor`;
-   bootstrap `ep04-01-permisos-iniciar-practica.sql`; función
-   `ep04-fn-iniciar-practica.sql`. En un esquema existente, revisar y aplicar solo
-   la migración versionada; no ejecutar `schema.sql` como actualización.
+   bootstrap y función EP04 están versionados en
+   `20261103130000_ep07_versionar_inicio_practica.sql` (EP07 Corrección 3); los
+   scripts manuales de `scripts/BD/fixes/` quedan como históricos y no se aplican.
+   En un esquema existente, revisar y aplicar solo las migraciones versionadas; no
+   ejecutar `schema.sql` como actualización.
    No ejecutar `schema.sql` sobre la base existente como actualización.
 4. Mantener propietario técnico NOLOGIN, sin privilegios administrativos ni
    BYPASSRLS, no propietario de tablas, con los permisos mínimos y políticas RLS

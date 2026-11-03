@@ -896,6 +896,18 @@ la sesión restringida y devuelve 409 si falta la asignación. El bootstrap EP04
 también necesita permiso de lectura de la columna `practica.id_gestor`. El cambio
 genérico de estado no permite iniciar EN_CURSO y no puede eludir ese flujo.
 
+EP07 Corrección 3: la función `practicas_privadas.fn_iniciar_practica` y su bootstrap
+de permisos EP04 están versionados en
+`supabase/migrations/20261103130000_ep07_versionar_inicio_practica.sql`, que reproduce
+`scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql` y
+`scripts/BD/fixes/ep04-fn-iniciar-practica.sql`. Ambos scripts manuales quedan como
+históricos y no se aplican. La función es `SECURITY DEFINER` con propietario
+`pl_ep04_owner` (NOLOGIN), `search_path = pg_catalog, pg_temp`, EXECUTE solo para
+`pl_ep04_executor`, sin acceso a PUBLIC. Reglas: sin gestor activo asignado (también
+para ADMINISTRADOR) → `GESTOR_NO_ASIGNADO` (409); GESTOR distinto → `USUARIO_NO_AUTORIZADO`
+(403); la práctica se bloquea con `FOR UPDATE` antes de decidir. El login ejecutor
+se provisiona fuera de las migraciones. Esta versión no está desplegada en Supabase real.
+
 ### EP07 · Corrección 2B.2: accesos laterales a la práctica
 
 Política aplicada por ámbito. Las prácticas de gestión (historial y seguimientos)
