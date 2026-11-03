@@ -12,6 +12,8 @@ from fastapi.testclient import TestClient
 from app.core.database import get_db
 from app.core.incidencias_database import get_incidencias_db
 from app.core.security import get_current_user_id
+from app.core.seguimientos_database import get_seguimientos_db
+from app.core.seguimientos_lectura_database import get_seguimientos_lectura_db
 from app.incidencias.routes import router as incidencias_router
 from app.main import app
 
@@ -157,134 +159,150 @@ class HistorialEstadosAccesoTests(AccesosLateralesBase):
         self.assertEqual(response.json(), {"detail": "No se encontró la práctica solicitada"})
 
 
-class SeguimientosAccesoTests(AccesosLateralesBase):
-    """S-A..S-I: GET y POST /practicas/{id}/seguimientos (handler realmente alcanzable)."""
+class SeguimientosCanonicosEp05Tests(AccesosLateralesBase):
+    """S-A..S-K: contrato canónico EP05 (app/seguimientos) con autorización EP07.
 
-    def _seguimiento(self, id_practica):
-        return {
-            "id_seguimiento": 7, "id_practica": id_practica, "id_usuario": self.uid,
-            "usuario": "Sintetico Sintetico", "fecha": datetime(2026, 11, 3, 12, tzinfo=timezone.utc),
-            "observacion": "Seguimiento sintetico",
-        }
+    Usa las conexiones restringidas que usa el router real; la principal no se consulta.
+    """
 
-    def test_S_A_gestor_asignado_lists(self):
+    def setUp(self):
+        super().setUp()
+        self.restringida = MagicMock()
+        self.lectura = MagicMock()
+        app.dependency_overrides[get_seguimientos_db] = lambda: self.restringida
+        app.dependency_overrides[get_seguimientos_lectura_db] = lambda: self.lectura
+
+    def _alta(self, id_practica=9401, observacion="Seguimiento sintetico"):
+        return self.client.post(f"/practicas/{id_practica}/seguimientos",
+                                json={"fecha": "2026-01-15", "tipo": "Videollamada", "observacion": observacion})
+
+    def _registro_ok(self, id_practica=9401):
+        return {"id_seguimiento": 7, "id_practica": id_practica, "id_usuario": self.uid,
+                "fecha": "2026-01-15", "tipo": "Videollamada", "observacion": "Seguimiento sintetico",
+                "fecha_creacion": "2026-01-15T12:00:00+00:00"}
+
+    def _listado_ok(self, id_practica=9401):
+        return {"id_practica": id_practica,
+                "items": [{"id_seguimiento": 7, "fecha": "2026-01-15", "tipo": "Videollamada",
+                           "observacion": "Seguimiento sintetico",
+                           "responsable": {"id_usuario": self.uid, "nombre": "Sintetico Sintetico"}}],
+                "limit": 50, "offset": 0, "hay_mas": False}
+
+    # --- Alta (POST) ---
+    def test_S_A_gestor_asignado_creates_with_tipo_and_commits_once(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.side_effect = [True, []]
-        self.assertEqual(self.client.get("/practicas/9401/seguimientos").status_code, 200)
-        self.assertEqual(self.db.execute.call_args_list[0].args[1],
-                         {"id_practica": 9401, "id_usuario": GESTOR_ASIGNADO})
-
-    def test_S_B_gestor_ajeno_lists_is_403_without_listing(self):
-        self.rol(["GESTOR"], GESTOR_AJENO)
-        self.db.execute.return_value.scalar_one.side_effect = [False]
-        self.db.execute.return_value.mappings.return_value.first.return_value = {"existe": 1}
-        response = self.client.get("/practicas/9401/seguimientos")
-        self.assertEqual(response.status_code, 403)
-        for llamada in self.db.execute.call_args_list:
-            self.assertNotIn("fn_listar_seguimientos", str(llamada.args[0]))
-
-    def test_S_K_gestor_listing_nonexistent_practice_is_404(self):
-        self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.side_effect = [False]
-        self.db.execute.return_value.mappings.return_value.first.return_value = None
-        response = self.client.get("/practicas/999999/seguimientos")
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"detail": "La práctica no existe"})
-        for llamada in self.db.execute.call_args_list:
-            self.assertNotIn("fn_listar_seguimientos", str(llamada.args[0]))
-
-    def test_S_B2_practice_without_gestor_is_403_for_gestor_listing(self):
-        self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.side_effect = [False]
-        self.assertEqual(self.client.get("/practicas/9403/seguimientos").status_code, 403)
-
-    def test_S_C_gestor_asignado_creates_and_commits_once(self):
-        self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = self._seguimiento(9401)
-        response = self.client.post("/practicas/9401/seguimientos", json={"observacion": "Seguimiento sintetico"})
+        self.restringida.execute.return_value.scalar_one.return_value = self._registro_ok()
+        response = self._alta()
         self.assertEqual(response.status_code, 201)
-        self.db.commit.assert_called_once()
-        self.db.rollback.assert_not_called()
+        self.assertEqual(response.json()["tipo"], "Videollamada")
+        self.restringida.commit.assert_called_once()
+        self.restringida.rollback.assert_not_called()
+        self.assertEqual(self.restringida.execute.call_args.args[1]["id_usuario"], GESTOR_ASIGNADO)
 
-    def test_S_D_gestor_ajeno_creates_is_403_without_commit(self):
+    def test_S_B_gestor_ajeno_creates_is_403_without_commit(self):
         self.rol(["GESTOR"], GESTOR_AJENO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
-        response = self.client.post("/practicas/9401/seguimientos", json={"observacion": "Seguimiento sintetico"})
-        self.assertEqual(response.status_code, 403)
-        self.db.rollback.assert_called_once()
-        self.db.commit.assert_not_called()
+        self.restringida.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
+        self.assertEqual(self._alta().status_code, 403)
+        self.restringida.rollback.assert_called_once()
+        self.restringida.commit.assert_not_called()
 
-    def test_S_G_gestor_creates_on_nonexistent_practice_is_404_without_commit(self):
+    def test_S_C_practice_without_gestor_creation_is_403_for_gestor(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "PRACTICA_NO_ENCONTRADA"}
-        response = self.client.post("/practicas/999999/seguimientos", json={"observacion": "Seguimiento sintetico"})
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"detail": "La práctica no existe"})
-        self.db.rollback.assert_called_once()
-        self.db.commit.assert_not_called()
+        self.restringida.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
+        self.assertEqual(self._alta(9403).status_code, 403)
+        self.restringida.commit.assert_not_called()
 
-    def test_S_H_gestor_creates_on_existing_practice_of_other_gestor_is_403(self):
-        self.rol(["GESTOR"], GESTOR_AJENO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
-        response = self.client.post("/practicas/9401/seguimientos", json={"observacion": "Seguimiento sintetico"})
-        self.assertEqual(response.status_code, 403)
-        self.db.commit.assert_not_called()
-
-    def test_S_I_gestor_creates_on_existing_practice_without_gestor_is_403(self):
+    def test_S_D_nonexistent_practice_creation_is_404(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
-        response = self.client.post("/practicas/9403/seguimientos", json={"observacion": "Seguimiento sintetico"})
-        self.assertEqual(response.status_code, 403)
-        self.db.commit.assert_not_called()
-
-    def test_S_J_administrator_on_nonexistent_practice_is_404(self):
-        self.rol(["ADMINISTRADOR"], ADMIN)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "PRACTICA_NO_ENCONTRADA"}
-        response = self.client.post("/practicas/999999/seguimientos", json={"observacion": "Seguimiento sintetico"})
+        self.restringida.execute.return_value.scalar_one.return_value = {"error": "PRACTICA_NO_ENCONTRADA"}
+        response = self._alta(999999)
         self.assertEqual(response.status_code, 404)
-        self.db.commit.assert_not_called()
+        self.restringida.commit.assert_not_called()
 
     def test_S_E_administrator_creates_on_any_practice(self):
         self.rol(["ADMINISTRADOR"], ADMIN)
-        self.db.execute.return_value.scalar_one.return_value = self._seguimiento(9401)
-        self.assertEqual(self.client.post("/practicas/9401/seguimientos",
-                                          json={"observacion": "Seguimiento sintetico"}).status_code, 201)
-        self.db.commit.assert_called_once()
+        self.restringida.execute.return_value.scalar_one.return_value = self._registro_ok()
+        self.assertEqual(self._alta().status_code, 201)
+        self.restringida.commit.assert_called_once()
 
-    def test_S_F_practice_without_gestor_creation_is_403_without_commit(self):
+    def test_S_F_non_in_progress_practice_is_409_without_commit(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
-        self.assertEqual(self.client.post("/practicas/9403/seguimientos",
-                                          json={"observacion": "Seguimiento sintetico"}).status_code, 403)
-        self.db.commit.assert_not_called()
+        self.restringida.execute.return_value.scalar_one.return_value = {"error": "PRACTICA_NO_EN_CURSO"}
+        self.assertEqual(self._alta().status_code, 409)
+        self.restringida.commit.assert_not_called()
 
-    def test_S_G_unknown_result_is_500_without_commit(self):
+    def test_S_G_payload_without_tipo_is_rejected_before_database(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = {"error": "RESULTADO_DESCONOCIDO"}
-        response = self.client.post("/practicas/9401/seguimientos", json={"observacion": "Seguimiento sintetico"})
-        self.assertEqual(response.status_code, 500)
-        self.db.rollback.assert_called_once()
-        self.db.commit.assert_not_called()
+        response = self.client.post("/practicas/9401/seguimientos",
+                                    json={"fecha": "2026-01-15", "observacion": "Seguimiento sintetico"})
+        self.assertEqual(response.status_code, 422)
+        self.restringida.execute.assert_not_called()
 
-    def test_S_G2_malformed_result_is_500_without_commit(self):
+    def test_S_G2_extra_fields_and_invalid_tipo_are_rejected_before_database(self):
         self.rol(["GESTOR"], GESTOR_ASIGNADO)
-        self.db.execute.return_value.scalar_one.return_value = "respuesta-no-diccionario"
-        self.assertEqual(self.client.post("/practicas/9401/seguimientos",
-                                          json={"observacion": "Seguimiento sintetico"}).status_code, 500)
-        self.db.commit.assert_not_called()
+        extra = self.client.post("/practicas/9401/seguimientos",
+                                 json={"fecha": "2026-01-15", "tipo": "Otro", "observacion": "x", "id_usuario": 999})
+        invalid = self.client.post("/practicas/9401/seguimientos",
+                                   json={"fecha": "2026-01-15", "tipo": "Fax", "observacion": "x"})
+        self.assertEqual((extra.status_code, invalid.status_code), (422, 422))
+        self.restringida.execute.assert_not_called()
 
-    def test_S_H_administrator_lists_without_assignment_query(self):
-        self.rol(["ADMINISTRADOR"], ADMIN)
-        self.db.execute.return_value.scalar_one.return_value = []
-        self.assertEqual(self.client.get("/practicas/9401/seguimientos").status_code, 200)
-        self.assertEqual(self.db.execute.call_count, 1)
+    def test_S_H_unknown_or_malformed_result_is_500_without_commit(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        for resultado in [{"error": "RESULTADO_DESCONOCIDO"}, "respuesta-no-diccionario"]:
+            with self.subTest(resultado=resultado):
+                self.restringida.reset_mock()
+                self.restringida.execute.return_value.scalar_one.return_value = resultado
+                self.assertEqual(self._alta().status_code, 500)
+                self.restringida.commit.assert_not_called()
 
-    def test_S_I_estudiante_is_denied_before_any_query(self):
+    def test_S_I_estudiante_cannot_create_or_list(self):
         self.rol(["ESTUDIANTE"], ESTUDIANTE)
+        self.assertEqual(self._alta().status_code, 403)
         self.assertEqual(self.client.get("/practicas/9401/seguimientos").status_code, 403)
-        self.assertEqual(self.client.post("/practicas/9401/seguimientos",
-                                          json={"observacion": "Seguimiento sintetico"}).status_code, 403)
-        self.db.execute.assert_not_called()
+        self.restringida.execute.assert_not_called()
+        self.lectura.execute.assert_not_called()
+
+    # --- Lectura (GET paginado) ---
+    def test_S_J_gestor_asignado_lists_paginated_items_with_tipo(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        self.lectura.execute.return_value.scalar_one.return_value = self._listado_ok()
+        response = self.client.get("/practicas/9401/seguimientos")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(set(body), {"id_practica", "items", "limit", "offset", "hay_mas"})
+        self.assertEqual(body["items"][0]["tipo"], "Videollamada")
+        self.assertEqual(self.lectura.execute.call_args.args[1],
+                         {"id_practica": 9401, "id_usuario": GESTOR_ASIGNADO, "limit": 50, "offset": 0})
+
+    def test_S_K_gestor_ajeno_lists_is_403_and_nonexistent_is_404(self):
+        self.rol(["GESTOR"], GESTOR_AJENO)
+        self.lectura.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
+        self.assertEqual(self.client.get("/practicas/9401/seguimientos").status_code, 403)
+        self.lectura.execute.return_value.scalar_one.return_value = {"error": "PRACTICA_NO_ENCONTRADA"}
+        self.assertEqual(self.client.get("/practicas/999999/seguimientos").status_code, 404)
+
+    def test_S_L_administrator_lists_any_practice(self):
+        self.rol(["ADMINISTRADOR"], ADMIN)
+        self.lectura.execute.return_value.scalar_one.return_value = self._listado_ok(9402)
+        self.assertEqual(self.client.get("/practicas/9402/seguimientos").status_code, 200)
+
+    def test_S_M_pagination_parameters_reach_the_authorized_query(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        listado = self._listado_ok()
+        listado.update(limit=2, offset=4)  # El servicio exige que la respuesta refleje la paginación pedida.
+        self.lectura.execute.return_value.scalar_one.return_value = listado
+        self.assertEqual(self.client.get("/practicas/9401/seguimientos",
+                                         params={"limit": 2, "offset": 4}).status_code, 200)
+        self.assertEqual(self.lectura.execute.call_args.args[1]["limit"], 2)
+        self.assertEqual(self.lectura.execute.call_args.args[1]["offset"], 4)
+
+    def test_S_N_client_cannot_inject_identity_or_filters_in_listing(self):
+        self.rol(["GESTOR"], GESTOR_ASIGNADO)
+        self.lectura.execute.return_value.scalar_one.return_value = self._listado_ok()
+        response = self.client.get("/practicas/9401/seguimientos", params={"id_gestor": 999})
+        self.assertEqual(response.status_code, 422)
+        self.lectura.execute.assert_not_called()
 
 
 class IncidenciasRegresionEp06Tests(AccesosLateralesBase):

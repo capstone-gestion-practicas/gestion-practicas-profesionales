@@ -604,12 +604,15 @@ pueden contener información sensible preexistente; no deben registrarse en logs
 
 ### EP05 / HU013: registro de seguimientos WEB
 
-`POST /practicas/{id_practica}/seguimientos` es atendido en la práctica por el handler de
-`app/practicas/routes.py` (ver colisión en la sección final de EP07 2B.2). Autoriza a
-ADMINISTRADOR (global) y a GESTOR solo de prácticas asignadas (EP07 2B.2): la regla vive
-en `fn_registrar_seguimiento` mediante `fn_puede_gestionar_practica`, con bloqueo
-compartido de la práctica. Rechazo: 403 sin escritura. El contexto de roles proviene
-de `fn_contexto_usuario`, filtrado por usuario y roles activos. Comprueba que el usuario del contexto coincide con el JWT.
+`POST /practicas/{id_practica}/seguimientos` es el **único** handler público, en
+`app/seguimientos/routes.py` (EP07 Corrección 4A: los handlers equivalentes de
+`app/practicas/routes.py` se retiraron). Autoriza a ADMINISTRADOR (global) y a GESTOR solo
+de prácticas asignadas (EP07 2B.2 portada a EP05): la regla vive en
+`seguimientos_privados.fn_registrar_seguimiento` (migración
+`20261103140000_ep07_unificar_seguimientos_ep05.sql`), que bloquea la práctica con
+`FOR UPDATE`, distingue inexistente (404) de no autorizada (403) y exige estado EN_CURSO.
+Rechazo: sin escritura. El contexto de roles proviene de `fn_contexto_usuario`, filtrado
+por usuario y roles activos, y comprueba que coincide con el JWT.
 La función de escritura revalida actividad y roles bajo bloqueo.
 
 El cuerpo admite exclusivamente `fecha` (YYYY-MM-DD, no futura según
@@ -656,10 +659,11 @@ actualmente HU013 y HU014 están integradas en Angular. No se migran demostracio
 
 ### EP05 / HU014: consulta HTTP del historial de seguimientos
 
-`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` amplía el módulo
-seguimientos. JWT y contexto deben coincidir; ADMINISTRADOR accede a todas las
-prácticas; GESTOR solo a las asignadas (EP07 2B.2, 403 si no lo está). SQL revalida
-actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
+`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` es el único handler público
+(EP07 Corrección 4A). JWT y contexto deben coincidir; ADMINISTRADOR accede a todas las
+prácticas; GESTOR solo a las asignadas (403 si no lo está; 404 si la práctica no existe).
+La paginación ocurre en SQL sobre el conjunto autorizado (`fn_consultar_seguimientos`).
+SQL revalida actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
 no identidad externa. No modifica la dependencia ni el POST HU013.
 
 La respuesta 200 contiene id_practica, items, limit, offset, hay_mas. Cada item:
@@ -937,12 +941,13 @@ aprobada en EP06 y no dependen de `id_gestor`.
 - Incidencias: sin cambios en SQL ni en rutas. Las pruebas de regresión EP06 viven en
   `tests/test_ep07_accesos_laterales.py` (I-A a I-G).
 
-Colisión heredada de seguimientos (no corregida en esta fase): `POST` y `GET
-/practicas/{id}/seguimientos` están definidos en `practicas/routes.py` y en
-`seguimientos/routes.py`. `practicas` se registra antes que `seguimientos` en
-`app/main.py`, así que atiende todas las peticiones; los handlers de
-`seguimientos/routes.py` nunca se ejecutan. Ese router usa `get_seguimientos_db` y
-la función `seguimientos_privados.fn_registrar_seguimiento`, que no está en las
-migraciones versionadas del repositorio y no pudo auditarse aquí. Riesgo: si se
-elimina la colisión conservando el handler de `seguimientos`, su comprobación solo
-valida rol (no asignación), así que habría que portar la regla antes.
+Colisión de seguimientos (resuelta en EP07 Corrección 4A): antes, `POST` y `GET
+/practicas/{id}/seguimientos` estaban declarados en `practicas/routes.py` y en
+`seguimientos/routes.py`. El router `seguimientos` (contrato EP05, HU013/HU014) queda como
+único registro público; el handler de `practicas` se retiró, junto con los módulos
+`app/services/seguimiento_service.py` y `app/schemas/seguimiento.py` que solo él usaba.
+Angular migró a ese contrato. Las funciones públicas legacy
+`public.fn_registrar_seguimiento` y `public.fn_listar_seguimientos` (migración
+`20261028010000`) quedan sin consumidores; no se eliminan (SQL versionado). La función
+de registro legacy no informa `tipo` y falla por la restricción EP05, por diseño.
+Los scripts manuales `scripts/BD/fixes/ep05-*.sql` quedan como históricos.

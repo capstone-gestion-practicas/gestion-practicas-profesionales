@@ -1,3 +1,6 @@
+-- HISTÓRICO (EP07 Corrección 4A): incorporado en la migración
+-- PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql.
+-- No aplicar manualmente: un despliegue de migraciones ya lo contiene.
 -- HU013 WEB: capacidades nuevas, sin modificar conexiones/permisos de EP03/EP04.
 -- No crea logins ni contraseñas. El futuro login backend recibirá únicamente
 -- pl_ep05_executor; nunca pl_ep05_owner. No conceder ejecutor a clientes/Data API.

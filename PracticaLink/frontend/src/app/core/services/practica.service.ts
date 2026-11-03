@@ -25,7 +25,6 @@ import {
   GestorPractica,
   IniciarPracticaRequest,
   IniciarPracticaResponse,
-  SeguimientoPractica,
   IncidenciaPractica,
   RecordatorioEstudianteResponse
 } from '../models/practica.models';
@@ -209,24 +208,6 @@ export class PracticaService {
     return this.http.patch<ActualizarEstadoPracticaResponse>(
       `${this.apiUrl}/practicas/${idPractica}/respuesta-observacion`,
       { respuesta }
-    );
-  }
-
-  listarSeguimientos(idPractica: number): Observable<SeguimientoPractica[]> {
-    return this.http.get<SeguimientoPractica[]>(
-      `${this.apiUrl}/practicas/${idPractica}/seguimientos`
-    );
-  }
-
-  // Renombrado tras el merge con develop: colisionaba con registrarSeguimiento(string, SeguimientoCreate) de EP05.
-  registrarSeguimientoPractica(
-    idPractica: number,
-    fecha: string,
-    observacion: string
-  ): Observable<SeguimientoPractica> {
-    return this.http.post<SeguimientoPractica>(
-      `${this.apiUrl}/practicas/${idPractica}/seguimientos`,
-      { fecha, observacion }
     );
   }
 

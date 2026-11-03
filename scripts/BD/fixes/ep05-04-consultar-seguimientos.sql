@@ -1,3 +1,6 @@
+-- HISTÓRICO (EP07 Corrección 4A): incorporado en la migración
+-- PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql.
+-- No aplicar manualmente: un despliegue de migraciones ya lo contiene.
 -- HU014 WEB. Requiere ep05-01/02/03. Aplicación única y transaccional.
 -- PMV: GESTOR/ADMINISTRADOR activos tienen alcance global, en todos los estados.
 -- p_id_usuario es una afirmación del backend de confianza, obtenida del JWT

@@ -1,3 +1,8 @@
+-- NOTA (EP07 Corrección 4A): esta prueba valida la función pública LEGACY
+-- public.fn_registrar_seguimiento (migración 20261028010000), que no informa 'tipo'.
+-- Desde 20261103140000 el contrato vigente es EP05 (seguimientos_privados, tipo obligatorio),
+-- cubierto por ep07_seguimientos_ep05.sql. Esta prueba solo debe ejecutarse sobre un
+-- laboratorio con migraciones hasta 20261103130000 inclusive.
 -- EP07 · Corrección 2B.2: autorización de seguimientos en fn_registrar_seguimiento.
 -- Ejecutar SOLO en un PostgreSQL de laboratorio desechable con las migraciones hasta
 -- 20261103120000 inclusive y los scripts EP04 aplicados, en orden.

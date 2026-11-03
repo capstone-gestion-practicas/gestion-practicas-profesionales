@@ -125,15 +125,6 @@ export interface HistorialEstadoPractica {
   observacion: string | null;
 }
 
-export interface SeguimientoPractica {
-  id_seguimiento: number;
-  id_practica: number;
-  id_usuario: number;
-  usuario: string;
-  fecha: string;
-  observacion: string;
-}
-
 export type PrioridadIncidencia = 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
 export type EstadoIncidencia = 'ABIERTA' | 'EN_REVISION' | 'RESUELTA' | 'CERRADA';
 

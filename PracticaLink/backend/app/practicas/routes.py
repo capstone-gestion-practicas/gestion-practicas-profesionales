@@ -34,7 +34,6 @@ from app.practicas.schemas import (
     RecordatoriosCierreResponse,
     ResponderObservacionPracticaRequest,
 )
-from app.schemas.seguimiento import SeguimientoCreate, SeguimientoResponse
 from app.practicas.service import (
     EstadoInicialNoEncontradoError,
     PerfilEstudianteNoEncontradoError,
@@ -77,14 +76,6 @@ from app.services.estado_practica_service import (
     obtener_estado_actual,
     obtener_historial_estados,
     responder_observacion_practica,
-)
-from app.services.seguimiento_service import (
-    AccesoSeguimientoNoPermitidoError,
-    PracticaSeguimientoNoDisponibleError,
-    PracticaSeguimientoNoEncontradaError,
-    SeguimientoOperacionError,
-    listar_seguimientos,
-    registrar_seguimiento,
 )
 
 
@@ -246,72 +237,6 @@ def consultar_historial_practica(
             detail="La práctica no existe",
         )
     return historial
-
-
-@router.post(
-    "/{id_practica}/seguimientos",
-    response_model=SeguimientoResponse,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
-)
-def crear_seguimiento(
-    id_practica: int,
-    datos: SeguimientoCreate,
-    id_usuario: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    try:
-        return registrar_seguimiento(db, id_practica, id_usuario, datos)
-    except PracticaSeguimientoNoEncontradaError as error:
-        db.rollback()
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            "La práctica no existe",
-        ) from error
-    except PracticaSeguimientoNoDisponibleError as error:
-        db.rollback()
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            "La práctica no existe o ya se encuentra finalizada",
-        ) from error
-    except AccesoSeguimientoNoPermitidoError as error:
-        db.rollback()
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            "No tiene permisos para registrar seguimientos en esta práctica",
-        ) from error
-    except SeguimientoOperacionError as error:
-        db.rollback()
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "No se pudo registrar el seguimiento de la práctica",
-        ) from error
-
-
-@router.get(
-    "/{id_practica}/seguimientos",
-    response_model=list[SeguimientoResponse],
-)
-def consultar_seguimientos(
-    id_practica: int,
-    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
-    id_usuario: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    # EP07 2B.2: GESTOR solo lee seguimientos de prácticas asignadas; ADMINISTRADOR global.
-    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
-    if "ADMINISTRADOR" not in roles and not puede_gestionar_practica(db, id_practica, id_usuario):
-        # Política 403/404 (EP07 2B.2): existente y no asignada -> 403; inexistente -> 404.
-        if not existe_practica(db, id_practica):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="La práctica no existe",
-            )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tiene permisos para consultar los seguimientos de esta práctica",
-        )
-    return listar_seguimientos(db, id_practica)
 
 
 @router.patch(

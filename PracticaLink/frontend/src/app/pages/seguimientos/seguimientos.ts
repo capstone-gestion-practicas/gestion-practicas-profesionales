@@ -15,14 +15,19 @@ import {
   IonGrid,
   IonInput,
   IonRow,
+  IonSelect,
+  IonSelectOption,
   IonSpinner,
   IonTextarea
 } from '@ionic/angular';
 
+import { PracticaEstadoResumen } from '../../core/models/practica.models';
 import {
-  PracticaEstadoResumen,
-  SeguimientoPractica
-} from '../../core/models/practica.models';
+  fechaSeguimientoValida,
+  MEDIOS_CONTACTO,
+  SeguimientoCreate,
+  SeguimientoHistorialItem
+} from '../../core/models/seguimiento.models';
 import { PracticaService } from '../../core/services/practica.service';
 
 @Component({
@@ -42,6 +47,8 @@ import { PracticaService } from '../../core/services/practica.service';
     IonGrid,
     IonInput,
     IonRow,
+    IonSelect,
+    IonSelectOption,
     IonSpinner,
     IonTextarea
   ],
@@ -50,8 +57,10 @@ import { PracticaService } from '../../core/services/practica.service';
 })
 export class Seguimientos implements OnInit {
   practicas: PracticaEstadoResumen[] = [];
-  readonly historiales = new Map<number, SeguimientoPractica[]>();
+  readonly medios = MEDIOS_CONTACTO;
+  readonly historiales = new Map<number, SeguimientoHistorialItem[]>();
   readonly fechas = new Map<number, string>();
+  readonly tipos = new Map<number, string>();
   readonly observaciones = new Map<number, string>();
   cargando = true;
   guardandoId: number | null = null;
@@ -98,19 +107,35 @@ export class Seguimientos implements OnInit {
   registrar(practica: PracticaEstadoResumen): void {
     const id = practica.id_practica;
     const observacion = this.observaciones.get(id)?.trim() ?? '';
+    const fecha = this.fechas.get(id) ?? '';
+    const tipo = this.tipos.get(id) ?? '';
+    if (!fechaSeguimientoValida(fecha)) {
+      this.error = 'Indica una fecha válida, no futura, para el seguimiento.';
+      return;
+    }
+    if (!tipo) {
+      this.error = 'Selecciona el medio de contacto antes de guardar el seguimiento.';
+      return;
+    }
     if (!observacion) {
       this.error = 'Escribe una observación antes de guardar el seguimiento.';
       return;
     }
     this.error = '';
     this.guardandoId = id;
-    this.practicaService.registrarSeguimientoPractica(id, this.fechas.get(id) ?? '', observacion).subscribe({
-      next: seguimiento => {
-        this.historiales.set(id, [seguimiento, ...(this.historiales.get(id) ?? [])]);
+    const datos: SeguimientoCreate = { fecha, tipo: tipo as SeguimientoCreate['tipo'], observacion };
+    this.practicaService.registrarSeguimiento(String(id), datos).subscribe({
+      next: () => {
         this.observaciones.set(id, '');
+        this.tipos.set(id, '');
         this.guardandoId = null;
         this.mensaje = `Seguimiento registrado para ${practica.estudiante}.`;
         window.setTimeout(() => this.mensaje = '', 5000);
+        // Recargar desde el servidor: la respuesta de alta no incluye el nombre del responsable.
+        this.historiales.delete(id);
+        if (this.historialAbiertoId === id) {
+          this.cargarHistorial(id);
+        }
       },
       error: (respuesta: HttpErrorResponse) => {
         this.guardandoId = null;
@@ -128,10 +153,14 @@ export class Seguimientos implements OnInit {
     this.historialAbiertoId = id;
     this.errorHistorial = '';
     if (this.historiales.has(id)) return;
+    this.cargarHistorial(id);
+  }
+
+  private cargarHistorial(id: number): void {
     this.cargandoHistorialId = id;
-    this.practicaService.listarSeguimientos(id).subscribe({
-      next: historial => {
-        this.historiales.set(id, historial);
+    this.practicaService.obtenerSeguimientos(String(id)).subscribe({
+      next: respuesta => {
+        this.historiales.set(id, respuesta.items);
         this.cargandoHistorialId = null;
       },
       error: () => {
@@ -141,7 +170,7 @@ export class Seguimientos implements OnInit {
     });
   }
 
-  historialDe(idPractica: number): SeguimientoPractica[] {
+  historialDe(idPractica: number): SeguimientoHistorialItem[] {
     return this.historiales.get(idPractica) ?? [];
   }
 
