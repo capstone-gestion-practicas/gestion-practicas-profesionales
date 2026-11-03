@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("SUPABASE_DATABASE_URL", "postgresql+psycopg://localhost/practicalink_test")
@@ -247,3 +248,127 @@ class Ep07PracticasTests(unittest.TestCase):
         self.assertEqual(response.json(), {"practicas_notificadas": 1})
         self.assertIn("fn_procesar_recordatorios_cierre", str(self.db.execute.call_args.args[0]))
         self.assertEqual(enviar_push.call_count, 2)
+
+    # --- Corrección 2B.1: listado y detalle de prácticas acotados por gestor asignado ---
+    # Nota: estas pruebas verifican la consulta y las decisiones de FastAPI con mocks.
+    # El resultado real (qué filas se devuelven) se verificó contra PostgreSQL de laboratorio.
+
+    def _fila_listado(self, id_practica):
+        return {
+            "id_practica": id_practica, "id_estudiante": 7,
+            "estudiante_nombre": "Estudiante Sintético", "centro_nombre": "Centro sintético",
+            "fecha_registro": datetime(2026, 10, 17, 12, tzinfo=timezone.utc),
+            "id_estado": 6, "estado_nombre": "APROBADA", "es_final": False,
+            "fecha_ultimo_cambio_estado": None,
+        }
+
+    def _fila_detalle(self):
+        return {
+            "id_practica": 9301, "id_estudiante": 7, "estudiante_nombre": "Estudiante Sintético",
+            "id_centro": 9, "centro_nombre": "Centro sintético",
+            "fecha_registro": datetime(2025, 3, 1, 12, tzinfo=timezone.utc),
+            "id_estado": 6, "estado_nombre": "APROBADA", "es_final": False,
+            "fecha_ultimo_cambio_estado": None,
+            "fecha_inicio": None, "fecha_termino": None,
+            "horas": None, "cargo_funcion": None, "descripcion": None,
+        }
+
+    def test_L1_L2_L3_gestor_listing_is_scoped_to_authenticated_identity(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.all.return_value = []
+        response = self.client.get("/practicas")
+        self.assertEqual(response.status_code, 200)
+        sql, params = self.db.execute.call_args.args
+        self.assertIn("p.id_gestor = :id_gestor_asignado", " ".join(str(sql).split()))
+        self.assertEqual(params["id_gestor_asignado"], 23)
+
+    def test_L4_administrator_listing_has_no_gestor_restriction(self):
+        self.contexto.return_value = {"roles": ["ADMINISTRADOR"]}
+        self.db.execute.return_value.mappings.return_value.all.return_value = []
+        self.assertEqual(self.client.get("/practicas").status_code, 200)
+        sql, params = self.db.execute.call_args.args
+        self.assertNotIn("id_gestor_asignado", str(sql))
+        self.assertNotIn("id_gestor_asignado", params)
+
+    def test_listing_client_cannot_choose_id_gestor(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.all.return_value = []
+        response = self.client.get(
+            "/practicas", params={"id_gestor": 999, "id_gestor_asignado": 999}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.db.execute.call_args.args[1]["id_gestor_asignado"], 23)
+
+    def test_L6_gestor_filter_is_applied_before_limit_so_paging_and_hay_mas_match_scope(self):
+        from app.practicas.service import listar_practicas
+
+        self.db.execute.return_value.mappings.return_value.all.return_value = [
+            self._fila_listado(9301), self._fila_listado(9302), self._fila_listado(9303),
+        ]
+        result = listar_practicas(self.db, limit=2, offset=0, id_gestor_asignado=23)
+        self.assertEqual([item["id_practica"] for item in result["items"]], [9301, 9302])
+        self.assertTrue(result["hay_mas"])
+        sql, params = self.db.execute.call_args.args
+        sql = " ".join(str(sql).split())
+        self.assertLess(sql.index("p.id_gestor = :id_gestor_asignado"), sql.index("LIMIT :limit"))
+        self.assertEqual(params, {"limit": 3, "offset": 0, "id_gestor_asignado": 23})
+        self.db.commit.assert_not_called()
+
+    def test_D1_gestor_assigned_detail_is_200_with_scoped_single_query(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.first.return_value = self._fila_detalle()
+        response = self.client.get("/practicas/9301")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["id_practica"], 9301)
+        self.db.execute.assert_called_once()
+        self.assertEqual(self.db.execute.call_args.args[1], {"id_practica": 9301, "id_gestor_asignado": 23})
+
+    def test_D2_gestor_of_another_practice_is_403_without_detail(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        # 1.ª consulta (acotada): sin fila; 2.ª consulta (solo existencia): la práctica existe.
+        self.db.execute.return_value.mappings.return_value.first.side_effect = [None, {"existe": 1}]
+        response = self.client.get("/practicas/9302")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()["detail"], "No tiene permisos para consultar esta práctica")
+        self.assertNotIn("estudiante", response.json())
+        self.db.commit.assert_not_called()
+
+    def test_D3_practice_without_gestor_is_rejected_for_gestor(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.first.side_effect = [None, {"existe": 1}]
+        response = self.client.get("/practicas/9303")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.db.execute.call_args.args[1], {"id_practica": 9303})
+
+    def test_D2_nonexistent_practice_remains_404_for_gestor(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.first.side_effect = [None, None]
+        response = self.client.get("/practicas/9999")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "La práctica no existe"})
+
+    def test_D4_administrator_detail_is_global_200(self):
+        self.contexto.return_value = {"roles": ["ADMINISTRADOR"]}
+        self.db.execute.return_value.mappings.return_value.first.return_value = self._fila_detalle()
+        self.assertEqual(self.client.get("/practicas/9302").status_code, 200)
+        self.db.execute.assert_called_once()
+        self.assertEqual(self.db.execute.call_args.args[1], {"id_practica": 9302})
+
+    def test_D5_estudiante_has_no_detail_access_and_no_query_runs(self):
+        self.contexto.return_value = {"roles": ["ESTUDIANTE"]}
+        self.db.execute.return_value.mappings.return_value.first.return_value = self._fila_detalle()
+        self.assertEqual(self.client.get("/practicas/9301").status_code, 403)
+        self.db.execute.assert_not_called()
+
+    def test_detail_client_cannot_choose_id_gestor(self):
+        self.contexto.return_value = {"roles": ["GESTOR"]}
+        self.db.execute.return_value.mappings.return_value.first.return_value = self._fila_detalle()
+        self.client.get("/practicas/9301", params={"id_gestor": 999})
+        self.assertEqual(self.db.execute.call_args.args[1]["id_gestor_asignado"], 23)
+
+    def test_inactive_or_roleless_user_is_denied_before_query(self):
+        # fn_contexto_usuario devuelve roles vacíos para usuarios inactivos o sin rol activo.
+        self.contexto.return_value = {"roles": []}
+        self.assertEqual(self.client.get("/practicas").status_code, 403)
+        self.assertEqual(self.client.get("/practicas/9301").status_code, 403)
+        self.db.execute.assert_not_called()

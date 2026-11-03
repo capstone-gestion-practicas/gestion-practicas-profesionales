@@ -40,6 +40,7 @@ from app.practicas.service import (
     PerfilEstudianteNoEncontradoError,
     PracticaActivaError,
     PracticaNoEncontradaError,
+    existe_practica,
     listar_practicas,
     obtener_historial_practica,
     obtener_practica_del_estudiante,
@@ -180,14 +181,18 @@ def obtener_mi_practica(
 @router.get(
     "",
     response_model=PracticasListadoResponse,
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
 )
 def consultar_practicas(
     rut: str | None = Query(default=None, pattern=r"^[0-9]{7,8}-[0-9Kk]$"),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
+    id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
+    # Identidad desde el JWT y roles desde fn_contexto_usuario; el cliente no elige id_gestor.
+    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
+    id_gestor_asignado = None if "ADMINISTRADOR" in roles else id_usuario
     if rut is not None:
         try:
             rut = normalizar_rut(rut)
@@ -196,7 +201,13 @@ def consultar_practicas(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="El RUT no es válido",
             ) from error
-    return listar_practicas(db, rut=rut, limit=limit, offset=offset)
+    return listar_practicas(
+        db,
+        rut=rut,
+        limit=limit,
+        offset=offset,
+        id_gestor_asignado=id_gestor_asignado,
+    )
 
 
 @router.get(
@@ -566,13 +577,25 @@ def actualizar_estado_general(
 @router.get(
     "/{id_practica}",
     response_model=PracticaDetalleGestionResponse,
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
 )
 def consultar_detalle_practica(
     id_practica: int = Path(ge=1, le=9223372036854775807),
+    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
+    id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    practica = obtener_detalle_practica(db, id_practica)
+    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
+    if "ADMINISTRADOR" in roles:
+        practica = obtener_detalle_practica(db, id_practica)
+    else:
+        practica = obtener_detalle_practica(
+            db, id_practica, id_gestor_asignado=id_usuario
+        )
+        if practica is None and existe_practica(db, id_practica):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tiene permisos para consultar esta práctica",
+            )
     if practica is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

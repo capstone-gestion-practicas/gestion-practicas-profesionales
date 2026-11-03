@@ -511,7 +511,11 @@ El valor ISO de la API permanece sin cambios. No modifica `/auth/context` ni las
 
 `GET /practicas` permite a GESTOR y ADMINISTRADOR consultar prácticas de
 cualquier estado, incluidas las históricas y finales. No modifica EP03 ni
-`GET /practicas/me`.
+`GET /practicas/me`. Desde EP07 (Corrección 2B.1), ADMINISTRADOR activo conserva el
+listado global y un GESTOR activo solo recibe prácticas con su `id_gestor`
+(identidad desde el JWT; el cliente no envía `id_gestor`). El filtro se aplica en el
+mismo `WHERE` antes de `LIMIT/OFFSET`, por lo que `hay_mas` refleja el conjunto
+autorizado. No existe campo `total` en el contrato.
 
 Parámetros: `rut` opcional, `limit` (1–100, por defecto 50) y `offset`
 (>= 0, por defecto 0). El RUT debe tener 7–8 dígitos, guion y verificador
@@ -542,7 +546,11 @@ peticiones. Las pruebas con mocks no acreditan rendimiento o ejecución SQL real
 ### EP04 / HU04.1: detalle general de gestión
 
 `GET /practicas/{id_practica}` permite consultar una práctica seleccionada en
-cualquier estado, incluidas históricas y finales, a GESTOR y ADMINISTRADOR.
+cualquier estado, incluidas históricas y finales, a ADMINISTRADOR (global) y a GESTOR
+solo si la práctica tiene su `id_gestor` (EP07, Corrección 2B.1). Un GESTOR que consulta
+una práctica ajena o sin gestor recibe `403` sin datos; una práctica inexistente sigue
+en `404`. Esta distinción permite a un gestor confirmar la existencia de un ID ajeno:
+es una decisión de contrato pendiente de revisión, no un defecto cerrado.
 La ruta dinámica se registra después de `/practicas/me`, cuyo contrato no cambia.
 Usa `PracticaDetalleGestionResponse`, independiente del detalle del estudiante.
 
