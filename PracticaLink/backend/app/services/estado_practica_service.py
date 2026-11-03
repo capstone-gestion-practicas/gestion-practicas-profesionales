@@ -1,7 +1,8 @@
+from pydantic import ValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.practicas.schemas import ActualizarEstadoPracticaRequest
+from app.practicas.schemas import ActualizarEstadoPracticaRequest, ActualizarEstadoPracticaResponse
 from app.services.push_service import enviar_push_notificacion
 
 
@@ -22,6 +23,15 @@ class CierreManualRequeridoError(Exception):
 
 
 class InicioRestringidoRequeridoError(Exception):
+    pass
+
+
+class PracticaFinalizadaNoModificableError(Exception):
+    pass
+
+
+class EstadoPracticaOperacionError(Exception):
+    """Resultado no reconocido o inválido: nunca se confirma como éxito."""
     pass
 
 def obtener_practica_estudiante(db: Session, id_usuario: int) -> dict | None:
@@ -171,6 +181,8 @@ def actualizar_estado_practica(
         "id_estado": datos.id_estado,
         "observacion": datos.observacion,
     }).scalar_one()
+    if not isinstance(resultado, dict):
+        raise EstadoPracticaOperacionError
     error = resultado.get("error")
     if error == "PRACTICA_NO_ENCONTRADA":
         raise PracticaEstadoNoEncontradaError
@@ -180,6 +192,15 @@ def actualizar_estado_practica(
         raise CierreManualRequeridoError
     if error == "INICIO_RESTRINGIDO_REQUERIDO":
         raise InicioRestringidoRequeridoError
+    if error == "PRACTICA_FINALIZADA_NO_MODIFICABLE":
+        raise PracticaFinalizadaNoModificableError
+    if error is not None:
+        raise EstadoPracticaOperacionError
+    # Validar antes de confirmar: una respuesta inesperada nunca es éxito.
+    try:
+        ActualizarEstadoPracticaResponse.model_validate(resultado)
+    except ValidationError as error_validacion:
+        raise EstadoPracticaOperacionError from error_validacion
     db.commit()
     return resultado
 

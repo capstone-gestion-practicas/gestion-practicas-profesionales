@@ -58,8 +58,10 @@ from app.services.correo_service import (
 from app.services.estado_practica_service import (
     CierreManualRequeridoError,
     EstadoPracticaNoDisponibleError,
+    EstadoPracticaOperacionError,
     InicioRestringidoRequeridoError,
     PracticaEstadoNoEncontradaError,
+    PracticaFinalizadaNoModificableError,
     PracticaNoObservadaError,
     actualizar_estado_practica,
     listar_estados_activos,
@@ -539,6 +541,18 @@ def actualizar_estado_general(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Use el flujo de inicio de práctica con un gestor asignado",
+        ) from error
+    except PracticaFinalizadaNoModificableError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="La práctica está finalizada y no puede modificarse",
+        ) from error
+    except EstadoPracticaOperacionError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo actualizar el estado de la práctica",
         ) from error
 
 
