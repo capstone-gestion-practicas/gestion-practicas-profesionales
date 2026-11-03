@@ -52,9 +52,23 @@ src/app/
 - `/practicas/nueva`: permite a un estudiante sin práctica activa registrar los antecedentes de su práctica profesional.
 - `/revisiones`: lista solicitudes pendientes para gestores y administradores.
 - `/revisiones/:id`: muestra los antecedentes; la decisión se registra mediante un modal.
+- `/notificaciones`: muestra la bandeja persistente del usuario autenticado.
+- `/envio-notificaciones`: permite a gestores y administradores enviar avisos push a un estudiante o a todos los estudiantes activos.
 - `/usuarios`: panel de gestión de cuentas exclusivo para el rol `ADMINISTRADOR`.
 
 Las rutas están declaradas en `app.routes.ts`.
+
+El inicio prioriza tareas según el rol: gestores ven solicitudes pendientes y
+accesos directos a revisión, estados, seguimientos, incidencias y envío de
+avisos; estudiantes ven el paso que necesitan completar y el estado de su
+práctica. Las cuentas con ambos roles pueden cambiar de espacio desde el encabezado.
+
+Al registrar una práctica, se puede informar la jornada semanal (1 a 45 horas).
+La estimación de horas transcurridas usa esa jornada y se detiene en la fecha de
+término cuando ya pasó; si no se informó, la estimación lo indica.
+
+Si el estado es `OBSERVADA`, el estudiante puede enviar una respuesta que queda
+en el historial junto al cambio del estado a `EN_REVISION`.
 
 ## Flujo de autenticación
 
@@ -135,10 +149,11 @@ El store vive únicamente en memoria. Al recargar el navegador, `Home` vuelve a 
 
 ## Comunicación con el backend
 
-El servicio de autenticación usa actualmente:
+Los servicios usan una URL centralizada por ambiente:
 
 ```text
-http://127.0.0.1:8000
+Desarrollo: http://127.0.0.1:8000
+Producción/Android: https://practicalink-api-qa.onrender.com
 ```
 
 Endpoints consumidos:
@@ -147,13 +162,19 @@ Endpoints consumidos:
 - `POST /auth/register`: crea una cuenta con rol `ESTUDIANTE`.
 - `GET /auth/context`: obtiene usuario, roles, perfil y práctica actual.
 - `POST /practicas`: registra el centro y la práctica del estudiante autenticado.
+- `GET /practicas/{id}/seguimientos`: lista los seguimientos de una práctica para gestores y administradores.
+- `POST /practicas/{id}/seguimientos`: registra fecha y observación durante el desarrollo de la práctica.
+- `GET /incidencias`: lista las incidencias y su prioridad, estado y práctica asociada para gestores y administradores.
+- `POST /practicas/{id}/incidencias`: registra una incidencia con el contrato EP06 (`tipo` y `descripcion`).
+- `PATCH /incidencias/{id}/estado`: retirado del API público; no existe en el backend. El único cambio de estado es `PATCH /practicas/{id}/incidencias/{id_incidencia}/estado` (HU016).
 - `GET /empresas/consulta/{rut}`: consulta antecedentes tributarios con caché de backend.
 - `GET /usuarios`: lista usuarios para el administrador.
 - `GET /usuarios/roles`: lista roles activos.
 - `POST /usuarios`: crea una cuenta y asigna sus roles.
 - `PATCH /usuarios/{id}`: actualiza datos, estado y roles.
 
-El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introduce configuración por ambientes, reemplazar la URL fija de `AuthService` por una configuración centralizada.
+Los archivos de `src/environments` determinan la URL usada en cada build. El
+proyecto nativo vive en `frontend/android` y se sincroniza con `npm run apk:sync`.
 
 ## Responsabilidad de cada pieza
 
@@ -166,6 +187,8 @@ El backend debe estar ejecutándose localmente en el puerto `8000`. Si se introd
 - `login.ts`: inicio de sesión y carga inicial del contexto.
 - `home.ts`: restauración del contexto y cierre de sesión.
 - `home.html`: presentación del contexto disponible.
+- `pages/seguimientos`: registro y consulta del historial EP05 por práctica.
+- `pages/incidencias`: listado y registro de incidencias con el contrato EP06 (`tipo`, `descripcion`). No cambia estados: la gestión de estado es HU016, desde la ficha de la práctica.
 - `practica-form`: modal de registro, búsqueda por RUT e ingreso manual del centro.
 - `practica.service.ts`: registro de prácticas y consulta de empresas.
 - `usuario.service.ts`: comunicación con los endpoints administrativos.
@@ -194,6 +217,21 @@ npm test -- --watch=false --browsers=ChromeHeadless
 Las pruebas actuales cubren guards, store de autenticación, componentes base y el saludo construido desde el contexto.
 
 ## Estado actual y límites conocidos
+
+El centro de notificaciones mantiene Realtime y avisos emergentes con la app
+abierta. En Android nativo, permite registrar un token Firebase Cloud Messaging
+por usuario para recibir avisos push cuando la app está en segundo plano o
+cerrada. El usuario habilita el permiso desde el centro de notificaciones.
+FCM requiere `google-services.json` en Android y la variable
+`FIREBASE_SERVICE_ACCOUNT_JSON` configurada en el backend.
+Cuando la app Android está abierta, el push recibido también se presenta como
+una notificación local del sistema; en segundo plano, Android presenta el push
+de FCM directamente.
+Gestores y administradores envían desde `/envio-notificaciones` un mensaje
+personalizado a un estudiante activo o a todos los estudiantes activos; el
+aviso queda en la bandeja del destinatario y se envía por FCM si habilitó push.
+También pueden elegir broadcast para enviar el mensaje a todos los estudiantes
+activos; la interfaz pide confirmación antes de realizar el envío.
 
 - `/home` está protegido por autenticación y roles; la página conserva una comprobación defensiva de sesión.
 - No existe flujo de renovación automática del token.

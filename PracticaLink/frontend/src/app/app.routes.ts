@@ -1,4 +1,4 @@
- import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -26,6 +26,22 @@ export const routes: Routes = [
         .then(m => m.Home)
   },
   {
+    path: 'notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./features/notificaciones/pages/notificaciones/notificaciones')
+        .then(m => m.Notificaciones)
+  },
+  {
+    path: 'envio-notificaciones',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./features/notificaciones/pages/envio-notificaciones/envio-notificaciones')
+        .then(m => m.EnvioNotificaciones)
+  },
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },
@@ -46,6 +62,28 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/revision-detalle/revision-detalle')
         .then(m => m.RevisionDetalle)
+  },
+  {
+    path: 'gestion-estados',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/gestion-estados/gestion-estados')
+        .then(m => m.GestionEstados)
+  },
+  {
+    path: 'seguimientos',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/seguimientos/seguimientos').then(m => m.Seguimientos)
+  },
+  {
+    path: 'incidencias',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/incidencias/incidencias').then(m => m.Incidencias)
   },
   {
     path: 'practicas',

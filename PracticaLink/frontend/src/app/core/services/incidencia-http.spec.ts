@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -29,7 +30,7 @@ describe('HU015 HTTP contract', () => {
     TestBed.inject(PracticaService).registrarIncidencia('15', datos).subscribe(response => {
       expect(response.status).toBe(201);
     });
-    const req = http.expectOne('http://127.0.0.1:8000/practicas/15/incidencias');
+    const req = http.expectOne(`${environment.apiUrl}/practicas/15/incidencias`);
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     expect(req.request.body).toEqual({ tipo: 'OTRO', descripcion: datos.descripcion });
@@ -40,7 +41,7 @@ describe('HU015 HTTP contract', () => {
     const page = { id_practica: 16, items: [], limit: 50, offset: 50, hay_mas: false };
     TestBed.inject(PracticaService).obtenerIncidencias('16', 50, 50)
       .subscribe(response => expect(response).toEqual(page));
-    const req = http.expectOne('http://127.0.0.1:8000/practicas/16/incidencias?limit=50&offset=50');
+    const req = http.expectOne(`${environment.apiUrl}/practicas/16/incidencias?limit=50&offset=50`);
     expect(req.request.method).toBe('GET');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     expect(req.request.body).toBeNull();
@@ -51,7 +52,7 @@ describe('HU015 HTTP contract', () => {
     TestBed.inject(PracticaService).registrarIncidencia('15', {
       tipo: 'OTRO', descripcion: 'Texto'
     }).subscribe({ error: error => expect(error.status).toBe(503) });
-    http.expectOne('http://127.0.0.1:8000/practicas/15/incidencias')
+    http.expectOne(`${environment.apiUrl}/practicas/15/incidencias`)
       .flush({}, { status: 503, statusText: 'Unavailable' });
   });
 
@@ -60,7 +61,7 @@ describe('HU015 HTTP contract', () => {
       comentario: 'Texto', id_usuario: 999, fecha: 'inventada' };
     TestBed.inject(PracticaService).cambiarEstadoIncidencia('15', '42', data)
       .subscribe(r => expect(r.status).toBe(200));
-    const req = http.expectOne('http://127.0.0.1:8000/practicas/15/incidencias/42/estado');
+    const req = http.expectOne(`${environment.apiUrl}/practicas/15/incidencias/42/estado`);
     expect(req.request.method).toBe('PATCH');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     expect(req.request.body).toEqual({ estado_esperado: 'PENDIENTE', estado_nuevo: 'RESUELTA', comentario: 'Texto' });
@@ -69,7 +70,7 @@ describe('HU015 HTTP contract', () => {
 
   it('HU016 history uses JWT, selected identifiers and pagination', () => {
     TestBed.inject(PracticaService).obtenerHistorialIncidencia('16', '43', 50, 50).subscribe();
-    const req = http.expectOne('http://127.0.0.1:8000/practicas/16/incidencias/43/historial?limit=50&offset=50');
+    const req = http.expectOne(`${environment.apiUrl}/practicas/16/incidencias/43/historial?limit=50&offset=50`);
     expect(req.request.method).toBe('GET');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     req.flush({});

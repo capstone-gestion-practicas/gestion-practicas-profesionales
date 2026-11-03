@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -26,7 +27,7 @@ describe('HU017 HTTP contract · resumen de incidencias pendientes', () => {
   it('sends a GET with only limit and offset, and the existing JWT interceptor', () => {
     let recibido: unknown;
     TestBed.inject(PracticaService).obtenerResumenIncidenciasPendientes(100, 200).subscribe(r => { recibido = r; });
-    const req = http.expectOne(request => request.url === 'http://127.0.0.1:8000/practicas/con-incidencias-pendientes');
+    const req = http.expectOne(request => request.url === `${environment.apiUrl}/practicas/con-incidencias-pendientes`);
     expect(req.request.method).toBe('GET');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     expect(req.request.params.keys().sort()).toEqual(['limit', 'offset']);

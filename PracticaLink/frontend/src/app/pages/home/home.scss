@@ -1,5 +1,5 @@
 .home-content {
-  --background: var(--ion-background-color);
+  --background: var(--cream);
 }
 
 .home-wrapper {
@@ -8,6 +8,19 @@
   padding: 24px;
   --ion-grid-padding: 0;
   --ion-grid-column-padding: 0;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  margin: 0 0 20px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 7px;
+  background: linear-gradient(100deg, #073b78 0%, #075b89 43%, #19975d 100%);
+  box-shadow: 0 6px 16px rgba(13, 70, 59, .24);
+  color: #fffdf7;
 }
 
 .admin-dashboard {
@@ -22,14 +35,11 @@
 }
 
 .student-dashboard > ion-card {
-  grid-column: span 8;
-  min-width: 0;
   margin: 0;
 }
 
 .student-sidebar {
   grid-column: span 4;
-  min-width: 0;
   display: grid;
   gap: 16px;
   align-content: start;
@@ -39,8 +49,9 @@
   margin: 0;
 }
 
-.student-dashboard.single-panel > .student-sidebar {
-  grid-column: 1 / -1;
+.student-dashboard > .practice-card,
+.student-dashboard > .state-card {
+  grid-column: span 8;
 }
 
 .student-dashboard .welcome-card ion-card-content {
@@ -66,13 +77,6 @@
   color: var(--ink-muted);
 }
 
-.admin-heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .admin-metrics,
 .admin-panels {
   padding: 0;
@@ -84,8 +88,7 @@
 }
 
 .metric-card,
-.admin-table-card,
-.quick-actions-card {
+.admin-table-card {
   height: 100%;
   margin: 0;
 }
@@ -119,8 +122,7 @@
   --color: var(--ion-color-primary);
 }
 
-.admin-table-card ion-card-title,
-.quick-actions-card ion-card-title {
+.admin-table-card ion-card-title {
   color: var(--ink);
   font-size: 1.1rem;
 }
@@ -138,9 +140,51 @@
   text-align: right;
 }
 
-.quick-actions-card ion-button + ion-button {
-  margin-top: 10px;
+.state-history {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(27, 54, 44, .12);
 }
+
+.state-history-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.state-history-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.state-history-list li:not(:last-child)::after {
+  position: absolute;
+  top: 11px;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background: #d7e5dc;
+  content: '';
+}
+
+.history-dot {
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+}
+
+.state-history-list strong { color: var(--ink); }
+.state-history-list p, .history-empty { margin: 4px 0 0; color: var(--ink-muted); font-size: .84rem; }
+.state-history-list .history-observation { color: var(--ink); }
+.history-loading { display: flex; align-items: center; gap: 10px; color: var(--ink-muted); }
 
 ion-modal.requests-modal {
   --width: min(720px, calc(100% - 32px));
@@ -170,6 +214,96 @@ ion-modal.requests-modal {
 .requests-modal-heading p:not(.module-label) {
   margin: 0;
   color: var(--ink-muted);
+}
+
+.menu-mark {
+  display: grid;
+  gap: 3px;
+  width: 14px;
+  margin-right: 11px;
+}
+
+.menu-mark i {
+  display: block;
+  width: 11px;
+  height: 1px;
+  border-radius: 1px;
+  background: #fffdf7;
+}
+
+.brand-symbol {
+  margin-right: 4px;
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.brand-name {
+  color: #fffdf7;
+  font-size: .94rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.brand-spacer {
+  flex: 1;
+}
+
+.quick-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 12px;
+}
+
+.quick-nav button {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #fffdf7;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.quick-nav button:hover,
+.quick-nav button:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, .16);
+}
+
+.account-summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.account-avatar {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 50%;
+  background: #fffdf7;
+  color: #166b59;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.account-name {
+  max-width: 130px;
+  overflow: hidden;
+  color: #fffdf7;
+  font-size: .68rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 ion-card {
@@ -382,8 +516,8 @@ ion-card {
 .registration-details span {
   padding: 6px 10px;
   border-radius: 999px;
-  background: var(--cream-muted);
-  color: var(--ion-color-primary);
+  background: #e4efe5;
+  color: #245a45;
   font-size: 0.82rem;
 }
 
@@ -397,8 +531,8 @@ ion-card {
 .module-success {
   padding: 12px;
   border-radius: 8px;
-  background: #ecfdf5;
-  color: #047857;
+  background: #e4efe5;
+  color: #245a45;
   font-weight: 600;
 }
 
@@ -440,30 +574,40 @@ ion-modal {
   --border-radius: 14px;
 }
 
-@media (max-width: 960px) {
-  .student-dashboard {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .student-sidebar,
-  .student-dashboard > ion-card {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (max-width: 720px) {
+  .brand-header {
+    min-height: 0;
+    flex-wrap: wrap;
+    gap: 4px 0;
+    padding: 8px 10px;
+  }
+
+  .quick-nav {
+    order: 4;
+    flex: 0 0 100%;
+    overflow-x: auto;
+    margin: 4px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, .22);
+  }
+
+  .quick-nav button {
+    padding: 9px 8px;
+    font-size: .65rem;
+  }
+
   .admin-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .admin-heading-actions {
-    width: 100%;
-    justify-content: stretch;
+  .student-dashboard {
+    grid-template-columns: 1fr;
   }
 
-  .admin-heading-actions ion-button {
-    flex: 1;
+  .student-sidebar,
+  .student-dashboard > .practice-card,
+  .student-dashboard > .state-card {
+    grid-column: 1;
   }
 
   .identity-list,

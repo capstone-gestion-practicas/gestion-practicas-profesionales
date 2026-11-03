@@ -1,17 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+import hmac
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.inicio_practica_database import get_inicio_practica_db
 from app.core.permissions import require_roles
 from app.core.security import get_current_user_id
 from app.practicas.schemas import (
     ActualizarEstadoPracticaRequest,
     ActualizarEstadoPracticaResponse,
+    AsignarGestorPracticaRequest,
+    AsignarGestorPracticaResponse,
+    CerrarPracticaRequest,
+    CerrarPracticaResponse,
     EstadoPracticaActualResponse,
     EstadoPracticaDetalle,
     EstudianteSinPractica,
+    GestorPracticaResponse,
     HistorialEstadoPractica,
     PracticaCreate,
     PracticaCreateResponse,
@@ -23,6 +31,7 @@ from app.practicas.schemas import (
     IniciarPracticaRequest,
     IniciarPracticaResponse,
     RecordatorioEstudianteResponse,
+    RecordatoriosCierreResponse,
     ResponderObservacionPracticaRequest,
 )
 from app.schemas.seguimiento import SeguimientoCreate, SeguimientoResponse
@@ -47,6 +56,7 @@ from app.services.correo_service import (
     enviar_recordatorio_sin_practica,
 )
 from app.services.estado_practica_service import (
+    CierreManualRequeridoError,
     EstadoPracticaNoDisponibleError,
     PracticaEstadoNoEncontradaError,
     PracticaNoObservadaError,
@@ -54,6 +64,10 @@ from app.services.estado_practica_service import (
     listar_estados_activos,
     listar_estudiantes_sin_practica,
     listar_practicas_para_gestion,
+    listar_gestores_activos,
+    asignar_gestor_practica,
+    cerrar_practica,
+    procesar_recordatorios_cierre,
     obtener_estado_actual,
     obtener_historial_estados,
     responder_observacion_practica,
@@ -280,10 +294,120 @@ def listar_estados(db: Session = Depends(get_db)):
 @router.get(
     "/gestion-estados",
     response_model=list[PracticaEstadoResumen],
+)
+def listar_para_gestionar_estados(
+    contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    roles = {str(rol).upper() for rol in contexto.get("roles", [])}
+    try:
+        return listar_practicas_para_gestion(
+            db, id_usuario, "ADMINISTRADOR" in roles
+        )
+    except PermissionError as error:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "No tiene permisos para consultar estas prácticas",
+        ) from error
+
+
+@router.get(
+    "/gestores",
+    response_model=list[GestorPracticaResponse],
+    dependencies=[Depends(require_roles("ADMINISTRADOR"))],
+)
+def listar_gestores(db: Session = Depends(get_db), id_usuario: int = Depends(get_current_user_id)):
+    try:
+        return listar_gestores_activos(db, id_usuario)
+    except PermissionError as error:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "No tiene permisos para consultar gestores"
+        ) from error
+
+
+@router.patch(
+    "/{id_practica}/gestor",
+    response_model=AsignarGestorPracticaResponse,
+    dependencies=[Depends(require_roles("ADMINISTRADOR"))],
+)
+def asignar_gestor(
+    datos: AsignarGestorPracticaRequest,
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    resultado = asignar_gestor_practica(
+        db, id_practica, id_usuario, datos.id_gestor
+    )
+    errores = {
+        "USUARIO_NO_AUTORIZADO": (403, "No tiene permisos para asignar gestores"),
+        "GESTOR_NO_DISPONIBLE": (409, "El gestor seleccionado no está activo"),
+        "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
+        "PRACTICA_FINALIZADA": (409, "No se puede asignar gestor a una práctica finalizada"),
+    }
+    if resultado.get("error"):
+        db.rollback()
+        codigo, mensaje = errores.get(
+            resultado["error"], (500, "No se pudo asignar el gestor")
+        )
+        raise HTTPException(codigo, mensaje)
+    return resultado
+
+
+@router.post(
+    "/{id_practica}/cierre",
+    response_model=CerrarPracticaResponse,
     dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
 )
-def listar_para_gestionar_estados(db: Session = Depends(get_db)):
-    return listar_practicas_para_gestion(db)
+def finalizar_practica(
+    datos: CerrarPracticaRequest,
+    id_practica: int = Path(ge=1, le=9223372036854775807),
+    id_usuario: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    resultado = cerrar_practica(
+        db, id_practica, id_usuario, datos.observacion
+    )
+    errores = {
+        "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
+        "USUARIO_NO_AUTORIZADO": (403, "No tiene permisos para finalizar esta práctica"),
+        "PRACTICA_NO_CERRABLE": (409, "La práctica debe estar EN_CURSO y haber alcanzado su fecha de término"),
+        "ESTADO_FINAL_NO_DISPONIBLE": (500, "No está configurado el estado FINALIZADA"),
+    }
+    if resultado.get("error"):
+        db.rollback()
+        codigo, mensaje = errores.get(
+            resultado["error"], (500, "No se pudo finalizar la práctica")
+        )
+        raise HTTPException(codigo, mensaje)
+    return resultado
+
+
+@router.post(
+    "/tareas/recordatorios-cierre",
+    response_model=RecordatoriosCierreResponse,
+)
+def ejecutar_recordatorios_cierre(
+    x_task_token: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    token_configurado = settings.ep07_reminder_task_token
+    if not token_configurado:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "La tarea de recordatorios no está configurada",
+        )
+    if not x_task_token or not hmac.compare_digest(x_task_token, token_configurado):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "No autorizado para ejecutar esta tarea"
+        )
+    notificaciones = procesar_recordatorios_cierre(db)
+    return {
+        "practicas_notificadas": len(
+            {item["id_practica"] for item in notificaciones}
+        )
+    }
 
 
 @router.get(
@@ -401,6 +525,12 @@ def actualizar_estado_general(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="El estado seleccionado no existe o no está activo",
+        ) from error
+    except CierreManualRequeridoError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Use la acción de cierre manual para finalizar la práctica",
         ) from error
 
 

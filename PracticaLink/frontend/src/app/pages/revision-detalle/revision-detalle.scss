@@ -129,6 +129,38 @@
   grid-column: 1 / -1;
 }
 
+.status-current {
+  margin: 0 0 12px;
+  color: var(--ink-muted);
+}
+
+.status-current strong {
+  color: var(--ion-color-primary);
+}
+
+.status-select-item {
+  margin-bottom: 12px;
+  --background: var(--cream-muted);
+}
+
+.status-observation {
+  margin-top: 4px;
+}
+
+.status-success {
+  margin: 12px 0 0;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+.status-actions {
+  margin-top: 14px;
+}
+
+.status-actions ion-button {
+  margin-inline-start: auto;
+}
+
 .detail-actions-card .actions-helper {
   margin: 0 0 16px;
   color: var(--ink-muted);

@@ -2,6 +2,7 @@
   <ion-grid class="form-wrapper"><ion-row><ion-col size="12">
     <ion-card>
       <ion-card-header>
+        <p class="module-label">EP02 · Registro de práctica</p>
         <ion-card-title>Registrar práctica profesional</ion-card-title>
       </ion-card-header>
 
@@ -142,6 +143,12 @@
               <ion-label position="stacked">Horas</ion-label>
               <ion-input type="number" min="1" formControlName="horas"></ion-input>
             </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Horas semanales</ion-label>
+              <ion-input type="number" min="1" max="45" formControlName="horasSemanales"></ion-input>
+            </ion-item>
+            <p class="field-help">Opcional. Si lo informas, debe estar entre 1 y 45 horas por semana.</p>
 
             <ion-item>
               <ion-label position="stacked">Cargo o función</ion-label>

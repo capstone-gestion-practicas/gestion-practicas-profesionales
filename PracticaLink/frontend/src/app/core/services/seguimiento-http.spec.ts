@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -28,7 +29,7 @@ describe('HU013 HTTP contract', () => {
     TestBed.inject(PracticaService).obtenerSeguimientos('15', 50, 100).subscribe({
       error: error => expect(error.status).toBe(503)
     });
-    const req = http.expectOne(request => request.url === 'http://127.0.0.1:8000/practicas/15/seguimientos');
+    const req = http.expectOne(request => request.url === `${environment.apiUrl}/practicas/15/seguimientos`);
     expect(req.request.method).toBe('GET');
     expect(req.request.params.keys()).toEqual(['limit', 'offset']);
     expect(req.request.params.get('limit')).toBe('50');
@@ -42,7 +43,7 @@ describe('HU013 HTTP contract', () => {
     TestBed.inject(PracticaService).registrarSeguimiento('15', datos).subscribe(response => {
       expect(response.status).toBe(201);
     });
-    const req = http.expectOne('http://127.0.0.1:8000/practicas/15/seguimientos');
+    const req = http.expectOne(`${environment.apiUrl}/practicas/15/seguimientos`);
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('Authorization')).toBe('Bearer synthetic-test-token');
     expect(req.request.body).toEqual({ fecha: datos.fecha, tipo: 'Otro', observacion: datos.observacion });
@@ -53,7 +54,7 @@ describe('HU013 HTTP contract', () => {
     TestBed.inject(PracticaService).registrarSeguimiento('15', {
       fecha: '2026-01-01', tipo: 'Otro', observacion: 'Texto'
     }).subscribe({ error: error => expect(error.status).toBe(503) });
-    http.expectOne('http://127.0.0.1:8000/practicas/15/seguimientos')
+    http.expectOne(`${environment.apiUrl}/practicas/15/seguimientos`)
       .flush({}, { status: 503, statusText: 'Unavailable' });
   });
 

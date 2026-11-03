@@ -22,6 +22,7 @@ import {
   IonCol,
   IonRow,
   IonSpinner,
+  IonTextarea,
   ModalController
 } from '@ionic/angular';
 
@@ -29,7 +30,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
-import { PracticaDetalleResponse } from '../../core/models/practica.models';
+import {
+  HistorialEstadoPractica,
+  EstudianteSinPractica,
+  PracticaDetalleResponse,
+  PracticaEstadoResumen
+} from '../../core/models/practica.models';
 import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 import { PracticaForm } from '../practica-form/practica-form';
@@ -39,6 +45,8 @@ import { UsuarioAdministrable } from '../../core/models/usuario.models';
 import { SolicitudRevisionResumen } from '../../core/models/revision.models';
 import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/solicitudes-pendientes-modal';
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
+import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
+import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
 
 @Component({
   selector: 'app-home',
@@ -61,7 +69,8 @@ import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-deta
     IonList,
     IonModal,
     IonNote,
-    IonSpinner
+    IonSpinner,
+    IonTextarea
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss'
@@ -74,10 +83,12 @@ export class Home implements OnInit {
   private readonly router = inject(Router);
   private readonly estudianteService = inject(EstudianteService);
   private readonly modalController = inject(ModalController);
+  private readonly notificacionService = inject(NotificacionService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly revisionService = inject(RevisionService);
 
   readonly contexto = this.authStore.contexto;
+  readonly notificacionesNoLeidas = this.notificacionService.noLeidas;
   readonly saludo = computed(() => {
     const contexto = this.contexto();
 
@@ -108,10 +119,24 @@ export class Home implements OnInit {
   readonly esAdministrador = computed(
     () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
   );
+  readonly tieneEspacioEstudiante = computed(
+    () => this.esEstudiante() && this.puedeRevisarPracticas()
+  );
 
   cargando = true;
+  mostrarPanelEstudiante = false;
   errorPractica = '';
+  errorSolicitudesGestion = '';
+  cargandoSolicitudesGestion = false;
   practicaDetalle: PracticaDetalleResponse | null = null;
+  modalAntecedentesAbierto = false;
+  historialEstados: HistorialEstadoPractica[] = [];
+  cargandoHistorialEstados = false;
+  errorHistorialEstados = '';
+  respuestaObservacion = '';
+  enviandoRespuestaObservacion = false;
+  errorRespuestaObservacion = '';
+  mensajeRespuestaObservacion = '';
   modalPerfilAbierto = false;
   guardandoPerfil = false;
   errorPerfil = '';
@@ -121,10 +146,17 @@ export class Home implements OnInit {
   telefonoPerfil = '';
   direccionPerfil = '';
   usuariosAdmin: UsuarioAdministrable[] = [];
+  estudiantesSinPractica: EstudianteSinPractica[] = [];
+  errorEstudiantesSinPractica = '';
+  recordatoriosEnCurso = new Set<number>();
+  resultadoRecordatorios: Record<number, { mensaje: string; error: boolean }> = {};
   solicitudesAdmin: SolicitudRevisionResumen[] = [];
+  practicasAdmin: PracticaEstadoResumen[] = [];
+  metricasPracticasEstado: { id_estado: number; nombre: string; cantidad: number }[] = [];
   errorDashboardAdmin = '';
   mensajeInteraccion = '';
   private firmaContextoPracticaProcesada = '';
+  private omitirPrimerIonViewWillEnter = true;
 
   private readonly sincronizarPracticaConContexto = effect(() => {
     const contexto = this.contexto();
@@ -149,6 +181,8 @@ export class Home implements OnInit {
       this.cargando = false;
       this.cargarPracticaRegistrada(this.contexto() as ContextoUsuarioResponse);
       this.cargarDashboardAdmin();
+      this.cargarEstudiantesSinPractica();
+      this.cargarSolicitudesGestion();
       return;
     }
 
@@ -158,11 +192,23 @@ export class Home implements OnInit {
         this.cargando = false;
         this.cargarPracticaRegistrada(contexto);
         this.cargarDashboardAdmin();
+        this.cargarEstudiantesSinPractica();
+        this.cargarSolicitudesGestion();
       },
       error: () => {
         this.cerrarSesion();
       }
     });
+  }
+
+  ionViewWillEnter(): void {
+    if (this.omitirPrimerIonViewWillEnter) {
+      this.omitirPrimerIonViewWillEnter = false;
+      return;
+    }
+    this.cargarDashboardAdmin();
+    this.cargarEstudiantesSinPractica();
+    this.cargarSolicitudesGestion();
   }
 
   cerrarSesion(): void {
@@ -180,16 +226,46 @@ export class Home implements OnInit {
     await modal.present();
   }
 
-  consultarPracticas(): void {
-    this.router.navigate(['/practicas']);
-  }
-
   revisarPracticas(): void {
     this.router.navigate(['/revisiones']);
   }
 
+  gestionarEstados(): void {
+    this.router.navigate(['/gestion-estados']);
+  }
+
+  gestionarSeguimientos(): void {
+    this.router.navigate(['/seguimientos']);
+  }
+
+  gestionarIncidencias(): void {
+    this.router.navigate(['/incidencias']);
+  }
+
+  enviarNotificaciones(): void {
+    this.router.navigate(['/envio-notificaciones']);
+  }
+
+  abrirPracticasEstado(estado: string): void {
+    this.router.navigate(['/gestion-estados'], {
+      queryParams: { estado: estado.toUpperCase() }
+    });
+  }
+
   gestionarUsuarios(): void {
     this.router.navigate(['/usuarios']);
+  }
+
+  verEspacioEstudiante(): void {
+    this.mostrarPanelEstudiante = true;
+  }
+
+  verEspacioGestion(): void {
+    this.mostrarPanelEstudiante = false;
+  }
+
+  abrirCentroNotificaciones(): void {
+    this.router.navigate(['/notificaciones']);
   }
 
   async abrirSolicitudesPendientes(): Promise<void> {
@@ -199,6 +275,12 @@ export class Home implements OnInit {
       cssClass: 'requests-modal'
     });
     await modal.present();
+    const { data } = await modal.onDidDismiss<{ irARevisiones?: boolean; idPractica?: number }>();
+    if (data?.idPractica) {
+      await this.router.navigate(['/revisiones', data.idPractica]);
+    } else if (data?.irARevisiones) {
+      await this.router.navigate(['/revisiones']);
+    }
   }
 
   async abrirDetalleSolicitud(idPractica: number): Promise<void> {
@@ -222,8 +304,12 @@ export class Home implements OnInit {
     );
   }
 
-  irAPractica(): void {
-    document.getElementById('antecedentes-practica')?.scrollIntoView({ behavior: 'smooth' });
+  abrirAntecedentesPractica(): void {
+    this.modalAntecedentesAbierto = true;
+  }
+
+  cerrarAntecedentes(): void {
+    this.modalAntecedentesAbierto = false;
   }
 
   solicitudesPendientes(): number {
@@ -246,8 +332,12 @@ export class Home implements OnInit {
     ).length;
   }
 
-  solicitudesRecientes(): SolicitudRevisionResumen[] {
-    return [...this.solicitudesAdmin]
+  nombreEstado(estado: string): string {
+    return estado.replaceAll('_', ' ');
+  }
+
+  solicitudesRecientes(): PracticaEstadoResumen[] {
+    return [...this.practicasAdmin]
       .sort((a, b) => b.fecha_registro.localeCompare(a.fecha_registro))
       .slice(0, 5);
   }
@@ -327,16 +417,114 @@ export class Home implements OnInit {
     this.errorDashboardAdmin = '';
     forkJoin({
       usuarios: this.usuarioService.listar(),
-      solicitudes: this.revisionService.listar()
+      solicitudes: this.revisionService.listar(),
+      estados: this.practicaService.listarEstados(),
+      practicas: this.practicaService.listarPracticasParaGestion()
     }).subscribe({
-      next: ({ usuarios, solicitudes }) => {
+      next: ({ usuarios, solicitudes, estados, practicas }) => {
         this.usuariosAdmin = usuarios;
         this.solicitudesAdmin = solicitudes;
+        this.practicasAdmin = practicas;
+        this.metricasPracticasEstado = this.contarPracticasPorEstado(estados, practicas);
       },
       error: () => {
         this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
       }
     });
+  }
+
+  private cargarSolicitudesGestion(): void {
+    if (!this.puedeRevisarPracticas() || this.esAdministrador()) {
+      return;
+    }
+
+    this.cargandoSolicitudesGestion = true;
+    this.errorSolicitudesGestion = '';
+    this.revisionService.listar().subscribe({
+      next: solicitudes => {
+        this.solicitudesAdmin = solicitudes;
+        this.cargandoSolicitudesGestion = false;
+      },
+      error: () => {
+        this.errorSolicitudesGestion = 'No fue posible cargar las solicitudes por revisar.';
+        this.cargandoSolicitudesGestion = false;
+      }
+    });
+  }
+
+  private cargarEstudiantesSinPractica(): void {
+    if (!this.puedeRevisarPracticas()) {
+      return;
+    }
+
+    this.errorEstudiantesSinPractica = '';
+    this.practicaService.listarEstudiantesSinPractica().subscribe({
+      next: estudiantes => {
+        this.estudiantesSinPractica = estudiantes;
+      },
+      error: () => {
+        this.errorEstudiantesSinPractica =
+          'No fue posible consultar los estudiantes sin práctica registrada.';
+      }
+    });
+  }
+
+  enviarRecordatorioEstudiante(idUsuario: number): void {
+    this.resultadoRecordatorios = {
+      ...this.resultadoRecordatorios,
+      [idUsuario]: { mensaje: '', error: false }
+    };
+    this.recordatoriosEnCurso.add(idUsuario);
+    this.practicaService.enviarRecordatorioEstudiante(idUsuario).subscribe({
+      next: resultado => {
+        this.recordatoriosEnCurso.delete(idUsuario);
+        this.resultadoRecordatorios = {
+          ...this.resultadoRecordatorios,
+          [idUsuario]: { mensaje: resultado.mensaje, error: false }
+        };
+        this.cargarEstudiantesSinPractica();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.recordatoriosEnCurso.delete(idUsuario);
+        const detalle = typeof error.error?.detail === 'string'
+          ? error.error.detail
+          : 'No fue posible enviar el recordatorio.';
+        this.resultadoRecordatorios = {
+          ...this.resultadoRecordatorios,
+          [idUsuario]: { mensaje: detalle, error: true }
+        };
+      }
+    });
+  }
+
+  private contarPracticasPorEstado(
+    estados: { id_estado: number; nombre: string }[],
+    practicas: PracticaEstadoResumen[]
+  ): { id_estado: number; nombre: string; cantidad: number }[] {
+    const cantidades = new Map<string, number>();
+    for (const practica of practicas) {
+      const nombre = practica.estado.toUpperCase();
+      cantidades.set(nombre, (cantidades.get(nombre) ?? 0) + 1);
+    }
+
+    const metricas = estados.map(estado => ({
+      id_estado: estado.id_estado,
+      nombre: estado.nombre,
+      cantidad: cantidades.get(estado.nombre.toUpperCase()) ?? 0
+    }));
+    const estadosNoActivos = new Map<string, { id_estado: number; nombre: string; cantidad: number }>();
+    for (const practica of practicas) {
+      const clave = practica.estado.toUpperCase();
+      if (!estados.some(estado => estado.nombre.toUpperCase() === clave)) {
+        const actual = estadosNoActivos.get(clave);
+        estadosNoActivos.set(clave, {
+          id_estado: practica.id_estado,
+          nombre: practica.estado,
+          cantidad: (actual?.cantidad ?? 0) + 1
+        });
+      }
+    }
+    return [...metricas, ...estadosNoActivos.values()];
   }
 
   private cargarPracticaRegistrada(contexto: ContextoUsuarioResponse): void {
@@ -354,12 +542,14 @@ export class Home implements OnInit {
       || contexto.practica_actual === null
     ) {
       this.practicaDetalle = null;
+      this.historialEstados = [];
       return;
     }
 
     this.practicaService.obtenerMiPractica().subscribe({
       next: (practica) => {
         this.practicaDetalle = practica;
+        this.cargarHistorialEstados(practica.id_practica);
       },
       error: (error: HttpErrorResponse) => {
         if (error.status === 404) {
@@ -373,31 +563,63 @@ export class Home implements OnInit {
     });
   }
 
+  private cargarHistorialEstados(idPractica: number): void {
+    this.cargandoHistorialEstados = true;
+    this.errorHistorialEstados = '';
+    this.practicaService.obtenerHistorialEstados(idPractica).subscribe({
+      next: historial => {
+        this.historialEstados = historial;
+        this.cargandoHistorialEstados = false;
+      },
+      error: () => {
+        this.historialEstados = [];
+        this.errorHistorialEstados = 'No fue posible cargar el historial de estados.';
+        this.cargandoHistorialEstados = false;
+      }
+    });
+  }
+
+  responderObservacionEstudiante(): void {
+    const practica = this.practicaDetalle;
+    const respuesta = this.respuestaObservacion.trim();
+    if (!practica || practica.estado.nombre.toUpperCase() !== 'OBSERVADA' || !respuesta) {
+      this.errorRespuestaObservacion = 'Escribe una respuesta antes de enviarla.';
+      return;
+    }
+
+    this.enviandoRespuestaObservacion = true;
+    this.errorRespuestaObservacion = '';
+    this.mensajeRespuestaObservacion = '';
+    this.practicaService.responderObservacion(practica.id_practica, respuesta).subscribe({
+      next: resultado => {
+        this.enviandoRespuestaObservacion = false;
+        this.respuestaObservacion = '';
+        this.mensajeRespuestaObservacion = resultado.mensaje;
+        this.practicaService.obtenerMiPractica().subscribe({
+          next: actualizada => {
+            this.practicaDetalle = actualizada;
+            this.cargarHistorialEstados(actualizada.id_practica);
+            this.authService.obtenerContexto().subscribe({
+              next: contexto => {
+                this.firmaContextoPracticaProcesada = '';
+                this.authStore.setContexto(contexto);
+              }
+            });
+          }
+        });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.enviandoRespuestaObservacion = false;
+        this.errorRespuestaObservacion = error.error?.detail ?? 'No fue posible enviar tu respuesta.';
+      }
+    });
+  }
+
   private firmaContexto(contexto: ContextoUsuarioResponse): string {
     const idPractica = contexto.practica_actual?.id_practica ?? 'sin-practica';
     const roles = contexto.roles.join('|');
 
     return `${contexto.usuario.id_usuario}:${roles}:${idPractica}`;
-  }
-
-  formatearFechaUltimoCambio(fecha: string | null): string {
-    if (fecha === null) {
-      return 'Fecha no disponible';
-    }
-
-    const partes = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23'
-    }).formatToParts(new Date(fecha));
-    const valor = (tipo: Intl.DateTimeFormatPartTypes): string =>
-      partes.find(parte => parte.type === tipo)?.value ?? '';
-
-    return `${valor('day')}/${valor('month')}/${valor('year')}, ${valor('hour')}:${valor('minute')}`;
   }
 
   formatearCampo(valor: string | number | null | undefined): string {
@@ -406,5 +628,13 @@ export class Home implements OnInit {
     }
 
     return String(valor);
+  }
+
+  estimacionHorasPractica(
+    fechaInicio: string | null,
+    fechaTermino: string | null,
+    horasSemanales: number | null
+  ): string {
+    return formatoHorasEstimadas(fechaInicio, fechaTermino, horasSemanales);
   }
 }

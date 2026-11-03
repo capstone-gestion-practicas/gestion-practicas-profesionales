@@ -773,6 +773,13 @@ la integración Angular y su validación E2E fueron completadas posteriormente.
 HU015 ya cuenta con integración Angular y E2E local; las referencias anteriores
 a Angular pendiente describen cierres de etapas previas.
 
+Integración con develop (merge 4819a5f): el router legado conserva solo
+GET /incidencias (consulta). Se retiraron del API público POST
+/practicas/{id}/incidencias (legado, sustituido por el contrato EP06) y
+PATCH /incidencias/{id}/estado (cambio de estado sin historial HU016). El
+handler y su schema/servicio legado permanecen en el código sin registrar;
+`fn_actualizar_estado_incidencia` no se modificó en SQL.
+
 Se incorporan PATCH /practicas/{id_practica}/incidencias/{id_incidencia}/estado
 y GET /practicas/{id_practica}/incidencias/{id_incidencia}/historial.
 Reutilizan app/incidencias y la conexión restringida INCIDENCIAS_DATABASE_URL,
@@ -820,3 +827,34 @@ Transacción READ ONLY, una sola llamada, sin commit ni reintentos. Históricos
 Ver tests/integration/HU017_HTTP.md para contrato, errores, enrutamiento y pruebas.
 Validación tras DEFECTO-001: backend unitario 331/331; HTTP + PostgreSQL 44/44 y SQL
 101/101 con regresiones en Docker exclusivo; E2E real 84/84 (HU017_E2E.md).
+### EP07: asignación, cierre manual y recordatorio
+
+La migración `supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql`
+agrega el gestor asignado a cada práctica, el listado de gestores activos y las
+funciones de asignación, cierre y procesamiento de recordatorios. No se aplicó
+esta migración a una base real durante el desarrollo.
+
+`GET /practicas/gestores` y `PATCH /practicas/{id_practica}/gestor` son exclusivos
+de ADMINISTRADOR. La asignación valida que el usuario elegido esté activo y tenga
+el rol GESTOR; se puede retirar la asignación enviando `id_gestor: null`.
+`GET /practicas/gestion-estados` mantiene el listado global para administradores
+y limita a cada gestor a las prácticas con su propio `id_gestor`.
+
+El cierre es manual mediante `POST /practicas/{id_practica}/cierre`. Solo admite
+prácticas EN_CURSO cuya fecha de término sea hoy o anterior. Autoriza al gestor
+asignado o a un administrador y, en una sola transacción, actualiza el estado,
+inserta el historial y `cierre_practica`, y notifica al estudiante. El cambio
+genérico de estado no puede finalizar una práctica. Los cierres registran resultado
+APROBADA; el esquema existente también admite REPROBADA y ANULADA, pero este flujo
+no ofrece selección de resultado.
+
+El recordatorio se genera una sola vez cuando han transcurrido 24 horas desde la
+fecha de término, mientras la práctica siga EN_CURSO. Se guarda en la bandeja de
+notificaciones del gestor asignado y de los administradores activos y se intenta
+enviar push con el servicio FCM existente. No hay un scheduler configurado por la
+migración: el despliegue debe configurar `EP07_REMINDER_TASK_TOKEN` como secreto
+del backend y programar un POST periódico a
+`/practicas/tareas/recordatorios-cierre`, enviando el mismo secreto en el header
+`X-Task-Token`. La llamada es idempotente por práctica; puede ejecutarse, por
+ejemplo, cada 15 minutos. Sin token la ruta devuelve 503. La ejecución periódica,
+la migración y el envío real de push no se verifican en pruebas unitarias.

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import {
   IonButton,
   IonContent,
@@ -24,14 +23,15 @@ export class SolicitudesPendientesModal {
   @Input() solicitudes: SolicitudRevisionResumen[] = [];
 
   private readonly modalController = inject(ModalController);
-  private readonly router = inject(Router);
-
   cerrar(): void {
     this.modalController.dismiss();
   }
 
   irARevisiones(): void {
-    this.modalController.dismiss();
-    this.router.navigate(['/revisiones']);
+    this.modalController.dismiss({ irARevisiones: true });
+  }
+
+  abrirSolicitud(idPractica: number): void {
+    this.modalController.dismiss({ idPractica });
   }
 }

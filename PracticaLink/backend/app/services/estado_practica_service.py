@@ -2,6 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.practicas.schemas import ActualizarEstadoPracticaRequest
+from app.services.push_service import enviar_push_notificacion
 
 
 class PracticaEstadoNoEncontradaError(Exception):
@@ -16,6 +17,9 @@ class PracticaNoObservadaError(Exception):
     pass
 
 
+class CierreManualRequeridoError(Exception):
+    pass
+
 def obtener_practica_estudiante(db: Session, id_usuario: int) -> dict | None:
     return db.execute(text("""
         SELECT public.fn_practica_estudiante(:id_usuario)
@@ -28,10 +32,82 @@ def listar_estados_activos(db: Session) -> list[dict]:
     """)).scalar_one()
 
 
-def listar_practicas_para_gestion(db: Session) -> list[dict]:
-    return db.execute(text("""
-        SELECT public.fn_listar_practicas_gestion()
+def listar_practicas_para_gestion(
+    db: Session, id_usuario: int, es_administrador: bool
+) -> list[dict]:
+    if es_administrador:
+        practicas = db.execute(text("""
+            SELECT public.fn_listar_practicas_gestion()
+        """)).scalar_one()
+    else:
+        practicas = db.execute(text("""
+            SELECT public.fn_listar_practicas_gestion_usuario(:id_usuario)
+        """), {"id_usuario": id_usuario}).scalar_one()
+    if isinstance(practicas, dict) and practicas.get("error"):
+        raise PermissionError("No se pudo autorizar la consulta de prácticas")
+    return practicas
+
+
+def listar_gestores_activos(db: Session, id_usuario: int) -> list[dict]:
+    gestores = db.execute(text("""
+        SELECT public.fn_listar_gestores_activos(:id_usuario)
+    """), {"id_usuario": id_usuario}).scalar_one()
+    if isinstance(gestores, dict) and gestores.get("error"):
+        raise PermissionError("No se pudo autorizar la consulta de gestores")
+    return gestores
+
+
+def asignar_gestor_practica(
+    db: Session, id_practica: int, id_admin: int, id_gestor: int | None
+) -> dict:
+    resultado = db.execute(text("""
+        SELECT public.fn_asignar_gestor_practica(
+            :id_practica, :id_admin, :id_gestor
+        )
+    """), {
+        "id_practica": id_practica,
+        "id_admin": id_admin,
+        "id_gestor": id_gestor,
+    }).scalar_one()
+    if not (isinstance(resultado, dict) and resultado.get("error")):
+        db.commit()
+    return resultado
+
+
+def cerrar_practica(
+    db: Session, id_practica: int, id_usuario: int, observacion: str | None
+) -> dict:
+    resultado = db.execute(text("""
+        SELECT public.fn_cerrar_practica(
+            :id_practica, :id_usuario, :observacion
+        )
+    """), {
+        "id_practica": id_practica,
+        "id_usuario": id_usuario,
+        "observacion": observacion,
+    }).scalar_one()
+    if isinstance(resultado, dict) and resultado.get("error"):
+        return resultado
+    db.commit()
+    id_notificacion = resultado.get("id_notificacion")
+    id_destinatario = resultado.get("id_usuario_notificado")
+    if id_notificacion is not None and id_destinatario is not None:
+        enviar_push_notificacion(db, int(id_notificacion), int(id_destinatario))
+    return resultado
+
+
+def procesar_recordatorios_cierre(db: Session) -> list[dict]:
+    notificaciones = db.execute(text("""
+        SELECT public.fn_procesar_recordatorios_cierre()
     """)).scalar_one()
+    db.commit()
+    for notificacion in notificaciones:
+        enviar_push_notificacion(
+            db,
+            int(notificacion["id_notificacion"]),
+            int(notificacion["id_usuario"]),
+        )
+    return notificaciones
 
 
 def listar_estudiantes_sin_practica(db: Session) -> list[dict]:
@@ -96,6 +172,8 @@ def actualizar_estado_practica(
         raise PracticaEstadoNoEncontradaError
     if error == "ESTADO_NO_DISPONIBLE":
         raise EstadoPracticaNoDisponibleError
+    if error == "CIERRE_MANUAL_REQUERIDO":
+        raise CierreManualRequeridoError
     db.commit()
     return resultado
 
