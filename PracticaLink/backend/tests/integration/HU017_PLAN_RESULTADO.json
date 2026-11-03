@@ -1,0 +1,66 @@
+{
+  "volumen": {
+    "practicas": 2000,
+    "incidencias": 50000
+  },
+  "sin_indice_adicional": {
+    "nodo_principal": "->  Seq Scan on incidencia i (actual rows=10000.00 loops=1)",
+    "ms_total": 6.3,
+    "plan": [
+      "Limit (actual rows=51.00 loops=1)",
+      "  Buffers: shared hit=676",
+      "  ->  Sort (actual rows=51.00 loops=1)",
+      "        Sort Key: (min(fecha) FILTER (WHERE ((estado)::text = 'PENDIENTE'::text))), id_practica",
+      "        Sort Method: top-N heapsort  Memory: 30kB",
+      "        Buffers: shared hit=676",
+      "        ->  HashAggregate (actual rows=200.00 loops=1)",
+      "              Group Key: id_practica",
+      "              Filter: (count(*) FILTER (WHERE ((estado)::text = 'PENDIENTE'::text)) > 0)",
+      "              Batches: 1  Memory Usage: 121kB",
+      "              Rows Removed by Filter: 200",
+      "              Buffers: shared hit=676",
+      "              ->  Seq Scan on incidencia i (actual rows=10000.00 loops=1)",
+      "                    Filter: ((estado)::text = ANY ('{PENDIENTE,EN_ATENCION}'::text[]))",
+      "                    Rows Removed by Filter: 40004",
+      "                    Buffers: shared hit=676",
+      "Planning:",
+      "  Buffers: shared hit=59",
+      "Planning Time: 0.156 ms",
+      "Execution Time: 5.632 ms"
+    ]
+  },
+  "con_indice_candidato": {
+    "nodo_principal": "->  Bitmap Heap Scan on incidencia i (actual rows=10000.00 loops=1)",
+    "ms_total": 3.7,
+    "plan": [
+      "Limit (actual rows=51.00 loops=1)",
+      "  Buffers: shared hit=676 read=63",
+      "  ->  Sort (actual rows=51.00 loops=1)",
+      "        Sort Key: (min(fecha) FILTER (WHERE ((estado)::text = 'PENDIENTE'::text))), id_practica",
+      "        Sort Method: top-N heapsort  Memory: 30kB",
+      "        Buffers: shared hit=676 read=63",
+      "        ->  HashAggregate (actual rows=200.00 loops=1)",
+      "              Group Key: id_practica",
+      "              Filter: (count(*) FILTER (WHERE ((estado)::text = 'PENDIENTE'::text)) > 0)",
+      "              Batches: 1  Memory Usage: 121kB",
+      "              Rows Removed by Filter: 200",
+      "              Buffers: shared hit=676 read=63",
+      "              ->  Bitmap Heap Scan on incidencia i (actual rows=10000.00 loops=1)",
+      "                    Recheck Cond: ((estado)::text = ANY ('{PENDIENTE,EN_ATENCION}'::text[]))",
+      "                    Heap Blocks: exact=676",
+      "                    Buffers: shared hit=676 read=63",
+      "                    ->  Bitmap Index Scan on ep06_hu017_candidato (actual rows=10000.00 loops=1)",
+      "                          Index Cond: ((estado)::text = ANY ('{PENDIENTE,EN_ATENCION}'::text[]))",
+      "                          Index Searches: 1",
+      "                          Buffers: shared read=63",
+      "Planning:",
+      "  Buffers: shared hit=25 read=1",
+      "Planning Time: 0.149 ms",
+      "Execution Time: 3.221 ms"
+    ]
+  },
+  "indice_candidato_revertido": true,
+  "funcion_ms": 7.4,
+  "funcion_items_pagina": 50,
+  "funcion_hay_mas": true
+}

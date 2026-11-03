@@ -1,0 +1,123 @@
+<ion-content>
+  <main class="registration-page">
+    <header class="page-topbar">
+      <div class="breadcrumb">
+        <button type="button" (click)="navegarA('/home')">PracticaLink</button>
+        <span aria-hidden="true">›</span>
+        <button type="button" (click)="navegarA('/practicas')">Seguimiento</button>
+      </div>
+      <ion-button fill="outline" (click)="cancelar()">Volver al detalle</ion-button>
+    </header>
+
+    <section class="page-heading">
+      <p class="eyebrow">EP04 · SEGUIMIENTO E INCIDENCIAS</p>
+      <h1>{{ esIncidencia ? 'Registrar incidencia' : 'Registrar seguimiento' }}</h1>
+      <p>{{ esIncidencia
+        ? 'Registra una situación que requiere atención durante el desarrollo de la práctica.'
+        : 'Deja constancia del avance y de los acuerdos realizados durante el proceso de práctica.' }}</p>
+    </section>
+
+    @if (cargando) {
+      <div class="loading"><ion-spinner></ion-spinner><p>Cargando práctica...</p></div>
+    } @else if (error && !detalle) {
+      <p class="form-error" role="alert">{{ error }}</p>
+    } @else if (detalle; as practica) {
+      <section class="form-panel">
+        <div class="form-panel-heading">
+          <div>
+            <h2>{{ esIncidencia ? 'Información de la incidencia' : 'Nuevo seguimiento' }}</h2>
+            <p>{{ esIncidencia
+              ? 'La incidencia quedará vinculada a la práctica seleccionada.'
+              : 'Los campos con * son obligatorios.' }}</p>
+          </div>
+          <span class="practice-chip">{{ practica.estudiante.nombre }}</span>
+        </div>
+
+        <form (ngSubmit)="guardar()" autocomplete="off" novalidate>
+          <div class="form-grid">
+            <div class="field full-width">
+              <label for="practica-asociada">Práctica asociada *</label>
+              <input id="practica-asociada" type="text"
+                [value]="practica.estudiante.nombre + ' · ' + practica.centro_practica.nombre"
+                readonly />
+            </div>
+
+            @if (!esIncidencia) {
+              <div class="field">
+                <label for="fecha-seguimiento">Fecha del seguimiento *</label>
+                <input id="fecha-seguimiento" name="fecha" type="date" [attr.max]="fechaMaxima"
+                  [(ngModel)]="fecha" required />
+              </div>
+            }
+
+            @if (esIncidencia) {
+              <div class="field">
+                <label for="tipo-incidencia">Tipo de incidencia *</label>
+                <select id="tipo-incidencia" name="tipoIncidencia" [(ngModel)]="tipoIncidencia" required>
+                  <option value="" disabled>Selecciona una opción</option>
+                  @for (tipo of tiposIncidencia; track tipo.codigo) {
+                    <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label for="estado-incidencia">Estado inicial</label>
+                <input id="estado-incidencia" value="PENDIENTE" readonly />
+                <small>La fecha y hora se asignarán en el servidor al registrar.</small>
+              </div>
+              <div class="field full-width">
+                <label for="descripcion-incidencia">Descripción de la situación *</label>
+                <textarea id="descripcion-incidencia" name="descripcionIncidencia" rows="5"
+                  [(ngModel)]="descripcionIncidencia" required
+                  placeholder="Describe qué ocurrió, a quién afecta y qué atención se requiere..."></textarea>
+                <small>Registra hechos y contexto suficiente. Máximo 2.000 caracteres.</small>
+              </div>
+            } @else {
+              <div class="field">
+                <label for="tipo-contacto">Tipo de contacto *</label>
+                <select id="tipo-contacto" name="tipoContacto" [(ngModel)]="tipoContacto" required>
+                  <option value="" disabled>Selecciona una opción</option>
+                  <option value="Reunión presencial">Reunión presencial</option>
+                  <option value="Videollamada">Videollamada</option>
+                  <option value="Llamada telefónica">Llamada telefónica</option>
+                  <option value="Correo electrónico">Correo electrónico</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="field full-width">
+                <label for="observaciones">Observaciones *</label>
+                <textarea id="observaciones" name="observaciones" rows="5"
+                  [(ngModel)]="observaciones" required
+                  placeholder="Describe avances, acuerdos o aspectos relevantes del seguimiento..."></textarea>
+                <small>Incluye información concreta para dar continuidad al proceso. Máximo 2.000 caracteres.</small>
+              </div>
+              <p class="form-note full-width">El seguimiento se guarda en el servidor. Puedes consultarlo en el historial de esta práctica.</p>
+            }
+          </div>
+
+          @if (mensaje) { <p class="form-note" role="status">{{ mensaje }}</p> }
+          @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
+
+          @if (esIncidencia) {
+            @if (!incidenciaHabilitada) {
+              <p class="form-error">Solo se pueden registrar incidencias en prácticas EN_CURSO.</p>
+            }
+            @if (fechaIncidencia) {
+              <p class="form-note">Fecha registrada: <time [attr.datetime]="fechaIncidencia">{{ fechaIncidenciaVisible(fechaIncidencia) }}</time> (America/Santiago).</p>
+            }
+            <p class="form-note">Consulta las incidencias guardadas en la pestaña Incidencias del detalle de práctica. Los datos locales de demostración no se muestran ni se migran.</p>
+          }
+
+          <footer class="form-actions">
+            <ion-button fill="outline" type="button" [disabled]="guardando" (click)="cancelar()">
+              Cancelar
+            </ion-button>
+            <ion-button type="submit" [disabled]="guardando || (esIncidencia ? incidenciaBloqueada || !incidenciaHabilitada : seguimientoBloqueado)">
+              {{ guardando ? 'Guardando...' : esIncidencia ? 'Guardar incidencia' : 'Guardar seguimiento' }}
+            </ion-button>
+          </footer>
+        </form>
+      </section>
+    }
+  </main>
+</ion-content>

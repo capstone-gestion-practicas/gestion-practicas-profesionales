@@ -454,3 +454,36 @@ Contraseña gestor: <CONTRASEÑA_DE_DEMOSTRACIÓN_LOCAL>
 Usar únicamente para demostración y pruebas locales. Para comprobar el panel
 administrativo, iniciar sesión con `<CORREO_ADMINISTRADOR_LOCAL>` y entrar a
 `http://localhost:4200/usuarios`.
+
+
+### EP06 / HU015 — conexión de registro de incidencias
+
+El endpoint `POST /practicas/{id_practica}/incidencias` requiere la variable privada
+`INCIDENCIAS_DATABASE_URL` en el backend. Debe ser una conexión `postgresql+psycopg`
+con login exclusivo, distinto del principal y de EP04/EP05, que herede únicamente
+`pl_ep06_executor`. No utilizar `pl_ep06_owner`, superusuario ni BYPASSRLS.
+No conceder acceso directo a tablas o secuencias. La validación de URL no sustituye
+comprobar membresías y privilegios efectivos en el entorno autorizado.
+
+Aplicar previamente, con autorización del entorno, los scripts EP06-01 a EP06-09
+en orden numérico, después de EP04 y EP05. No reaplicar `schema.sql` en una base
+existente. Los scripts posteriores son incrementales y dependen del estado creado
+por los anteriores.
+
+EP06-01 sustituye la relación `fk_incidencia_practica` para utilizar
+`ON DELETE RESTRICT` en lugar del `ON DELETE CASCADE` definido originalmente en el
+esquema base. Este cambio es intencional: una práctica con incidencias asociadas no
+debe eliminarse automáticamente junto con su historial. Antes de aplicarlo en un
+entorno compartido se debe comprobar que el cambio de política de borrado es
+compatible con la operación esperada y considerar la validación de la FK durante
+la ventana de despliegue.
+
+La aplicación no ejecuta migraciones ni aprovisiona roles. Los scripts que crean
+roles deben aplicarse de forma controlada y no asumirse idempotentes ante una
+reaplicación parcial. Sin `INCIDENCIAS_DATABASE_URL` configurada o disponible, la
+API responde 503 sin fallback a una conexión privilegiada. No reintentar
+automáticamente una escritura con resultado incierto; EP06 no incorpora garantía
+de idempotencia ante pérdida de respuesta.
+
+Reproducción local y límites:
+[HU015 HTTP + PostgreSQL](PracticaLink/backend/tests/integration/HU015_HTTP.md).

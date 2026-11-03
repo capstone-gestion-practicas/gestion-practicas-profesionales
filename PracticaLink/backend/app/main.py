@@ -11,9 +11,10 @@ from app.estudiantes.routes import router as estudiantes_router
 from app.revisiones.routes import router as revisiones_router
 from app.usuarios.routes import router as usuarios_router
 from app.empresas.routes import router as empresas_router
-from app.api.routes.incidencias import router as incidencias_router
+from app.api.routes.incidencias import router as incidencias_legacy_router
 from app.api.routes.notificaciones import router as notificaciones_router
 from app.seguimientos.routes import router as seguimientos_router
+from app.incidencias.routes import router as incidencias_ep06_router
 
 app = FastAPI(
     title="PracticaLink API",
@@ -45,13 +46,16 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+# EP06 antes que prácticas: GET /practicas/con-incidencias-pendientes (HU017)
+# no debe ser capturado por GET /practicas/{id_practica}. Registro único.
+app.include_router(incidencias_ep06_router)
+app.include_router(incidencias_legacy_router)
 app.include_router(practicas_router)
 app.include_router(estudiantes_router)
 app.include_router(revisiones_router)
 app.include_router(usuarios_router)
 app.include_router(empresas_router)
 app.include_router(notificaciones_router)
-app.include_router(incidencias_router)
 app.include_router(seguimientos_router)
 
 

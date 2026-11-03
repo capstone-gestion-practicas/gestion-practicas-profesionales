@@ -97,15 +97,6 @@ export interface CerrarPracticaResponse {
   mensaje: string;
 }
 
-export interface IniciarPracticaResponse {
-  id_practica: number;
-  estado_anterior: { id_estado: number; nombre: string };
-  estado: EstadoPracticaDetalle;
-  fecha_ultimo_cambio_estado: string;
-  id_historial: number;
-  mensaje: string;
-}
-
 export interface EstudianteSinPractica {
   id_usuario: number;
   nombre: string;
@@ -200,4 +191,94 @@ export interface ActividadEmpresa {
   descripcion: string;
   afecta_iva: string | null;
   categoria: string | null;
+}
+
+
+export interface PracticaResumen {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: string;
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+}
+
+export interface PracticasListadoResponse {
+  items: PracticaResumen[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
+// HU017: pendientes = solo estado PENDIENTE; en_atencion se informa aparte.
+// pendientes y en_atencion son independientes. fecha_pendiente_antigua es null si pendientes = 0.
+export interface PracticaIncidenciasPendientesItem {
+  id_practica: number;
+  pendientes: number;
+  en_atencion: number;
+  fecha_pendiente_antigua: string | null;
+}
+
+export interface ResumenIncidenciasPendientesResponse {
+  items: PracticaIncidenciasPendientesItem[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
+
+export interface PracticaDetalleGestionResponse {
+  id_practica: number;
+  estudiante: { id_estudiante: number; nombre: string };
+  centro_practica: { id_centro: number; nombre: string };
+  fecha_registro: string;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string | null;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  horas: number | null;
+  cargo_funcion: string | null;
+  descripcion: string | null;
+}
+
+
+export interface EstadoHistorial {
+  id_estado: number;
+  nombre: string;
+}
+
+export interface ResponsableHistorial {
+  id_usuario: number;
+  nombre: string;
+}
+
+export interface EventoHistorial {
+  id_historial: number;
+  estado_anterior: EstadoHistorial | null;
+  estado_nuevo: EstadoHistorial;
+  fecha_cambio: string;
+  responsable: ResponsableHistorial;
+  observacion: string | null;
+}
+
+export interface HistorialPracticaResponse {
+  id_practica: number;
+  items: EventoHistorial[];
+  limit: number;
+  offset: number;
+  hay_mas: boolean;
+}
+
+export interface IniciarPracticaRequest {
+  estado: 'EN_CURSO';
+  observacion?: string | null;
+}
+
+export interface IniciarPracticaResponse {
+  id_practica: number;
+  estado_anterior: EstadoHistorial;
+  estado: EstadoPracticaDetalle;
+  fecha_ultimo_cambio_estado: string;
+  id_historial: number;
+  mensaje: string;
 }

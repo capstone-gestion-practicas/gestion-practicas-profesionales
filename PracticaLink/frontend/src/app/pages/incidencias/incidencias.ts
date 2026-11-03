@@ -14,7 +14,6 @@ import {
   IonCol,
   IonContent,
   IonGrid,
-  IonInput,
   IonRow,
   IonSelect,
   IonSelectOption,
@@ -23,10 +22,10 @@ import {
 } from '@ionic/angular';
 
 import {
-  EstadoIncidencia,
   IncidenciaPractica,
   PracticaEstadoResumen
 } from '../../core/models/practica.models';
+import { TIPOS_INCIDENCIA, TipoIncidencia } from '../../core/models/incidencia.models';
 import { PracticaService } from '../../core/services/practica.service';
 
 @Component({
@@ -44,7 +43,6 @@ import { PracticaService } from '../../core/services/practica.service';
     IonCol,
     IonContent,
     IonGrid,
-    IonInput,
     IonRow,
     IonSelect,
     IonSelectOption,
@@ -55,17 +53,14 @@ import { PracticaService } from '../../core/services/practica.service';
   styleUrl: './incidencias.scss'
 })
 export class Incidencias implements OnInit {
-  readonly estados: EstadoIncidencia[] = ['ABIERTA', 'EN_REVISION', 'RESUELTA', 'CERRADA'];
   practicas: PracticaEstadoResumen[] = [];
   incidencias: IncidenciaPractica[] = [];
   practicaSeleccionada: number | null = null;
-  fecha = '';
+  readonly tipos = TIPOS_INCIDENCIA;
+  tipo: TipoIncidencia | null = null;
   descripcion = '';
-  prioridad: IncidenciaPractica['prioridad'] = 'MEDIA';
-  readonly estadosSeleccionados = new Map<number, EstadoIncidencia>();
   cargando = true;
   guardando = false;
-  guardandoEstadoId: number | null = null;
   soloPendientes = true;
   error = '';
   mensaje = '';
@@ -73,15 +68,7 @@ export class Incidencias implements OnInit {
   constructor(private readonly practicaService: PracticaService, private readonly router: Router) {}
 
   ngOnInit(): void {
-    this.fecha = this.fechaHoy();
     this.cargar();
-  }
-
-  private fechaHoy(): string {
-    const hoy = new Date();
-    return [hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate()]
-      .map((parte, indice) => indice === 0 ? String(parte) : String(parte).padStart(2, '0'))
-      .join('-');
   }
 
   cargar(): void {
@@ -94,7 +81,6 @@ export class Incidencias implements OnInit {
       next: ({ practicas, incidencias }) => {
         this.practicas = practicas.filter(practica => !practica.es_final);
         this.incidencias = incidencias;
-        incidencias.forEach(item => this.estadosSeleccionados.set(item.id_incidencia, item.estado));
         this.practicaSeleccionada ??= this.practicas[0]?.id_practica ?? null;
         this.cargando = false;
       },
@@ -105,64 +91,43 @@ export class Incidencias implements OnInit {
     });
   }
 
+  // Pendiente = cualquier estado no cerrado. Cubre PENDIENTE/EN_ATENCION (EP06) y ABIERTA/EN_REVISION (legado).
+  esPendiente(item: IncidenciaPractica): boolean {
+    return item.estado !== 'RESUELTA' && item.estado !== 'CERRADA';
+  }
+
   incidenciasVisibles(): IncidenciaPractica[] {
-    return this.incidencias.filter(item =>
-      !this.soloPendientes || item.estado === 'ABIERTA' || item.estado === 'EN_REVISION'
-    );
+    return this.incidencias.filter(item => !this.soloPendientes || this.esPendiente(item));
   }
 
   pendientes(): number {
-    return this.incidencias.filter(item => item.estado === 'ABIERTA' || item.estado === 'EN_REVISION').length;
+    return this.incidencias.filter(item => this.esPendiente(item)).length;
   }
 
   registrar(): void {
-    if (this.practicaSeleccionada === null || !this.descripcion.trim()) {
-      this.error = 'Selecciona una práctica e ingresa la descripción de la incidencia.';
+    if (this.practicaSeleccionada === null || this.tipo === null || !this.descripcion.trim()) {
+      this.error = 'Selecciona una práctica, un tipo e ingresa la descripción de la incidencia.';
       return;
     }
     this.error = '';
     this.guardando = true;
-    this.practicaService.registrarIncidencia(
-      this.practicaSeleccionada,
-      this.fecha,
-      this.descripcion.trim(),
-      this.prioridad
-    ).subscribe({
-      next: incidencia => {
-        this.incidencias = [incidencia, ...this.incidencias];
-        this.estadosSeleccionados.set(incidencia.id_incidencia, incidencia.estado);
+    // Contrato EP06 exclusivo: tipo y descripcion. Sin fecha ni prioridad.
+    this.practicaService.registrarIncidencia(String(this.practicaSeleccionada), {
+      tipo: this.tipo,
+      descripcion: this.descripcion.trim()
+    }).subscribe({
+      next: () => {
         this.descripcion = '';
+        this.tipo = null;
         this.guardando = false;
-        this.mensaje = incidencia.alerta
-          ? 'Incidencia registrada y alerta generada por su prioridad.'
-          : 'Incidencia registrada.';
+        this.mensaje = 'Incidencia registrada.';
         window.setTimeout(() => this.mensaje = '', 5000);
+        // La lista legado tiene otra forma: se recarga en lugar de insertar la respuesta EP06.
+        this.cargar();
       },
       error: (respuesta: HttpErrorResponse) => {
         this.guardando = false;
         this.error = respuesta.error?.detail ?? 'No fue posible registrar la incidencia.';
-      }
-    });
-  }
-
-  guardarEstado(incidencia: IncidenciaPractica): void {
-    const estado = this.estadosSeleccionados.get(incidencia.id_incidencia);
-    if (!estado || estado === incidencia.estado) return;
-    this.guardandoEstadoId = incidencia.id_incidencia;
-    this.error = '';
-    this.practicaService.actualizarEstadoIncidencia(incidencia.id_incidencia, estado).subscribe({
-      next: respuesta => {
-        this.incidencias = this.incidencias.map(item => item.id_incidencia === respuesta.id_incidencia
-          ? { ...item, estado: respuesta.estado, fecha_resolucion: ['RESUELTA', 'CERRADA'].includes(respuesta.estado) ? new Date().toISOString() : null }
-          : item);
-        this.guardandoEstadoId = null;
-        this.mensaje = respuesta.mensaje;
-        window.setTimeout(() => this.mensaje = '', 5000);
-      },
-      error: (respuesta: HttpErrorResponse) => {
-        this.estadosSeleccionados.set(incidencia.id_incidencia, incidencia.estado);
-        this.guardandoEstadoId = null;
-        this.error = respuesta.error?.detail ?? 'No fue posible actualizar el estado de la incidencia.';
       }
     });
   }

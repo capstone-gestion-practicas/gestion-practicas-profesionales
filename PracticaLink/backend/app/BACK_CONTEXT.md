@@ -692,6 +692,141 @@ ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con re
 HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados
 como number en JavaScript pierden precisión fuera del rango seguro ±(2^53−1).
 
+
+### EP06 / HU015: registro HTTP de incidencias
+
+`POST /practicas/{id_practica}/incidencias`, módulo `app/incidencias/`.
+Recibe exclusivamente `tipo` (ABANDONO, PROBLEMA_CENTRO, SALUD u OTRO) y
+`descripcion` (contenido obligatorio, hasta 2000 caracteres, espacios conservados).
+Rechaza campos adicionales y parámetros query. Identificador de práctica positivo BIGINT.
+Autor exclusivamente del JWT validado, contrastado con el contexto persistido:
+GESTOR/ADMINISTRADOR activos, sin asignaciones territoriales en este PMV.
+PostgreSQL revalida usuario, rol, tipo activo y práctica EN_CURSO bajo bloqueo.
+
+Requiere `INCIDENCIAS_DATABASE_URL`, login exclusivo que herede únicamente
+`pl_ep06_executor`, sin privilegios directos ni membresía en `pl_ep06_owner`.
+No puede reutilizar el usuario principal ni los configurados para EP04/HU013/HU014.
+Inicialización perezosa, sin fallback; configuración ausente/inválida o conexión
+indisponible devuelve 503. Validar la URL no acredita los privilegios efectivos:
+el aprovisionamiento y su auditoría se realizan separadamente en un entorno autorizado.
+No se crean permisos ni logins desde FastAPI.
+
+Invoca solamente `incidencias_privadas.fn_registrar_incidencia(bigint,bigint,text,text)`.
+Valida el JSONB y correspondencia de práctica/autor/tipo/descripción antes del commit.
+Devuelve 201 después de confirmar: id_incidencia, id_practica, id_usuario, tipo,
+descripcion, estado PENDIENTE y fecha con zona horaria asignada por PostgreSQL.
+La fecha se muestra posteriormente en America/Santiago; no se acepta desde el cliente.
+La incidencia y su historial inicial se insertan atómicamente en SQL.
+
+Errores: autenticación existente; 403 autorización; 404 práctica inexistente;
+409 práctica no EN_CURSO o conflicto concurrente; 422 entrada inválida;
+503 indisponibilidad; 500 fallo inesperado. No se exponen mensajes SQL ni
+parámetros. Se intenta rollback, preservando el error original. No se reintenta
+la escritura, incluso si falla el commit y su resultado es incierto.
+No hay idempotencia ni integración Angular EP06 en este incremento.
+
+Orden SQL previo: EP04, EP05-01 a EP05-05, EP06-01 a EP06-03; ver
+`tests/integration/HU015_PERSISTENCIA.md` y `tests/integration/HU015_HTTP.md`.
+Los scripts validados no se modifican en esta implementación backend.
+
+### EP06 / HU015: consulta HTTP de incidencias
+
+`GET /practicas/{id_practica}/incidencias?limit=50&offset=0` reutiliza
+`app/incidencias/` y la conexión `INCIDENCIAS_DATABASE_URL`. Requiere EP06-04
+además de los tres scripts de registro. No amplía permisos ni ejecuta migraciones.
+
+GESTOR/ADMINISTRADOR activos se autorizan mediante JWT y contexto confiable antes
+de consultar; PostgreSQL repite la autorización. Identidad nunca desde query/body.
+Parámetros: id positivo BIGINT, limit 1–100 (50), offset 0–BIGINT máximo (0).
+Solo se admiten parámetros query limit y offset. POST conserva su contrato cerrado.
+
+El servicio activa SET TRANSACTION READ ONLY en una sesión nueva antes de llamar
+exclusivamente a fn_consultar_incidencias con parámetros vinculados. No hace commit,
+no reintenta ni utiliza fallback; el cierre de sesión revierte la transacción y
+restablece el uso normal del pool para POST. El login mantiene EXECUTE de alta y
+consulta, pero no SELECT directo: read-only se aplica a la transacción GET, no a
+la conexión global. Los permisos reales requieren auditoría en despliegue.
+
+Respuesta: id_practica, items, limit, offset, hay_mas. Cada item conserva
+id_incidencia, id_practica, id_usuario, tipo nullable, descripcion sin límite de
+creación, estado libre, fecha, sin_tipo_registrado, fecha_resolucion nullable y
+resolucion nullable (id_historial, id_usuario, fecha, comentario nullable).
+Los esquemas históricos son independientes del alta. No inventan tipos ni datos
+de resolución, no traducen estados antiguos ni excluyen prácticas finalizadas.
+Se conservan timestamps con zona y los literales PostgreSQL infinity/-infinity.
+El servicio comprueba práctica/paginación y la práctica de cada item antes de
+responder. Conserva el orden SQL fecha DESC,id_incidencia DESC y hay_mas.
+Offset no garantiza estabilidad entre páginas ante inserciones concurrentes.
+
+Errores SQL de negocio: USUARIO_NO_AUTORIZADO→403, PRACTICA_NO_ENCONTRADA→404,
+PAGINACION_INVALIDA→422. Conexión requerida ausente/indisponible→503;
+JSON inesperado, SQL desconocido u otro fallo→500 genérico. Autenticación conserva
+su comportamiento existente. Rollback se intenta sin sustituir el error original.
+Una colección vacía solo representa una consulta exitosa, nunca un error.
+
+Ver tests/integration/HU015_HTTP.md para reproducción del GET y regresión POST,
+EP04 y EP05. Esta referencia corresponde al cierre de la etapa backend de HU015;
+la integración Angular y su validación E2E fueron completadas posteriormente.
+
+### EP06 / HU016: gestión HTTP de estados e historial (vigente)
+
+HU015 ya cuenta con integración Angular y E2E local; las referencias anteriores
+a Angular pendiente describen cierres de etapas previas.
+
+Integración con develop (merge 4819a5f): el router legado conserva solo
+GET /incidencias (consulta). Se retiraron del API público POST
+/practicas/{id}/incidencias (legado, sustituido por el contrato EP06) y
+PATCH /incidencias/{id}/estado (cambio de estado sin historial HU016). El
+handler y su schema/servicio legado permanecen en el código sin registrar;
+`fn_actualizar_estado_incidencia` no se modificó en SQL.
+
+Se incorporan PATCH /practicas/{id_practica}/incidencias/{id_incidencia}/estado
+y GET /practicas/{id_practica}/incidencias/{id_incidencia}/historial.
+Reutilizan app/incidencias y la conexión restringida INCIDENCIAS_DATABASE_URL,
+sin fallback. Requieren EP06-05/06/07; no aplican migraciones automáticamente.
+
+PATCH recibe estado_esperado, estado_nuevo y comentario opcional, sin campos extra.
+Comentario normalizado con espacios de borde U+0020, máximo 2000 caracteres;
+RESUELTA exige contenido. Autor exclusivamente JWT/contexto, roles activos
+GESTOR/ADMINISTRADOR; PostgreSQL repite autorización y controla la cadena,
+asociación, estado esperado y transiciones. Permite incidencias modernas de
+prácticas finalizadas; históricos incompatibles permanecen solo lectura.
+Valida resultado antes del commit y solo entonces devuelve 200. Rollback ante
+errores; sin reintentos. Conflictos SQL/estado/historial devuelven 409.
+
+GET limita 1..100 (default 50), offset >=0 y conserva id_historial DESC.
+Transacción READ ONLY, sin commit. Conserva estados textuales, comentario/origen
+null, comentarios extensos y fechas históricas; no inventa eventos.
+Respuesta: id_practica, id_incidencia, items, limit, offset, hay_mas.
+Cada evento expone id_historial, id_usuario, estado_anterior, estado_nuevo,
+fecha y comentario. No se agregan datos personales.
+
+Ver tests/integration/HU016_HTTP.md para contratos, errores, ejemplos,
+reproducción, resultados y límites. Validación de la etapa backend: backend
+304/304 con mocks, SQL PostgreSQL 84/84 y HTTP + PostgreSQL 35/35 en Docker
+exclusivo. La integración Angular de HU016 fue completada posteriormente y el
+flujo E2E real quedó validado 91/91.
+
+### EP06 / HU017: resumen HTTP de prácticas con incidencias pendientes (vigente)
+
+GET /practicas/con-incidencias-pendientes?limit=50&offset=0 devuelve prácticas con al
+menos una incidencia `PENDIENTE` o `EN_ATENCION` (corrección DEFECTO-001, EP06-09),
+con `pendientes`, `en_atencion` (contadores independientes), `fecha_pendiente_antigua`
+(null si `pendientes = 0`), `limit`, `offset` y `hay_mas`. Orden: primero las prácticas
+con pendientes por fecha ascendente; después las solo EN_ATENCION; desempate por
+id_practica. Una fila con ambos contadores en 0 se rechaza como incoherente.
+Usa `fn_resumen_incidencias_pendientes` mediante
+la conexión restringida INCIDENCIAS_DATABASE_URL, sin fallback; la conexión principal
+solo valida roles. Solo GESTOR y ADMINISTRADOR activos; ESTUDIANTE e inactivos 403.
+Transacción READ ONLY, una sola llamada, sin commit ni reintentos. Históricos
+(ABIERTA, EN_REVISION, CERRADA) no cuentan como pendientes.
+
+`app/main.py` incluye `incidencias_router` antes que `practicas_router`: sin ese orden,
+`GET /practicas/{id_practica}` capturaba la ruta nueva y respondía 422.
+
+Ver tests/integration/HU017_HTTP.md para contrato, errores, enrutamiento y pruebas.
+Validación tras DEFECTO-001: backend unitario 331/331; HTTP + PostgreSQL 44/44 y SQL
+101/101 con regresiones en Docker exclusivo; E2E real 84/84 (HU017_E2E.md).
 ### EP07: asignación, cierre manual y recordatorio
 
 El frontend QA se publica como sitio estático de Render mediante el Blueprint

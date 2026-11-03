@@ -1,0 +1,301 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #1f2a37;
+}
+
+ion-content {
+  --background: #f2f4f8;
+}
+
+.registration-page {
+  width: min(100%, 1120px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+}
+
+.page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #718096;
+  font-size: 0.82rem;
+}
+
+.breadcrumb button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.breadcrumb button:hover {
+  color: #1d6ebb;
+}
+
+.page-heading {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #1d6ebb;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: #172435;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.page-heading > p:last-child {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.form-panel {
+  max-width: 900px;
+  overflow: hidden;
+  border: 1px solid #e1e6ed;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.form-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e5e9ef;
+}
+
+.form-panel-heading h2 {
+  margin: 0;
+  color: #1d2a39;
+  font-size: 1rem;
+}
+
+.form-panel-heading p {
+  margin: 4px 0 0;
+  color: #758296;
+  font-size: 0.78rem;
+}
+
+.practice-chip {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f2fc;
+  color: #1d6ebb;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+form {
+  padding: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 14px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  color: #354254;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid #cfd6df;
+  border-radius: 6px;
+  background: #fff;
+  color: #273548;
+  font: inherit;
+  font-size: 0.86rem;
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.field input[readonly] {
+  background: #f8fafc;
+  color: #526174;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #3385d5;
+  outline: 2px solid rgba(51, 133, 213, 0.16);
+}
+
+.field small {
+  color: #748196;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.next-date {
+  max-width: 50%;
+}
+
+.form-note {
+  margin: 0;
+  padding: 12px;
+  border-radius: 6px;
+  background: #f7f9fb;
+  color: #68788c;
+  font-size: 0.76rem;
+}
+
+.form-error {
+  margin: 16px 0 0;
+  color: #ad332a;
+  font-size: 0.86rem;
+}
+
+.incident-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e9ef;
+}
+
+.incident-list h3 {
+  margin: 0 0 2px;
+  color: #273548;
+  font-size: 0.88rem;
+}
+
+.incident-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid #e1e6ed;
+  border-radius: 6px;
+}
+
+.incident-item strong {
+  color: #273548;
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.incident-item p {
+  margin: 5px 0 0;
+  color: #748196;
+  font-size: 0.72rem;
+}
+
+.incident-status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #fff3e5;
+  color: #a95200;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e9ef;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .registration-page {
+    padding: 14px 12px 28px;
+  }
+
+  .page-topbar {
+    align-items: flex-start;
+  }
+
+  .page-heading h1 {
+    font-size: 1.6rem;
+  }
+
+  .form-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  form {
+    padding: 14px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .next-date {
+    max-width: none;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions ion-button {
+    width: 100%;
+    margin: 0;
+  }
+}

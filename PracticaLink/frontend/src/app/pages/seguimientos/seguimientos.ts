@@ -104,7 +104,7 @@ export class Seguimientos implements OnInit {
     }
     this.error = '';
     this.guardandoId = id;
-    this.practicaService.registrarSeguimiento(id, this.fechas.get(id) ?? '', observacion).subscribe({
+    this.practicaService.registrarSeguimientoPractica(id, this.fechas.get(id) ?? '', observacion).subscribe({
       next: seguimiento => {
         this.historiales.set(id, [seguimiento, ...(this.historiales.get(id) ?? [])]);
         this.observaciones.set(id, '');

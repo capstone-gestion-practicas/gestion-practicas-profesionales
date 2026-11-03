@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map } from 'rxjs';
 import {
   IonBadge,
   IonButton,
@@ -26,9 +26,11 @@ import {
 } from '@ionic/angular';
 
 import {
+  ActualizarEstadoPracticaResponse,
   EstadoPracticaDetalle,
   GestorPractica,
   HistorialEstadoPractica,
+  IniciarPracticaResponse,
   PracticaEstadoResumen
 } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
@@ -202,14 +204,17 @@ export class GestionEstados implements OnInit {
     const estadoSeleccionado = this.estados.find(
       estado => estado.id_estado === idEstado
     );
-    const operacion = (estadoSeleccionado?.nombre === 'EN_CURSO'
-      ? this.practicaService.iniciarPractica(
-        practica.id_practica, this.observacion.trim() || null
-      )
-      : this.practicaService.actualizarEstado(
-        practica.id_practica, idEstado,
-        this.observacion.trim() || null
-      )).pipe(map(respuesta => ({
+    // Tipo explícito de la unión: evita pipe() sobre Observable<A> | Observable<B>.
+    const solicitud: Observable<ActualizarEstadoPracticaResponse | IniciarPracticaResponse> =
+      estadoSeleccionado?.nombre === 'EN_CURSO'
+        ? this.practicaService.iniciarPractica(
+          practica.id_practica, this.observacion.trim() || null
+        )
+        : this.practicaService.actualizarEstado(
+          practica.id_practica, idEstado,
+          this.observacion.trim() || null
+        );
+    const operacion = solicitud.pipe(map(respuesta => ({
         id_practica: respuesta.id_practica,
         mensaje: respuesta.mensaje
       })));

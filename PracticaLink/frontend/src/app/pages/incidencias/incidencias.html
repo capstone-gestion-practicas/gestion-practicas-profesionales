@@ -32,12 +32,10 @@
                   <ion-select-option [value]="practica.id_practica">#{{ practica.id_practica }} · {{ practica.estudiante }} · {{ practica.centro_practica }}</ion-select-option>
                 }
               </ion-select>
-              <ion-input type="date" label="Fecha" labelPlacement="stacked" [(ngModel)]="fecha"></ion-input>
-              <ion-select label="Prioridad" labelPlacement="stacked" interface="popover" [(ngModel)]="prioridad">
-                <ion-select-option value="BAJA">Baja</ion-select-option>
-                <ion-select-option value="MEDIA">Media</ion-select-option>
-                <ion-select-option value="ALTA">Alta</ion-select-option>
-                <ion-select-option value="CRITICA">Crítica</ion-select-option>
+              <ion-select label="Tipo" labelPlacement="stacked" interface="popover" [(ngModel)]="tipo">
+                @for (item of tipos; track item.codigo) {
+                  <ion-select-option [value]="item.codigo">{{ item.nombre }}</ion-select-option>
+                }
               </ion-select>
             </div>
             <ion-textarea label="Descripción" labelPlacement="stacked" placeholder="Describe la situación que requiere atención" [autoGrow]="true" [(ngModel)]="descripcion"></ion-textarea>
@@ -57,7 +55,7 @@
         } @else {
           <div class="incident-list">
             @for (incidencia of incidenciasVisibles(); track incidencia.id_incidencia) {
-              <ion-card class="incident-card" [class.incident-pending]="incidencia.estado === 'ABIERTA' || incidencia.estado === 'EN_REVISION'">
+              <ion-card class="incident-card" [class.incident-pending]="esPendiente(incidencia)">
                 <ion-card-header>
                   <div class="incident-heading">
                     <div><p class="incident-id">Incidencia #{{ incidencia.id_incidencia }} · Práctica #{{ incidencia.id_practica }}</p><ion-card-title>{{ incidencia.estudiante }} · {{ incidencia.centro_practica }}</ion-card-title><p class="student-email">{{ incidencia.correo_estudiante }}</p></div>
@@ -70,14 +68,8 @@
                     @if (incidencia.alerta) { <ion-badge color="danger">Alerta pendiente</ion-badge> }
                     @if (incidencia.fecha_resolucion) { <span>Atendida {{ incidencia.fecha_resolucion | date:'dd/MM/yyyy HH:mm' }}</span> }
                   </div>
-                  <div class="state-actions">
-                    <ion-select label="Estado" labelPlacement="stacked" interface="popover" [ngModel]="estadosSeleccionados.get(incidencia.id_incidencia)" (ngModelChange)="estadosSeleccionados.set(incidencia.id_incidencia, $event)">
-                      @for (estado of estados; track estado) { <ion-select-option [value]="estado">{{ estado.replace('_', ' ') }}</ion-select-option> }
-                    </ion-select>
-                    <ion-button fill="outline" [disabled]="guardandoEstadoId === incidencia.id_incidencia || estadosSeleccionados.get(incidencia.id_incidencia) === incidencia.estado" (click)="guardarEstado(incidencia)">
-                      @if (guardandoEstadoId === incidencia.id_incidencia) { <ion-spinner name="crescent"></ion-spinner> } @else { Actualizar estado }
-                    </ion-button>
-                  </div>
+                  <p class="incident-state">Estado: <strong>{{ incidencia.estado }}</strong></p>
+                  <p class="student-email">El cambio de estado se gestiona desde la ficha de la práctica (HU016).</p>
                 </ion-card-content>
               </ion-card>
             }

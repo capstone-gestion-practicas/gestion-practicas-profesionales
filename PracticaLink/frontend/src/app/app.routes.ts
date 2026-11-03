@@ -86,6 +86,34 @@ export const routes: Routes = [
       import('./pages/incidencias/incidencias').then(m => m.Incidencias)
   },
   {
+    path: 'practicas',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practicas-listado/practicas-listado').then(m => m.PracticasListado)
+  },
+  {
+    path: 'practicas/:id/seguimiento/nuevo',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'seguimiento' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
+  },
+  {
+    path: 'practicas/:id/incidencias/nueva',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'], tipoRegistro: 'incidencia' },
+    loadComponent: () =>
+      import('./pages/registro-practica/registro-practica').then(m => m.RegistroPractica)
+  },
+  {
+    path: 'practicas/:id',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+    loadComponent: () =>
+      import('./pages/practica-detalle/practica-detalle').then(m => m.PracticaDetalle)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   }
