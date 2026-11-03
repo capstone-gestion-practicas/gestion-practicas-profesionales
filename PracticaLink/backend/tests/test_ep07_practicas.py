@@ -193,6 +193,36 @@ class Ep07PracticasTests(unittest.TestCase):
                 self.db.rollback.assert_called_once()
                 self.db.commit.assert_not_called()
 
+    def test_generic_change_by_unassigned_or_unauthorized_user_is_403_without_commit(self):
+        for error in ["GESTOR_NO_ASIGNADO_A_PRACTICA", "USUARIO_NO_AUTORIZADO"]:
+            with self.subTest(error=error):
+                self.db.reset_mock()
+                self.db.execute.return_value.scalar_one.return_value = {"error": error}
+                response = self.client.patch(
+                    "/practicas/9202/estado/actualizacion", json={"id_estado": 3}
+                )
+                self.assertEqual(response.status_code, 403)
+                self.assertEqual(
+                    response.json()["detail"],
+                    "No tiene permisos para modificar el estado de esta práctica",
+                )
+                self.db.rollback.assert_called_once()
+                self.db.commit.assert_not_called()
+
+    def test_administrator_generic_change_is_allowed_and_commits_once(self):
+        self.contexto.return_value = {"roles": ["ADMINISTRADOR"]}
+        self.db.execute.return_value.scalar_one.return_value = {
+            "id_practica": 9202, "id_estado": 3, "estado": "OBSERVADA",
+            "mensaje": "Estado actualizado y registrado en el historial",
+        }
+        response = self.client.patch(
+            "/practicas/9202/estado/actualizacion", json={"id_estado": 3}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["estado"], "OBSERVADA")
+        self.db.commit.assert_called_once()
+        self.db.rollback.assert_not_called()
+
     def test_reminder_task_requires_configured_header_token(self):
         with (
             patch.object(settings, "ep07_reminder_task_token", "unit-test-task-token"),

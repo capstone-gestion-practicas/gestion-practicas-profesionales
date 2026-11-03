@@ -30,6 +30,11 @@ class PracticaFinalizadaNoModificableError(Exception):
     pass
 
 
+class AccesoPracticaNoPermitidoError(Exception):
+    """Usuario sin rol activo o GESTOR que no tiene asignada la práctica."""
+    pass
+
+
 class EstadoPracticaOperacionError(Exception):
     """Resultado no reconocido o inválido: nunca se confirma como éxito."""
     pass
@@ -194,6 +199,8 @@ def actualizar_estado_practica(
         raise InicioRestringidoRequeridoError
     if error == "PRACTICA_FINALIZADA_NO_MODIFICABLE":
         raise PracticaFinalizadaNoModificableError
+    if error in {"USUARIO_NO_AUTORIZADO", "GESTOR_NO_ASIGNADO_A_PRACTICA"}:
+        raise AccesoPracticaNoPermitidoError
     if error is not None:
         raise EstadoPracticaOperacionError
     # Validar antes de confirmar: una respuesta inesperada nunca es éxito.

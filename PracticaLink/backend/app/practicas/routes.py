@@ -56,6 +56,7 @@ from app.services.correo_service import (
     enviar_recordatorio_sin_practica,
 )
 from app.services.estado_practica_service import (
+    AccesoPracticaNoPermitidoError,
     CierreManualRequeridoError,
     EstadoPracticaNoDisponibleError,
     EstadoPracticaOperacionError,
@@ -547,6 +548,12 @@ def actualizar_estado_general(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="La práctica está finalizada y no puede modificarse",
+        ) from error
+    except AccesoPracticaNoPermitidoError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permisos para modificar el estado de esta práctica",
         ) from error
     except EstadoPracticaOperacionError as error:
         db.rollback()
