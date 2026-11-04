@@ -74,6 +74,8 @@ Ejecución local desde `PracticaLink/backend`:
 - `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`
 - `CHILE_RUT_EMPRESA_API_KEY`
 - `CHILE_RUT_EMPRESA_API_URL`
+- `OPENFACTURA_API_KEY` (opcional; proveedor de respaldo para consulta de RUT)
+- `OPENFACTURA_API_URL` (opcional; por defecto `https://api.haulmer.com`)
 
 El archivo `.env` es local y está ignorado por Git. La plantilla pública es `PracticaLink/backend/.env.template`.
 

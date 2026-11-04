@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 
     chile_rut_empresa_api_key: str | None = None
     chile_rut_empresa_api_url: str = "https://chilerutempresa.cl/api"
+    openfactura_api_key: str | None = None
+    openfactura_api_url: str = "https://api.haulmer.com"
 
     smtp_host: str = "127.0.0.1"
     smtp_port: int = 54325

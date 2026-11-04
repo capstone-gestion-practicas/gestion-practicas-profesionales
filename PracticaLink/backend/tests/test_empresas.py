@@ -28,6 +28,9 @@ from app.empresas.service import (  # noqa: E402
 RUT = "12.345.678-5"
 RUT_PROVEEDOR = "12345678-5"
 URL = "https://provider.example/api/lookup/" + RUT_PROVEEDOR
+OPENFACTURA_URL = (
+    "https://openfactura.example/v2/dte/taxpayer/" + RUT_PROVEEDOR
+)
 
 
 def datos_proveedor():
@@ -74,6 +77,8 @@ class EmpresasAisladasTests(unittest.TestCase):
             SimpleNamespace(
                 chile_rut_empresa_api_key="synthetic-key",
                 chile_rut_empresa_api_url="https://provider.example/api///",
+                openfactura_api_key=None,
+                openfactura_api_url="https://openfactura.example/",
             ),
         )
         self.settings = config_patch.start()
@@ -200,6 +205,128 @@ class EmpresasServiceTests(EmpresasAisladasTests):
         with self.assertRaises(EmpresaApiNoConfiguradaError):
             consultar_empresa(self.db, RUT)
         self.http_mock.assert_not_called()
+        self.assert_no_writes()
+
+    def test_chile_provider_failure_uses_openfactura_and_maps_its_response(self):
+        datos_openfactura = {
+            "rut": RUT_PROVEEDOR,
+            "razonSocial": "Empresa OpenFactura SpA",
+            "comuna": "Santiago",
+            "actividades": [{
+                "giro": "Servicios informáticos",
+                "actividadEconomica": "Consultoría informática",
+                "codigoActividadEconomica": 620200,
+                "actividadPrincipal": True,
+            }],
+        }
+        self.settings.openfactura_api_key = "synthetic-openfactura-key"
+        self.http_mock.side_effect = [
+            respuesta(403),
+            httpx.Response(
+                200, json=datos_openfactura,
+                request=httpx.Request("GET", OPENFACTURA_URL),
+            ),
+        ]
+        self.db.execute.return_value.scalar_one.return_value = {
+            **datos_cache(),
+            "razon_social": "Empresa OpenFactura SpA",
+            "giro": "Servicios informáticos",
+            "comuna": "Santiago",
+            "actividades": [{
+                "codigo": "620200",
+                "descripcion": "Consultoría informática",
+            }],
+            "fuente": "OpenFactura",
+        }
+
+        with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+            datos = consultar_empresa(self.db, RUT)
+
+        self.assertEqual(datos["fuente"], "OpenFactura")
+        self.assertEqual(datos["rut"], RUT)
+        self.assertEqual(datos["dv"], "5")
+        self.assertEqual(datos["razon_social"], "Empresa OpenFactura SpA")
+        self.assertEqual(datos["giro"], "Servicios informáticos")
+        self.assertEqual(datos["comuna"], "Santiago")
+        self.assertEqual(datos["actividades"], [{
+            "codigo": "620200",
+            "descripcion": "Consultoría informática",
+        }])
+        datos_guardados = json.loads(
+            self.db.execute.call_args_list[1].args[1]["datos"]
+        )
+        self.assertEqual(datos_guardados, {
+            "found": True,
+            "rut": RUT,
+            "dv": "5",
+            "razon_social": "Empresa OpenFactura SpA",
+            "fecha_inicio_actividades": None,
+            "giro": "Servicios informáticos",
+            "rubro": None,
+            "subrubro": None,
+            "categoria_tributaria": None,
+            "afecta_iva": None,
+            "actividades": [{
+                "codigo": "620200",
+                "descripcion": "Consultoría informática",
+            }],
+            "comuna": "Santiago",
+            "region": None,
+            "num_trabajadores": None,
+            "fuente": "OpenFactura",
+        })
+        self.assertIn("trying OpenFactura fallback", " ".join(logs.output))
+        self.assertEqual(self.http_mock.call_count, 2)
+        self.assertEqual(
+            self.http_mock.call_args_list[1].args[0], OPENFACTURA_URL
+        )
+        self.assertEqual(
+            self.http_mock.call_args_list[1].kwargs["headers"],
+            {"apikey": "synthetic-openfactura-key"},
+        )
+        self.db.commit.assert_called_once_with()
+
+    def test_unconfigured_chile_provider_uses_configured_openfactura(self):
+        self.settings.chile_rut_empresa_api_key = None
+        self.settings.openfactura_api_key = "synthetic-openfactura-key"
+        self.http_mock.return_value = httpx.Response(
+            200,
+            json={"razonSocial": "Empresa OpenFactura SpA", "actividades": []},
+            request=httpx.Request("GET", OPENFACTURA_URL),
+        )
+        self.db.execute.return_value.scalar_one.return_value = {
+            **datos_cache(),
+            "razon_social": "Empresa OpenFactura SpA",
+            "actividades": [],
+            "fuente": "OpenFactura",
+        }
+
+        datos = consultar_empresa(self.db, RUT)
+
+        self.assertEqual(datos["fuente"], "OpenFactura")
+        self.http_mock.assert_called_once_with(
+            OPENFACTURA_URL,
+            headers={"apikey": "synthetic-openfactura-key"},
+            timeout=8.0,
+        )
+        self.db.commit.assert_called_once_with()
+
+    def test_chile_not_found_does_not_query_openfactura(self):
+        self.settings.openfactura_api_key = "synthetic-openfactura-key"
+        self.http_mock.return_value = respuesta(404)
+        with self.assertRaises(EmpresaNoEncontradaError):
+            consultar_empresa(self.db, RUT)
+        self.http_mock.assert_called_once()
+        self.assert_no_writes()
+
+    def test_provider_failures_raise_unavailable_when_both_are_configured(self):
+        self.settings.openfactura_api_key = "synthetic-openfactura-key"
+        self.http_mock.side_effect = [respuesta(503), httpx.Response(
+            503, request=httpx.Request("GET", OPENFACTURA_URL)
+        )]
+        with self.assertRaises(EmpresaApiNoDisponibleError):
+            consultar_empresa(self.db, RUT)
+        self.assertEqual(self.http_mock.call_count, 2)
         self.assert_no_writes()
 
     def test_saved_cache_is_reused_on_next_lookup_without_second_http_call(self):
