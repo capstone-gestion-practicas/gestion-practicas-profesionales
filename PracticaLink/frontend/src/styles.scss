@@ -13,33 +13,130 @@
 @import "@ionic/angular/css/display.css";
 
 :root {
-  --ion-color-primary: #245a45;
+  /* ===== Fuente de verdad visual (Bloque 1 · rediseño UI) ===== */
+
+  /* Colores semánticos */
+  --color-primary: #245a45;
+  --color-primary-hover: #1f4f3c;
+  --color-primary-on: #ffffff;
+  --color-secondary: #6f8769;
+  --color-bg: #f6f2e9;
+  --color-surface: #fffcf5;
+  --color-surface-muted: #f0ebdf;
+  --color-surface-form: #fbf8f0;
+  --color-border: #d9d0bf;
+  --color-text: #20372d;
+  --color-text-muted: #627168;
+  --color-success: #2f7d4b;
+  --color-warning: #7a4a00;
+  --color-danger: #b42318;
+  --color-info: #1d6ebb;
+  --color-neutral: #5f6b66;
+  --color-error-form: #a23d34;
+
+  /* Pares texto/fondo para badges (contraste WCAG AA verificado) */
+  --color-neutral-soft: #ebe6da;
+  --color-neutral-on: #3f4f47;
+  --color-info-soft: #e4eff8;
+  --color-info-on: #1d4f7a;
+  --color-warning-soft: #fff0dc;
+  --color-warning-on: #7a4a00;
+  --color-success-soft: #e3f1e6;
+  --color-success-on: #1f5c39;
+  --color-danger-soft: #fbebe8;
+  --color-danger-on: #9c2a20;
+
+  /* Ionic: variables derivadas de los tokens (las variantes -rgb deben coincidir) */
+  --ion-color-primary: var(--color-primary);
   --ion-color-primary-rgb: 36, 90, 69;
-  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast: var(--color-primary-on);
   --ion-color-primary-contrast-rgb: 255, 255, 255;
   --ion-color-primary-shade: #1f4f3c;
   --ion-color-primary-tint: #3a6b58;
-  --ion-color-secondary: #6f8769;
+  --ion-color-secondary: var(--color-secondary);
   --ion-color-secondary-rgb: 111, 135, 105;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-shade: #62775c;
   --ion-color-secondary-tint: #7d9378;
-  --ion-background-color: #f6f2e9;
-  --ion-text-color: #20372d;
-  --ion-card-background: #fffcf5;
-  --ion-toolbar-background: #fffcf5;
-  --ion-toolbar-color: #20372d;
-  --cream: #f6f2e9;
-  --cream-surface: #fffcf5;
-  --cream-muted: #f0ebdf;
-  --ink: #20372d;
-  --ink-muted: #627168;
-  --line: #d9d0bf;
+  --ion-color-success: var(--color-success);
+  --ion-color-success-rgb: 47, 125, 75;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #296d42;
+  --ion-color-success-tint: #4a8f63;
+  --ion-color-warning: var(--color-warning);
+  --ion-color-warning-rgb: 122, 74, 0;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #6b4200;
+  --ion-color-warning-tint: #8c5a1a;
+  --ion-color-danger: var(--color-danger);
+  --ion-color-danger-rgb: 180, 35, 24;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #9e1e14;
+  --ion-color-danger-tint: #bd3b31;
+  --ion-color-info: var(--color-info);
+  --ion-color-info-rgb: 29, 110, 187;
+  --ion-color-info-contrast: #ffffff;
+  --ion-color-info-contrast-rgb: 255, 255, 255;
+  --ion-color-info-shade: #1a62a5;
+  --ion-color-info-tint: #3a7fc4;
+  --ion-background-color: var(--color-bg);
+  --ion-text-color: var(--color-text);
+  --ion-card-background: var(--color-surface);
+  --ion-toolbar-background: var(--color-surface);
+  --ion-toolbar-color: var(--color-text);
+  --ion-font-family: var(--font-family-base);
+
+  /* Tipografía: pila del sistema (sin webfonts) y escala corta */
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-size-page-title: 1.75rem;
+  --font-size-section-title: 1.15rem;
+  --font-size-body: 1rem;
+  --font-size-small: .875rem;
+  --font-size-meta: .8125rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Espaciado (escala de 4px) */
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Radios y sombras discretas */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px rgba(32, 55, 45, .06);
+  --shadow-md: 0 8px 24px rgba(32, 55, 45, .07);
+
+  /* Aliases de compatibilidad: apuntan a la fuente de verdad anterior */
+  --cream: var(--color-bg);
+  --cream-surface: var(--color-surface);
+  --cream-muted: var(--color-surface-muted);
+  --ink: var(--color-text);
+  --ink-muted: var(--color-text-muted);
+  --line: var(--color-border);
   --form-primary: var(--ion-color-primary);
   --form-border: var(--line);
-  --form-surface: #fbf8f0;
-  --form-error: #a23d34;
+  --form-surface: var(--color-surface-form);
+  --form-error: var(--color-error-form);
 }
+
+/*
+ * Breakpoints de diseño (convención; los media queries existentes se migran por página).
+ *   móvil/tablet pequeño: 600px · tablet/notebook: 900px · escritorio amplio: 1200px
+ * CSS no admite variables en @media; usar estos valores literales o las variables SCSS siguientes.
+ */
+$bp-movil: 600px;
+$bp-tablet: 900px;
+$bp-escritorio: 1200px;
 
 ion-card {
   --background: var(--cream-surface);

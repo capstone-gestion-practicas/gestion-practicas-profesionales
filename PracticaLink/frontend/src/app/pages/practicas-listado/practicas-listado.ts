@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { IonButton, IonCard, IonCardContent, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { formatearFechaHoraChile } from '../../core/utils/fechas';
+import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
 
 import { PracticaIncidenciasPendientesItem, PracticaResumen } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
@@ -16,7 +17,7 @@ type EstadoResumen = 'inactivo' | 'cargando' | 'listo' | 'error';
 @Component({
   selector: 'app-practicas-listado',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner],
+  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner],
   templateUrl: './practicas-listado.html',
   styleUrl: './practicas-listado.scss'
 })

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, map } from 'rxjs';
+import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
 import {
   IonBadge,
   IonButton,
@@ -41,6 +42,7 @@ import { AuthStore } from '../../core/store/auth.store';
   standalone: true,
   imports: [
     CommonModule,
+    EstadoBadge,
     FormsModule,
     IonBadge,
     IonButton,

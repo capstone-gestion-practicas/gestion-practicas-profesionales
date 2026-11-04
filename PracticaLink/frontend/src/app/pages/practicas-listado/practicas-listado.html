@@ -40,7 +40,7 @@
             <h2>{{ practica.estudiante.nombre }}</h2>
             <dl>
               <div><dt>Centro de práctica</dt><dd>{{ practica.centro_practica }}</dd></div>
-              <div><dt>Estado</dt><dd>{{ practica.estado.nombre }}</dd></div>
+              <div><dt>Estado</dt><dd><app-estado-badge [estado]="practica.estado.nombre"></app-estado-badge></dd></div>
               <div><dt>Fecha de registro</dt><dd>{{ formatearFecha(practica.fecha_registro) }}</dd></div>
               <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
             </dl>

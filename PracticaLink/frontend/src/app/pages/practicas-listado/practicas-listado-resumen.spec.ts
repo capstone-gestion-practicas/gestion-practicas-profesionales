@@ -127,7 +127,7 @@ describe('PracticasListado · resumen HU017', () => {
   it('shows finalized practices with pending incidences', () => {
     crear();
     const finalizada = fixture.nativeElement.querySelectorAll('ion-card')[1] as HTMLElement;
-    expect(finalizada.textContent).toContain('FINALIZADA');
+    expect(finalizada.textContent).toContain('Finalizada');
     expect(finalizada.textContent).toContain('Pendientes: 1');
   });
 

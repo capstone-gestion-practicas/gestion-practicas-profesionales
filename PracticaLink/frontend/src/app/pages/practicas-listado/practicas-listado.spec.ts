@@ -5,6 +5,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { PracticasListadoResponse } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { PracticasListado } from './practicas-listado';
+import { presentarEstado } from '../../shared/components/estado-badge/estado-badge';
 
 describe('PracticasListado', () => {
   let fixture: ComponentFixture<PracticasListado>;
@@ -34,9 +35,26 @@ describe('PracticasListado', () => {
   });
   afterEach(() => fixture.destroy());
 
+  it('gives each state its own variant so active states are not all success', () => {
+    const badges = Array.from(
+      fixture.nativeElement.querySelectorAll('app-estado-badge .estado-badge')
+    ) as HTMLElement[];
+    const variante = (texto: string) =>
+      badges.find(badge => badge.textContent?.trim() === texto)?.className ?? '';
+    expect(variante('Registrada')).toContain('estado-badge--neutral');
+    expect(variante('Aprobada')).toContain('estado-badge--info');
+    expect(variante('En curso')).toContain('estado-badge--primary');
+    expect(variante('Finalizada')).toContain('estado-badge--success');
+    expect(variante('Rechazada')).toContain('estado-badge--danger');
+    const noFinalesEnSuccess = badges.filter(badge =>
+      badge.classList.contains('estado-badge--success') && badge.textContent?.trim() !== 'Finalizada');
+    expect(noFinalesEnSuccess.length).toBe(0);
+  });
+
   it('renders all seven states and dates without review actions or RUT', () => {
     const text = fixture.nativeElement.textContent;
-    for (const item of respuesta.items) expect(text).toContain(item.estado.nombre);
+    // El estado se muestra como etiqueta legible (app-estado-badge), no como código crudo.
+    for (const item of respuesta.items) expect(text).toContain(presentarEstado(item.estado.nombre).etiqueta);
     expect(text).toContain('Estudiante sintético');
     expect(text).toContain('Centro sintético');
     expect(text).toContain('17/10/2026, 09:30');
