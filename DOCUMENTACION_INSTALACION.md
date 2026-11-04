@@ -190,20 +190,21 @@ directas sobre las tablas. La lectura abre transacciones read-only. No hay fallb
 la ausencia de la configuración correspondiente produce 503 al usar su endpoint,
 aunque la aplicación pueda arrancar. Una URL distinta no acredita privilegios mínimos.
 
-Sobre el esquema requerido y con autorización específica para el entorno, el orden es:
+La infraestructura EP05 está versionada en la migración
+`PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql`
+(EP07 Corrección 4A). Incluye la columna `seguimiento.fecha_seguimiento`, las restricciones
+EP05, los roles y ejecutores `pl_ep05_*`, las funciones
+`seguimientos_privados.fn_registrar_seguimiento` y `seguimientos_privados.fn_consultar_seguimientos`,
+y el índice de lectura.
 
-1. `scripts/BD/fixes/ep05-01-seguimiento-calendario.sql`.
-2. `scripts/BD/fixes/ep05-02-permisos-seguimiento.sql`.
-3. `scripts/BD/fixes/ep05-03-registrar-seguimiento.sql`.
-4. `scripts/BD/fixes/ep05-04-consultar-seguimientos.sql`.
-5. `scripts/BD/fixes/ep05-05-indice-lectura-seguimientos.sql`.
-
+Para instalar o actualizar una base se aplican las migraciones versionadas de
+`supabase/migrations`, en orden, con la autorización específica del entorno. **No se ejecutan
+los scripts `scripts/BD/fixes/ep05-01` a `ep05-05`**: quedan como referencia histórica y no deben
+ejecutarse sobre una base que ya recibió la migración, porque fallarían o duplicarían objetos.
 `schema.sql` es exclusivamente para bases vacías; no recrear una base existente.
-Cada script tiene su propia transacción, no existe una transacción global de despliegue.
-Los cuatro primeros son incrementos de aplicación única. El quinto evita duplicar
-un índice equivalente. Revisar la aplicación previa de cada incremento antes de
-reanudar un despliegue parcial. La migración de fecha toma un bloqueo exclusivo;
-la creación normal del índice puede bloquear escritores. Planificar una ventana.
+
+La migración de fecha toma un bloqueo exclusivo sobre `seguimiento`, y la creación del índice
+de lectura bloquea escritores mientras se ejecuta. Planificar una ventana de mantenimiento.
 Una reversión del código no revierte SQL: conservar datos y FK RESTRICT, sin volver
 a CASCADE ni eliminar históricos como mecanismo de recuperación.
 

@@ -42,6 +42,16 @@
                   [ngModel]="fechas.get(practica.id_practica)"
                   (ngModelChange)="fechas.set(practica.id_practica, $event)">
                 </ion-input>
+                  <ion-select
+                  label="Medio de contacto"
+                  labelPlacement="stacked"
+                  placeholder="Selecciona un medio"
+                  [ngModel]="tipos.get(practica.id_practica) ?? ''"
+                  (ngModelChange)="tipos.set(practica.id_practica, $event)">
+                  @for (medio of medios; track medio) {
+                    <ion-select-option [value]="medio">{{ medio }}</ion-select-option>
+                  }
+                </ion-select>
                   <ion-textarea
                   label="Observaciones"
                   labelPlacement="stacked"
@@ -81,7 +91,7 @@
                       @for (seguimiento of historialDe(practica.id_practica); track seguimiento.id_seguimiento) {
                         <li class="history-item">
                           <span class="history-marker" aria-hidden="true"></span>
-                          <div><strong>{{ seguimiento.fecha | date:'dd/MM/yyyy':'UTC' }}</strong><p>Registrado por {{ seguimiento.usuario }}</p><p class="history-note">{{ seguimiento.observacion }}</p></div>
+                          <div><strong>{{ seguimiento.fecha | date:'dd/MM/yyyy' }}</strong><p>{{ seguimiento.tipo }}</p><p>Registrado por {{ seguimiento.responsable.nombre }}</p><p class="history-note">{{ seguimiento.observacion }}</p></div>
                         </li>
                       }
                     </ol>

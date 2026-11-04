@@ -51,12 +51,11 @@ Cada ejecución crea nombres aleatorios y etiquetas exclusivas para contenedor,
 red interna y volumen. Registra e imprime cada candidato **antes** de ejecutar
 su creación, por lo que una interrupción o timeout no lo excluye de la limpieza.
 Comprueba colisiones y verifica la propiedad de cada objeto tras crearlo, antes
-de usarlo. Aplica, en este orden, exclusivamente dentro del contenedor:
-
-1. `scripts/BD/schema.sql`.
-2. `PracticaLink/supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql`.
-3. `scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql`.
-4. `scripts/BD/fixes/ep04-fn-iniciar-practica.sql`.
+de usarlo. Aplica, en orden y exclusivamente dentro del contenedor, todas las migraciones de
+`PracticaLink/supabase/migrations/` hasta `20261103130000_ep07_versionar_inicio_practica.sql`
+inclusive, tras crear el stub `auth.jwt()` de laboratorio. Esa migración incorpora el
+bootstrap EP04 y `fn_iniciar_practica`; ya no se usan los scripts manuales de
+`scripts/BD/fixes/` ni `schema.sql`. Ejecutar con `--image postgres:18.6`.
 
 Genera contraseñas sintéticas en memoria y un login miembro únicamente de
 `pl_ep04_executor`. La conexión principal apunta a un destino sintético sin uso

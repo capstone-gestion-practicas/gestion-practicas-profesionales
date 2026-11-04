@@ -139,11 +139,14 @@ class LocalPostgres:
             CREATE ROLE authenticated NOLOGIN;
             CREATE ROLE service_role NOLOGIN;
         """)
-        for path in ['scripts/BD/schema.sql',
-                     'PracticaLink/supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql',
-                     'scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql',
-                     'scripts/BD/fixes/ep04-fn-iniciar-practica.sql']:
-            self.sql((ROOT / path).read_text())
+        # Esquema solo desde migraciones versionadas, en orden, hasta EP07 Corrección 3.
+        # El bootstrap EP04 y fn_iniciar_practica ya están en 20261103130000; no se usan
+        # scripts manuales ni schema.sql (evita duplicados y versiones obsoletas).
+        self.sql("CREATE SCHEMA auth; CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT '{}'::jsonb $$;")
+        for path in sorted((ROOT / 'PracticaLink/supabase/migrations').glob('*.sql')):
+            if path.name > '20261103130000_ep07_versionar_inicio_practica.sql':
+                break
+            self.sql(path.read_text())
         self.sql(f"""
             CREATE ROLE ep04_integration_login LOGIN INHERIT NOSUPERUSER NOBYPASSRLS
                 NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD '{self.executor_password}';
@@ -515,7 +518,7 @@ def main():
     mode.add_argument('--docker-local', action='store_true',
                         help='autoriza recursos Docker temporales exclusivos y SQL sintético local')
     mode.add_argument('--unit-cleanup',action='store_true',help='solo pruebas de limpieza con mocks, sin Docker ni SQL')
-    parser.add_argument('--image',default='postgres:18',help='imagen local PostgreSQL 18.6; nunca se descarga')
+    parser.add_argument('--image',default='postgres:18.6',help='imagen local PostgreSQL 18.6; nunca se descarga')
     args = parser.parse_args()
     if args.unit_cleanup:
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(CleanupSafetyTests)

@@ -511,7 +511,11 @@ El valor ISO de la API permanece sin cambios. No modifica `/auth/context` ni las
 
 `GET /practicas` permite a GESTOR y ADMINISTRADOR consultar prácticas de
 cualquier estado, incluidas las históricas y finales. No modifica EP03 ni
-`GET /practicas/me`.
+`GET /practicas/me`. Desde EP07 (Corrección 2B.1), ADMINISTRADOR activo conserva el
+listado global y un GESTOR activo solo recibe prácticas con su `id_gestor`
+(identidad desde el JWT; el cliente no envía `id_gestor`). El filtro se aplica en el
+mismo `WHERE` antes de `LIMIT/OFFSET`, por lo que `hay_mas` refleja el conjunto
+autorizado. No existe campo `total` en el contrato.
 
 Parámetros: `rut` opcional, `limit` (1–100, por defecto 50) y `offset`
 (>= 0, por defecto 0). El RUT debe tener 7–8 dígitos, guion y verificador
@@ -542,7 +546,11 @@ peticiones. Las pruebas con mocks no acreditan rendimiento o ejecución SQL real
 ### EP04 / HU04.1: detalle general de gestión
 
 `GET /practicas/{id_practica}` permite consultar una práctica seleccionada en
-cualquier estado, incluidas históricas y finales, a GESTOR y ADMINISTRADOR.
+cualquier estado, incluidas históricas y finales, a ADMINISTRADOR (global) y a GESTOR
+solo si la práctica tiene su `id_gestor` (EP07, Corrección 2B.1). Un GESTOR que consulta
+una práctica ajena o sin gestor recibe `403` sin datos; una práctica inexistente sigue
+en `404`. Esta distinción permite a un gestor confirmar la existencia de un ID ajeno:
+es una decisión de contrato pendiente de revisión, no un defecto cerrado.
 La ruta dinámica se registra después de `/practicas/me`, cuyo contrato no cambia.
 Usa `PracticaDetalleGestionResponse`, independiente del detalle del estudiante.
 
@@ -566,8 +574,9 @@ con mocks no validan la ejecución SQL ni la consistencia de datos reales.
 
 ### EP04 / HU04.3: historial de estados para gestión
 
-`GET /practicas/{id_practica}/historial` permite lectura a GESTOR y ADMINISTRADOR;
-ESTUDIANTE recibe 403. No cambia permisos ni contratos de otros endpoints.
+`GET /practicas/{id_practica}/historial` permite lectura a ADMINISTRADOR (global) y a
+GESTOR solo de prácticas asignadas (EP07, Corrección 2B.2: práctica ajena o sin gestor
+→ 403; inexistente → 404). ESTUDIANTE recibe 403. No cambia contratos de otros endpoints.
 El identificador debe estar entre 1 y 9223372036854775807. Acepta limit de 1 a
 100 (50 predeterminado), y offset >= 0 (0 predeterminado). Entradas inválidas:
 422. Práctica inexistente: 404, "La práctica no existe". Práctica existente sin
@@ -595,10 +604,15 @@ pueden contener información sensible preexistente; no deben registrarse en logs
 
 ### EP05 / HU013: registro de seguimientos WEB
 
-`POST /practicas/{id_practica}/seguimientos` está organizado en
-`app/seguimientos/{routes,schemas,service}.py`. Autoriza GESTOR y ADMINISTRADOR
-mediante el JWT y el contexto existente, cuya función SQL filtra usuarios y
-roles activos. Comprueba que el usuario del contexto coincide con el JWT.
+`POST /practicas/{id_practica}/seguimientos` es el **único** handler público, en
+`app/seguimientos/routes.py` (EP07 Corrección 4A: los handlers equivalentes de
+`app/practicas/routes.py` se retiraron). Autoriza a ADMINISTRADOR (global) y a GESTOR solo
+de prácticas asignadas (EP07 2B.2 portada a EP05): la regla vive en
+`seguimientos_privados.fn_registrar_seguimiento` (migración
+`20261103140000_ep07_unificar_seguimientos_ep05.sql`), que bloquea la práctica con
+`FOR UPDATE`, distingue inexistente (404) de no autorizada (403) y exige estado EN_CURSO.
+Rechazo: sin escritura. El contexto de roles proviene de `fn_contexto_usuario`, filtrado
+por usuario y roles activos, y comprueba que coincide con el JWT.
 La función de escritura revalida actividad y roles bajo bloqueo.
 
 El cuerpo admite exclusivamente `fecha` (YYYY-MM-DD, no futura según
@@ -645,10 +659,11 @@ actualmente HU013 y HU014 están integradas en Angular. No se migran demostracio
 
 ### EP05 / HU014: consulta HTTP del historial de seguimientos
 
-`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` amplía el módulo
-seguimientos. JWT y contexto deben coincidir; usuario activo GESTOR o ADMINISTRADOR
-accede a todas las prácticas según el PMV, incluidas finalizadas. SQL revalida
-actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
+`GET /practicas/{id_practica}/seguimientos?limit=50&offset=0` es el único handler público
+(EP07 Corrección 4A). JWT y contexto deben coincidir; ADMINISTRADOR accede a todas las
+prácticas; GESTOR solo a las asignadas (403 si no lo está; 404 si la práctica no existe).
+La paginación ocurre en SQL sobre el conjunto autorizado (`fn_consultar_seguimientos`).
+SQL revalida actividad y roles. ESTUDIANTE queda excluido. Solo admite query limit/offset,
 no identidad externa. No modifica la dependencia ni el POST HU013.
 
 La respuesta 200 contiene id_practica, items, limit, offset, hay_mas. Cada item:
@@ -683,10 +698,11 @@ Las referencias anteriores a integración pendiente corresponden a etapas histó
 
 ### EP05: operación vigente y límites
 
-El orden de aplicación es ep05-01, ep05-02, ep05-03, ep05-04 y ep05-05, según
-[DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md). Esa guía
-identifica los ejecutores separados, la comprobación de privilegios efectivos y
-los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
+La infraestructura EP05 se aplica mediante la migración versionada
+`20261103140000_ep07_unificar_seguimientos_ep05.sql` (no mediante los scripts manuales
+`ep05-*`), según [DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md).
+Esa guía identifica los ejecutores separados, la comprobación de privilegios efectivos
+y los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
 responde 503; no utiliza otra conexión. Las pruebas locales no validan migraciones
 ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con respuesta
 HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados
@@ -855,27 +871,77 @@ genérico de estado no puede finalizar una práctica. Los cierres registran resu
 APROBADA; el esquema existente también admite REPROBADA y ANULADA, pero este flujo
 no ofrece selección de resultado.
 
-El recordatorio se genera una sola vez cuando han transcurrido 24 horas desde la
-fecha de término, mientras la práctica siga EN_CURSO. Se guarda en la bandeja de
-notificaciones del gestor asignado y de los administradores activos y se intenta
-enviar push con el servicio FCM existente. Para el despliegue previsto en Render,
-crear un **Cron Job** separado con programación `*/15 * * * *`, URL base del
-backend en `API_BASE_URL` y `EP07_REMINDER_TASK_TOKEN` como variable secreta.
-Render interpreta la expresión de cron en UTC.
-Comando del job:
+Comportamiento verificado (EP07 Corrección 6A, migración
+`20261103150000_ep07_corregir_recordatorios_cierre.sql`): la práctica es candidata
+si está EN_CURSO y ya comenzó el día siguiente a `fecha_termino` en `America/Santiago`
+(00:00 locales; función `fn_ep07_recordatorio_habilitado`). `fecha_termino` es fecha de
+calendario: la regla no depende de la zona horaria de la sesión PostgreSQL ni del
+servidor, y respeta el horario de verano e invierno de Chile. Destinatarios: el gestor asignado solo si está activo y tiene rol GESTOR activo;
+todos los ADMINISTRADORES activos, también cuando la práctica no tiene gestor. Un
+usuario inactivo no recibe. Idempotencia en PostgreSQL: la PK de
+`recordatorio_cierre_practica` reclama la práctica dentro de la transacción. Si no
+hay ningún destinatario, el reclamo se libera y una ejecución posterior lo entrega.
+La notificación se persiste y se confirma antes del envío push, que va fuera de la
+transacción; un fallo de FCM se contiene y no revierte ni duplica registros.
+Umbral comprobado: con `fecha_termino` 2026-06-30 la habilitación ocurre en
+2026-07-01 00:00 de Santiago (04:00 UTC) con independencia de la sesión UTC o
+`America/Santiago`; la prueba cubre medianoche exacta, justo antes, cambios de horario
+de Chile y que el resultado no varía con la sesión. El disparo lo realiza un job externo aún no configurado (Corrección 6B). No
+se desplegó en Supabase real. **Operación del recordatorio (EP07 Corrección 6B).** Propósito: procesar los
+recordatorios automáticos de cierre. Frecuencia objetivo: **cada hora** (`0 * * * *`).
+La regla funcional se calcula en `America/Santiago` dentro de PostgreSQL, así que el
+scheduler puede operar en UTC; la idempotencia en base evita duplicados si una
+ejecución se repite.
+
+Plataforma: el repositorio versiona solo el frontend QA en `render.yaml`. La
+documentación indica Render para el backend QA (`practicalink-api-qa`), pero ese
+servicio no está versionado en el repositorio. Por eso el scheduler es una
+**configuración manual pendiente** en el dashboard de la plataforma; no existe
+infraestructura versionada para crearlo. Producción no está determinada en el
+repositorio.
+
+Configuración manual requerida (no contiene secretos):
+- Crear un Cron Job separado, programado `0 * * * *`.
+- Variable `API_BASE_URL`: URL HTTPS del backend desplegado.
+- Variable secreta `EP07_REMINDER_TASK_TOKEN`: valor cargado en la plataforma, nunca
+  en el repositorio, en URLs, en logs ni en la documentación.
+
+Comando del job (sin `--verbose` para no imprimir cabeceras; `--no-progress-meter`
+evita ruido, y el cuerpo de respuesta, que solo contiene el conteo, queda visible):
 
 ```sh
-curl --fail --silent --show-error --request POST \
+curl --fail --show-error --no-progress-meter --request POST \
   "$API_BASE_URL/practicas/tareas/recordatorios-cierre" \
   --header "X-Task-Token: $EP07_REMINDER_TASK_TOKEN"
 ```
 
-El endpoint valida el secreto con comparación constante. Sin configuración
-devuelve 503 y ante fallo HTTP el job debe finalizar con error. No hay un
-servicio Render configurado desde el repositorio: crear el Cron Job y cargar
-ambas variables sigue siendo una operación de despliegue pendiente. La llamada
-es idempotente por práctica. La ejecución periódica, la migración y el envío real
-de push no se verifican en pruebas unitarias.
+Contrato verificado: POST sin body; cabecera `X-Task-Token`, comparada con
+`hmac.compare_digest`. Respuestas: 2xx con `{"practicas_notificadas": N}` (N = 0 si no
+hay candidatas, sin push); 403 si el token falta o no coincide; 503 si el backend no
+tiene token configurado; 5xx si falla la transacción (no hay commit); timeout o DNS:
+sin confirmación. Ante cualquier respuesta distinta de 2xx el job termina con error y
+se reintenta en la siguiente hora; el reintento no duplica registros ni notificaciones.
+No hay reintentos automáticos en el backend ni se documentan reintentos nativos de la
+plataforma, porque no están configurados en el repositorio.
+
+Observabilidad: el endpoint no escribe logs propios del flujo. El job registra el
+código de salida y el cuerpo con el conteo. Brecha conocida y propuesta sin aplicar:
+añadir un `logger.info` con el conteo en el endpoint, para verlo también en los logs
+del servidor sin depender del job. Solo afecta al servicio de logging y no expone
+secretos.
+
+FCM: la notificación se persiste y se confirma antes del envío push, que va fuera de
+la transacción. Un fallo de FCM se contiene por dispositivo y no revierte ni duplica
+registros. No hay reintentos de push: deuda operativa abierta.
+
+Disponibilidad: no está verificado si el servicio backend entra en reposo o escala a
+cero en la plataforma, porque su plan no está versionado. No se implementa keep-alive.
+
+Verificado en pruebas: `tests/test_ep07_recordatorios.py` (503, 403, commit antes del
+push, error de base sin commit, contención de FCM y caso sin candidatas) y
+`tests/integration/ep07_recordatorios_cierre.sql`. No se verificó la ejecución
+periódica real ni el envío push real. No se desplegó en Supabase real y el Cron Job
+no se ha creado.
 
 El inicio `PATCH /practicas/{id_practica}/estado` requiere ahora un gestor activo
 asignado. Un GESTOR solo puede iniciar las prácticas asignadas a su usuario;
@@ -884,3 +950,55 @@ La función SQL `practicas_privadas.fn_iniciar_practica` verifica esta regla baj
 la sesión restringida y devuelve 409 si falta la asignación. El bootstrap EP04
 también necesita permiso de lectura de la columna `practica.id_gestor`. El cambio
 genérico de estado no permite iniciar EN_CURSO y no puede eludir ese flujo.
+
+EP07 Corrección 3: la función `practicas_privadas.fn_iniciar_practica` y su bootstrap
+de permisos EP04 están versionados en
+`supabase/migrations/20261103130000_ep07_versionar_inicio_practica.sql`, que reproduce
+`scripts/BD/fixes/ep04-01-permisos-iniciar-practica.sql` y
+`scripts/BD/fixes/ep04-fn-iniciar-practica.sql`. Ambos scripts manuales quedan como
+históricos y no se aplican. La función es `SECURITY DEFINER` con propietario
+`pl_ep04_owner` (NOLOGIN), `search_path = pg_catalog, pg_temp`, EXECUTE solo para
+`pl_ep04_executor`, sin acceso a PUBLIC. Reglas: sin gestor activo asignado (también
+para ADMINISTRADOR) → `GESTOR_NO_ASIGNADO` (409); GESTOR distinto → `USUARIO_NO_AUTORIZADO`
+(403); la práctica se bloquea con `FOR UPDATE` antes de decidir. El login ejecutor
+se provisiona fuera de las migraciones. Esta versión no está desplegada en Supabase real.
+
+### EP07 · Corrección 2B.2: accesos laterales a la práctica
+
+Política aplicada por ámbito. Las prácticas de gestión (historial y seguimientos)
+usan la regla de gestor asignado; las incidencias conservan la política transversal
+aprobada en EP06 y no dependen de `id_gestor`.
+
+| Ámbito | ADMINISTRADOR activo | GESTOR activo | ESTUDIANTE / sin rol / inactivo |
+|---|---|---|---|
+| Historial general `GET /practicas/{id}/historial` | global | solo asignada (ajena o sin gestor: 403) | 403 (ruta) |
+| Historial de estados `GET /practicas/{id}/historial-estados` | global | solo asignada | propietario: permitido (SQL); ajeno: 404 |
+| Estado actual `GET /practicas/{id}/estado` (EP07 2B.3) | global | solo asignada (ajena o sin gestor: 403; inexistente: 404) | propietario: permitido (SQL); ajeno: 404 |
+| Seguimientos `GET` y `POST /practicas/{id}/seguimientos` | global | solo asignada (ajena o sin gestor: 403 sin escritura; inexistente: 404) | 403 (ruta) |
+| Incidencias EP06 (`/practicas/{id}/incidencias*`, `con-incidencias-pendientes`, `GET /incidencias`) | transversal | transversal (sin `id_gestor`) | 403 |
+
+- `fn_puede_gestionar_practica(id_practica, id_usuario)` (migración
+  `20261103120000_ep07_autorizacion_seguimientos.sql`) es la regla única para
+  seguimientos y para el historial de estados. Devuelve verdadero para ADMINISTRADOR
+  activo, o para GESTOR activo asignado.
+- `fn_registrar_seguimiento` aplica la regla dentro de su transacción, con
+  `FOR SHARE` sobre la práctica para serializar con la reasignación. Primero comprueba
+  existencia (`PRACTICA_NO_ENCONTRADA` → 404) y luego autorización
+  (`USUARIO_NO_AUTORIZADO` → 403). Ninguna escritura ocurre antes de ambas. Ambos
+  errores se traducen sin `commit`. Un código no
+  reconocido también se rechaza sin `commit` (500).
+- `fn_listar_seguimientos` no cambió de firma. La capa FastAPI aplica la misma regla
+  antes de listar.
+- Incidencias: sin cambios en SQL ni en rutas. Las pruebas de regresión EP06 viven en
+  `tests/test_ep07_accesos_laterales.py` (I-A a I-G).
+
+Colisión de seguimientos (resuelta en EP07 Corrección 4A): antes, `POST` y `GET
+/practicas/{id}/seguimientos` estaban declarados en `practicas/routes.py` y en
+`seguimientos/routes.py`. El router `seguimientos` (contrato EP05, HU013/HU014) queda como
+único registro público; el handler de `practicas` se retiró, junto con los módulos
+`app/services/seguimiento_service.py` y `app/schemas/seguimiento.py` que solo él usaba.
+Angular migró a ese contrato. Las funciones públicas legacy
+`public.fn_registrar_seguimiento` y `public.fn_listar_seguimientos` (migración
+`20261028010000`) quedan sin consumidores; no se eliminan (SQL versionado). La función
+de registro legacy no informa `tipo` y falla por la restricción EP05, por diseño.
+Los scripts manuales `scripts/BD/fixes/ep05-*.sql` quedan como históricos.

@@ -108,7 +108,8 @@ class DetalleGestionTests(unittest.TestCase):
         for identifier in [1, 9223372036854775807]:
             with self.subTest(identifier=identifier):
                 self.assertEqual(self.client.get('/practicas/' + str(identifier)).status_code, 200)
-                self.assertEqual(self.db.execute.call_args.args[1], {'id_practica': identifier})
+                # EP07: el GESTOR autenticado (123) limita la consulta a sus prácticas asignadas.
+                self.assertEqual(self.db.execute.call_args.args[1], {'id_practica': identifier, 'id_gestor_asignado': 123})
 
     def test_historical_practice_in_all_states_can_be_read(self):
         for estado in ['REGISTRADA', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'EN_CURSO', 'FINALIZADA', 'RECHAZADA']:

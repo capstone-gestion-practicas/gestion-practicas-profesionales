@@ -73,7 +73,8 @@ class ListadoPracticasTests(unittest.TestCase):
         self.assertEqual(response.json()['items'], [])
         sql, params = self.db.execute.call_args.args
         self.assertIn('WHERE e.rut = :rut', str(sql))
-        self.assertEqual(params, {'rut': '12.345.678-5', 'limit': 51, 'offset': 0})
+        # EP07: GESTOR consulta solo sus prácticas asignadas (id desde el JWT, no desde el cliente).
+        self.assertEqual(params, {'rut': '12.345.678-5', 'limit': 51, 'offset': 0, 'id_gestor_asignado': 123})
         self.assertNotIn('12.345.678-5', str(sql))
 
     def test_accepts_uppercase_and_lowercase_k(self):
@@ -137,4 +138,4 @@ class ListadoPracticasTests(unittest.TestCase):
     def test_pagination_boundaries_reach_service(self):
         response = self.client.get('/practicas', params={'limit': 100, 'offset': 200})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.db.execute.call_args.args[1], {'limit': 101, 'offset': 200})
+        self.assertEqual(self.db.execute.call_args.args[1], {'limit': 101, 'offset': 200, 'id_gestor_asignado': 123})

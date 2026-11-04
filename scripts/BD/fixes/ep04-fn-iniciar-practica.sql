@@ -1,3 +1,6 @@
+-- HISTÓRICO (EP07 Corrección 3): este script queda incorporado en la migración
+-- PracticaLink/supabase/migrations/20261103130000_ep07_versionar_inicio_practica.sql.
+-- No aplicar manualmente: un despliegue de migraciones ya lo contiene.
 -- EP04 / HU04.2: APROBADA -> EN_CURSO.
 -- PREPARADO PARA REVISION. Validacion solo en PostgreSQL local aislado.
 -- No aplicado a Supabase. Esta revision incorpora bloqueos de autorizacion/catalogo.

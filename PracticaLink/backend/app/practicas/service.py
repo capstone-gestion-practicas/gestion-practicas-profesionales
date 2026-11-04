@@ -181,11 +181,19 @@ def listar_practicas(
     rut: str | None = None,
     limit: int = 50,
     offset: int = 0,
+    id_gestor_asignado: int | None = None,
 ) -> dict:
-    filtro = "WHERE e.rut = :rut" if rut is not None else ""
+    # Los filtros van dentro del mismo WHERE antes de LIMIT/OFFSET: paginación y hay_mas
+    # reflejan solo las prácticas autorizadas. None = sin restricción por gestor (ADMINISTRADOR).
+    condiciones = []
     parametros = {"limit": limit + 1, "offset": offset}
     if rut is not None:
+        condiciones.append("e.rut = :rut")
         parametros["rut"] = rut
+    if id_gestor_asignado is not None:
+        condiciones.append("p.id_gestor = :id_gestor_asignado")
+        parametros["id_gestor_asignado"] = id_gestor_asignado
+    filtro = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
 
     filas = db.execute(text(f"""
         SELECT p.id_practica, p.fecha_registro,
@@ -234,8 +242,28 @@ def listar_practicas(
     }
 
 
-def obtener_detalle_practica(db: Session, id_practica: int) -> dict | None:
-    practica = db.execute(text("""
+def existe_practica(db: Session, id_practica: int) -> bool:
+    # Solo distingue existencia para responder 403 frente a 404; no devuelve datos.
+    fila = db.execute(text("""
+        SELECT 1 AS existe
+        FROM practica p
+        WHERE p.id_practica = :id_practica
+    """), {"id_practica": id_practica}).mappings().first()
+    return fila is not None
+
+
+def obtener_detalle_practica(
+    db: Session,
+    id_practica: int,
+    id_gestor_asignado: int | None = None,
+) -> dict | None:
+    # Con id_gestor_asignado, la práctica solo se devuelve si está asignada a ese gestor.
+    # None = sin restricción por gestor (ADMINISTRADOR).
+    filtro = "AND p.id_gestor = :id_gestor_asignado" if id_gestor_asignado is not None else ""
+    parametros = {"id_practica": id_practica}
+    if id_gestor_asignado is not None:
+        parametros["id_gestor_asignado"] = id_gestor_asignado
+    practica = db.execute(text(f"""
         SELECT p.id_practica, p.fecha_registro,
                p.fecha_inicio, p.fecha_termino, p.horas, p.cargo_funcion, p.descripcion,
                e.id_estudiante, CONCAT(u.nombre, ' ', u.apellido) AS estudiante_nombre,
@@ -254,7 +282,8 @@ def obtener_detalle_practica(db: Session, id_practica: int) -> dict | None:
         JOIN centro_practica cp ON cp.id_centro = p.id_centro
         JOIN estado_practica ep ON ep.id_estado = p.id_estado_actual
         WHERE p.id_practica = :id_practica
-    """), {"id_practica": id_practica}).mappings().first()
+        {filtro}
+    """), parametros).mappings().first()
 
     if practica is None:
         return None
@@ -284,17 +313,33 @@ def obtener_detalle_practica(db: Session, id_practica: int) -> dict | None:
     }
 
 
+def puede_gestionar_practica(db: Session, id_practica: int, id_usuario: int) -> bool:
+    # Regla única en PostgreSQL: ADMINISTRADOR activo, o GESTOR activo asignado a la práctica.
+    resultado = db.execute(text("""
+        SELECT public.fn_puede_gestionar_practica(:id_practica, :id_usuario)
+    """), {"id_practica": id_practica, "id_usuario": id_usuario}).scalar_one()
+    return resultado is True
+
+
 def obtener_historial_practica(
     db: Session,
     id_practica: int,
     limit: int = 50,
     offset: int = 0,
+    id_gestor_asignado: int | None = None,
 ) -> dict | None:
-    existe = db.execute(text("""
+    # Con id_gestor_asignado, el historial solo se devuelve si la práctica es de ese gestor.
+    # None = sin restricción por gestor (ADMINISTRADOR).
+    filtro = "AND p.id_gestor = :id_gestor_asignado" if id_gestor_asignado is not None else ""
+    parametros = {"id_practica": id_practica}
+    if id_gestor_asignado is not None:
+        parametros["id_gestor_asignado"] = id_gestor_asignado
+    existe = db.execute(text(f"""
         SELECT p.id_practica
         FROM practica p
         WHERE p.id_practica = :id_practica
-    """), {"id_practica": id_practica}).mappings().first()
+        {filtro}
+    """), parametros).mappings().first()
     if existe is None:
         return None
 

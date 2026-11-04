@@ -1,5 +1,10 @@
 # HU014 WEB — Persistencia de lectura
 
+> **Documento histórico (superado).** La infraestructura EP05 se incorpora ahora por la migración
+> `supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql` (EP07 Corrección 4A).
+> Los scripts citados abajo son referencia histórica: no ejecutarlos sobre una base que ya tiene la migración.
+
+
 Implementación SQL sobre base `54502ae`, sin endpoint FastAPI ni cambios Angular.
 Regla PMV aprobada: GESTOR y ADMINISTRADOR activos, con rol activo, consultan todas
 las prácticas, incluidas finalizadas. ESTUDIANTE no accede; no hay asignaciones.

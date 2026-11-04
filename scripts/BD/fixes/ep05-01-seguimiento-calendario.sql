@@ -1,3 +1,6 @@
+-- HISTÓRICO (EP07 Corrección 4A): incorporado en la migración
+-- PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql.
+-- No aplicar manualmente: un despliegue de migraciones ya lo contiene.
 -- HU013 WEB. Aplicar solo tras revisión y autorización del entorno.
 -- Orden: schema.sql (solo base vacía), este archivo, ep05-02, ep05-03.
 -- Migración única: falla si ya fue aplicada; nunca recrea ni vacía tablas.

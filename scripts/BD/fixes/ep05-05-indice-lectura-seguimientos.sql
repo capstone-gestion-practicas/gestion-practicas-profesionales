@@ -1,3 +1,6 @@
+-- HISTÓRICO (EP07 Corrección 4A): incorporado en la migración
+-- PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql.
+-- No aplicar manualmente: un despliegue de migraciones ya lo contiene.
 -- HU014: índice de lectura. Transaccional; no reescribe datos.
 -- CREATE INDEX normal toma un lock que puede esperar/bloquear escritores:
 -- planificar su aplicación fuera del laboratorio mediante revisión humana.
