@@ -256,4 +256,23 @@ describe('Login', () => {
       })
     );
   });
+
+  it('allows manual company details when the lookup service is unavailable', () => {
+    for (const status of [0, 500, 502, 503]) {
+      laboralService.consultarEmpresaParaSolicitud.and.returnValue(
+        throwError(() => new HttpErrorResponse({ status }))
+      );
+      component.modoSolicitudEmpresa = true;
+      component.rutEmpresaSolicitud = '76.123.456-0';
+
+      component.buscarEmpresaSolicitud();
+
+      expect(component.puedeCompletarSolicitudEmpresa)
+        .withContext(`HTTP ${status}`)
+        .toBeTrue();
+      expect(component.mensajeConsultaEmpresa)
+        .withContext(`HTTP ${status}`)
+        .toContain('completar la solicitud manualmente');
+    }
+  });
 });

@@ -205,6 +205,13 @@ export class Login {
           this.permitirSolicitudManual(rutConsultado);
           return;
         }
+        if (error.status === 0 || error.status >= 500) {
+          this.permitirSolicitudManual(
+            rutConsultado,
+            'No fue posible consultar los datos de la empresa. Puedes completar la solicitud manualmente; será revisada por un administrador.'
+          );
+          return;
+        }
         this.mensajeConsultaEmpresa = 'No fue posible verificar el RUT. Inténtalo nuevamente para continuar.';
       }
     });
@@ -407,10 +414,13 @@ export class Login {
     return rutValido(this.rutEmpresaSolicitud);
   }
 
-  private permitirSolicitudManual(rut: string): void {
+  private permitirSolicitudManual(
+    rut: string,
+    mensaje = 'No encontramos una empresa asociada a ese RUT. Completa los datos manualmente; la solicitud será revisada por un administrador.'
+  ): void {
     this.rutEmpresaSolicitudSinCoincidencia = rut;
     this.razonSocialSolicitud = '';
-    this.mensajeConsultaEmpresa = 'No encontramos una empresa asociada a ese RUT. Completa los datos manualmente; la solicitud será revisada por un administrador.';
+    this.mensajeConsultaEmpresa = mensaje;
   }
 
   private mostrarToastRut(mensaje: string): void {

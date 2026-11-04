@@ -93,11 +93,16 @@ class EmpresasServiceTests(EmpresasAisladasTests):
         cache = datos_cache()
         self.db.execute.return_value.scalar_one_or_none.return_value = cache
 
-        self.assertEqual(consultar_empresa(self.db, " 12345678-5 "), cache)
+        with self.assertLogs("app.empresas.service", level="INFO") as logs:
+            self.assertEqual(consultar_empresa(self.db, " 12345678-5 "), cache)
 
+        self.assertIn("current cached company data", " ".join(logs.output))
         self.db.execute.assert_called_once()
         sql, params = self.db.execute.call_args.args
-        self.assertEqual(str(sql), "SELECT fn_obtener_empresa_cache(:rut)")
+        self.assertEqual(
+            str(sql).strip(),
+            "SELECT public.fn_obtener_empresa_cache(:rut)",
+        )
         self.assertEqual(params, {"rut": RUT})
         self.http_mock.assert_not_called()
         self.assert_no_writes()
@@ -123,11 +128,14 @@ class EmpresasServiceTests(EmpresasAisladasTests):
 
         self.assertEqual(self.db.execute.call_count, 2)
         lectura, escritura = self.db.execute.call_args_list
-        self.assertEqual(str(lectura.args[0]), "SELECT fn_obtener_empresa_cache(:rut)")
+        self.assertEqual(
+            str(lectura.args[0]).strip(),
+            "SELECT public.fn_obtener_empresa_cache(:rut)",
+        )
         self.assertEqual(lectura.args[1], {"rut": RUT})
         self.assertEqual(
-            str(escritura.args[0]),
-            "SELECT fn_guardar_empresa_cache(CAST(:datos AS JSONB))",
+            str(escritura.args[0]).strip(),
+            "SELECT public.fn_guardar_empresa_cache(CAST(:datos AS JSONB))",
         )
         self.assertEqual(set(escritura.args[1]), {"datos"})
         esperado = {**datos_proveedor(), "rut": RUT, "fuente": "Chile RUT Empresa"}
@@ -203,11 +211,13 @@ class EmpresasServiceTests(EmpresasAisladasTests):
         self.db.commit.assert_called_once_with()
         self.db.rollback.assert_not_called()
 
-    def test_unexpected_provider_shape_does_not_use_stale_fallback(self):
+    def test_unexpected_provider_shape_uses_stale_fallback(self):
         self.db.execute.return_value.scalar_one_or_none.return_value = datos_cache(False)
         self.http_mock.return_value = respuesta(datos=[])
-        with self.assertRaises(AttributeError):
-            consultar_empresa(self.db, RUT)
+        with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+            cache = consultar_empresa(self.db, RUT)
+        self.assertIn("unexpected JSON type list", " ".join(logs.output))
+        self.assertFalse(cache["cache_vigente"])
         self.assert_no_writes()
 
     def test_save_failure_propagates_without_explicit_rollback(self):
@@ -220,10 +230,12 @@ class EmpresasServiceTests(EmpresasAisladasTests):
 
 class EmpresaProveedorTests(EmpresasAisladasTests):
     def test_maps_provider_fields_and_uses_requested_rut(self):
-        self.assertEqual(
-            _consultar_api(RUT),
-            {**datos_proveedor(), "rut": RUT, "fuente": "Chile RUT Empresa"},
-        )
+        with self.assertLogs("app.empresas.service", level="INFO") as logs:
+            self.assertEqual(
+                _consultar_api(RUT),
+                {**datos_proveedor(), "rut": RUT, "fuente": "Chile RUT Empresa"},
+            )
+        self.assertIn("HTTP status 200", " ".join(logs.output))
         self.http_mock.assert_called_once_with(
             URL, headers={"x-api-key": "synthetic-key"}, timeout=8.0
         )
@@ -242,17 +254,25 @@ class EmpresaProveedorTests(EmpresasAisladasTests):
             with self.subTest(status=status):
                 self.http_mock.reset_mock()
                 self.http_mock.return_value = respuesta(status)
-                with self.assertRaises(EmpresaApiNoDisponibleError):
-                    _consultar_api(RUT)
+                with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+                    with self.assertRaises(EmpresaApiNoDisponibleError):
+                        _consultar_api(RUT)
+                self.assertIn(str(status), " ".join(logs.output))
+                self.assertNotIn(RUT, " ".join(logs.output))
+                self.assertNotIn("synthetic-key", " ".join(logs.output))
                 self.http_mock.assert_called_once()
 
     def test_timeouts_and_connection_errors_become_unavailable(self):
         for error in (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.ConnectError):
             with self.subTest(error=error.__name__):
                 self.http_mock.side_effect = error("synthetic-error")
-                with self.assertRaises(EmpresaApiNoDisponibleError) as raised:
-                    _consultar_api(RUT)
+                with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+                    with self.assertRaises(EmpresaApiNoDisponibleError) as raised:
+                        _consultar_api(RUT)
                 self.assertIsInstance(raised.exception.__cause__, error)
+                self.assertIn(error.__name__, " ".join(logs.output))
+                self.assertNotIn(RUT, " ".join(logs.output))
+                self.assertNotIn("synthetic-key", " ".join(logs.output))
 
     def test_404_or_missing_found_or_name_become_not_found(self):
         for response in (
@@ -266,15 +286,19 @@ class EmpresaProveedorTests(EmpresasAisladasTests):
 
     def test_invalid_json_becomes_unavailable(self):
         self.http_mock.return_value = httpx.Response(200, content=b"not-json")
-        with self.assertRaises(EmpresaApiNoDisponibleError):
-            _consultar_api(RUT)
+        with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+            with self.assertRaises(EmpresaApiNoDisponibleError):
+                _consultar_api(RUT)
+        self.assertIn("invalid JSON", " ".join(logs.output))
 
-    def test_non_object_json_currently_raises_attribute_error(self):
+    def test_non_object_json_becomes_unavailable(self):
         for datos in ([], "unexpected", 42, None):
             with self.subTest(kind=type(datos).__name__):
                 self.http_mock.return_value = httpx.Response(200, content=json.dumps(datos).encode())
-                with self.assertRaises(AttributeError):
-                    _consultar_api(RUT)
+                with self.assertLogs("app.empresas.service", level="WARNING") as logs:
+                    with self.assertRaises(EmpresaApiNoDisponibleError):
+                        _consultar_api(RUT)
+                self.assertIn(type(datos).__name__, " ".join(logs.output))
 
     def test_provider_field_types_are_not_validated_here(self):
         self.http_mock.return_value = respuesta(datos={
@@ -401,10 +425,10 @@ class EmpresasRouteTests(EmpresasAisladasTests):
         self.db.commit.assert_called_once_with()
         self.db.rollback.assert_not_called()
 
-    def test_non_object_provider_json_currently_returns_500(self):
+    def test_non_object_provider_json_returns_502(self):
         self.http_mock.return_value = respuesta(datos=[])
         response = self._get()
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 502)
         self.assert_no_writes()
 
     def test_invalid_cached_response_currently_returns_500(self):
