@@ -51,9 +51,10 @@ def _consultar_api(rut_normalizado: str) -> dict:
     if not settings.chile_rut_empresa_api_key:
         raise EmpresaApiNoConfiguradaError
 
+    rut_api = rut_normalizado.replace(".", "")
     try:
         respuesta = httpx.get(
-            f"{settings.chile_rut_empresa_api_url.rstrip('/')}/lookup/{rut_normalizado}",
+            f"{settings.chile_rut_empresa_api_url.rstrip('/')}/lookup/{rut_api}",
             headers={"x-api-key": settings.chile_rut_empresa_api_key},
             timeout=8.0,
         )
