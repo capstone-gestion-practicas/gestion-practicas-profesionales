@@ -1,4 +1,5 @@
 import json
+import logging
 
 import httpx
 from sqlalchemy import text
@@ -6,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.schemas.validators import normalizar_rut
+
+logger = logging.getLogger(__name__)
 
 
 class EmpresaNoEncontradaError(Exception):
@@ -24,6 +27,7 @@ def consultar_empresa(db: Session, rut: str) -> dict:
     rut_normalizado = normalizar_rut(rut)
     cache = _leer_cache(db, rut_normalizado)
     if cache and cache.get("cache_vigente"):
+        logger.info("Using current cached company data")
         return cache
 
     try:
@@ -49,6 +53,7 @@ def _leer_cache(db: Session, rut: str) -> dict | None:
 
 def _consultar_api(rut_normalizado: str) -> dict:
     if not settings.chile_rut_empresa_api_key:
+        logger.error("Chile RUT Empresa API key is not configured")
         raise EmpresaApiNoConfiguradaError
 
     try:
@@ -58,17 +63,32 @@ def _consultar_api(rut_normalizado: str) -> dict:
             timeout=8.0,
         )
     except httpx.RequestError as error:
+        logger.warning(
+            "Chile RUT Empresa request failed (%s)", type(error).__name__
+        )
         raise EmpresaApiNoDisponibleError from error
 
     if respuesta.status_code == 404:
         raise EmpresaNoEncontradaError
     if respuesta.status_code != 200:
+        logger.warning(
+            "Chile RUT Empresa returned unexpected HTTP status %d",
+            respuesta.status_code,
+        )
         raise EmpresaApiNoDisponibleError
+    logger.info("Chile RUT Empresa returned HTTP status 200")
 
     try:
         datos = respuesta.json()
     except ValueError as error:
+        logger.warning("Chile RUT Empresa returned invalid JSON")
         raise EmpresaApiNoDisponibleError from error
+    if not isinstance(datos, dict):
+        logger.warning(
+            "Chile RUT Empresa returned unexpected JSON type %s",
+            type(datos).__name__,
+        )
+        raise EmpresaApiNoDisponibleError
     if not datos.get("found") or not datos.get("razon_social"):
         raise EmpresaNoEncontradaError
 
