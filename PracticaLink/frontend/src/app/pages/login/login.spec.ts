@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { ContextoUsuarioResponse, LoginResponse, RegistroResponse } from '../../core/models/auth.models';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { Login } from './login';
@@ -66,5 +69,105 @@ describe('Login', () => {
       nombre: 'Ana', apellido: 'Pérez', correo: 'ana@practicalink.cl', password: '123456.abc'
     });
     expect(component.modoRegistro).toBeFalse();
+  });
+
+  describe('rediseño: formulario y accesibilidad', () => {
+    function rellenarLogin(correo: string, password: string): void {
+      component.correo = correo;
+      component.password = password;
+      fixture.detectChanges();
+    }
+
+    it('L1: enviar usa el mismo payload normalizado de login', () => {
+      authService.login.and.returnValue(of({ access_token: 'token-sintetico' } as LoginResponse));
+      authService.obtenerContexto.and.returnValue(of({} as ContextoUsuarioResponse));
+      rellenarLogin(' Usuario@PracticaLink.cl ', '123456.abc');
+      component.enviar();
+      expect(authService.login).toHaveBeenCalledOnceWith({
+        correo: 'usuario@practicalink.cl', password: '123456.abc'
+      });
+    });
+
+    it('L2: el formulario se envía por ngSubmit una sola vez', () => {
+      spyOn(component, 'enviar');
+      const form = fixture.debugElement.query(By.css('form'));
+      form.triggerEventHandler('ngSubmit', null);
+      expect(component.enviar).toHaveBeenCalledTimes(1);
+    });
+
+    it('L3: durante la autenticación el botón mantiene texto accesible, deshabilitado y aria-busy', () => {
+      component.correo = 'usuario@practicalink.cl';
+      component.password = '123456.abc';
+      component.cargando = true;
+      fixture.detectChanges();
+      const boton = fixture.debugElement.query(By.css('.login-submit')).nativeElement as HTMLElement & { disabled: boolean };
+      expect(boton.textContent).toContain('Iniciando sesión…');
+      expect(boton.disabled).toBeTrue();
+      expect(fixture.debugElement.query(By.css('form')).nativeElement.getAttribute('aria-busy')).toBe('true');
+    });
+
+    it('L4: un error de autenticación se anuncia con role="alert"', () => {
+      authService.login.and.returnValue(throwError(() => new HttpErrorResponse({ status: 401 })));
+      rellenarLogin('usuario@practicalink.cl', 'incorrecta');
+      component.enviar();
+      fixture.detectChanges();
+      const alerta = fixture.debugElement.query(By.css('[role="alert"]'));
+      expect(alerta.nativeElement.textContent).toContain('Correo o contraseña incorrectos.');
+    });
+
+    it('L5: el éxito de registro se anuncia con role="status"', () => {
+      authService.registrar.and.returnValue(of({ id_usuario: 10 } as RegistroResponse));
+      component.modoRegistro = true;
+      component.nombre = 'Ana';
+      component.apellido = 'Pérez';
+      component.correo = 'ana@practicalink.cl';
+      component.password = '123456.abc';
+      component.confirmarPassword = '123456.abc';
+      component.enviar();
+      fixture.detectChanges();
+      const estado = fixture.debugElement.query(By.css('[role="status"]'));
+      expect(estado.nativeElement.textContent).toContain('Cuenta creada. Ya puedes iniciar sesión.');
+    });
+
+    it('L6: mostrar/ocultar cambia solo la presentación del campo, no su valor', () => {
+      rellenarLogin('usuario@practicalink.cl', 'secreto-sintetico');
+      const campo = fixture.debugElement.query(By.css('.login-password')).nativeElement as HTMLElement & { type: string };
+      expect(campo.type).toBe('password');
+      component.alternarMostrarPassword();
+      fixture.detectChanges();
+      expect(campo.type).toBe('text');
+      expect(component.password).toBe('secreto-sintetico');
+    });
+
+    it('L7: el control de mostrar contraseña tiene nombre accesible dinámico', () => {
+      rellenarLogin('usuario@practicalink.cl', '123456.abc');
+      const boton = fixture.debugElement.query(By.css('.login-toggle-password')).nativeElement as HTMLElement;
+      expect(boton.getAttribute('aria-label')).toBe('Mostrar contraseña');
+      component.alternarMostrarPassword();
+      fixture.detectChanges();
+      expect(boton.getAttribute('aria-label')).toBe('Ocultar contraseña');
+    });
+
+    it('L8: el registro conserva exactamente el mismo contrato enviado al backend', () => {
+      authService.registrar.and.returnValue(of({ id_usuario: 11 } as RegistroResponse));
+      component.modoRegistro = true;
+      component.nombre = 'Luis';
+      component.apellido = 'Soto';
+      component.correo = ' Luis@PracticaLink.cl ';
+      component.password = 'clave-sintetica';
+      component.confirmarPassword = 'clave-sintetica';
+      component.enviar();
+      expect(authService.registrar).toHaveBeenCalledOnceWith({
+        nombre: 'Luis', apellido: 'Soto', correo: 'luis@practicalink.cl', password: 'clave-sintetica'
+      });
+    });
+
+    it('muestra el error de correo solo tras salir del campo y lo asocia al input', () => {
+      component.correo = 'no-es-correo';
+      component.correoTocado = true;
+      fixture.detectChanges();
+      const mensaje = fixture.debugElement.query(By.css('#login-correo-error'));
+      expect(mensaje.nativeElement.textContent).toContain('Ingresa un correo válido');
+    });
   });
 });

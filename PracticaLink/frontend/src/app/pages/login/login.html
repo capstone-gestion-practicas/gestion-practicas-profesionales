@@ -1,141 +1,169 @@
 <ion-content class="login-content">
-  <ion-grid class="login-wrapper"><ion-row><ion-col size="12">
+  <main class="login-page">
+    <div class="login-shell">
 
-    <main class="login-shell">
-      <section class="login-brand-panel" aria-label="PracticaLink">
-        <span class="brand-mark">PL</span>
-        <p class="brand-eyebrow">Plataforma académica</p>
-        <h1>Gestiona tu práctica con claridad.</h1>
-        <p class="brand-description">
-          Centraliza tus antecedentes, seguimientos y comunicaciones en un solo lugar.
-        </p>
-        <ul class="brand-benefits">
-          <li>Seguimiento de tu práctica</li>
-          <li>Información siempre disponible</li>
-          <li>Acceso según tu rol</li>
-        </ul>
+      <section class="login-identidad" aria-label="PracticaLink">
+        <div class="login-identidad__imagen" aria-hidden="true"></div>
+        <div class="login-identidad__contenido">
+          <div class="login-identidad__marca">
+            <svg class="login-identidad__icono" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+              <path d="M32 192 256 64l224 128-224 128z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
+              <path d="M112 240v128l144 80 144-80V240M480 368V192M256 320v128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
+            </svg>
+            <span class="login-identidad__nombre">PracticaLink</span>
+          </div>
+          <span class="login-identidad__divisor" aria-hidden="true"></span>
+          <div class="login-identidad__mensaje">
+            <p class="login-identidad__titulo">Tu práctica profesional, organizada en un solo lugar.</p>
+            <p class="login-identidad__secundario">
+              Consulta tu estado, seguimientos e incidencias durante todo el proceso.
+            </p>
+          </div>
+        </div>
       </section>
 
-    <ion-card class="login-card">
-
-      <ion-card-header>
-        <p class="login-eyebrow">Bienvenido a</p>
-        <ion-card-title>PracticaLink</ion-card-title>
-      </ion-card-header>
-
-      <ion-card-content>
-
-        <p class="subtitle">
-          @if (modoRegistro) {
-            Crea tu cuenta
-          } @else {
-            Gestión de prácticas profesionales
-          }
-        </p>
-
-        @if (modoRegistro) {
-          <ion-item>
-            <ion-label position="stacked">Nombre</ion-label>
-            <ion-input
-              [(ngModel)]="nombre"
-              maxlength="100"
-              autocomplete="given-name">
-            </ion-input>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Apellido</ion-label>
-            <ion-input
-              [(ngModel)]="apellido"
-              maxlength="100"
-              autocomplete="family-name">
-            </ion-input>
-          </ion-item>
-
-        }
-
-        <ion-item>
-          <ion-label position="stacked">Correo</ion-label>
-          <ion-input
-            type="email"
-            [(ngModel)]="correo"
-            maxlength="150"
-            inputmode="email"
-            autocapitalize="off"
-            spellcheck="false"
-            autocomplete="email"
-            placeholder="correo@ejemplo.cl">
-          </ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Contraseña</ion-label>
-          <ion-input
-            type="password"
-            [(ngModel)]="password"
-            maxlength="128"
-            [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
-          </ion-input>
-        </ion-item>
-
-        @if (modoRegistro) {
-          <ion-item>
-            <ion-label position="stacked">Confirmar contraseña</ion-label>
-            <ion-input
-              type="password"
-              [(ngModel)]="confirmarPassword"
-              maxlength="128"
-              autocomplete="new-password">
-            </ion-input>
-          </ion-item>
-        }
-
-        @if (error) {
-          <p class="error">
-            {{ error }}
+      <section class="login-acceso" aria-labelledby="login-titulo">
+        <div class="login-formulario">
+          <h1 id="login-titulo" class="login-titulo">
+            {{ modoRegistro ? 'Crear cuenta' : 'Inicia sesión' }}
+          </h1>
+          <p class="login-subtitulo">
+            {{ modoRegistro
+              ? 'Completa tus datos para crear tu cuenta.'
+              : 'Accede a la gestión de tu práctica profesional.' }}
           </p>
-        }
 
-        @if (mensaje) {
-          <p class="success">
-            {{ mensaje }}
-          </p>
-        }
+          <form
+            class="login-card login-form"
+            novalidate
+            [attr.aria-busy]="cargando ? 'true' : null"
+            (ngSubmit)="enviar()">
 
-        <ion-button
-          expand="block"
-          class="login-button"
-          [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))"
-          (click)="modoRegistro ? registrarse() : iniciarSesion()">
+            @if (modoRegistro) {
+              <ion-item>
+                <ion-label position="stacked">Nombre</ion-label>
+                <ion-input
+                  name="nombre"
+                  [(ngModel)]="nombre"
+                  maxlength="100"
+                  autocomplete="given-name">
+                </ion-input>
+              </ion-item>
 
-          @if (cargando) {
-            <ion-spinner name="crescent"></ion-spinner>
-          } @else {
-            {{ modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
-          }
+              <ion-item>
+                <ion-label position="stacked">Apellido</ion-label>
+                <ion-input
+                  name="apellido"
+                  [(ngModel)]="apellido"
+                  maxlength="100"
+                  autocomplete="family-name">
+                </ion-input>
+              </ion-item>
+            }
 
-        </ion-button>
+            <ion-item>
+              <ion-label position="stacked">Correo institucional</ion-label>
+              <ion-input
+                id="login-correo"
+                name="correo"
+                type="email"
+                [(ngModel)]="correo"
+                (ionBlur)="correoTocado = true"
+                maxlength="150"
+                inputmode="email"
+                autocapitalize="off"
+                spellcheck="false"
+                autocomplete="email"
+                placeholder="nombre@institucion.cl"
+                [attr.aria-invalid]="errorCorreo ? 'true' : null"
+                [attr.aria-describedby]="errorCorreo ? 'login-correo-error' : null">
+              </ion-input>
+            </ion-item>
+            @if (errorCorreo) {
+              <p id="login-correo-error" class="login-campo-error">{{ errorCorreo }}</p>
+            }
 
-        <ion-button
-          expand="block"
-          fill="clear"
-          [disabled]="cargando"
-          (click)="alternarModo()">
-          {{ modoRegistro
-            ? 'Ya tengo una cuenta'
-            : 'Registrarme' }}
-        </ion-button>
+            <ion-item>
+              <ion-label position="stacked">Contraseña</ion-label>
+              <ion-input
+                class="login-password"
+                name="password"
+                [type]="mostrarPassword ? 'text' : 'password'"
+                [(ngModel)]="password"
+                maxlength="128"
+                [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
+              </ion-input>
+              <ion-button
+                slot="end"
+                fill="clear"
+                type="button"
+                class="login-toggle-password"
+                [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="alternarMostrarPassword()">
+                <ion-icon slot="icon-only" [name]="mostrarPassword ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+              </ion-button>
+            </ion-item>
 
-        <p class="app-build" aria-label="Versión de la aplicación">
-          Versión {{ appVersion }} · Build {{ androidVersionCode }}
-        </p>
+            @if (modoRegistro) {
+              <ion-item>
+                <ion-label position="stacked">Confirmar contraseña</ion-label>
+                <ion-input
+                  name="confirmarPassword"
+                  type="password"
+                  [(ngModel)]="confirmarPassword"
+                  maxlength="128"
+                  autocomplete="new-password">
+                </ion-input>
+              </ion-item>
+            }
 
-      </ion-card-content>
+            @if (error) {
+              <div class="login-feedback login-feedback--error" role="alert">
+                <p>{{ error }}</p>
+              </div>
+            }
 
-    </ion-card>
-    </main>
+            @if (mensaje) {
+              <div class="login-feedback login-feedback--success" role="status">
+                <p>{{ mensaje }}</p>
+              </div>
+            }
 
-  </ion-col></ion-row></ion-grid>
+            <ion-button
+              type="submit"
+              expand="block"
+              class="login-submit"
+              [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))">
+              @if (cargando) {
+                <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+                <span>{{ modoRegistro ? 'Creando cuenta…' : 'Iniciando sesión…' }}</span>
+              } @else {
+                {{ modoRegistro ? 'Crear cuenta' : 'Iniciar sesión' }}
+              }
+            </ion-button>
+          </form>
+
+          <div class="login-alternar-bloque">
+            <p class="login-alternar-texto">
+              {{ modoRegistro ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?' }}
+            </p>
+            <ion-button
+              type="button"
+              expand="block"
+              fill="outline"
+              class="login-alternar"
+              [disabled]="cargando"
+              (click)="alternarModo()">
+              {{ modoRegistro ? 'Iniciar sesión' : 'Registrarme' }}
+            </ion-button>
+          </div>
+
+          <p class="login-version">Versión {{ appVersion }} · Build {{ androidVersionCode }}</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
 </ion-content>
 
 <ion-modal
