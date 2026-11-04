@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { addIcons } from 'ionicons';
+import { eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,24 +8,20 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import {
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonContent,
   IonModal,
-  IonGrid,
   IonInput,
   IonItem,
   IonLabel,
-  IonCol,
-  IonRow,
-  IonSpinner
+  IonSpinner,
+  IonIcon
 } from '@ionic/angular';
 
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { environment } from '../../../environments/environment';
+
+const MENSAJE_CORREO_INVALIDO = 'Ingresa un correo válido de máximo 150 caracteres.';
 
 @Component({
   selector: 'app-login',
@@ -33,17 +31,11 @@ import { environment } from '../../../environments/environment';
     FormsModule,
     IonContent,
     IonModal,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
     IonItem,
     IonLabel,
     IonInput,
     IonButton,
+    IonIcon,
     IonSpinner
   ],
   templateUrl: './login.html',
@@ -68,12 +60,37 @@ export class Login {
   cargando = false;
   error = '';
   mensaje = '';
+  mostrarPassword = false;
+  correoTocado = false;
 
   constructor(
     private readonly authService: AuthService,
     private readonly authStore: AuthStore,
     private readonly router: Router
-  ) {}
+  ) {
+    addIcons({ eyeOutline, eyeOffOutline });
+  }
+
+  /** Envío único del formulario: Enter o el botón principal, nunca ambos. */
+  enviar(): void {
+    if (this.modoRegistro) {
+      this.registrarse();
+    } else {
+      this.iniciarSesion();
+    }
+  }
+
+  alternarMostrarPassword(): void {
+    this.mostrarPassword = !this.mostrarPassword;
+  }
+
+  /** Error de correo solo visible tras salir del campo; usa la misma regla que el envío. */
+  get errorCorreo(): string {
+    const texto = this.correo.trim();
+    return this.correoTocado && texto !== '' && !this.correoValido(texto)
+      ? MENSAJE_CORREO_INVALIDO
+      : '';
+  }
 
   alternarModo(): void {
     this.modoRegistro = !this.modoRegistro;
@@ -88,7 +105,7 @@ export class Login {
     this.mensaje = '';
 
     if (!this.correoValido(this.correo)) {
-      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      this.error = MENSAJE_CORREO_INVALIDO;
       return;
     }
 
@@ -133,7 +150,7 @@ export class Login {
     this.mensaje = '';
 
     if (!this.correoValido(this.correo)) {
-      this.error = 'Ingresa un correo válido de máximo 150 caracteres.';
+      this.error = MENSAJE_CORREO_INVALIDO;
       return;
     }
     this.cargando = true;

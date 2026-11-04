@@ -59,7 +59,7 @@
                       <p class="practice-id">Práctica #{{ practica.id_practica }}</p>
                       <h3>{{ practica.estudiante }}</h3>
                     </div>
-                    <ion-badge color="warning">{{ practica.estado }}</ion-badge>
+                    <app-estado-badge [estado]="practica.estado"></app-estado-badge>
                   </div>
                   <p><strong>Centro:</strong> {{ practica.centro_practica }}</p>
                   <p><strong>Fecha de término:</strong> {{ practica.fecha_termino | date:'dd/MM/yyyy' }}</p>
@@ -146,7 +146,7 @@
                   <p class="practice-id">Práctica #{{ practica.id_practica }}</p>
                   <ion-card-title>{{ practica.estudiante }}</ion-card-title>
                 </div>
-                <ion-badge [color]="practica.es_final ? 'medium' : 'success'">{{ practica.estado }}</ion-badge>
+                <app-estado-badge [estado]="practica.estado"></app-estado-badge>
               </div>
             </ion-card-header>
             <ion-card-content>
