@@ -95,7 +95,7 @@ export class LaboralService {
 
   consultarEmpresaParaSolicitud(rut: string): Observable<EmpresaLookup> {
     return this.http.get<EmpresaLookup>(
-      `${this.apiUrl}/laboral/solicitudes-empresa/consulta/${encodeURIComponent(rut)}`
+      `${this.apiUrl}/solicitudes-empresa/consulta/${encodeURIComponent(rut)}`
     );
   }
 
@@ -103,14 +103,14 @@ export class LaboralService {
     datos: SolicitudCuentaEmpresaInput
   ): Observable<SolicitudCuentaEmpresaCreada> {
     return this.http.post<SolicitudCuentaEmpresaCreada>(
-      `${this.apiUrl}/laboral/solicitudes-empresa`,
+      `${this.apiUrl}/solicitudes-empresa`,
       datos
     );
   }
 
   listarSolicitudesEmpresa(): Observable<SolicitudCuentaEmpresa[]> {
     return this.http.get<SolicitudCuentaEmpresa[]>(
-      `${this.apiUrl}/laboral/solicitudes-empresa`
+      `${this.apiUrl}/solicitudes-empresa`
     );
   }
 
@@ -119,7 +119,7 @@ export class LaboralService {
     datos: ResolverSolicitudCuentaEmpresa
   ): Observable<SolicitudCuentaEmpresaResuelta> {
     return this.http.patch<SolicitudCuentaEmpresaResuelta>(
-      `${this.apiUrl}/laboral/solicitudes-empresa/${idSolicitud}`,
+      `${this.apiUrl}/solicitudes-empresa/${idSolicitud}`,
       datos
     );
   }
