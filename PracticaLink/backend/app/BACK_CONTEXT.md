@@ -698,10 +698,11 @@ Las referencias anteriores a integración pendiente corresponden a etapas histó
 
 ### EP05: operación vigente y límites
 
-El orden de aplicación es ep05-01, ep05-02, ep05-03, ep05-04 y ep05-05, según
-[DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md). Esa guía
-identifica los ejecutores separados, la comprobación de privilegios efectivos y
-los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
+La infraestructura EP05 se aplica mediante la migración versionada
+`20261103140000_ep07_unificar_seguimientos_ep05.sql` (no mediante los scripts manuales
+`ep05-*`), según [DOCUMENTACION_INSTALACION.md](../../../DOCUMENTACION_INSTALACION.md).
+Esa guía identifica los ejecutores separados, la comprobación de privilegios efectivos
+y los riesgos de aplicación parcial/bloqueos. Sin URL específica, el endpoint afectado
 responde 503; no utiliza otra conexión. Las pruebas locales no validan migraciones
 ni privilegios del despliegue. Permanecen sin idempotencia las escrituras con respuesta
 HTTP perdida; offset puede desplazarse por inserciones y los BIGINT representados

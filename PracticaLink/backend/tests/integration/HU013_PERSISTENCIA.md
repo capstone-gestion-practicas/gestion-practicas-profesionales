@@ -1,5 +1,10 @@
 # HU013 WEB — Persistencia de seguimientos (incremento 01)
 
+> **Documento histórico (superado).** La infraestructura EP05 se incorpora ahora por la migración
+> `supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql` (EP07 Corrección 4A).
+> Los scripts citados abajo son referencia histórica: no ejecutarlos sobre una base que ya tiene la migración.
+
+
 Base: `develop` local `8882036`, verificada con fetch de `develop` y `main`
 el 24-10-2026. Sin endpoints FastAPI ni cambios Angular. Los datos locales del
 navegador son demostrativos y no se importan.

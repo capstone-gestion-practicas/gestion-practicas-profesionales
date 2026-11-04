@@ -6,6 +6,12 @@
 
 BEGIN;
 
+-- Día de negocio en America/Santiago: la misma regla que usa fn_registrar_seguimiento.
+-- No usar CURRENT_DATE: depende de la TimeZone de sesión y falla entre 00:00 y 03:00/04:00 UTC.
+CREATE FUNCTION pg_temp.hoy_santiago() RETURNS DATE LANGUAGE sql STABLE AS $$
+    SELECT (clock_timestamp() AT TIME ZONE 'America/Santiago')::date
+$$;
+
 INSERT INTO usuario(id_usuario,nombre,apellido,correo,password_hash) VALUES
     (950,'Estudiante','Sintetico','ep07g-student@example.invalid','synthetic-hash'),
     (951,'Gestor A','Sintetico','ep07g-gestorA@example.invalid','synthetic-hash'),
@@ -22,10 +28,10 @@ INSERT INTO centro_practica(id_centro,nombre) VALUES (950, 'Centro sintetico');
 -- 9601: EN_CURSO, gestor A. 9602: EN_CURSO, gestor B. 9603: EN_CURSO, sin gestor.
 -- 9604: APROBADA (no iniciada), gestor A.
 INSERT INTO practica(id_practica,id_estudiante,id_centro,id_estado_actual,fecha_inicio,fecha_termino,id_gestor) VALUES
-    (9601, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), CURRENT_DATE-30, CURRENT_DATE+30, 951),
-    (9602, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), CURRENT_DATE-30, CURRENT_DATE+30, 952),
-    (9603, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), CURRENT_DATE-30, CURRENT_DATE+30, NULL),
-    (9604, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='APROBADA'), CURRENT_DATE-30, CURRENT_DATE+30, 951);
+    (9601, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), pg_temp.hoy_santiago()-30, pg_temp.hoy_santiago()+30, 951),
+    (9602, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), pg_temp.hoy_santiago()-30, pg_temp.hoy_santiago()+30, 952),
+    (9603, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='EN_CURSO'), pg_temp.hoy_santiago()-30, pg_temp.hoy_santiago()+30, NULL),
+    (9604, 950, 950, (SELECT id_estado FROM estado_practica WHERE nombre='APROBADA'), pg_temp.hoy_santiago()-30, pg_temp.hoy_santiago()+30, 951);
 
 -- Huella: seguimientos de una práctica.
 CREATE FUNCTION pg_temp.seg(p BIGINT) RETURNS BIGINT LANGUAGE sql STABLE AS $$
@@ -50,7 +56,7 @@ DECLARE
     antes BIGINT := pg_temp.seg(9601);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(9601, 951, CURRENT_DATE, 'Videollamada', 'SG-A sintetico');
+    r := seguimientos_privados.fn_registrar_seguimiento(9601, 951, pg_temp.hoy_santiago(), 'Videollamada', 'SG-A sintetico');
     IF r ? 'error' THEN RAISE EXCEPTION 'SG-A fallido: %', r; END IF;
     IF r->>'tipo' IS DISTINCT FROM 'Videollamada' THEN RAISE EXCEPTION 'SG-A fallido: tipo devuelto %', r; END IF;
     IF pg_temp.seg(9601) IS DISTINCT FROM antes + 1 THEN RAISE EXCEPTION 'SG-A fallido: sin escritura'; END IF;
@@ -63,7 +69,7 @@ DECLARE
     antes BIGINT := pg_temp.seg(9601);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(9601, 952, CURRENT_DATE, 'Otro', 'SG-B');
+    r := seguimientos_privados.fn_registrar_seguimiento(9601, 952, pg_temp.hoy_santiago(), 'Otro', 'SG-B');
     IF r IS DISTINCT FROM '{"error": "USUARIO_NO_AUTORIZADO"}'::JSONB THEN RAISE EXCEPTION 'SG-B fallido: %', r; END IF;
     IF pg_temp.seg(9601) IS DISTINCT FROM antes THEN RAISE EXCEPTION 'SG-B fallido: escritura'; END IF;
 END;
@@ -75,7 +81,7 @@ DECLARE
     antes BIGINT := pg_temp.seg(9603);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(9603, 951, CURRENT_DATE, 'Otro', 'SG-C');
+    r := seguimientos_privados.fn_registrar_seguimiento(9603, 951, pg_temp.hoy_santiago(), 'Otro', 'SG-C');
     IF r IS DISTINCT FROM '{"error": "USUARIO_NO_AUTORIZADO"}'::JSONB THEN RAISE EXCEPTION 'SG-C fallido: %', r; END IF;
     IF pg_temp.seg(9603) IS DISTINCT FROM antes THEN RAISE EXCEPTION 'SG-C fallido: escritura'; END IF;
 END;
@@ -87,7 +93,7 @@ DECLARE
     antes BIGINT := (SELECT count(*) FROM seguimiento);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(999999, 951, CURRENT_DATE, 'Otro', 'SG-D');
+    r := seguimientos_privados.fn_registrar_seguimiento(999999, 951, pg_temp.hoy_santiago(), 'Otro', 'SG-D');
     IF r IS DISTINCT FROM '{"error": "PRACTICA_NO_ENCONTRADA"}'::JSONB THEN RAISE EXCEPTION 'SG-D fallido: %', r; END IF;
     IF (SELECT count(*) FROM seguimiento) IS DISTINCT FROM antes THEN RAISE EXCEPTION 'SG-D fallido: escritura'; END IF;
 END;
@@ -99,7 +105,7 @@ DECLARE
     antes BIGINT := pg_temp.seg(9602);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(9602, 953, CURRENT_DATE, 'Correo electrónico', 'SG-E sintetico');
+    r := seguimientos_privados.fn_registrar_seguimiento(9602, 953, pg_temp.hoy_santiago(), 'Correo electrónico', 'SG-E sintetico');
     IF r ? 'error' THEN RAISE EXCEPTION 'SG-E fallido: %', r; END IF;
     IF pg_temp.seg(9602) IS DISTINCT FROM antes + 1 THEN RAISE EXCEPTION 'SG-E fallido: sin escritura'; END IF;
 END;
@@ -111,9 +117,9 @@ DECLARE
     antes BIGINT := pg_temp.seg(9604);
     r JSONB;
 BEGIN
-    r := seguimientos_privados.fn_registrar_seguimiento(9604, 951, CURRENT_DATE, 'Otro', 'no iniciada');
+    r := seguimientos_privados.fn_registrar_seguimiento(9604, 951, pg_temp.hoy_santiago(), 'Otro', 'no iniciada');
     IF r IS DISTINCT FROM '{"error": "PRACTICA_NO_EN_CURSO"}'::JSONB THEN RAISE EXCEPTION 'EP05 no iniciada fallido: %', r; END IF;
-    r := seguimientos_privados.fn_registrar_seguimiento(9601, 951, CURRENT_DATE, 'Fax', 'tipo invalido');
+    r := seguimientos_privados.fn_registrar_seguimiento(9601, 951, pg_temp.hoy_santiago(), 'Fax', 'tipo invalido');
     IF r IS DISTINCT FROM '{"error": "MEDIO_INVALIDO"}'::JSONB THEN RAISE EXCEPTION 'EP05 tipo fallido: %', r; END IF;
     IF pg_temp.seg(9604) IS DISTINCT FROM antes THEN RAISE EXCEPTION 'EP05 fallido: escritura'; END IF;
 END;
@@ -149,8 +155,8 @@ DECLARE
     r1 JSONB;
     r2 JSONB;
 BEGIN
-    PERFORM seguimientos_privados.fn_registrar_seguimiento(9601, 953, CURRENT_DATE, 'Otro', 'SG-H 2');
-    PERFORM seguimientos_privados.fn_registrar_seguimiento(9601, 953, CURRENT_DATE, 'Otro', 'SG-H 3');
+    PERFORM seguimientos_privados.fn_registrar_seguimiento(9601, 953, pg_temp.hoy_santiago(), 'Otro', 'SG-H 2');
+    PERFORM seguimientos_privados.fn_registrar_seguimiento(9601, 953, pg_temp.hoy_santiago(), 'Otro', 'SG-H 3');
     r1 := seguimientos_privados.fn_consultar_seguimientos(9601, 951, 2, 0);
     IF jsonb_array_length(r1->'items') <> 2 OR (r1->>'hay_mas')::BOOLEAN IS NOT TRUE THEN
         RAISE EXCEPTION 'SG-H fallido (pagina 1): %', r1;
