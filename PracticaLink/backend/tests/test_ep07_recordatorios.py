@@ -82,3 +82,14 @@ class RecordatorioTareaTests(unittest.TestCase):
             enviados = push_service.enviar_push_notificacion(self.db, 1, 10)
         self.assertEqual(enviados, 0)
         self.db.commit.assert_not_called()
+
+    def test_no_candidates_returns_200_with_zero_and_no_push(self):
+        # Sin prácticas candidatas la tarea responde 2xx válido con cero; no envía push.
+        self.configurar_token(TOKEN)
+        self.db.execute.return_value.scalar_one.return_value = []
+        with patch("app.services.estado_practica_service.enviar_push_notificacion") as enviar:
+            response = self.client.post(RUTA, headers={"X-Task-Token": TOKEN})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"practicas_notificadas": 0})
+        self.db.commit.assert_called_once()
+        enviar.assert_not_called()

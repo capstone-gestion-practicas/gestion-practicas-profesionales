@@ -886,24 +886,61 @@ Umbral comprobado: con `fecha_termino` 2026-06-30 la habilitación ocurre en
 2026-07-01 00:00 de Santiago (04:00 UTC) con independencia de la sesión UTC o
 `America/Santiago`; la prueba cubre medianoche exacta, justo antes, cambios de horario
 de Chile y que el resultado no varía con la sesión. El disparo lo realiza un job externo aún no configurado (Corrección 6B). No
-se desplegó en Supabase real. Para el despliegue previsto en Render,
-crear un **Cron Job** separado con programación `*/15 * * * *`, URL base del
-backend en `API_BASE_URL` y `EP07_REMINDER_TASK_TOKEN` como variable secreta.
-Render interpreta la expresión de cron en UTC.
-Comando del job:
+se desplegó en Supabase real. **Operación del recordatorio (EP07 Corrección 6B).** Propósito: procesar los
+recordatorios automáticos de cierre. Frecuencia objetivo: **cada hora** (`0 * * * *`).
+La regla funcional se calcula en `America/Santiago` dentro de PostgreSQL, así que el
+scheduler puede operar en UTC; la idempotencia en base evita duplicados si una
+ejecución se repite.
+
+Plataforma: el repositorio versiona solo el frontend QA en `render.yaml`. La
+documentación indica Render para el backend QA (`practicalink-api-qa`), pero ese
+servicio no está versionado en el repositorio. Por eso el scheduler es una
+**configuración manual pendiente** en el dashboard de la plataforma; no existe
+infraestructura versionada para crearlo. Producción no está determinada en el
+repositorio.
+
+Configuración manual requerida (no contiene secretos):
+- Crear un Cron Job separado, programado `0 * * * *`.
+- Variable `API_BASE_URL`: URL HTTPS del backend desplegado.
+- Variable secreta `EP07_REMINDER_TASK_TOKEN`: valor cargado en la plataforma, nunca
+  en el repositorio, en URLs, en logs ni en la documentación.
+
+Comando del job (sin `--verbose` para no imprimir cabeceras; `--no-progress-meter`
+evita ruido, y el cuerpo de respuesta, que solo contiene el conteo, queda visible):
 
 ```sh
-curl --fail --silent --show-error --request POST \
+curl --fail --show-error --no-progress-meter --request POST \
   "$API_BASE_URL/practicas/tareas/recordatorios-cierre" \
   --header "X-Task-Token: $EP07_REMINDER_TASK_TOKEN"
 ```
 
-El endpoint valida el secreto con comparación constante. Sin configuración
-devuelve 503 y ante fallo HTTP el job debe finalizar con error. No hay un
-servicio Render configurado desde el repositorio: crear el Cron Job y cargar
-ambas variables sigue siendo una operación de despliegue pendiente. La llamada
-es idempotente por práctica. La ejecución periódica, la migración y el envío real
-de push no se verifican en pruebas unitarias.
+Contrato verificado: POST sin body; cabecera `X-Task-Token`, comparada con
+`hmac.compare_digest`. Respuestas: 2xx con `{"practicas_notificadas": N}` (N = 0 si no
+hay candidatas, sin push); 403 si el token falta o no coincide; 503 si el backend no
+tiene token configurado; 5xx si falla la transacción (no hay commit); timeout o DNS:
+sin confirmación. Ante cualquier respuesta distinta de 2xx el job termina con error y
+se reintenta en la siguiente hora; el reintento no duplica registros ni notificaciones.
+No hay reintentos automáticos en el backend ni se documentan reintentos nativos de la
+plataforma, porque no están configurados en el repositorio.
+
+Observabilidad: el endpoint no escribe logs propios del flujo. El job registra el
+código de salida y el cuerpo con el conteo. Brecha conocida y propuesta sin aplicar:
+añadir un `logger.info` con el conteo en el endpoint, para verlo también en los logs
+del servidor sin depender del job. Solo afecta al servicio de logging y no expone
+secretos.
+
+FCM: la notificación se persiste y se confirma antes del envío push, que va fuera de
+la transacción. Un fallo de FCM se contiene por dispositivo y no revierte ni duplica
+registros. No hay reintentos de push: deuda operativa abierta.
+
+Disponibilidad: no está verificado si el servicio backend entra en reposo o escala a
+cero en la plataforma, porque su plan no está versionado. No se implementa keep-alive.
+
+Verificado en pruebas: `tests/test_ep07_recordatorios.py` (503, 403, commit antes del
+push, error de base sin commit, contención de FCM y caso sin candidatas) y
+`tests/integration/ep07_recordatorios_cierre.sql`. No se verificó la ejecución
+periódica real ni el envío push real. No se desplegó en Supabase real y el Cron Job
+no se ha creado.
 
 El inicio `PATCH /practicas/{id_practica}/estado` requiere ahora un gestor activo
 asignado. Un GESTOR solo puede iniciar las prácticas asignadas a su usuario;
