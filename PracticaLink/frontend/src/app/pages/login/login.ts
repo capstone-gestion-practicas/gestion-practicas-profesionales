@@ -18,7 +18,8 @@ import {
   IonLabel,
   IonCol,
   IonRow,
-  IonSpinner
+  IonSpinner,
+  IonToast
 } from '@ionic/angular';
 
 import { EmpresaLookup } from '../../core/models/practica.models';
@@ -26,6 +27,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { environment } from '../../../environments/environment';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 
 @Component({
@@ -47,7 +49,8 @@ import { formatearRut, rutValido } from '../../core/validators/rut.validator';
     IonLabel,
     IonInput,
     IonButton,
-    IonSpinner
+    IonSpinner,
+    IonToast
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss'
@@ -83,6 +86,8 @@ export class Login {
   empresaVerificadaSolicitud: EmpresaLookup | null = null;
   rutEmpresaSolicitudSinCoincidencia: string | null = null;
   private consultaEmpresaSolicitudId = 0;
+  toastRutAbierto = false;
+  mensajeToastRut = '';
 
   cargando = false;
   error = '';
@@ -129,16 +134,32 @@ export class Login {
   }
 
   get puedeCompletarSolicitudEmpresa(): boolean {
+    if (!this.rutValidoSolicitudActual()) return false;
     if (this.empresaVerificadaSolicitud) {
       return this.rutEmpresaSolicitud === this.empresaVerificadaSolicitud.rut;
     }
-    return this.rutValidoSolicitudActual()
-      && this.rutEmpresaSolicitudSinCoincidencia === formatearRut(this.rutEmpresaSolicitud);
+    return this.rutEmpresaSolicitudSinCoincidencia === formatearRut(this.rutEmpresaSolicitud);
+  }
+
+  get rutSolicitudValido(): boolean {
+    return this.rutValidoSolicitudActual();
+  }
+
+  validarRutEmpresaSolicitud(): void {
+    if (!this.rutValidoSolicitudActual()) {
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+    }
+  }
+
+  cerrarToastRut(): void {
+    this.toastRutAbierto = false;
   }
 
   actualizarRutEmpresaSolicitud(rut: string): void {
-    if (rut === this.rutEmpresaSolicitud) return;
-    this.rutEmpresaSolicitud = rut;
+    const rutFormateado = formatearRut(rut);
+    if (rutFormateado === this.rutEmpresaSolicitud) return;
+    this.rutEmpresaSolicitud = rutFormateado;
+    this.toastRutAbierto = false;
     this.empresaVerificadaSolicitud = null;
     this.rutEmpresaSolicitudSinCoincidencia = null;
     this.razonSocialSolicitud = '';
@@ -154,7 +175,8 @@ export class Login {
     this.empresaVerificadaSolicitud = null;
     this.rutEmpresaSolicitudSinCoincidencia = null;
     if (!rutValido(this.rutEmpresaSolicitud)) {
-      this.error = 'Ingresa un RUT de empresa válido.';
+      this.error = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
       return;
     }
 
@@ -191,6 +213,11 @@ export class Login {
   enviarSolicitudEmpresa(): void {
     this.error = '';
     this.mensaje = '';
+    if (!this.rutValidoSolicitudActual()) {
+      this.error = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+      return;
+    }
     if (!this.puedeCompletarSolicitudEmpresa) {
       this.error = 'Verifica el RUT de la empresa antes de continuar. Si no se encuentra, completa la solicitud manual para revisión.';
       return;
@@ -384,5 +411,10 @@ export class Login {
     this.rutEmpresaSolicitudSinCoincidencia = rut;
     this.razonSocialSolicitud = '';
     this.mensajeConsultaEmpresa = 'No encontramos una empresa asociada a ese RUT. Completa los datos manualmente; la solicitud será revisada por un administrador.';
+  }
+
+  private mostrarToastRut(mensaje: string): void {
+    this.mensajeToastRut = mensaje;
+    this.toastRutAbierto = true;
   }
 }

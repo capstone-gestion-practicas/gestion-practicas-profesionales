@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import {
   IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
   IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol,
-  IonTextarea
+  IonTextarea, IonToast
 } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 
@@ -17,7 +17,8 @@ import {
 import { Rol, UsuarioAdministrable } from '../../core/models/usuario.models';
 import { LaboralService } from '../../core/services/laboral.service';
 import { UsuarioService } from '../../core/services/usuario.service';
-import { rutValido } from '../../core/validators/rut.validator';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
+import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 
 @Component({
   selector: 'app-usuarios',
@@ -25,7 +26,7 @@ import { rutValido } from '../../core/validators/rut.validator';
   imports: [
     CommonModule, FormsModule, IonButton, IonCard, IonCardContent, IonCheckbox,
     IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle,
-    IonGrid, IonRow, IonCol, IonTextarea
+    IonGrid, IonRow, IonCol, IonTextarea, IonToast
   ],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss'
@@ -57,6 +58,8 @@ export class Usuarios implements OnInit {
   observacionRevision = '';
   guardandoRevision = false;
   errorRevision = '';
+  toastRutAbierto = false;
+  mensajeToastRut = '';
 
   ngOnInit(): void { this.cargar(); }
 
@@ -122,6 +125,17 @@ export class Usuarios implements OnInit {
 
   tieneRol(rol: string): boolean { return this.rolesSeleccionados.includes(rol); }
   get esCuentaEmpresa(): boolean { return this.tieneRol('EMPRESA'); }
+  get rutEmpresaValido(): boolean { return rutValido(this.rutEmpresa); }
+  actualizarRutEmpresa(rut: string): void {
+    this.rutEmpresa = formatearRut(rut);
+    this.toastRutAbierto = false;
+  }
+  validarRutEmpresa(): void {
+    if (this.esCuentaEmpresa && !this.rutEmpresaValido) {
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+    }
+  }
+  cerrarToastRut(): void { this.toastRutAbierto = false; }
   get solicitudesPendientes(): number {
     return this.solicitudesEmpresa.filter(solicitud => solicitud.estado === 'PENDIENTE').length;
   }
@@ -183,7 +197,8 @@ export class Usuarios implements OnInit {
       return;
     }
     if (this.esCuentaEmpresa && !rutValido(this.rutEmpresa)) {
-      this.errorModal = 'Ingresa un RUT de empresa válido.';
+      this.errorModal = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
       return;
     }
 
@@ -222,5 +237,10 @@ export class Usuarios implements OnInit {
     const limpio = correo.trim();
     return limpio.length <= 150
       && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(limpio);
+  }
+
+  private mostrarToastRut(mensaje: string): void {
+    this.mensajeToastRut = mensaje;
+    this.toastRutAbierto = true;
   }
 }

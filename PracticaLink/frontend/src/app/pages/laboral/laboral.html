@@ -49,6 +49,7 @@
                   <ion-input
                     [ngModel]="rutEmpresa"
                     (ngModelChange)="actualizarRutEmpresa($event)"
+                    (ionBlur)="validarRutEmpresa()"
                     placeholder="76.123.456-0"
                     maxlength="12">
                   </ion-input>
@@ -59,7 +60,7 @@
               </ion-item>
               @if (vista === 'gestion') {
                 <ion-button
-                  [disabled]="consultandoEmpresa || !rutEmpresa"
+                  [disabled]="consultandoEmpresa || !rutEmpresaValido"
                   (click)="consultarRutEmpresa()">
                   @if (consultandoEmpresa) {
                     <ion-spinner name="crescent"></ion-spinner>
@@ -166,7 +167,9 @@
             </ion-item>
           </div>
           @if (errorFormulario) { <p class="notice error" role="alert">{{ errorFormulario }}</p> }
-          <ion-button [disabled]="guardando" (click)="guardarOferta()">
+          <ion-button
+            [disabled]="guardando || (vista === 'gestion' && !rutEmpresaValido)"
+            (click)="guardarOferta()">
             @if (guardando) { <ion-spinner name="crescent"></ion-spinner> }
             @else { {{ ofertaEditandoId ? 'Guardar cambios' : 'Publicar oferta' }} }
           </ion-button>
@@ -334,4 +337,12 @@
       </section>
     }
   </main>
+  <ion-toast
+    [isOpen]="toastRutAbierto"
+    [message]="mensajeToastRut"
+    color="danger"
+    position="top"
+    [duration]="3500"
+    (didDismiss)="cerrarToastRut()">
+  </ion-toast>
 </ion-content>

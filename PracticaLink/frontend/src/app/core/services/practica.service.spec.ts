@@ -10,6 +10,7 @@ import {
   PracticaCreateResponse,
   PracticaDetalleResponse
 } from '../models/practica.models';
+import { environment } from '../../../environments/environment';
 import { PracticaService } from './practica.service';
 
 describe('PracticaService', () => {
@@ -78,7 +79,7 @@ describe('PracticaService', () => {
       respuesta = data;
     });
 
-    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas/me');
+    const request = httpMock.expectOne(`${environment.apiUrl}/practicas/me`);
     expect(request.request.method).toBe('GET');
 
     request.flush(practicaDetalle);
@@ -93,7 +94,7 @@ describe('PracticaService', () => {
       respuesta = data;
     });
 
-    const request = httpMock.expectOne('http://127.0.0.1:8000/practicas');
+    const request = httpMock.expectOne(`${environment.apiUrl}/practicas`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(practicaCreate);
 
@@ -120,7 +121,7 @@ describe('PracticaService', () => {
     });
 
     const request = httpMock.expectOne(
-      'http://127.0.0.1:8000/empresas/consulta/12.345.678-5'
+      `${environment.apiUrl}/empresas/consulta/12.345.678-5`
     );
     expect(request.request.method).toBe('GET');
 

@@ -26,7 +26,8 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
-  IonTextarea
+  IonTextarea,
+  IonToast
 } from '@ionic/angular';
 
 import {
@@ -44,6 +45,7 @@ import {
 import { EmpresaLookup } from '../../core/models/practica.models';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 
 interface PhotonFeature {
@@ -69,7 +71,7 @@ interface PhotonResponse {
   imports: [
     CommonModule, FormsModule, IonButton, IonCard, IonCardContent,
     IonContent, IonInput, IonItem, IonLabel, IonSelect, IonSelectOption,
-    IonSpinner, IonTextarea
+    IonSpinner, IonTextarea, IonToast
   ],
   templateUrl: './laboral.html',
   styleUrl: './laboral.scss'
@@ -80,6 +82,8 @@ export class Laboral implements OnDestroy, OnInit {
   private readonly router = inject(Router);
   private readonly consultasDireccion$ = new Subject<string>();
   private readonly destruir$ = new Subject<void>();
+  toastRutAbierto = false;
+  mensajeToastRut = '';
 
   readonly cargosPractica = [
     'Administración',
@@ -214,6 +218,14 @@ export class Laboral implements OnDestroy, OnInit {
       .join(', ');
   }
 
+  get rutEmpresaValido(): boolean {
+    return rutValido(this.rutEmpresa);
+  }
+
+  cerrarToastRut(): void {
+    this.toastRutAbierto = false;
+  }
+
   actualizarUbicacion(evento: CustomEvent<{ value?: string | null }>): void {
     this.ubicacion = evento.detail.value ?? '';
     this.sugerenciasUbicacion = [];
@@ -231,7 +243,8 @@ export class Laboral implements OnDestroy, OnInit {
     this.empresaConsultada = null;
     this.errorConsultaEmpresa = '';
     if (!rutValido(this.rutEmpresa)) {
-      this.errorConsultaEmpresa = 'Ingresa un RUT válido para consultar la empresa.';
+      this.errorConsultaEmpresa = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
       return;
     }
 
@@ -259,12 +272,20 @@ export class Laboral implements OnDestroy, OnInit {
   }
 
   actualizarRutEmpresa(rut: string): void {
-    if (rut === this.rutEmpresa) return;
-    this.rutEmpresa = rut;
+    const rutFormateado = formatearRut(rut);
+    if (rutFormateado === this.rutEmpresa) return;
+    this.rutEmpresa = rutFormateado;
+    this.toastRutAbierto = false;
     this.empresaConsultada = null;
     this.consultandoEmpresa = false;
     this.errorConsultaEmpresa = '';
     this.errorFormulario = '';
+  }
+
+  validarRutEmpresa(): void {
+    if (!this.rutEmpresaValido) {
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+    }
   }
 
   seleccionarCargo(cargo: string): void {
@@ -366,6 +387,12 @@ export class Laboral implements OnDestroy, OnInit {
     this.mensaje = '';
     if (this.vista === 'gestion' && !this.rutEmpresa.trim()) {
       this.errorFormulario = 'Ingresa el RUT de la empresa asociada.';
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+      return;
+    }
+    if (this.vista === 'gestion' && !this.rutEmpresaValido) {
+      this.errorFormulario = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
       return;
     }
     if (!this.empresaConsultada?.found
@@ -550,6 +577,11 @@ export class Laboral implements OnDestroy, OnInit {
   private fallarCarga(mensaje: string): void {
     this.error = mensaje;
     this.cargando = false;
+  }
+
+  private mostrarToastRut(mensaje: string): void {
+    this.mensajeToastRut = mensaje;
+    this.toastRutAbierto = true;
   }
 
   private detalleError(error: HttpErrorResponse, alternativa: string): string {

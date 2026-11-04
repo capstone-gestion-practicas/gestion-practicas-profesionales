@@ -657,7 +657,14 @@
 
         <ion-item>
           <ion-label position="stacked">RUT *</ion-label>
-          <ion-input [(ngModel)]="rutPerfil" maxlength="12" autocapitalize="characters" placeholder="12.345.678-5"></ion-input>
+          <ion-input
+            [ngModel]="rutPerfil"
+            (ngModelChange)="actualizarRutPerfil($event)"
+            (ionBlur)="validarRutPerfil()"
+            maxlength="12"
+            autocapitalize="characters"
+            placeholder="12.345.678-5">
+          </ion-input>
         </ion-item>
         <ion-item>
           <ion-label position="stacked">Carrera *</ion-label>
@@ -693,7 +700,7 @@
             Cancelar
           </ion-button>
           <ion-button
-            [disabled]="guardandoPerfil"
+            [disabled]="guardandoPerfil || !rutPerfilValido"
             (click)="guardarPerfil()">
             @if (guardandoPerfil) {
               <ion-spinner name="crescent"></ion-spinner>
@@ -745,4 +752,12 @@
     </ng-template>
   </ion-modal>
   -->
+  <ion-toast
+    [isOpen]="toastRutAbierto"
+    [message]="mensajeToastRut"
+    color="danger"
+    position="top"
+    [duration]="3500"
+    (didDismiss)="cerrarToastRut()">
+  </ion-toast>
 </ion-content>

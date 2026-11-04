@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { LaboralService } from '../../core/services/laboral.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 import { Login } from './login';
 
 describe('Login', () => {
@@ -152,8 +153,33 @@ describe('Login', () => {
       cargo_contacto: 'Encargada',
       password: 'synthetic-password'
     });
+
     expect(component.modoSolicitudEmpresa).toBeFalse();
     expect(component.mensaje).toContain('Un administrador revisará');
+  });
+
+  it('formats the company RUT while it is being entered', () => {
+    component.actualizarRutEmpresaSolicitud('761234560');
+
+    expect(component.rutEmpresaSolicitud).toBe('76.123.456-0');
+  });
+
+  it('blocks company requests and shows the shared message for an invalid RUT', () => {
+    component.actualizarRutEmpresaSolicitud('123');
+    component.validarRutEmpresaSolicitud();
+    component.enviarSolicitudEmpresa();
+    component.modoSolicitudEmpresa = true;
+    fixture.detectChanges();
+
+    expect(component.rutSolicitudValido).toBeFalse();
+    expect(component.puedeCompletarSolicitudEmpresa).toBeFalse();
+    expect(component.toastRutAbierto).toBeTrue();
+    expect(component.mensajeToastRut).toBe(MENSAJE_RUT_INVALIDO);
+    expect(laboralService.consultarEmpresaParaSolicitud).not.toHaveBeenCalled();
+    expect(laboralService.solicitarCuentaEmpresa).not.toHaveBeenCalled();
+    expect(
+      (fixture.nativeElement.querySelector('.login-button') as HTMLIonButtonElement).disabled
+    ).toBeTrue();
   });
 
   it('requires a verified company RUT before submitting an account request', () => {

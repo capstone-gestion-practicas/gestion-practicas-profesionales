@@ -121,7 +121,13 @@
         @if (esCuentaEmpresa) {
           <ion-item>
             <ion-label position="stacked">RUT de la empresa *</ion-label>
-            <ion-input [(ngModel)]="rutEmpresa" maxlength="12" placeholder="76.123.456-7"></ion-input>
+            <ion-input
+              [ngModel]="rutEmpresa"
+              (ngModelChange)="actualizarRutEmpresa($event)"
+              (ionBlur)="validarRutEmpresa()"
+              maxlength="12"
+              placeholder="76.123.456-7">
+            </ion-input>
           </ion-item>
           <p class="helper-text">
             La cuenta solo tendrá acceso a las prácticas y ofertas vinculadas a este RUT.
@@ -130,7 +136,9 @@
         @if (errorModal) { <p class="error" role="alert">{{ errorModal }}</p> }
         <div class="modal-actions">
           <ion-button fill="outline" [disabled]="guardando" (click)="cerrarModal()">Cancelar</ion-button>
-          <ion-button [disabled]="guardando" (click)="guardar()">
+          <ion-button
+            [disabled]="guardando || (esCuentaEmpresa && !rutEmpresaValido)"
+            (click)="guardar()">
             @if (guardando) { <ion-spinner></ion-spinner> } @else { Guardar }
           </ion-button>
         </div>
@@ -168,4 +176,12 @@
       </div>
     </ng-template>
   </ion-modal>
+  <ion-toast
+    [isOpen]="toastRutAbierto"
+    [message]="mensajeToastRut"
+    color="danger"
+    position="top"
+    [duration]="3500"
+    (didDismiss)="cerrarToastRut()">
+  </ion-toast>
 </ion-content>

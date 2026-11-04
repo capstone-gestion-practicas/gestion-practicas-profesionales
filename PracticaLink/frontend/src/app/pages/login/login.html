@@ -95,6 +95,7 @@
             <ion-input
               [ngModel]="rutEmpresaSolicitud"
               (ngModelChange)="actualizarRutEmpresaSolicitud($event)"
+              (ionBlur)="validarRutEmpresaSolicitud()"
               maxlength="12"
               placeholder="76.123.456-7">
             </ion-input>
@@ -102,7 +103,7 @@
           <ion-button
             expand="block"
             fill="outline"
-            [disabled]="consultandoEmpresa || !rutEmpresaSolicitud"
+            [disabled]="consultandoEmpresa || !rutSolicitudValido"
             (click)="buscarEmpresaSolicitud()">
             @if (consultandoEmpresa) {
               <ion-spinner name="crescent"></ion-spinner>
@@ -243,7 +244,7 @@
           expand="block"
           class="login-button"
           [disabled]="cargando || (modoSolicitudEmpresa
-            ? (!puedeCompletarSolicitudEmpresa || !rutEmpresaSolicitud || !razonSocialSolicitud || !nombreContactoSolicitud
+            ? (!puedeCompletarSolicitudEmpresa || !rutSolicitudValido || !razonSocialSolicitud || !nombreContactoSolicitud
               || !apellidoContactoSolicitud || !correoSolicitud || !telefonoSolicitud
               || !cargoContactoSolicitud || !passwordSolicitud || !confirmarPasswordSolicitud
               || consultandoEmpresa)
@@ -293,6 +294,14 @@
     </main>
 
   </ion-col></ion-row></ion-grid>
+  <ion-toast
+    [isOpen]="toastRutAbierto"
+    [message]="mensajeToastRut"
+    color="danger"
+    position="top"
+    [duration]="3500"
+    (didDismiss)="cerrarToastRut()">
+  </ion-toast>
 </ion-content>
 
 <ion-modal

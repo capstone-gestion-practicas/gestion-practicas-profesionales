@@ -30,6 +30,7 @@ import { EmpresaLookup, PracticaCreate } from '../../core/models/practica.models
 import { AuthService } from '../../core/services/auth.service';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 import { formatearRut, rutValidator } from '../../core/validators/rut.validator';
 
 @Component({
@@ -99,6 +100,13 @@ export class PracticaForm {
 
   registrar(): void {
     this.error = '';
+
+    const controlRut = this.formulario.controls.rutEmpresa;
+    if (controlRut.value.trim() && controlRut.invalid) {
+      controlRut.markAsTouched();
+      this.error = MENSAJE_RUT_INVALIDO;
+      return;
+    }
 
     if (this.formulario.invalid || !this.fechasValidas()) {
       this.formulario.markAllAsTouched();
@@ -180,7 +188,7 @@ export class PracticaForm {
     control.setValue(formatearRut(valor));
     control.markAsTouched();
     if (control.invalid) {
-      this.error = 'Ingresa un RUT de empresa válido con dígito verificador.';
+      this.error = MENSAJE_RUT_INVALIDO;
       return;
     }
 
@@ -206,7 +214,20 @@ export class PracticaForm {
   }
 
   cambiarRutEmpresa(): void {
+    const control = this.formulario.controls.rutEmpresa;
+    const rutFormateado = formatearRut(control.value);
+    if (control.value !== rutFormateado) {
+      control.setValue(rutFormateado);
+    }
+    if (this.error === MENSAJE_RUT_INVALIDO) this.error = '';
     this.empresaEncontrada = null;
+  }
+
+  validarRutEmpresa(): void {
+    const control = this.formulario.controls.rutEmpresa;
+    if (control.value.trim() && control.invalid) {
+      this.error = MENSAJE_RUT_INVALIDO;
+    }
   }
 
   cerrarToast(): void {

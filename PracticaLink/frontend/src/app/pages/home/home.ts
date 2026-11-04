@@ -23,6 +23,7 @@ import {
   IonRow,
   IonSpinner,
   IonTextarea,
+  IonToast,
   ModalController
 } from '@ionic/angular';
 
@@ -47,6 +48,7 @@ import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/soli
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
 import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 
 @Component({
   selector: 'app-home',
@@ -70,7 +72,8 @@ import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
     IonModal,
     IonNote,
     IonSpinner,
-    IonTextarea
+    IonTextarea,
+    IonToast
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss'
@@ -89,6 +92,8 @@ export class Home implements OnInit {
 
   readonly contexto = this.authStore.contexto;
   readonly notificacionesNoLeidas = this.notificacionService.noLeidas;
+  toastRutAbierto = false;
+  mensajeToastRut = '';
   readonly saludo = computed(() => {
     const contexto = this.contexto();
 
@@ -362,6 +367,25 @@ export class Home implements OnInit {
     }
   }
 
+  actualizarRutPerfil(rut: string): void {
+    this.rutPerfil = formatearRut(rut);
+    this.toastRutAbierto = false;
+  }
+
+  get rutPerfilValido(): boolean {
+    return rutValido(this.rutPerfil);
+  }
+
+  validarRutPerfil(): void {
+    if (!this.rutPerfilValido) {
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
+    }
+  }
+
+  cerrarToastRut(): void {
+    this.toastRutAbierto = false;
+  }
+
   guardarPerfil(): void {
     if (
       !this.rutPerfil.trim()
@@ -372,8 +396,9 @@ export class Home implements OnInit {
       return;
     }
 
-    if (!rutValido(this.rutPerfil)) {
-      this.errorPerfil = 'Ingresa un RUT válido con dígito verificador.';
+    if (!this.rutPerfilValido) {
+      this.errorPerfil = MENSAJE_RUT_INVALIDO;
+      this.mostrarToastRut(MENSAJE_RUT_INVALIDO);
       return;
     }
 
@@ -406,6 +431,11 @@ export class Home implements OnInit {
 
   private opcional(valor: string): string | null {
     return valor.trim() || null;
+  }
+
+  private mostrarToastRut(mensaje: string): void {
+    this.mensajeToastRut = mensaje;
+    this.toastRutAbierto = true;
   }
 
   private mostrarMensaje(mensaje: string): void {

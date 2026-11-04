@@ -12,12 +12,14 @@ import { PracticaService } from '../../core/services/practica.service';
 import { RevisionService } from '../../core/services/revision.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { MENSAJE_RUT_INVALIDO } from '../../core/utils/mensajes-rut';
 import { Home } from './home';
 
 describe('Home', () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
   let authStore: AuthStore;
+  let estudianteService: jasmine.SpyObj<EstudianteService>;
 
   const contexto: ContextoUsuarioResponse = {
     usuario: {
@@ -53,19 +55,17 @@ describe('Home', () => {
     usuarioService.listar.and.returnValue(of([]));
     const revisionService = jasmine.createSpyObj<RevisionService>('RevisionService', ['listar']);
     revisionService.listar.and.returnValue(of([]));
+    estudianteService = jasmine.createSpyObj<EstudianteService>(
+      'EstudianteService',
+      ['completarPerfil']
+    );
 
     await TestBed.configureTestingModule({
       imports: [Home],
       providers: [
         AuthStore,
         { provide: AuthService, useValue: authService },
-        {
-          provide: EstudianteService,
-          useValue: jasmine.createSpyObj<EstudianteService>(
-            'EstudianteService',
-            ['completarPerfil']
-          )
-        },
+        { provide: EstudianteService, useValue: estudianteService },
         {
           provide: PracticaService,
           useValue: practicaService
@@ -125,6 +125,21 @@ describe('Home', () => {
     expect(
       fixture.nativeElement.textContent
     ).toContain('Completa tu perfil');
+  });
+
+  it('blocks saving a profile with an invalid RUT and shows the shared message', () => {
+    component.rutPerfil = '12.3';
+    component.carreraPerfil = 'Informática';
+    component.sedePerfil = 'Santiago';
+
+    component.validarRutPerfil();
+    component.guardarPerfil();
+
+    expect(component.rutPerfilValido).toBeFalse();
+    expect(component.toastRutAbierto).toBeTrue();
+    expect(component.mensajeToastRut).toBe(MENSAJE_RUT_INVALIDO);
+    expect(component.errorPerfil).toBe(MENSAJE_RUT_INVALIDO);
+    expect(estudianteService.completarPerfil).not.toHaveBeenCalled();
   });
 
   it('shows a dedicated workflow dashboard to gestores', () => {
