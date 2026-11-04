@@ -26,7 +26,8 @@ from app.empresas.service import (  # noqa: E402
 
 
 RUT = "12.345.678-5"
-URL = "https://provider.example/api/lookup/" + RUT
+RUT_PROVEEDOR = "12345678-5"
+URL = "https://provider.example/api/lookup/" + RUT_PROVEEDOR
 
 
 def datos_proveedor():
