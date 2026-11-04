@@ -1,5 +1,7 @@
 import json
 import logging
+import time
+from urllib.parse import urlsplit
 
 import httpx
 from sqlalchemy import text
@@ -34,6 +36,7 @@ def consultar_empresa(db: Session, rut: str) -> dict:
         datos_api = _consultar_api(rut_normalizado)
     except (EmpresaApiNoConfiguradaError, EmpresaApiNoDisponibleError):
         if cache:
+            logger.warning("Provider unavailable; returning stale cached company data")
             cache["cache_vigente"] = False
             return cache
         raise
@@ -57,40 +60,97 @@ def _consultar_api(rut_normalizado: str) -> dict:
         raise EmpresaApiNoConfiguradaError
 
     rut_api = rut_normalizado.replace(".", "")
+    base_url = settings.chile_rut_empresa_api_url.rstrip("/")
+    parsed_url = urlsplit(base_url)
+    safe_headers = (
+        "content-type",
+        "content-length",
+        "server",
+        "cf-cache-status",
+        "cf-ray",
+        "x-request-id",
+        "x-quota-limit",
+        "x-quota-used",
+        "x-quota-plan",
+    )
+    started_at = time.monotonic()
+    logger.info(
+        "Calling Chile RUT Empresa method=GET scheme=%s host=%s "
+        "base_path=%s endpoint=/lookup/<rut> rut_has_dots=%s rut_has_hyphen=%s "
+        "api_key_configured=true timeout_seconds=8",
+        parsed_url.scheme,
+        parsed_url.hostname or "unknown",
+        parsed_url.path.rstrip("/"),
+        "." in rut_api,
+        "-" in rut_api,
+    )
     try:
         respuesta = httpx.get(
-            f"{settings.chile_rut_empresa_api_url.rstrip('/')}/lookup/{rut_api}",
+            f"{base_url}/lookup/{rut_api}",
             headers={"x-api-key": settings.chile_rut_empresa_api_key},
             timeout=8.0,
         )
     except httpx.RequestError as error:
         logger.warning(
-            "Chile RUT Empresa request failed (%s)", type(error).__name__
+            "Chile RUT Empresa request failed error_type=%s elapsed_ms=%.1f",
+            type(error).__name__,
+            (time.monotonic() - started_at) * 1000,
         )
         raise EmpresaApiNoDisponibleError from error
 
+    elapsed_ms = (time.monotonic() - started_at) * 1000
+    response_headers = {
+        name: respuesta.headers[name]
+        for name in safe_headers
+        if name in respuesta.headers
+    }
     if respuesta.status_code == 404:
+        logger.info(
+            "Chile RUT Empresa returned HTTP status=404 elapsed_ms=%.1f "
+            "response_headers=%s",
+            elapsed_ms,
+            response_headers,
+        )
         raise EmpresaNoEncontradaError
     if respuesta.status_code != 200:
         logger.warning(
-            "Chile RUT Empresa returned unexpected HTTP status %d",
+            "Chile RUT Empresa returned unexpected HTTP status=%d "
+            "elapsed_ms=%.1f response_headers=%s",
             respuesta.status_code,
+            elapsed_ms,
+            response_headers,
         )
         raise EmpresaApiNoDisponibleError
-    logger.info("Chile RUT Empresa returned HTTP status 200")
+    logger.info(
+        "Chile RUT Empresa returned HTTP status=200 elapsed_ms=%.1f "
+        "response_headers=%s",
+        elapsed_ms,
+        response_headers,
+    )
 
     try:
         datos = respuesta.json()
     except ValueError as error:
-        logger.warning("Chile RUT Empresa returned invalid JSON")
+        logger.warning(
+            "Chile RUT Empresa returned invalid JSON content_type=%s "
+            "content_length=%d",
+            respuesta.headers.get("content-type", "unknown"),
+            len(respuesta.content),
+        )
         raise EmpresaApiNoDisponibleError from error
     if not isinstance(datos, dict):
         logger.warning(
-            "Chile RUT Empresa returned unexpected JSON type %s",
+            "Chile RUT Empresa returned unexpected JSON type=%s",
             type(datos).__name__,
         )
         raise EmpresaApiNoDisponibleError
     if not datos.get("found") or not datos.get("razon_social"):
+        logger.info(
+            "Chile RUT Empresa response had no usable company data "
+            "found_field_present=%s razon_social_field_present=%s",
+            "found" in datos,
+            "razon_social" in datos,
+        )
         raise EmpresaNoEncontradaError
 
     return {

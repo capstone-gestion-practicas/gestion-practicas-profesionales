@@ -216,7 +216,7 @@ class EmpresasServiceTests(EmpresasAisladasTests):
         self.http_mock.return_value = respuesta(datos=[])
         with self.assertLogs("app.empresas.service", level="WARNING") as logs:
             cache = consultar_empresa(self.db, RUT)
-        self.assertIn("unexpected JSON type list", " ".join(logs.output))
+        self.assertIn("unexpected JSON type=list", " ".join(logs.output))
         self.assertFalse(cache["cache_vigente"])
         self.assert_no_writes()
 
@@ -235,7 +235,17 @@ class EmpresaProveedorTests(EmpresasAisladasTests):
                 _consultar_api(RUT),
                 {**datos_proveedor(), "rut": RUT, "fuente": "Chile RUT Empresa"},
             )
-        self.assertIn("HTTP status 200", " ".join(logs.output))
+        diagnostic = " ".join(logs.output)
+        self.assertIn("HTTP status=200", diagnostic)
+        self.assertIn("host=provider.example", diagnostic)
+        self.assertIn("base_path=/api", diagnostic)
+        self.assertIn("endpoint=/lookup/<rut>", diagnostic)
+        self.assertIn("rut_has_dots=False", diagnostic)
+        self.assertIn("rut_has_hyphen=True", diagnostic)
+        self.assertNotIn(RUT, diagnostic)
+        self.assertNotIn(RUT_PROVEEDOR, diagnostic)
+        self.assertNotIn("synthetic-key", diagnostic)
+        self.assertNotIn("Empresa de Prueba", diagnostic)
         self.http_mock.assert_called_once_with(
             URL, headers={"x-api-key": "synthetic-key"}, timeout=8.0
         )
@@ -254,12 +264,19 @@ class EmpresaProveedorTests(EmpresasAisladasTests):
             with self.subTest(status=status):
                 self.http_mock.reset_mock()
                 self.http_mock.return_value = respuesta(status)
+                self.http_mock.return_value.headers["x-quota-plan"] = "free"
+                self.http_mock.return_value.headers["x-quota-used"] = "3"
                 with self.assertLogs("app.empresas.service", level="WARNING") as logs:
                     with self.assertRaises(EmpresaApiNoDisponibleError):
                         _consultar_api(RUT)
-                self.assertIn(str(status), " ".join(logs.output))
-                self.assertNotIn(RUT, " ".join(logs.output))
-                self.assertNotIn("synthetic-key", " ".join(logs.output))
+                diagnostic = " ".join(logs.output)
+                self.assertIn(f"status={status}", diagnostic)
+                self.assertIn("x-quota-plan", diagnostic)
+                self.assertIn("x-quota-used", diagnostic)
+                self.assertNotIn(RUT, diagnostic)
+                self.assertNotIn(RUT_PROVEEDOR, diagnostic)
+                self.assertNotIn("synthetic-key", diagnostic)
+                self.assertNotIn("Empresa de Prueba", diagnostic)
                 self.http_mock.assert_called_once()
 
     def test_timeouts_and_connection_errors_become_unavailable(self):
@@ -270,9 +287,11 @@ class EmpresaProveedorTests(EmpresasAisladasTests):
                     with self.assertRaises(EmpresaApiNoDisponibleError) as raised:
                         _consultar_api(RUT)
                 self.assertIsInstance(raised.exception.__cause__, error)
-                self.assertIn(error.__name__, " ".join(logs.output))
-                self.assertNotIn(RUT, " ".join(logs.output))
-                self.assertNotIn("synthetic-key", " ".join(logs.output))
+                diagnostic = " ".join(logs.output)
+                self.assertIn(error.__name__, diagnostic)
+                self.assertNotIn(RUT, diagnostic)
+                self.assertNotIn(RUT_PROVEEDOR, diagnostic)
+                self.assertNotIn("synthetic-key", diagnostic)
 
     def test_404_or_missing_found_or_name_become_not_found(self):
         for response in (
