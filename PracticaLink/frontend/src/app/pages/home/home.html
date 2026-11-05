@@ -1,7 +1,8 @@
 <ion-content class="home-content">
-  <ion-grid class="home-wrapper">
+  <ion-grid class="home-wrapper" [class.home-wrapper--estudiante]="esVistaEstudiante()">
     <ion-row>
       <ion-col size="12">
+    @if (!esVistaEstudiante()) {
     <header class="brand-header" [class.student-brand-header]="esEstudiante() && (!esAdministrador() || mostrarPanelEstudiante)" aria-label="PracticaLink">
       <span class="brand-symbol" aria-hidden="true">P</span>
       <span class="brand-name">PracticaLink</span>
@@ -42,6 +43,7 @@
         </span>
       }
     </header>
+    }
 
     @if (cargando) {
 
@@ -351,116 +353,186 @@
           }
         </section>
       } @else {
-      <section class="student-dashboard" aria-label="Panel personal">
-
-      <aside class="student-sidebar">
-      <ion-card class="welcome-card">
-        <ion-card-header>
-          <div class="profile-intro">
-            <span class="profile-avatar">{{ ctx.usuario.nombre[0] }}</span>
-            <div>
-              <p class="module-label">Tu espacio de práctica</p>
-              <ion-card-title>Hola, {{ ctx.usuario.nombre }}</ion-card-title>
-              <span class="account-status-chip">Cuenta activa</span>
-            </div>
+      <div class="student-app" [class.student-app--sin-practica]="!ctx.practica_actual">
+        <nav class="student-nav" aria-label="Navegación del estudiante">
+          <div class="student-nav__brand">
+            <span class="brand-symbol" aria-hidden="true">P</span>
+            <span class="brand-name">PracticaLink</span>
           </div>
-          <p class="welcome-subtitle">
-            Tu proceso de práctica, en un solo lugar.
-          </p>
-        </ion-card-header>
+          <ul class="student-nav__list">
+            <li>
+              <button type="button" class="student-nav__item" aria-current="page" (click)="irInicio()">
+                <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+                <span>Inicio</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="student-nav__item" [disabled]="!practicaDetalle" (click)="abrirAntecedentesPractica()">
+                <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+                <span>Mi práctica</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="student-nav__item" (click)="abrirCentroNotificaciones()">
+                <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+                <span>Notificaciones</span>
+                @if (notificacionesNoLeidas() > 0) {
+                  <span class="student-nav__count">{{ notificacionesNoLeidas() }}<span class="visually-hidden"> sin leer</span></span>
+                }
+              </button>
+            </li>
+          </ul>
+          <button type="button" class="student-nav__item student-nav__logout" (click)="cerrarSesion()">
+            <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+            <span>Cerrar sesión</span>
+          </button>
+        </nav>
 
-        <ion-card-content>
-          <div class="identity-list">
-            <div class="identity-item">
-              <span>Correo institucional</span>
-              <strong>{{ ctx.usuario.correo }}</strong>
-            </div>
-
-            @if (ctx.perfil) {
-              <div class="identity-item">
-                <span>Carrera</span>
-                <strong>{{ ctx.perfil.carrera }}</strong>
-              </div>
-
-              <div class="identity-item">
-                <span>Sede</span>
-                <strong>{{ ctx.perfil.sede }}</strong>
-              </div>
+        <div class="student-main">
+          <div class="student-photo" aria-hidden="true"></div>
+          <header class="student-topbar">
+            <span class="student-topbar__brand" aria-hidden="true">
+              <span class="brand-symbol">P</span>
+            </span>
+            <span class="student-topbar__spacer"></span>
+            @if (tieneEspacioEstudiante()) {
+              <button class="workspace-switch" type="button" (click)="verEspacioGestion()">Gestión</button>
             }
-          </div>
-          <div class="profile-actions">
-            <ion-button fill="outline" size="small" (click)="copiarCorreo(ctx.usuario.correo)">
-              Copiar correo
-            </ion-button>
-          </div>
-        </ion-card-content>
-      </ion-card>
+            <button
+              type="button"
+              class="student-bell"
+              [attr.aria-label]="'Abrir notificaciones' + (notificacionesNoLeidas() > 0 ? ', ' + notificacionesNoLeidas() + ' sin leer' : '')"
+              (click)="abrirCentroNotificaciones()">
+              <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+              @if (notificacionesNoLeidas() > 0) {
+                <span class="student-bell__count" aria-hidden="true">{{ notificacionesNoLeidas() }}</span>
+              }
+            </button>
+            <span class="student-account">
+              <span class="account-avatar" role="img" [attr.aria-label]="'Cuenta de ' + ctx.usuario.nombre">{{ ctx.usuario.nombre[0] }}</span>
+            </span>
+          </header>
 
-      <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
-      </aside>
+      <section class="student-dashboard" aria-label="Panel personal" [class.student-dashboard--sin-practica]="!ctx.practica_actual">
+        <header class="student-greeting">
+          <p class="module-label">Tu espacio de práctica</p>
+          <h1>Hola, {{ ctx.usuario.nombre }}</h1>
+          <p>Tu panel de control para la práctica profesional.</p>
+        </header>
 
-      @if (practicaDetalle && esEstudiante()) {
-        <ion-card class="practice-card state-card student-practice-status">
-          <ion-card-header>
-            <p class="module-label">EP04 · Tu práctica</p>
-            <ion-card-title>Estado y seguimiento</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="practice-section practice-status">
-              <p class="section-label">Estado actual</p>
-              <div class="status-pill">
-                <strong>{{ practicaDetalle.estado.nombre }}</strong>
-                <span>{{ practicaDetalle.estado.es_final ? 'Estado final' : 'En proceso' }}</span>
+        @if (practicaDetalle && esEstudiante()) {
+          <ion-card class="practice-card state-card student-practice-status">
+            <ion-card-header>
+              <p class="module-label">Tu práctica</p>
+              <ion-card-title>Estado y seguimiento</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              @if (mensajeRespuestaObservacion) {
+                <p class="module-success" role="status">{{ mensajeRespuestaObservacion }}</p>
+              }
+              @if (errorActualizacionPractica) {
+                <p class="module-warning" role="alert">{{ errorActualizacionPractica }}</p>
+              }
+
+              <div class="practice-section practice-status">
+                <p class="section-label">Estado actual</p>
+                <app-estado-badge [estado]="practicaDetalle.estado.nombre"></app-estado-badge>
+                <p class="status-message">{{ mensajeEstadoPractica(practicaDetalle.estado.nombre) }}</p>
+                @if (practicaDetalle.estado.es_final) {
+                  <span class="status-finality">Estado final</span>
+                }
               </div>
-            </div>
 
-            @if (practicaDetalle.estado.nombre.toUpperCase() === 'OBSERVADA' && esEstudiante()) {
-              <div class="practice-section observation-response">
-                <p class="section-label">Responder observación</p>
-                <p>Indica qué corregiste o responde a lo solicitado. Al enviarlo, la práctica volverá a revisión.</p>
-                <ion-item>
-                  <ion-label position="stacked">Tu respuesta</ion-label>
-                  <ion-textarea [(ngModel)]="respuestaObservacion" maxlength="500" [counter]="true" [autoGrow]="true" rows="3"></ion-textarea>
-                </ion-item>
-                @if (errorRespuestaObservacion) { <p class="module-warning" role="alert">{{ errorRespuestaObservacion }}</p> }
-                @if (mensajeRespuestaObservacion) { <p class="success-message" role="status">{{ mensajeRespuestaObservacion }}</p> }
-                <ion-button [disabled]="enviandoRespuestaObservacion || !respuestaObservacion.trim()" (click)="responderObservacionEstudiante()">
-                  @if (enviandoRespuestaObservacion) { <ion-spinner name="crescent"></ion-spinner> } @else { Enviar respuesta y volver a revisión }
+              @if (practicaDetalle.estado.nombre.toUpperCase() === 'OBSERVADA' && esEstudiante()) {
+                <div class="practice-section observation-response" id="responder-observacion">
+                  <p class="section-label">Observación recibida</p>
+                  @if (cargandoHistorialEstados) {
+                    <p class="history-empty">Cargando observación...</p>
+                  } @else if (errorHistorialEstados) {
+                    <p class="module-warning" role="alert">No fue posible cargar la observación. Revisa el historial de estados.</p>
+                  } @else if (ultimaObservacion(); as observacion) {
+                    <p class="history-observation">{{ observacion.observacion }}</p>
+                    <p class="history-empty">{{ observacion.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ observacion.usuario }}</p>
+                  } @else {
+                    <p class="history-empty">No hay una observación registrada en el historial. Puedes responder igualmente.</p>
+                  }
+                  <p class="section-label">Responder observación</p>
+                  <p>Indica qué corregiste o responde a lo solicitado. Al enviarlo, la práctica volverá a revisión.</p>
+                  <ion-item>
+                    <ion-label position="stacked">Tu respuesta</ion-label>
+                    <ion-textarea [(ngModel)]="respuestaObservacion" maxlength="500" [counter]="true" [autoGrow]="true" rows="3"></ion-textarea>
+                  </ion-item>
+                  @if (errorRespuestaObservacion) { <p class="module-warning" role="alert">{{ errorRespuestaObservacion }}</p> }
+                  <ion-button [disabled]="enviandoRespuestaObservacion || !respuestaObservacion.trim()" (click)="responderObservacionEstudiante()">
+                    @if (enviandoRespuestaObservacion) { <ion-spinner name="crescent"></ion-spinner> } @else { Enviar respuesta y volver a revisión }
+                  </ion-button>
+                </div>
+              }
+
+              <details id="historial-estados" class="practice-section state-history" [open]="historialAbierto" (toggle)="alternarHistorial($event)">
+                <summary class="state-history__summary">Historial de estados</summary>
+                @if (cargandoHistorialEstados) {
+                  <div class="history-loading"><ion-spinner name="crescent"></ion-spinner><span>Cargando historial...</span></div>
+                } @else if (errorHistorialEstados) {
+                  <p class="module-warning" role="alert">{{ errorHistorialEstados }}</p>
+                } @else if (historialEstados.length === 0) {
+                  <p class="history-empty">Aún no hay cambios de estado registrados.</p>
+                } @else {
+                  <ol class="state-history-list">
+                    @for (evento of historialEstados; track evento.id_historial) {
+                      <li>
+                        <span class="history-dot" aria-hidden="true"></span>
+                        <div>
+                          <app-estado-badge [estado]="evento.estado"></app-estado-badge>
+                          <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.usuario }}</p>
+                          @if (evento.observacion) { <p class="history-observation">{{ evento.observacion }}</p> }
+                        </div>
+                      </li>
+                    }
+                  </ol>
+                }
+              </details>
+            </ion-card-content>
+          </ion-card>
+        } @else if (errorPractica && esEstudiante()) {
+          <ion-card class="state-card state-card-warning">
+            <ion-card-content><p class="module-warning" role="alert">{{ errorPractica }}</p></ion-card-content>
+          </ion-card>
+        }
+
+        <aside class="student-sidebar" aria-label="Próxima acción y datos personales">
+          <ng-container [ngTemplateOutlet]="registrationCard"></ng-container>
+
+          <ion-card class="student-identity-card">
+            <ion-card-header>
+              <p class="module-label">Tus datos</p>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="identity-list">
+                <div class="identity-item">
+                  <span>Correo institucional</span>
+                  <strong>{{ ctx.usuario.correo }}</strong>
+                </div>
+                @if (ctx.perfil) {
+                  <div class="identity-item">
+                    <span>Carrera</span>
+                    <strong>{{ ctx.perfil.carrera }}</strong>
+                  </div>
+                  <div class="identity-item">
+                    <span>Sede</span>
+                    <strong>{{ ctx.perfil.sede }}</strong>
+                  </div>
+                }
+              </div>
+              <div class="profile-actions">
+                <ion-button fill="outline" size="small" (click)="copiarCorreo(ctx.usuario.correo)">
+                  Copiar correo
                 </ion-button>
               </div>
-            }
+            </ion-card-content>
+          </ion-card>
 
-            <div class="practice-section state-history">
-              <p class="section-label">Historial de estados</p>
-              @if (cargandoHistorialEstados) {
-                <div class="history-loading"><ion-spinner name="crescent"></ion-spinner><span>Cargando historial...</span></div>
-              } @else if (errorHistorialEstados) {
-                <p class="module-warning" role="alert">{{ errorHistorialEstados }}</p>
-              } @else if (historialEstados.length === 0) {
-                <p class="history-empty">Aún no hay cambios de estado registrados.</p>
-              } @else {
-                <ol class="state-history-list">
-                  @for (evento of historialEstados; track evento.id_historial) {
-                    <li>
-                      <span class="history-dot" aria-hidden="true"></span>
-                      <div>
-                        <strong>{{ evento.estado }}</strong>
-                        <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.usuario }}</p>
-                        @if (evento.observacion) { <p class="history-observation">{{ evento.observacion }}</p> }
-                      </div>
-                    </li>
-                  }
-                </ol>
-              }
-            </div>
-          </ion-card-content>
-        </ion-card>
-      } @else if (errorPractica && esEstudiante()) {
-        <ion-card class="state-card state-card-warning">
-          <ion-card-content><p class="module-warning" role="alert">{{ errorPractica }}</p></ion-card-content>
-        </ion-card>
-      }
-
+        </aside>
       <ion-modal
         class="practice-details-modal"
         [isOpen]="modalAntecedentesAbierto"
@@ -557,10 +629,12 @@
         <ion-card class="state-card state-card-warning">
           <ion-card-content>
             <p class="module-warning" role="alert">
-              {{ errorPractica }}
+              Los antecedentes no están disponibles en este momento. Intenta nuevamente más tarde.
             </p>
           </ion-card-content>
         </ion-card>
+      } @else {
+        <p class="history-empty">Cargando antecedentes...</p>
       }
           </div>
         </ng-template>
@@ -571,19 +645,24 @@
           <ion-card-header>
             <p class="module-label">Siguiente paso</p>
             <ion-card-title>
-              {{ ctx.practica_actual ? 'Tu práctica registrada' : ctx.perfil ? 'Registra tu práctica' : 'Completa tu perfil' }}
+              {{ ctx.practica_actual ? (esObservada() ? 'Responder observación' : 'Tu práctica') : ctx.perfil ? 'Registra tu práctica' : 'Completa tu perfil' }}
             </ion-card-title>
           </ion-card-header>
 
           <ion-card-content>
-            @if (ctx.practica_actual) {
-              <p class="module-success">
-                Tu práctica ya fue registrada correctamente.
-              </p>
-              <p>Consulta aquí el estado, el historial y los datos completos de tu práctica.</p>
-              <ion-button expand="block" (click)="abrirAntecedentesPractica()">
-                Ver antecedentes de práctica
+            @if (ctx.practica_actual && esObservada()) {
+              <ion-button expand="block" (click)="irAResponderObservacion()">
+                Responder observación
               </ion-button>
+            } @else if (ctx.practica_actual) {
+              @if (esEstadoConocido() && !errorPractica) {
+                <p class="history-empty">No tienes acciones pendientes por ahora.</p>
+              }
+              @if (esRechazada()) {
+                <ion-button expand="block" fill="outline" (click)="abrirHistorial()">
+                  Ver historial de estados
+                </ion-button>
+              }
             } @else if (ctx.perfil) {
               <p>
                 Ingresa los antecedentes de la empresa, las fechas, las horas
@@ -592,13 +671,12 @@
 
               <div class="registration-details">
                 <span>Perfil: {{ ctx.perfil.rut }}</span>
-                <span>Estado inicial: REGISTRADA</span>
               </div>
 
               <ion-button
                 expand="block"
                 (click)="registrarPractica()">
-                Comenzar registro
+                Registrar práctica
               </ion-button>
             } @else {
               <p class="module-warning" role="alert">
@@ -620,8 +698,30 @@
         <p class="interaction-message" role="status">{{ mensajeInteraccion }}</p>
       }
       </section>
+        </div>
+
+        <nav class="student-bottom-nav" aria-label="Navegación móvil">
+          <button type="button" aria-current="page" (click)="irInicio()">
+            <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+            <span>Inicio</span>
+          </button>
+          <button type="button" [disabled]="!practicaDetalle" (click)="abrirAntecedentesPractica()">
+            <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+            <span>Mi práctica</span>
+          </button>
+          <button type="button" (click)="abrirCentroNotificaciones()">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+            <span>Notificaciones</span>
+          </button>
+          <button type="button" (click)="cerrarSesion()">
+            <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+            <span>Cerrar sesión</span>
+          </button>
+        </nav>
+      </div>
       }
 
+      @if (!esVistaEstudiante()) {
       <div class="secondary-action">
         <ion-button
           expand="block"
@@ -630,6 +730,7 @@
           Cerrar sesión
         </ion-button>
       </div>
+      }
 
     }
 

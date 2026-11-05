@@ -1,0 +1,38 @@
+<section class="student-profile" aria-labelledby="student-profile-title">
+  @if (contexto(); as ctx) {
+    <header class="student-profile__encabezado">
+      <span class="student-profile__avatar" aria-hidden="true">{{ inicial() }}</span>
+      <div>
+        <p class="student-profile__eyebrow">Tu cuenta</p>
+        <h1 id="student-profile-title" tabindex="-1" #titulo>Mi perfil</h1>
+        <p class="student-profile__nombre">{{ nombreCompleto() }}</p>
+        <p class="student-profile__descripcion">Consulta tus datos personales y académicos registrados en PracticaLink.</p>
+      </div>
+    </header>
+
+    <section class="student-card" aria-labelledby="datos-personales-titulo">
+      <div class="student-card__cabecera"><h2 id="datos-personales-titulo">Datos personales</h2></div>
+      <dl class="student-profile__datos">
+        <div><dt>Nombre</dt><dd>{{ valor(ctx.usuario.nombre) }}</dd></div>
+        <div><dt>Apellidos</dt><dd>{{ valor(ctx.usuario.apellido) }}</dd></div>
+        <div><dt>Correo institucional</dt><dd>{{ valor(ctx.usuario.correo) }}</dd></div>
+        <div><dt>RUT</dt><dd>{{ valor(ctx.perfil?.rut) }}</dd></div>
+      </dl>
+    </section>
+
+    <section class="student-card" aria-labelledby="datos-academicos-titulo">
+      <div class="student-card__cabecera"><h2 id="datos-academicos-titulo">Datos académicos</h2></div>
+      <dl class="student-profile__datos">
+        <div><dt>Carrera</dt><dd>{{ valor(ctx.perfil?.carrera) }}</dd></div>
+        <div><dt>Sede</dt><dd>{{ valor(ctx.perfil?.sede) }}</dd></div>
+      </dl>
+      @if (!ctx.perfil) {
+        <p class="student-profile__nota">Tu perfil académico aún no está completo. Puedes completarlo desde Inicio.</p>
+      }
+    </section>
+  } @else {
+    <section class="student-card" role="status">
+      <p>No hay datos de cuenta disponibles.</p>
+    </section>
+  }
+</section>

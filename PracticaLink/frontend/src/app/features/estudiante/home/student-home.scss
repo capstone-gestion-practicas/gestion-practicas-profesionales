@@ -1,0 +1,271 @@
+:host {
+  display: block;
+  min-width: 0;
+  color: var(--student-text);
+}
+
+.student-home {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.student-home__welcome h1 {
+  margin: 0.1rem 0 0.25rem;
+  color: var(--student-navy);
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.student-home__welcome > p:last-child {
+  margin: 0;
+  color: var(--student-muted);
+}
+
+.student-home__eyebrow {
+  margin: 0;
+  color: var(--student-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.student-home__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Tarjeta compacta: cabecera celeste y cuerpo con filas separadas por divisores */
+.student-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--student-border);
+  border-radius: 14px;
+  background: var(--student-surface);
+  box-shadow: 0 4px 14px var(--shadow-sm);
+}
+
+.student-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: var(--student-green-soft);
+}
+
+.student-card__heading h2 {
+  margin: 0;
+  color: var(--student-navy);
+  font-size: 1rem;
+}
+
+.student-card__icon {
+  display: grid;
+  flex: 0 0 28px;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--student-surface);
+  color: var(--student-active);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.student-card > :not(.student-card__heading) {
+  margin: 0;
+  padding: 0.7rem 1rem;
+}
+
+.student-home__facts {
+  display: grid;
+  margin: 0;
+}
+
+.student-home__facts > div {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.9fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--student-border);
+}
+
+.student-home__facts > div:first-child {
+  border-top: 0;
+}
+
+.student-home__facts dt {
+  color: var(--student-muted);
+  font-size: 0.85rem;
+}
+
+.student-home__facts dd {
+  margin: 0;
+  color: var(--student-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.student-home__status {
+  margin-bottom: 0.25rem;
+}
+
+.student-home__status-message,
+.student-home__muted {
+  color: var(--student-muted);
+}
+
+.student-card--next h2 {
+  margin: 0.15rem 0 0.4rem;
+  color: var(--student-navy);
+  font-size: 1.05rem;
+}
+
+.student-card--next p:not(.student-home__eyebrow) {
+  margin: 0 0 0.75rem;
+}
+
+.student-home__action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--student-active);
+  color: var(--student-on-navy);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.student-home__action:hover {
+  background: var(--student-navy-hover);
+}
+
+.student-home__action:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 3px;
+}
+
+.student-home__unavailable {
+  padding: 1rem;
+}
+
+@media (min-width: 900px) {
+  .student-home__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .student-card--next {
+    grid-column: 1 / -1;
+  }
+}
+
+.student-home__subtitle,
+.student-home__correo {
+  margin: 0.2rem 0 0;
+  color: var(--student-muted);
+}
+
+.student-home__correo {
+  font-size: 0.9rem;
+}
+
+.student-card__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.student-card__cabecera h2 {
+  margin: 0.15rem 0 0;
+  color: var(--student-navy);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.student-home__etapas {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.student-home__etapa {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 6px solid var(--student-border);
+  min-width: 0;
+}
+
+.student-home__etapa--completada {
+  border-top-color: var(--student-navy);
+}
+
+.student-home__etapa--actual {
+  border-top-color: var(--color-secondary);
+}
+
+.student-home__etapa-nombre {
+  color: var(--student-text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.student-home__etapa-estado {
+  color: var(--student-muted);
+  font-size: 0.8rem;
+}
+
+.student-home__etapa--actual .student-home__etapa-estado {
+  color: var(--student-navy);
+  font-weight: 700;
+}
+
+.student-home__mensaje {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--student-green-soft);
+  color: var(--student-navy);
+  font-weight: 600;
+}
+
+.student-card--resumen .student-home__facts {
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  .student-home__etapas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-home__etapa {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-top: 0;
+    border-left: 6px solid var(--student-border);
+    padding: 0.4rem 0 0.4rem 0.6rem;
+  }
+
+  .student-home__etapa--completada {
+    border-left-color: var(--student-navy);
+  }
+
+  .student-home__etapa--actual {
+    border-left-color: var(--color-secondary);
+  }
+}

@@ -1,9 +1,18 @@
 import { Component, OnInit, computed, effect, inject } from '@angular/core';
+import { addIcons } from 'ionicons';
+import {
+  briefcaseOutline,
+  documentTextOutline,
+  helpCircleOutline,
+  homeOutline,
+  logOutOutline,
+  notificationsOutline
+} from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 import {
   IonButton,
@@ -22,6 +31,7 @@ import {
   IonCol,
   IonRow,
   IonSpinner,
+  IonIcon,
   IonTextarea,
   ModalController
 } from '@ionic/angular';
@@ -36,7 +46,6 @@ import {
   PracticaDetalleResponse,
   PracticaEstadoResumen
 } from '../../core/models/practica.models';
-import { EstudianteService } from '../../core/services/estudiante.service';
 import { formatearRut, rutValido } from '../../core/validators/rut.validator';
 import { PracticaForm } from '../practica-form/practica-form';
 import { UsuarioService } from '../../core/services/usuario.service';
@@ -47,6 +56,27 @@ import { SolicitudesPendientesModal } from '../solicitudes-pendientes-modal/soli
 import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-detalle-modal';
 import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
+import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
+import { PerfilEstudianteWorkflowService } from '../../features/estudiante/services/perfil-estudiante-workflow.service';
+
+/** Mensajes informativos del estudiante. Solo describen el estado recibido; no crean acciones. */
+const MENSAJES_ESTADO_PRACTICA = new Map<string, string>([
+  ['REGISTRADA', 'Tu práctica fue registrada.'],
+  ['EN_REVISION', 'Tu práctica está siendo revisada.'],
+  ['OBSERVADA', 'Tu práctica tiene observaciones. Responde para que vuelva a revisión.'],
+  ['APROBADA', 'Tu práctica fue aprobada.'],
+  ['EN_CURSO', 'Tu práctica está en curso.'],
+  ['FINALIZADA', 'Tu práctica finalizó.'],
+  ['RECHAZADA', 'Tu práctica fue rechazada. Puedes consultar el historial para revisar las observaciones disponibles.']
+]);
+const MENSAJE_ESTADO_DESCONOCIDO =
+  'No pudimos identificar el estado actual de tu práctica. Puedes consultar el historial para obtener más información.';
+const MENSAJE_ERROR_ANTECEDENTES_404 =
+  'No pudimos cargar los antecedentes de tu práctica. Intenta nuevamente más tarde.';
+const MENSAJE_ERROR_ANTECEDENTES =
+  'No fue posible cargar los antecedentes de tu práctica.';
+const MENSAJE_ERROR_ACTUALIZACION_TRAS_RESPUESTA =
+  'Tu respuesta fue enviada, pero no pudimos actualizar la información de tu práctica. Recarga la pantalla para ver la información más reciente.';
 
 @Component({
   selector: 'app-home',
@@ -70,10 +100,12 @@ import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
     IonModal,
     IonNote,
     IonSpinner,
-    IonTextarea
+    IonIcon,
+    IonTextarea,
+    EstadoBadge
   ],
   templateUrl: './home.html',
-  styleUrl: './home.scss'
+  styleUrls: ['./home.scss', './home-student.scss']
 })
 export class Home implements OnInit {
 
@@ -81,11 +113,22 @@ export class Home implements OnInit {
   private readonly practicaService = inject(PracticaService);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
-  private readonly estudianteService = inject(EstudianteService);
+  private readonly perfilEstudianteWorkflow = inject(PerfilEstudianteWorkflowService);
   private readonly modalController = inject(ModalController);
   private readonly notificacionService = inject(NotificacionService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly revisionService = inject(RevisionService);
+
+  constructor() {
+    addIcons({
+      homeOutline,
+      briefcaseOutline,
+      notificationsOutline,
+      documentTextOutline,
+      helpCircleOutline,
+      logOutOutline
+    });
+  }
 
   readonly contexto = this.authStore.contexto;
   readonly notificacionesNoLeidas = this.notificacionService.noLeidas;
@@ -116,6 +159,54 @@ export class Home implements OnInit {
     const roles = this.contexto()?.roles ?? [];
     return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
   });
+  /** Vista de estudiante: estudiante sin gestión, o estudiante con panel de estudiante activo. */
+  esVistaEstudiante(): boolean {
+    return this.esEstudiante() && (!this.puedeRevisarPracticas() || this.mostrarPanelEstudiante);
+  }
+
+  irInicio(): void {
+    this.router.navigate(['/home']);
+  }
+
+  /** Estado real de la práctica: detalle cargado, o estado del contexto si el detalle aún no existe. */
+  esObservada(): boolean {
+    const nombre = this.practicaDetalle?.estado.nombre ?? this.contexto()?.practica_actual?.estado.nombre ?? '';
+    return nombre.toUpperCase() === 'OBSERVADA';
+  }
+
+  irAResponderObservacion(): void {
+    document.getElementById('responder-observacion')?.scrollIntoView({ block: 'center' });
+  }
+
+  /** Estado recibido reconocido por la pantalla. Un estado desconocido no muestra líneas de acción. */
+  esEstadoConocido(): boolean {
+    return MENSAJES_ESTADO_PRACTICA.has(this.nombreEstadoActual());
+  }
+
+  esRechazada(): boolean {
+    return this.nombreEstadoActual() === 'RECHAZADA';
+  }
+
+  /** Última observación registrada en el historial. Puede no existir. */
+  ultimaObservacion(): HistorialEstadoPractica | null {
+    const observaciones = this.historialEstados
+      .filter(evento => evento.observacion && evento.estado.toUpperCase() === 'OBSERVADA');
+    return [...observaciones].sort((a, b) => b.fecha_cambio.localeCompare(a.fecha_cambio))[0] ?? null;
+  }
+
+  abrirHistorial(): void {
+    this.historialAbierto = true;
+    setTimeout(() => document.getElementById('historial-estados')?.scrollIntoView({ block: 'center' }));
+  }
+
+  alternarHistorial(evento: Event): void {
+    this.historialAbierto = (evento.target as HTMLDetailsElement).open;
+  }
+
+  private nombreEstadoActual(): string {
+    return (this.practicaDetalle?.estado.nombre ?? this.contexto()?.practica_actual?.estado.nombre ?? '').toUpperCase();
+  }
+
   readonly esAdministrador = computed(
     () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
   );
@@ -137,6 +228,8 @@ export class Home implements OnInit {
   enviandoRespuestaObservacion = false;
   errorRespuestaObservacion = '';
   mensajeRespuestaObservacion = '';
+  errorActualizacionPractica = '';
+  historialAbierto = false;
   modalPerfilAbierto = false;
   guardandoPerfil = false;
   errorPerfil = '';
@@ -373,17 +466,14 @@ export class Home implements OnInit {
 
     this.errorPerfil = '';
     this.guardandoPerfil = true;
-    this.estudianteService.completarPerfil({
+    this.perfilEstudianteWorkflow.completar({
       rut: this.rutPerfil.trim(),
       carrera: this.carreraPerfil.trim(),
       sede: this.sedePerfil.trim(),
       telefono: this.opcional(this.telefonoPerfil),
       direccion: this.opcional(this.direccionPerfil)
-    }).pipe(
-      switchMap(() => this.authService.obtenerContexto())
-    ).subscribe({
-      next: contexto => {
-        this.authStore.setContexto(contexto);
+    }).subscribe({
+      next: () => {
         this.guardandoPerfil = false;
         this.modalPerfilAbierto = false;
       },
@@ -552,13 +642,17 @@ export class Home implements OnInit {
         this.cargarHistorialEstados(practica.id_practica);
       },
       error: (error: HttpErrorResponse) => {
+        this.practicaDetalle = null;
+
         if (error.status === 404) {
-          this.practicaDetalle = null;
+          // Sin práctica en el contexto, el 404 es esperado. Con práctica en el contexto, no debe quedar vacío.
+          if (contexto.practica_actual !== null) {
+            this.errorPractica = MENSAJE_ERROR_ANTECEDENTES_404;
+          }
           return;
         }
 
-        this.practicaDetalle = null;
-        this.errorPractica = 'No fue posible cargar los antecedentes de tu práctica.';
+        this.errorPractica = MENSAJE_ERROR_ANTECEDENTES;
       }
     });
   }
@@ -590,27 +684,51 @@ export class Home implements OnInit {
     this.enviandoRespuestaObservacion = true;
     this.errorRespuestaObservacion = '';
     this.mensajeRespuestaObservacion = '';
+    this.errorActualizacionPractica = '';
     this.practicaService.responderObservacion(practica.id_practica, respuesta).subscribe({
       next: resultado => {
+        // El envío fue aceptado: la respuesta ya no se conserva en el formulario.
         this.enviandoRespuestaObservacion = false;
         this.respuestaObservacion = '';
         this.mensajeRespuestaObservacion = resultado.mensaje;
-        this.practicaService.obtenerMiPractica().subscribe({
-          next: actualizada => {
-            this.practicaDetalle = actualizada;
-            this.cargarHistorialEstados(actualizada.id_practica);
-            this.authService.obtenerContexto().subscribe({
-              next: contexto => {
-                this.firmaContextoPracticaProcesada = '';
-                this.authStore.setContexto(contexto);
-              }
-            });
-          }
-        });
+        this.actualizarPracticaTrasRespuesta();
       },
       error: (error: HttpErrorResponse) => {
+        // Envío fallido: el texto escrito se conserva para reintentar.
         this.enviandoRespuestaObservacion = false;
-        this.errorRespuestaObservacion = error.error?.detail ?? 'No fue posible enviar tu respuesta.';
+        this.errorRespuestaObservacion = typeof error.error?.detail === 'string'
+          ? error.error.detail
+          : 'No fue posible enviar tu respuesta.';
+      }
+    });
+  }
+
+  mensajeEstadoPractica(nombreEstado: string): string {
+    return MENSAJES_ESTADO_PRACTICA.get(nombreEstado.toUpperCase()) ?? MENSAJE_ESTADO_DESCONOCIDO;
+  }
+
+  /** Recargas posteriores a un envío exitoso: sus errores no deben confundirse con un fallo de envío. */
+  private actualizarPracticaTrasRespuesta(): void {
+    this.practicaService.obtenerMiPractica().subscribe({
+      next: actualizada => {
+        this.practicaDetalle = actualizada;
+        this.cargarHistorialEstados(actualizada.id_practica);
+        this.refrescarContextoTrasRespuesta();
+      },
+      error: () => {
+        this.errorActualizacionPractica = MENSAJE_ERROR_ACTUALIZACION_TRAS_RESPUESTA;
+      }
+    });
+  }
+
+  private refrescarContextoTrasRespuesta(): void {
+    this.authService.obtenerContexto().subscribe({
+      next: contexto => {
+        this.firmaContextoPracticaProcesada = '';
+        this.authStore.setContexto(contexto);
+      },
+      error: () => {
+        this.errorActualizacionPractica = MENSAJE_ERROR_ACTUALIZACION_TRAS_RESPUESTA;
       }
     });
   }

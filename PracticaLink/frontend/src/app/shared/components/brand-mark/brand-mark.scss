@@ -1,0 +1,42 @@
+:host {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-primary-on);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.brand-mark--oscuro {
+  color: var(--color-primary);
+}
+
+.brand-mark__icono {
+  flex: none;
+  font-size: 1.5rem;
+}
+
+/* Tamaño ajustado para que «PracticaLink» quepa completo en el sidebar de 220 px útiles */
+.brand-mark__nombre {
+  display: var(--brand-mark-texto, inline);
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-mark--compacta .brand-mark__icono {
+  font-size: 1.4rem;
+}
+
+.brand-mark--compacta .brand-mark__nombre {
+  font-size: var(--font-size-section-title);
+}

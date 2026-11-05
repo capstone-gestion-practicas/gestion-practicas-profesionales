@@ -5,12 +5,14 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { SolicitudRevisionDetalle } from '../../core/models/revision.models';
 import { RevisionService } from '../../core/services/revision.service';
+import { PracticaService } from '../../core/services/practica.service';
 import { RevisionDetalle } from './revision-detalle';
 
 describe('RevisionDetalle', () => {
   let component: RevisionDetalle;
   let fixture: ComponentFixture<RevisionDetalle>;
   let revisionService: jasmine.SpyObj<RevisionService>;
+  let practicaService: jasmine.SpyObj<PracticaService>;
   let router: jasmine.SpyObj<Router>;
 
   const detalle: SolicitudRevisionDetalle = {
@@ -46,6 +48,11 @@ describe('RevisionDetalle', () => {
       'obtener',
       'resolver'
     ]);
+    practicaService = jasmine.createSpyObj<PracticaService>('PracticaService', [
+      'listarEstados',
+      'actualizarEstado'
+    ]);
+    practicaService.listarEstados.and.returnValue(of([]));
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
@@ -53,7 +60,8 @@ describe('RevisionDetalle', () => {
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: config.snapshot } },
         { provide: Router, useValue: router },
-        { provide: RevisionService, useValue: revisionService }
+        { provide: RevisionService, useValue: revisionService },
+        { provide: PracticaService, useValue: practicaService }
       ]
     }).compileComponents();
   });

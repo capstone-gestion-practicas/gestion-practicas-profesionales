@@ -2,8 +2,37 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { studentHomeSpaceGuard } from './core/guards/student-home-space.guard';
+import { ESPACIO_PAGINA } from './core/navigation/espacio-pagina.token';
 
 export const routes: Routes = [
+  {
+    path: 'estudiante',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE'] },
+    loadComponent: () =>
+      import('./features/estudiante/layout/student-layout').then(m => m.StudentLayout),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'inicio' },
+      {
+        path: 'inicio', canActivate: [authGuard, roleGuard], data: { roles: ['ESTUDIANTE'] },
+        loadComponent: () => import('./features/estudiante/home/student-home').then(m => m.StudentHome)
+      },
+      {
+        path: 'mi-practica', canActivate: [authGuard, roleGuard], data: { roles: ['ESTUDIANTE'] },
+        loadComponent: () => import('./features/estudiante/practice/student-practice').then(m => m.StudentPractice)
+      },
+      {
+        path: 'notificaciones', canActivate: [authGuard, roleGuard], data: { roles: ['ESTUDIANTE'] },
+        providers: [{ provide: ESPACIO_PAGINA, useValue: 'estudiante' }],
+        loadComponent: () => import('./features/notificaciones/pages/notificaciones/notificaciones').then(m => m.Notificaciones)
+      },
+      {
+        path: 'perfil', canActivate: [authGuard, roleGuard], data: { roles: ['ESTUDIANTE'] },
+        loadComponent: () => import('./features/estudiante/profile/student-profile').then(m => m.StudentProfile)
+      }
+    ]
+  },
   {
     path: '',
     redirectTo: 'login',
@@ -17,7 +46,7 @@ export const routes: Routes = [
   },
   {
     path: 'home',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, studentHomeSpaceGuard],
     data: {
       roles: ['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR']
     },

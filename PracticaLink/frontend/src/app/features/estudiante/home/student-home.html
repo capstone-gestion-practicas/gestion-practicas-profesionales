@@ -1,0 +1,110 @@
+<section class="student-home" aria-labelledby="student-home-title">
+  @if (contexto(); as ctx) {
+    <header class="student-home__welcome">
+      <p class="student-home__eyebrow">Tu espacio académico</p>
+      <h1 id="student-home-title">Hola, {{ nombreCompleto() || ctx.usuario.correo }}</h1>
+      @if (ctx.perfil) {
+        <p class="student-home__subtitle">{{ ctx.perfil.carrera || 'Carrera no informada' }} · Sede {{ ctx.perfil.sede || 'no informada' }}</p>
+      }
+      <p class="student-home__correo">{{ ctx.usuario.correo }}</p>
+    </header>
+
+    <section class="student-card student-card--practice" aria-labelledby="practice-title">
+      <div class="student-card__cabecera">
+        <div>
+          <p class="student-home__eyebrow">Tu práctica profesional</p>
+          <h2 id="practice-title">{{ ctx.practica_actual?.centro_practica?.nombre || 'Sin práctica asociada' }}</h2>
+          @if (ctx.practica_actual; as practica) {
+            <p class="student-home__subtitle">
+              {{ ctx.practica_actual.cargo_funcion || 'Función no informada' }}
+              @if (fechaCalendario(practica.fecha_inicio); as inicio) { · {{ inicio }} }
+              @if (fechaCalendario(practica.fecha_termino); as termino) { – {{ termino }} }
+            </p>
+          }
+        </div>
+        @if (ctx.practica_actual; as practica) {
+          <app-estado-badge [estado]="practica.estado.nombre" />
+        }
+      </div>
+
+      @if (ctx.practica_actual) {
+        @if (lineaDeEtapas(); as etapas) {
+          <ol class="student-home__etapas" aria-label="Etapas de tu práctica">
+            @for (etapa of etapas; track etapa.etiqueta) {
+              <li class="student-home__etapa" [class]="'student-home__etapa student-home__etapa--' + etapa.estado" [attr.aria-current]="etapa.estado === 'actual' ? 'step' : null">
+                <span class="student-home__etapa-nombre">{{ etapa.etiqueta }}</span>
+                <span class="student-home__etapa-estado">
+                  @switch (etapa.estado) {
+                    @case ('completada') { Completada }
+                    @case ('actual') { Etapa actual }
+                    @default { Pendiente }
+                  }
+                </span>
+              </li>
+            }
+          </ol>
+        }
+        @if (mensajeContextual(); as mensaje) {
+          <p class="student-home__mensaje">{{ mensaje }}</p>
+        }
+        @if (fechaCalendario(ctx.practica_actual.fecha_inicio) === null && fechaCalendario(ctx.practica_actual.fecha_termino) === null) {
+          <p class="student-home__muted">Las fechas de la práctica se mostrarán cuando estén registradas.</p>
+        }
+      } @else {
+        <p class="student-home__muted">Aún no hay una práctica asociada a tu contexto.</p>
+      }
+    </section>
+
+    <div class="student-home__grid">
+      <section class="student-card student-card--next" aria-labelledby="next-title">
+        <p class="student-home__eyebrow">Siguiente paso</p>
+        @switch (proximaAccion()) {
+          @case ('perfil') {
+            <h2 id="next-title">Completa tu perfil</h2>
+            <p>Completa tu perfil para habilitar los siguientes pasos.</p>
+            <button class="student-home__action" type="button" (click)="solicitarCompletarPerfil.emit()">Completar perfil</button>
+          }
+          @case ('practica') {
+            <h2 id="next-title">Registra tu práctica</h2>
+            <p>Tu perfil está listo. Puedes iniciar el registro de tu práctica.</p>
+            <button class="student-home__action" type="button" (click)="solicitarRegistroPractica.emit()">Registrar práctica</button>
+          }
+          @case ('observacion') {
+            <h2 id="next-title">Responde la observación</h2>
+            <p>Revisa las observaciones recibidas y responde en el detalle de tu práctica.</p>
+            <a class="student-home__action" routerLink="/estudiante/mi-practica">Ir a Mi práctica</a>
+          }
+          @default {
+            <h2 id="next-title">Por ahora, nada pendiente de tu parte</h2>
+            <p>Puedes revisar el detalle de tu práctica cuando lo necesites.</p>
+            <a class="student-home__action" routerLink="/estudiante/mi-practica">Revisar mi práctica</a>
+          }
+        }
+      </section>
+
+      @if (ctx.practica_actual; as practica) {
+        <section class="student-card student-card--resumen" aria-labelledby="resumen-title">
+          <p class="student-home__eyebrow" id="resumen-title">Resumen</p>
+          <dl class="student-home__facts">
+            @if (duracionSemanas(); as semanas) {
+              <div><dt>Duración</dt><dd>{{ semanas }} semanas</dd></div>
+            }
+            @if (practica.horas !== null) {
+              <div><dt>Horas estimadas</dt><dd>{{ practica.horas }} h</dd></div>
+            }
+            @if (fechaCalendario(practica.fecha_inicio); as inicio) {
+              <div><dt>Fecha de inicio</dt><dd>{{ inicio }}</dd></div>
+            }
+            @if (fechaCalendario(practica.fecha_termino); as termino) {
+              <div><dt>Fecha de término</dt><dd>{{ termino }}</dd></div>
+            }
+          </dl>
+        </section>
+      }
+    </div>
+  } @else {
+    <section class="student-card student-home__unavailable" aria-live="polite">
+      <p>No hay contexto de usuario disponible.</p>
+    </section>
+  }
+</section>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import {
@@ -17,6 +17,7 @@ import {
 import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { AuthStore } from '../../../../core/store/auth.store';
+import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token';
 
 @Component({
   selector: 'app-notificaciones',
@@ -32,12 +33,39 @@ export class Notificaciones implements OnInit {
   error = '';
   actualizando = false;
   mensajePush = '';
+  filtro: 'todas' | 'no_leidas' = 'todas';
 
   constructor(
     readonly servicio: NotificacionService,
     private readonly authStore: AuthStore,
-    private readonly router: Router
+    private readonly router: Router,
+    @Optional() @Inject(ESPACIO_PAGINA) private readonly espacio: 'estudiante' | null = null
   ) {}
+
+  /** Contadores reales derivados de la lista cargada. */
+  get totalNotificaciones(): number {
+    return this.notificaciones.length;
+  }
+
+  get totalNoLeidas(): number {
+    return this.notificaciones.filter(item => !item.fecha_leida).length;
+  }
+
+  /** Lista visible: el filtro solo aplica en la presentación V3 del estudiante. */
+  get visibles(): Notificacion[] {
+    return this.presentacionEstudiante && this.filtro === 'no_leidas'
+      ? this.notificaciones.filter(item => !item.fecha_leida)
+      : this.notificaciones;
+  }
+
+  elegirFiltro(filtro: 'todas' | 'no_leidas'): void {
+    this.filtro = filtro;
+  }
+
+  /** Presentación del espacio V3 del estudiante. Lo define la ruta, no la URL. */
+  get presentacionEstudiante(): boolean {
+    return this.espacio === 'estudiante';
+  }
 
   ngOnInit(): void {
     this.cargar();
@@ -108,7 +136,7 @@ export class Notificaciones implements OnInit {
         notificacion.tipo === 'CAMBIO_ESTADO'
         || notificacion.tipo === 'RECORDATORIO_SIN_PRACTICA'
       ) {
-        this.router.navigate(['/home']);
+        this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/mi-practica'] : ['/home']);
       }
     };
 
@@ -127,5 +155,11 @@ export class Notificaciones implements OnInit {
     });
   }
 
-  volver(): void { this.router.navigate(['/home']); }
+  volver(): void {
+    this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/inicio'] : ['/home']);
+  }
+
+  private enEspacioEstudiante(): boolean {
+    return this.router.url.split(/[?#]/, 1)[0].startsWith('/estudiante/');
+  }
 }

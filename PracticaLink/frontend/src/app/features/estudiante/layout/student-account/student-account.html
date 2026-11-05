@@ -1,0 +1,27 @@
+<div class="student-account" #contenedor (focusout)="salirDelFoco($event)">
+  <button
+    #disparador
+    class="student-account__disparador"
+    type="button"
+    [attr.aria-expanded]="menuAbierto()"
+    [attr.aria-controls]="menuAbierto() ? 'student-account-menu' : null"
+    (click)="alternarMenu()">
+    <span class="student-layout__account">
+      <span class="student-layout__avatar" role="img" [attr.aria-label]="'Avatar de ' + nombre()">{{ inicial() }}</span>
+      <span class="student-layout__account-name">{{ nombre() }}</span>
+    </span>
+    <ion-icon name="chevron-down-outline" aria-hidden="true" class="student-account__chevron"></ion-icon>
+  </button>
+
+  @if (menuAbierto()) {
+    <div id="student-account-menu" class="student-account__menu">
+      <p class="student-account__nombre">{{ nombre() }}</p>
+      <button class="student-account__item" type="button" (click)="abrirPerfil()">
+        Mi perfil
+      </button>
+      <button #primeraAccion class="student-account__item" type="button" (click)="salirDesdeMenu()">
+        Cerrar sesión
+      </button>
+    </div>
+  }
+</div>

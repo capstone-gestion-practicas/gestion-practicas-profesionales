@@ -1,0 +1,125 @@
+<section class="student-practice" aria-labelledby="student-practice-title">
+  <header class="student-practice__heading">
+    <p class="student-practice__eyebrow">Tu experiencia profesional</p>
+    <h1 id="student-practice-title">Mi práctica</h1>
+    <p>Consulta los antecedentes, el estado y los cambios registrados.</p>
+  </header>
+
+  @if (!contextoDisponible) {
+    <section class="student-card" role="status"><p>No hay contexto de usuario disponible.</p></section>
+  } @else if (!tienePerfil) {
+    <section class="student-card" aria-labelledby="profile-missing-title">
+      <h2 id="profile-missing-title">Completa tu perfil</h2>
+      <p>Necesitas completar tus antecedentes antes de gestionar una práctica.</p>
+      <button class="student-practice__action" type="button" (click)="solicitarCompletarPerfil.emit()">Completar perfil</button>
+    </section>
+  } @else if (!tienePracticaEnContexto) {
+    <section class="student-card" aria-labelledby="practice-missing-title">
+      <h2 id="practice-missing-title">Aún no tienes una práctica asociada</h2>
+      <p>Cuando registres una práctica, sus antecedentes y estado aparecerán aquí.</p>
+      <button class="student-practice__action" type="button" (click)="solicitarRegistroPractica.emit()">Registrar práctica</button>
+    </section>
+  } @else if (cargandoDetalle()) {
+    <section class="student-card" aria-live="polite"><p>Cargando antecedentes de la práctica…</p></section>
+  } @else if (errorCoherencia()) {
+    <section class="student-card student-card--warning" role="alert">
+      <h2>No se pudo confirmar la práctica</h2>
+      <p>{{ errorCoherencia() }}</p>
+      <button class="student-practice__action" type="button" (click)="reintentarDetalle()">Actualizar</button>
+    </section>
+  } @else if (errorDetalle()) {
+    <section class="student-card student-card--warning" role="alert">
+      <p>{{ errorDetalle() }}</p>
+      <button class="student-practice__action" type="button" (click)="reintentarDetalle()">Reintentar</button>
+    </section>
+  } @else if (detalle(); as practica) {
+    <div class="student-practice__metricas">
+      @if (fechaCalendario(practica.fecha_inicio); as fechaInicio) { <article class="student-card student-practice__metrica"><span>Inicio</span><strong>{{ fechaInicio }}</strong></article> }
+      @if (fechaCalendario(practica.fecha_termino); as fechaTermino) { <article class="student-card student-practice__metrica"><span>Término</span><strong>{{ fechaTermino }}</strong></article> }
+      @if (duracionSemanas(practica.fecha_inicio, practica.fecha_termino); as semanas) { <article class="student-card student-practice__metrica"><span>Duración</span><strong>{{ semanas }} semanas</strong></article> }
+      @if (practica.horas !== null) { <article class="student-card student-practice__metrica"><span>Horas estimadas</span><strong>{{ practica.horas }} h</strong></article> }
+      @if (practica.horas_semanales != null) { <article class="student-card student-practice__metrica"><span>Horas semanales</span><strong>{{ practica.horas_semanales }} h</strong></article> }
+    </div>
+
+    <div class="student-practice__grid">
+      <div class="student-practice__columna">
+        <section class="student-card student-practice__company" aria-labelledby="company-title">
+          <div class="student-card__heading">
+            <p class="student-practice__eyebrow">Empresa</p>
+            <h2 id="company-title">{{ practica.centro_practica.nombre }}</h2>
+          </div>
+          <div class="student-practice__body">
+            <div class="student-practice__estado">
+              <app-estado-badge [estado]="practica.estado.nombre" />
+              <p class="student-practice__status-message">{{ mensajeEstado(practica.estado.nombre) }}</p>
+            </div>
+            <dl class="student-practice__facts">
+              @if (practica.centro_practica.rut_empresa) { <div><dt>RUT de empresa</dt><dd>{{ practica.centro_practica.rut_empresa }}</dd></div> }
+              @if (practica.centro_practica.direccion) { <div><dt>Dirección</dt><dd>{{ practica.centro_practica.direccion }}</dd></div> }
+              @if (practica.centro_practica.telefono) { <div><dt>Teléfono</dt><dd>{{ practica.centro_practica.telefono }}</dd></div> }
+              @if (practica.centro_practica.correo) { <div><dt>Correo de contacto</dt><dd>{{ practica.centro_practica.correo }}</dd></div> }
+              @if (practica.centro_practica.contacto_nombre) { <div><dt>Nombre de contacto</dt><dd>{{ practica.centro_practica.contacto_nombre }}</dd></div> }
+              @if (practica.centro_practica.contacto_cargo) { <div><dt>Cargo de contacto</dt><dd>{{ practica.centro_practica.contacto_cargo }}</dd></div> }
+            </dl>
+          </div>
+        </section>
+
+        <section class="student-card student-practice__funciones" aria-labelledby="funciones-title">
+          <div class="student-card__heading"><h2 id="funciones-title">Funciones y descripción</h2></div>
+          <div class="student-practice__body">
+            @if (practica.cargo_funcion) { <p class="student-practice__funcion"><strong>{{ practica.cargo_funcion }}</strong></p> }
+            @if (practica.descripcion) { <p class="student-practice__descripcion">{{ practica.descripcion }}</p> }
+            @if (!practica.cargo_funcion && !practica.descripcion) { <p class="student-practice__muted">No hay funciones registradas.</p> }
+          </div>
+        </section>
+      </div>
+
+      <div class="student-practice__columna">
+    <section class="student-card student-practice__history" aria-labelledby="history-title">
+      <div class="student-practice__section-heading"><div><p class="student-practice__eyebrow">Trazabilidad</p><h2 id="history-title">Historial de estados</h2></div></div>
+      @if (cargandoHistorial()) {
+        <p aria-live="polite">Cargando historial…</p>
+      } @else if (errorHistorial()) {
+        <p class="student-practice__error" role="alert">{{ errorHistorial() }}</p>
+        <button class="student-practice__action" type="button" (click)="reintentarHistorial()">Reintentar historial</button>
+      } @else if (historial().length === 0) {
+        <p class="student-practice__muted">Aún no hay cambios de estado registrados.</p>
+      } @else {
+        <ol class="student-practice__timeline">
+          @for (evento of historial(); track evento.id_historial) {
+            <li>
+              <app-estado-badge [estado]="evento.estado" />
+              <p>{{ evento.fecha_cambio | date:'dd/MM/yyyy HH:mm':'America/Santiago' }}</p>
+              @if (evento.usuario) { <p>Por {{ evento.usuario }}</p> }
+              @if (evento.observacion) { <p class="student-practice__observation">{{ evento.observacion }}</p> }
+            </li>
+          }
+        </ol>
+      }
+    </section>
+      </div>
+    </div>
+
+    @if (esObservada) {
+      <div class="student-card student-practice__details">
+        <section class="student-practice__response" aria-labelledby="response-title">
+          <h3 id="response-title">Respuesta a observaciones</h3>
+          @if (ultimaObservacion(); as ultima) {
+            <p class="student-practice__observation">{{ ultima.observacion }}</p>
+          } @else {
+            <p class="student-practice__muted">No hay una observación registrada en el historial. Puedes responder igualmente.</p>
+          }
+          <label for="observation-response">Indica qué corregiste o responde a lo solicitado</label>
+          <textarea id="observation-response" [(ngModel)]="respuestaObservacion" maxlength="500" rows="4" [disabled]="enviandoRespuesta()"></textarea>
+          <p class="student-practice__counter">{{ respuestaObservacion.length }}/500</p>
+          @if (errorEnvio()) { <p class="student-practice__error" role="alert">{{ errorEnvio() }}</p> }
+          @if (mensajeExito()) { <p class="student-practice__success" role="status">{{ mensajeExito() }}</p> }
+          @if (errorActualizacion()) { <p class="student-practice__error" role="alert">{{ errorActualizacion() }}</p> }
+          <button class="student-practice__action" type="button" [disabled]="enviandoRespuesta() || !respuestaObservacion.trim() || respuestaObservacion.length > 500" (click)="responderObservacion()">
+            {{ enviandoRespuesta() ? 'Enviando…' : 'Enviar respuesta y volver a revisión' }}
+          </button>
+        </section>
+      </div>
+    }
+  }
+</section>
