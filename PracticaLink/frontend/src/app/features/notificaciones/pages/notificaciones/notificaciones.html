@@ -1,18 +1,22 @@
-<ion-content class="notifications-content">
+<ion-content class="notifications-content" [class.notifications-content--estudiante]="presentacionEstudiante">
   <ion-grid class="notifications-wrapper"><ion-row><ion-col size="12">
     <header class="page-heading">
       <div>
-        <p class="module-label">EP08 · Centro de notificaciones</p>
+        @if (!presentacionEstudiante) {
+          <p class="module-label">EP08 · Centro de notificaciones</p>
+        }
         <h1>Notificaciones</h1>
         @if (servicio.noLeidas(); as cantidad) {
           <p>{{ cantidad }} sin leer</p>
         }
       </div>
       <div class="heading-actions">
-        <ion-button fill="solid" (click)="habilitarPush()">Activar push en este dispositivo</ion-button>
-        <ion-button class="back-home-button" fill="outline" (click)="volver()">
-          ← Volver al inicio
-        </ion-button>
+        @if (!presentacionEstudiante) {
+          <ion-button fill="solid" (click)="habilitarPush()">Activar push en este dispositivo</ion-button>
+          <ion-button class="back-home-button" fill="outline" (click)="volver()">
+            ← Volver al inicio
+          </ion-button>
+        }
         <ion-button fill="outline" [disabled]="servicio.noLeidas() === 0 || actualizando" (click)="marcarTodas()">
           Marcar todas como leídas
         </ion-button>
@@ -37,7 +41,20 @@
     } @else if (notificaciones.length === 0) {
       <ion-card><ion-card-content>No tienes notificaciones todavía.</ion-card-content></ion-card>
     } @else {
-      @for (notificacion of notificaciones; track notificacion.id_notificacion) {
+      @if (presentacionEstudiante) {
+        <div class="filtros-notificaciones" role="group" aria-label="Filtrar notificaciones">
+          <button type="button" class="filtro" [attr.aria-pressed]="filtro === 'todas'" (click)="elegirFiltro('todas')">
+            Todas <span class="filtro__cuenta">({{ totalNotificaciones }})</span>
+          </button>
+          <button type="button" class="filtro" [attr.aria-pressed]="filtro === 'no_leidas'" (click)="elegirFiltro('no_leidas')">
+            No leídas <span class="filtro__cuenta">({{ totalNoLeidas }})</span>
+          </button>
+        </div>
+      }
+      @if (visibles.length === 0) {
+        <ion-card><ion-card-content>No tienes notificaciones sin leer.</ion-card-content></ion-card>
+      }
+      @for (notificacion of visibles; track notificacion.id_notificacion) {
         <ion-card button (click)="abrir(notificacion)" [class.unread]="!notificacion.fecha_leida">
           <ion-card-content>
             <div class="notification-row">

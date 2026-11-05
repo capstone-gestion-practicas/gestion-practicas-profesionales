@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.profile-modal {
+  padding: 1.5rem;
+}
+
+.profile-modal header h2 {
+  margin: 0 0 0.45rem;
+  color: #183c60;
+}
+
+.profile-modal header > p:last-child {
+  margin: 0 0 1rem;
+  color: #52677d;
+}
+
+.profile-modal__eyebrow {
+  color: #52769b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.profile-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.profile-modal__error {
+  color: #a32f2f;
+}

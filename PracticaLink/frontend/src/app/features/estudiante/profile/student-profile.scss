@@ -1,0 +1,128 @@
+:host {
+  display: block;
+  min-width: 0;
+  color: var(--student-text);
+}
+
+.student-profile {
+  display: grid;
+  gap: 1rem;
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+.student-profile__encabezado {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.student-profile__avatar {
+  display: grid;
+  flex: 0 0 64px;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--student-border);
+  border-radius: 50%;
+  background: var(--student-green-soft);
+  color: var(--student-navy);
+  font-size: 1.5rem;
+  font-weight: 750;
+}
+
+.student-profile__encabezado h1 {
+  margin: 0.1rem 0 0;
+  color: var(--student-navy);
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.student-profile__encabezado h1:focus {
+  outline: none;
+}
+
+.student-profile__encabezado h1:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 3px;
+}
+
+.student-profile__eyebrow {
+  margin: 0;
+  color: var(--student-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.student-profile__nombre {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+}
+
+.student-profile__descripcion,
+.student-profile__nota {
+  margin: 0.2rem 0 0;
+  color: var(--student-muted);
+}
+
+.student-card {
+  overflow: hidden;
+  border: 1px solid var(--student-border);
+  border-radius: 14px;
+  background: var(--student-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.student-card__cabecera {
+  padding: 0.75rem 1rem;
+  background: var(--student-green-soft);
+}
+
+.student-card__cabecera h2 {
+  margin: 0;
+  color: var(--student-navy);
+  font-size: 1rem;
+}
+
+.student-profile__datos {
+  display: grid;
+  margin: 0;
+  padding: 0.25rem 1rem 0.75rem;
+}
+
+.student-profile__datos > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.9fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--student-border);
+}
+
+.student-profile__datos > div:first-child {
+  border-top: 0;
+}
+
+.student-profile__datos dt {
+  color: var(--student-muted);
+  font-size: 0.85rem;
+}
+
+.student-profile__datos dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.student-profile .student-card > .student-profile__nota {
+  padding: 0 1rem 0.9rem;
+}
+
+@media (max-width: 599px) {
+  .student-profile__datos > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+  }
+}

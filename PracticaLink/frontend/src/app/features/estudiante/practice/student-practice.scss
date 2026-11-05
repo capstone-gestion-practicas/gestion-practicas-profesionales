@@ -1,0 +1,306 @@
+:host {
+  display: block;
+  min-width: 0;
+  color: var(--student-text);
+}
+
+.student-practice {
+  display: grid;
+  gap: 1.1rem;
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.student-practice__heading h1 {
+  margin: 0.15rem 0 0.25rem;
+  color: var(--student-navy);
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.student-practice__heading > p:last-child {
+  margin: 0;
+  color: var(--student-muted);
+}
+
+.student-practice__eyebrow {
+  margin: 0;
+  color: var(--student-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Tarjetas compactas con cabecera celeste, como en el bosquejo */
+.student-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--student-border);
+  border-radius: 14px;
+  background: var(--student-surface);
+  box-shadow: 0 4px 14px var(--shadow-sm);
+}
+
+.student-card__heading {
+  padding: 0.75rem 1rem;
+  background: var(--student-green-soft);
+}
+
+.student-card__heading h2 {
+  margin: 0;
+  color: var(--student-navy);
+  font-size: 1rem;
+}
+
+.student-card > :not(.student-card__heading) {
+  margin: 0;
+  padding: 0.7rem 1rem;
+}
+
+.student-card--warning {
+  border-color: var(--color-warning-soft);
+  background: var(--color-warning-soft);
+}
+
+.student-practice__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.student-practice__facts {
+  display: grid;
+  margin: 0;
+}
+
+.student-practice__facts > div {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.9fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--student-border);
+}
+
+.student-practice__facts > div:first-child {
+  border-top: 0;
+}
+
+.student-practice__facts dt {
+  color: var(--student-muted);
+  font-size: 0.85rem;
+}
+
+.student-practice__facts dd {
+  margin: 0;
+  color: var(--student-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.student-practice__status-row {
+  display: grid;
+  gap: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.student-practice__status-message,
+.student-practice__muted,
+.student-practice__counter {
+  margin: 0;
+  color: var(--student-muted);
+}
+
+.student-practice__description p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.student-practice__details h3 {
+  margin: 0 0 0.5rem;
+  color: var(--student-navy);
+  font-size: 1rem;
+}
+
+.student-practice__details label {
+  display: block;
+  margin: 0.5rem 0 0.3rem;
+  font-weight: 600;
+}
+
+.student-practice__details textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--student-border);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.student-practice__details textarea:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 2px;
+}
+
+.student-practice__observation {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--student-active);
+  border-radius: 8px;
+  background: var(--student-green-soft);
+}
+
+.student-practice__error {
+  margin: 0.5rem 0;
+  color: var(--color-danger-on);
+}
+
+.student-practice__success {
+  margin: 0.5rem 0;
+  color: var(--color-success-on);
+}
+
+.student-practice__action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  margin-top: 0.6rem;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--student-active);
+  color: var(--student-on-navy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-practice__action:hover:not(:disabled) {
+  background: var(--student-navy-hover);
+}
+
+.student-practice__action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.student-practice__action:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 3px;
+}
+
+.student-practice__history h2 {
+  margin: 0;
+  color: var(--student-navy);
+  font-size: 1rem;
+}
+
+.student-practice__timeline {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid var(--student-border);
+  list-style: none;
+}
+
+.student-practice__timeline > li {
+  position: relative;
+}
+
+.student-practice__timeline > li::before {
+  position: absolute;
+  top: 0.45rem;
+  left: -1.4rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--student-active);
+  content: '';
+}
+
+.student-practice__timeline p {
+  margin: 0.15rem 0 0;
+  color: var(--student-muted);
+  font-size: 0.88rem;
+}
+
+@media (min-width: 900px) {
+  .student-practice__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Composición de referencia: métricas, columnas y cabeceras celestes */
+.student-practice__metricas {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.student-practice__metrica {
+  padding: 0.75rem 1rem;
+}
+
+.student-practice__metrica span {
+  display: block;
+  color: var(--student-muted);
+  font-size: 0.85rem;
+}
+
+.student-practice__metrica strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--student-text);
+  font-size: 1.1rem;
+}
+
+.student-practice__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.student-practice__columna {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  align-content: start;
+}
+
+.student-practice__body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.student-practice__estado {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.student-practice__descripcion,
+.student-practice__funcion {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.student-practice__company h2,
+.student-practice__funciones h2 {
+  margin: 0.15rem 0 0;
+  color: var(--student-navy);
+  font-size: 1.1rem;
+}
+
+@media (min-width: 900px) {
+  .student-practice__metricas {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .student-practice__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

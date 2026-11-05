@@ -1,0 +1,93 @@
+<div class="student-layout">
+  <aside class="student-layout__sidebar" aria-label="Espacio estudiante">
+    <a class="student-layout__brand" routerLink="/estudiante/inicio" aria-label="PracticaLink, inicio">
+      <app-brand-mark variante="completa" tono="claro" />
+    </a>
+    <span class="student-layout__brand-divider" aria-hidden="true"></span>
+
+    <nav class="student-layout__navigation" aria-label="Navegación del estudiante">
+      <a
+        class="student-layout__nav-item"
+        routerLink="/estudiante/inicio"
+        routerLinkActive="student-layout__nav-item--active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+        <span class="student-layout__nav-label">Inicio</span>
+      </a>
+      <a
+        class="student-layout__nav-item"
+        routerLink="/estudiante/mi-practica"
+        routerLinkActive="student-layout__nav-item--active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>
+        <span class="student-layout__nav-label">Mi práctica</span>
+      </a>
+      <a
+        class="student-layout__nav-item"
+        routerLink="/estudiante/notificaciones"
+        routerLinkActive="student-layout__nav-item--active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+        <span class="student-layout__nav-label">Notificaciones</span>
+        @if (noLeidas() > 0) {
+          <span class="student-layout__nav-count">
+            {{ noLeidas() }}<span class="visually-hidden"> sin leer</span>
+          </span>
+        }
+      </a>
+    </nav>
+
+    <button class="student-layout__logout student-layout__logout--sidebar" type="button" (click)="cerrarSesion()">
+      <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+      <span>Cerrar sesión</span>
+    </button>
+  </aside>
+
+  <div class="student-layout__workspace">
+    <header class="student-layout__topbar">
+      <a class="student-layout__topbar-brand" routerLink="/estudiante/inicio" aria-label="PracticaLink, inicio">
+        <app-brand-mark variante="compacta" tono="oscuro" />
+      </a>
+      <span class="student-layout__topbar-spacer"></span>
+
+      @if (puedeCambiarAEspacioGestion()) {
+        <button
+          class="student-layout__workspace-switch"
+          type="button"
+          (click)="abrirEspacioGestion()">
+          Gestión
+        </button>
+      }
+
+      <a
+        class="student-layout__notification-link"
+        routerLink="/estudiante/notificaciones"
+        [attr.aria-label]="'Notificaciones' + (noLeidas() > 0 ? ', ' + noLeidas() + ' sin leer' : '')">
+        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+        @if (noLeidas() > 0) {
+          <span class="student-layout__topbar-count" aria-hidden="true">{{ noLeidas() }}</span>
+        }
+      </a>
+
+      <app-student-account
+        [nombre]="nombreUsuario()"
+        [inicial]="inicialUsuario()"
+        (cerrarSesion)="cerrarSesion()" />
+
+      <button
+        class="student-layout__logout student-layout__logout--topbar"
+        type="button"
+        aria-label="Cerrar sesión"
+        (click)="cerrarSesion()">
+        <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+      </button>
+    </header>
+
+    <main class="student-layout__main" id="student-main-content">
+      <router-outlet (activate)="vincularAcciones($event)"></router-outlet>
+    </main>
+  </div>
+</div>

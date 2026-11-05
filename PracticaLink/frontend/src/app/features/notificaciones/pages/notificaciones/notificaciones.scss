@@ -18,3 +18,110 @@ ion-card.unread { border-inline-start:4px solid var(--ion-color-primary); }
 .center { display:grid; place-items:center; min-height:160px; }
 .error-text { color:#b42318; }
 @media (max-width:640px) { .page-heading { align-items:flex-start; flex-direction:column; } .heading-actions { width:100%; justify-content:flex-start; gap:4px; } .back-home-button { order:-1; } }
+
+/* Espacio V3 del estudiante: solo se aplica con la clase de presentación; gestor y administrador no la reciben. */
+.notifications-content--estudiante {
+  --background: var(--student-page);
+  --accent: var(--student-active);
+}
+
+.notifications-content--estudiante .notifications-wrapper {
+  max-width: 880px;
+  margin: 0;
+  padding: 0;
+}
+
+.notifications-content--estudiante .page-heading {
+  position: static;
+  margin: 0 0 16px;
+  padding: 0;
+  background: transparent;
+}
+
+.notifications-content--estudiante .page-heading h1 {
+  margin: 0;
+  color: var(--student-navy);
+  font-size: 1.6rem;
+}
+
+.notifications-content--estudiante .page-heading > div > p {
+  margin: 4px 0 0;
+  color: var(--student-text);
+  font-size: .9rem;
+}
+
+.notifications-content--estudiante .heading-actions ion-button {
+  --color: var(--student-navy);
+  --border-color: var(--student-border);
+  --border-radius: 10px;
+}
+
+.notifications-content--estudiante ion-card {
+  margin: 0 0 8px;
+  --background: var(--student-surface);
+  border: 1px solid var(--student-border);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.notifications-content--estudiante ion-card-content {
+  padding: 12px 16px;
+}
+
+.notifications-content--estudiante ion-card.unread {
+  border-inline-start: 4px solid var(--accent);
+}
+
+.notifications-content--estudiante .notification-title h2 {
+  color: var(--student-text);
+  font-size: 1rem;
+}
+
+.notifications-content--estudiante .notification-row p {
+  margin: 4px 0;
+  font-size: .9rem;
+}
+
+.notifications-content--estudiante ion-badge {
+  --background: var(--student-green-soft);
+  --color: var(--student-navy);
+}
+
+.notifications-content--estudiante .arrow {
+  color: var(--accent);
+}
+
+/* Filtros V3: Todas / No leídas con contadores reales */
+.notifications-content--estudiante .filtros-notificaciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.notifications-content--estudiante .filtro {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--student-border);
+  border-radius: 999px;
+  background: var(--student-surface);
+  color: var(--student-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notifications-content--estudiante .filtro[aria-pressed="true"] {
+  border-color: var(--student-navy);
+  background: var(--student-navy);
+  color: var(--color-primary-on);
+}
+
+.notifications-content--estudiante .filtro:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 2px;
+}
+
+.notifications-content--estudiante .filtro__cuenta {
+  font-weight: 500;
+}

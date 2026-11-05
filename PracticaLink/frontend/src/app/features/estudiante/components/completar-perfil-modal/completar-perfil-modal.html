@@ -1,0 +1,21 @@
+<section class="profile-modal" aria-labelledby="profile-modal-title">
+  <header>
+    <p class="profile-modal__eyebrow">Perfil de estudiante</p>
+    <h2 id="profile-modal-title">Completa tus datos</h2>
+    <p>Necesitamos esta información antes de registrar tu práctica.</p>
+  </header>
+
+  <ion-item><ion-label position="stacked">RUT *</ion-label><ion-input [(ngModel)]="rut" maxlength="12" autocapitalize="characters" placeholder="12.345.678-5"></ion-input></ion-item>
+  <ion-item><ion-label position="stacked">Carrera *</ion-label><ion-input [(ngModel)]="carrera" maxlength="150"></ion-input></ion-item>
+  <ion-item><ion-label position="stacked">Sede *</ion-label><ion-input [(ngModel)]="sede" maxlength="100"></ion-input></ion-item>
+  <ion-item><ion-label position="stacked">Teléfono</ion-label><ion-input type="tel" inputmode="tel" [(ngModel)]="telefono" maxlength="20"></ion-input></ion-item>
+  <ion-item><ion-label position="stacked">Dirección</ion-label><ion-input [(ngModel)]="direccion" maxlength="255"></ion-input></ion-item>
+
+  @if (error) { <p class="profile-modal__error" role="alert">{{ error }}</p> }
+  <div class="profile-modal__actions">
+    <ion-button fill="outline" [disabled]="guardando" (click)="cerrar()">Cancelar</ion-button>
+    <ion-button [disabled]="guardando" (click)="guardar()">
+      @if (guardando) { <ion-spinner name="crescent"></ion-spinner> } @else { Guardar perfil }
+    </ion-button>
+  </div>
+</section>
