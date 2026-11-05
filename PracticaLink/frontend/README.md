@@ -71,6 +71,15 @@ Supabase configurados. En Android Studio, genera la APK desde
 `Build > Build App Bundles or APKs > Build APKs`. La guía completa está en
 [`DOCUMENTACION_ANDROID.md`](../../DOCUMENTACION_ANDROID.md).
 
+Para compilar directamente una APK de depuración con el frontend remoto QA:
+
+```powershell
+npm.cmd run apk:debug
+```
+
+El archivo se genera en `android/app/build/outputs/apk/debug/app-debug.apk`.
+Esta APK está firmada con la clave debug y es solo para pruebas internas.
+
 Para abrirlo en Android Studio:
 
 ```powershell

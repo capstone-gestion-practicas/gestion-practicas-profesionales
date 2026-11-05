@@ -184,23 +184,34 @@ El equipo debe tener acceso a Internet para comunicarse con el backend QA.
 
 ## Generar una APK de depuración
 
-En Android Studio seleccionar:
-
-```text
-Build > Build App Bundles or APKs > Build APKs
-```
-
-También puede generarse desde PowerShell:
+Desde `PracticaLink/frontend`, ejecutar:
 
 ```powershell
-cd PracticaLink/frontend/android
-.\gradlew.bat assembleDebug
+npm.cmd run apk:debug
 ```
+
+El comando sincroniza la versión, compila el frontend con la configuración
+remota QA, sincroniza Capacitor y genera la APK de depuración. También se puede
+ejecutar desde la terminal integrada de Android Studio, situada en
+`PracticaLink/frontend`.
 
 El resultado queda en:
 
 ```text
 PracticaLink/frontend/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Para generar manualmente la APK desde Android Studio, seleccionar:
+
+```text
+Build > Build App Bundles or APKs > Build APKs
+```
+
+O desde PowerShell:
+
+```powershell
+cd PracticaLink/frontend/android
+.\gradlew.bat assembleDebug
 ```
 
 Esta APK sirve para QA y pruebas internas. Android la firma automáticamente con
