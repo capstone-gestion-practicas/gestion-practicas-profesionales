@@ -6,11 +6,29 @@ os.environ.setdefault("SUPABASE_DATABASE_URL", "postgresql+psycopg://localhost/p
 os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
 from app.main import app
-from app.laboral.schemas import SolicitudCuentaEmpresaRequest
+from app.laboral.schemas import OfertaLaboralRequest, SolicitudCuentaEmpresaRequest
+
+
+class OfertaLaboralSchemaTests(unittest.TestCase):
+    def test_description_requires_at_least_ten_characters_after_trimming(self):
+        datos = {
+            "cargo": "Analista",
+            "ubicacion": "Santiago",
+            "modalidad": "REMOTA",
+            "requisitos": "Experiencia",
+            "jornada": "COMPLETA",
+        }
+
+        with self.assertRaises(ValidationError):
+            OfertaLaboralRequest(**datos, descripcion="123456789 ")
+
+        oferta = OfertaLaboralRequest(**datos, descripcion="1234567890")
+        self.assertEqual(oferta.descripcion, "1234567890")
 
 
 class LaboralRoutesTests(unittest.TestCase):

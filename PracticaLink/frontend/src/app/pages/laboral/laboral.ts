@@ -151,6 +151,13 @@ export class Laboral implements OnDestroy, OnInit {
       return;
     }
 
+    if (this.router.url.startsWith('/ofertas')
+      && contexto.roles.includes('ESTUDIANTE')
+      && !contexto.perfil) {
+      this.router.navigate(['/home']);
+      return;
+    }
+
     if (contexto.roles.includes('EMPRESA')) {
       this.vista = 'empresa';
     } else if (this.router.url.startsWith('/gestion-ofertas')) {
@@ -403,16 +410,21 @@ export class Laboral implements OnDestroy, OnInit {
     const cargoFinal = this.cargoSeleccionado === 'OTRO'
       ? this.cargoPersonalizado.trim()
       : this.cargoSeleccionado.trim();
-    if (!cargoFinal || !this.descripcion.trim()
+    const descripcionFinal = this.descripcion.trim();
+    if (!cargoFinal || !descripcionFinal
       || !this.ubicacion.trim() || !this.requisitos.trim()) {
       this.errorFormulario = 'Completa todos los campos obligatorios.';
+      return;
+    }
+    if (Array.from(descripcionFinal).length < 10) {
+      this.errorFormulario = 'La descripción debe tener al menos 10 caracteres.';
       return;
     }
 
     const datos: OfertaLaboralInput = {
       rut_empresa: this.vista === 'gestion' ? formatearRut(this.rutEmpresa) : null,
       cargo: cargoFinal,
-      descripcion: this.descripcion.trim(),
+      descripcion: descripcionFinal,
       ubicacion: this.ubicacion.trim(),
       modalidad: this.modalidad,
       requisitos: this.requisitos.trim(),

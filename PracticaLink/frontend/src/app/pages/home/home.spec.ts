@@ -127,6 +127,13 @@ describe('Home', () => {
     ).toContain('Completa tu perfil');
   });
 
+  it('requires a student profile before navigating to work offers', () => {
+    component.explorarOfertas();
+
+    expect(component.modalPerfilAbierto).toBeTrue();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalledWith(['/ofertas']);
+  });
+
   it('blocks saving a profile with an invalid RUT and shows the shared message', () => {
     component.rutPerfil = '12.3';
     component.carreraPerfil = 'Informática';

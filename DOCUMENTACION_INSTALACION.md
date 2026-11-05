@@ -271,18 +271,30 @@ Con ambas terminales abiertas:
 2. Visitar `http://127.0.0.1:8000/health/database` y comprobar la conexión.
 3. Abrir `http://localhost:4200`.
 
-## Ejecución conjunta en Windows
+## Ejecución en Windows
 
-Después de completar la instalación del backend y frontend, ambos servidores se
-pueden iniciar desde la raíz del repositorio con:
+Después de completar la instalación del backend y frontend, se pueden iniciar
+ambos servidores desde la raíz del repositorio con:
 
 ```powershell
 .\scripts\start-dev.cmd
 ```
 
-El script valida que existan `.env`, el entorno virtual del backend y
-`node_modules`; luego inicia FastAPI en `http://127.0.0.1:8000` y Angular en
-`http://127.0.0.1:4200`. Presionar `Ctrl+C` detiene ambos procesos.
+El script valida los requisitos del backend y el frontend; luego inicia FastAPI
+en `http://127.0.0.1:8000` y Angular en `http://127.0.0.1:4200`. Presionar
+`Ctrl+C` detiene los procesos iniciados.
+
+También se puede iniciar cada parte por separado desde la raíz:
+
+```powershell
+.\scripts\start-dev.cmd backend
+.\scripts\start-dev.cmd frontend
+```
+
+El modo `backend` solo requiere `.env` y el entorno virtual configurado. El modo
+`frontend` requiere `node_modules`. Para iniciar el backend o frontend
+independientemente mediante el comando global, usar `practicalink-dev backend`
+o `practicalink-dev frontend`.
 
 Para instalar un comando disponible desde cualquier carpeta, ejecutar una sola
 vez desde la raíz del repositorio:

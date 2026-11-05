@@ -248,6 +248,17 @@ export class Home implements OnInit {
   }
 
   explorarOfertas(): void {
+    const contexto = this.contexto();
+    if (!contexto) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (contexto.roles.includes('ESTUDIANTE') && !contexto.perfil) {
+      this.completarPerfil();
+      return;
+    }
+
     this.router.navigate(['/ofertas']);
   }
 

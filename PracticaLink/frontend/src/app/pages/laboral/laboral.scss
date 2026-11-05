@@ -12,6 +12,7 @@
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 20px 0; }
 .form-grid .wide { grid-column: 1 / -1; }
 .form-grid ion-item, .search-item, .candidate-card ion-item { --background: transparent; }
+.field-hint { color: var(--ink-muted); font-size: .75rem; }
 .company-summary { display: grid; gap: 4px; padding: 12px 16px; border: 1px solid #c8e1cf; border-radius: 12px; background: #edf7ee; color: #245a45; }
 .company-summary span { color: var(--ink-muted); font-size: .85rem; }
 .location-field { position: relative; min-width: 0; }

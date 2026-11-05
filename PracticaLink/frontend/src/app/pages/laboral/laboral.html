@@ -160,7 +160,13 @@
               </ion-select>
             </ion-item>
             <ion-item class="wide"><ion-label position="stacked">Descripción *</ion-label>
-              <ion-textarea [(ngModel)]="descripcion" rows="4" maxlength="10000"></ion-textarea>
+              <ion-textarea
+                [(ngModel)]="descripcion"
+                rows="4"
+                minlength="10"
+                maxlength="10000">
+              </ion-textarea>
+              <small class="field-hint">La descripción debe tener al menos 10 caracteres.</small>
             </ion-item>
             <ion-item class="wide"><ion-label position="stacked">Requisitos *</ion-label>
               <ion-textarea [(ngModel)]="requisitos" rows="3" maxlength="10000"></ion-textarea>
