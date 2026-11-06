@@ -17,6 +17,7 @@ import {
 import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { AuthStore } from '../../../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
 import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token';
 
 @Component({
@@ -153,6 +154,10 @@ export class Notificaciones implements OnInit {
       },
       error: () => irADestino()
     });
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void {

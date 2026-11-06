@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 
 import { AuthStore } from '../../../core/store/auth.store';
 
@@ -24,9 +24,29 @@ export class StudentProfile {
 
   readonly inicial = computed(() => this.contexto()?.usuario.nombre.trim().charAt(0) || '?');
 
+  /** Correo real de la cuenta; vacío cuando no hay dato utilizable. */
+  readonly correo = computed(() => this.contexto()?.usuario.correo?.trim() ?? '');
+
+  /** Confirmación o error de la copia, anunciada mediante una región de estado. */
+  readonly mensajeCopia = signal('');
+
   constructor() {
     // Al entrar desde el menú de cuenta, el foco va al título de la página.
     afterNextRender(() => this.titulo()?.nativeElement.focus());
+  }
+
+  copiarCorreo(): void {
+    const correo = this.correo();
+    if (!correo) return;
+    const portapapeles = navigator.clipboard;
+    if (!portapapeles?.writeText) {
+      this.mensajeCopia.set('Tu navegador no permite copiar el correo automáticamente.');
+      return;
+    }
+    portapapeles.writeText(correo).then(
+      () => this.mensajeCopia.set('Correo copiado al portapapeles.'),
+      () => this.mensajeCopia.set('No fue posible copiar el correo.')
+    );
   }
 
   /** Valor real o indicación explícita de dato no registrado; nunca un valor inventado. */

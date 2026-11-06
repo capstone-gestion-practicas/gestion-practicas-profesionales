@@ -19,6 +19,13 @@
   --color-primary: #245a45;
   --color-primary-hover: #1f4f3c;
   --color-primary-on: #ffffff;
+  /* Sidebar del espacio GESTOR: tokens semánticos complementarios; no alteran la paleta global. */
+  --color-sidebar: #1f4a3a;
+  --color-sidebar-on: #ffffff;
+  --color-sidebar-text: #c9dccf;
+  --color-sidebar-hover: rgba(255, 255, 255, .10);
+  --color-sidebar-active: rgba(255, 255, 255, .18);
+  --color-sidebar-focus: #ffffff;
   --color-secondary: #6f8769;
   --color-bg: #f6f2e9;
   --color-surface: #fffcf5;

@@ -1,0 +1,21 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+.gl-contenido {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* El router-outlet es un ancla vacía: la página enrutada es su hermana inmediatamente posterior y debe ocupar el alto restante. */
+:host ::ng-deep .gl-contenido > router-outlet + * {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}

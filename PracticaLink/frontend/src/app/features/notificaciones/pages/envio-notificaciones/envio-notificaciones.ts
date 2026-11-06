@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthStore } from '../../../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
 import {
   IonButton,
   IonCard,
@@ -36,6 +38,7 @@ import { NotificacionService } from '../../services/notificacion.service';
   styleUrl: './envio-notificaciones.scss'
 })
 export class EnvioNotificaciones implements OnInit {
+  private readonly authStore = inject(AuthStore);
   destinatarios: DestinatarioMensajePush[] = [];
   modoEnvio: 'individual' | 'broadcast' = 'individual';
   destinatarioId = '';
@@ -112,6 +115,10 @@ export class EnvioNotificaciones implements OnInit {
       next: respuesta => this.completarEnvio(respuesta.mensaje),
       error: error => this.fallarEnvio(error, 'No fue posible enviar el mensaje.')
     });
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void {

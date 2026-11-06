@@ -6,7 +6,9 @@
         <h1>Estado de prácticas</h1>
         <p class="heading-subtitle">Consulta el avance, actualiza el estado y revisa la trazabilidad de cada práctica.</p>
       </div>
-      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      @if (mostrarVolver()) {
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      }
     </header>
 
     @if (mensaje) {
@@ -37,7 +39,7 @@
     } @else if (error) {
       <ion-card class="state-card error-card"><ion-card-content><p role="alert">{{ error }}</p></ion-card-content></ion-card>
     } @else if (practicasFiltradas().length === 0) {
-      <ion-card class="state-card"><ion-card-content>No hay prácticas que coincidan con la búsqueda.</ion-card-content></ion-card>
+      <ion-card class="state-card"><ion-card-content><p class="state-empty-message">{{ mensajeListaVacia() }}</p></ion-card-content></ion-card>
     } @else {
       @if (practicasVencidas().length > 0) {
         <ion-card class="expired-review-panel">

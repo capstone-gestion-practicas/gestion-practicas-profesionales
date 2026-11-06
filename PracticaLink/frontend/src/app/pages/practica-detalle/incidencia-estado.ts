@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { EstadoIncidencia, IncidenciaEstadoEvento, IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { SesionService } from '../../core/session/sesion.service';
 import { formatearFechaHoraChile } from '../../core/utils/fechas';
 
 @Component({
@@ -36,7 +37,7 @@ export class IncidenciaEstado implements OnChanges, OnDestroy {
   private escritura?: Subscription;
 
   constructor(private readonly servicio: PracticaService, private readonly auth: AuthStore,
-              private readonly router: Router) {}
+              private readonly router: Router, private readonly sesion: SesionService) {}
 
   get autorizado(): boolean {
     return (this.auth.contexto()?.roles ?? []).some(r => r === 'GESTOR' || r === 'ADMINISTRADOR');
@@ -175,7 +176,7 @@ export class IncidenciaEstado implements OnChanges, OnDestroy {
 
   private autenticacion(status: number): void {
     if (status === 401) {
-      sessionStorage.removeItem('access_token'); this.auth.limpiar(); this.router.navigate(['/login']);
+      this.sesion.cerrar();
     }
   }
 

@@ -13,9 +13,11 @@
       <div class="heading-actions">
         @if (!presentacionEstudiante) {
           <ion-button fill="solid" (click)="habilitarPush()">Activar push en este dispositivo</ion-button>
-          <ion-button class="back-home-button" fill="outline" (click)="volver()">
-            ← Volver al inicio
-          </ion-button>
+          @if (mostrarVolver()) {
+            <ion-button class="back-home-button" fill="outline" (click)="volver()">
+              ← Volver al inicio
+            </ion-button>
+          }
         }
         <ion-button fill="outline" [disabled]="servicio.noLeidas() === 0 || actualizando" (click)="marcarTodas()">
           Marcar todas como leídas

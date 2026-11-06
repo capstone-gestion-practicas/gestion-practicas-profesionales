@@ -11,6 +11,7 @@ import {
 } from 'ionicons/icons';
 
 import { AuthStore } from '../../../core/store/auth.store';
+import { SesionService } from '../../../core/session/sesion.service';
 import { BrandMark } from '../../../shared/components/brand-mark/brand-mark';
 import { StudentAccount } from './student-account/student-account';
 import { NotificacionService } from '../../notificaciones/services/notificacion.service';
@@ -38,6 +39,7 @@ function isStudentActionSource(value: unknown): value is StudentActionSource {
 export class StudentLayout {
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly sesion = inject(SesionService);
   private readonly notificacionService = inject(NotificacionService);
   private readonly modalController = inject(ModalController);
   private readonly destroyRef = inject(DestroyRef);
@@ -95,8 +97,6 @@ export class StudentLayout {
   }
 
   cerrarSesion(): void {
-    sessionStorage.removeItem('access_token');
-    this.authStore.limpiar();
-    void this.router.navigate(['/login']);
+    this.sesion.cerrar();
   }
 }

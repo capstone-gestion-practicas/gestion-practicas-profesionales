@@ -1,3 +1,4 @@
+import { NavController } from '@ionic/angular';
 import { AuthStore } from '../../core/store/auth.store';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -28,7 +29,8 @@ describe('HU014 seguimientos persistidos', () => {
     await TestBed.configureTestingModule({ imports: [PracticaDetalle], providers: [
       { provide: PracticaService, useValue: service },
       { provide: ActivatedRoute, useValue: { paramMap: parametros } },
-      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) }
+      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
+      { provide: NavController, useValue: jasmine.createSpyObj('NavController', ['navigateRoot']) }
     ] }).compileComponents();
     fixture = TestBed.createComponent(PracticaDetalle);
     component = fixture.componentInstance;
@@ -54,7 +56,7 @@ describe('HU014 seguimientos persistidos', () => {
       component.cargarSeguimientos();
       expect(clear).toHaveBeenCalled();
       expect(sessionStorage.getItem('access_token')).toBeNull();
-      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+      expect(TestBed.inject(NavController).navigateRoot).toHaveBeenCalledWith(['/login']);
     } finally {
       if (previous !== null) sessionStorage.setItem('access_token', previous);
     }

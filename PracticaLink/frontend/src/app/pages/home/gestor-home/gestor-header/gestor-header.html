@@ -1,0 +1,95 @@
+<div class="gh-shell">
+  <aside id="gh-sidebar" class="gh-sidebar" [class.gh-sidebar--abierto]="menuMovilAbierto()" aria-label="Navegación de gestión">
+    <a class="gh-sidebar__marca" routerLink="/home" (click)="cerrarMenuMovil()" aria-label="PracticaLink, inicio">
+      <app-brand-mark variante="completa" tono="claro" />
+    </a>
+    <p class="gh-sidebar__etiqueta">Espacio de gestión</p>
+
+    <nav aria-label="Accesos de gestión">
+      <ul class="gh-nav">
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'inicio' ? 'page' : null" (click)="irA('/home')">Inicio</button>
+        </li>
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'solicitudes' ? 'page' : null" (click)="irA('/revisiones')">Solicitudes</button>
+          @let porRevisar = solicitudesPorRevisar();
+          @if (porRevisar !== null && porRevisar > 0) {
+            <span class="gh-nav__contador" [attr.aria-label]="porRevisar + ' solicitudes por revisar'">{{ porRevisar }}</span>
+          }
+        </li>
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'estados' ? 'page' : null" (click)="irA('/gestion-estados')">Estados</button>
+        </li>
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'seguimientos' ? 'page' : null" (click)="irA('/seguimientos')">Seguimientos</button>
+        </li>
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'incidencias' ? 'page' : null" (click)="irA('/incidencias')">Incidencias</button>
+        </li>
+        <li class="gh-nav__item">
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'avisos' ? 'page' : null" (click)="irA('/envio-notificaciones')">Avisos</button>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  @if (menuMovilAbierto()) {
+    <div class="gh-velo" aria-hidden="true" (click)="cerrarMenuMovil()"></div>
+  }
+
+  <div class="gh-principal">
+    <header class="gh-topbar">
+      <button
+        #botonMenuMovil
+        type="button"
+        class="gh-menu"
+        aria-controls="gh-sidebar"
+        [attr.aria-expanded]="menuMovilAbierto()"
+        (click)="alternarMenuMovil()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+        <span>Menú</span>
+      </button>
+
+      <div class="gh-herramientas">
+        @if (tieneEspacioEstudiante()) {
+          <button type="button" class="gh-cambio" (click)="irAEspacioEstudiante()">Mi práctica</button>
+        }
+        <button type="button" class="gh-campana" aria-label="Abrir notificaciones" (click)="abrirNotificaciones()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+            <path d="M10 21h4" />
+          </svg>
+          @if (notificacionesNoLeidas() > 0) {
+            <span class="gh-campana__cuenta">{{ notificacionesNoLeidas() }}</span>
+          }
+        </button>
+
+        <div class="gh-cuenta" #cuenta>
+          <button
+            type="button"
+            class="gh-cuenta__alternar"
+            aria-controls="gh-cuenta-menu"
+            [attr.aria-expanded]="menuCuentaAbierto()"
+            (click)="alternarMenuCuenta()">
+            <span class="gh-avatar" aria-hidden="true">{{ inicial() }}</span>
+            <span class="gh-cuenta__nombre">{{ nombre() }}</span>
+            <svg class="gh-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          @if (menuCuentaAbierto()) {
+            <div class="gh-cuenta__menu" id="gh-cuenta-menu">
+              <button type="button" (click)="cerrarSesion()">Cerrar sesión</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <div class="gh-area">
+      <ng-content />
+    </div>
+  </div>
+</div>

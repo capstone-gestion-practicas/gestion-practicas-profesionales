@@ -126,3 +126,34 @@
     gap: 0.15rem;
   }
 }
+
+.student-profile__copiar {
+  justify-self: start;
+  min-height: 40px;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--student-border);
+  border-radius: 10px;
+  background: var(--student-surface);
+  color: var(--student-navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.student-profile__copiar:disabled {
+  color: var(--student-muted);
+  cursor: default;
+}
+
+.student-profile__copiar:focus-visible {
+  outline: 3px solid var(--student-focus);
+  outline-offset: 2px;
+}
+
+.student-profile__estado-copia {
+  margin: 0;
+  padding: 0 1rem 0.9rem;
+  color: var(--student-muted);
+  font-size: 0.9rem;
+}

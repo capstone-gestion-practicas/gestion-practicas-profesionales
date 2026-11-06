@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthStore } from '../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 import {
   IonBadge,
   IonButton,
@@ -56,6 +58,7 @@ import { PracticaService } from '../../core/services/practica.service';
   styleUrl: './seguimientos.scss'
 })
 export class Seguimientos implements OnInit {
+  private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   readonly medios = MEDIOS_CONTACTO;
   readonly historiales = new Map<number, SeguimientoHistorialItem[]>();
@@ -172,6 +175,10 @@ export class Seguimientos implements OnInit {
 
   historialDe(idPractica: number): SeguimientoHistorialItem[] {
     return this.historiales.get(idPractica) ?? [];
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void {

@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthStore } from '../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 import { forkJoin } from 'rxjs';
 import {
   IonBadge,
@@ -53,6 +55,7 @@ import { PracticaService } from '../../core/services/practica.service';
   styleUrl: './incidencias.scss'
 })
 export class Incidencias implements OnInit {
+  private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   incidencias: IncidenciaPractica[] = [];
   practicaSeleccionada: number | null = null;
@@ -130,6 +133,10 @@ export class Incidencias implements OnInit {
         this.error = respuesta.error?.detail ?? 'No fue posible registrar la incidencia.';
       }
     });
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void {

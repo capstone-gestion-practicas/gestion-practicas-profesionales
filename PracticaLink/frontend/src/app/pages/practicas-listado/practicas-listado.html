@@ -2,7 +2,9 @@
   <main class="practicas-wrapper">
     <header>
       <div><p class="module-label">EP04 · Seguimiento</p><h1>Seguimiento de prácticas</h1></div>
-      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      @if (mostrarVolver()) {
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      }
     </header>
     <p>Selecciona una práctica para revisar su historial y registrar seguimientos o incidencias.</p>
     <form (ngSubmit)="buscar()" autocomplete="off">

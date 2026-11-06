@@ -1,0 +1,215 @@
+
+<main class="gh-main" aria-label="Espacio de gestión">
+  <section class="gh-cabecera">
+    <div>
+      <p class="gh-eyebrow">Espacio de gestión · {{ fechaHoy }}</p>
+      <h1>Hola, {{ nombre() }}</h1>
+      <p class="gh-resumen">{{ resumen() }}</p>
+    </div>
+    <button type="button" class="gh-primario" (click)="abrirNuevoAviso()">+ Nuevo aviso</button>
+  </section>
+
+  <section class="gh-indicadores" aria-label="Indicadores de gestión">
+    <button type="button" class="gh-indicador" (click)="abrirRevisiones()">
+      <span class="gh-indicador__etiqueta">Por revisar</span>
+      <strong>{{ valorIndicador(cargandoSolicitudes(), errorSolicitudes(), porRevisar().length) }}</strong>
+      <small>
+        @if (errorSolicitudes()) {
+          Sin datos disponibles
+        } @else {
+          {{ porRevisarAntiguas() }} con más de 30 días
+        }
+      </small>
+    </button>
+    <button type="button" class="gh-indicador" (click)="abrirRevisiones()">
+      <span class="gh-indicador__etiqueta">Observadas</span>
+      <strong>{{ valorIndicador(cargandoSolicitudes(), errorSolicitudes(), observadas()) }}</strong>
+      <small>Esperan respuesta del estudiante</small>
+    </button>
+    <button type="button" class="gh-indicador" (click)="irA('/incidencias')">
+      <span class="gh-indicador__etiqueta">Incidencias abiertas</span>
+      <strong>{{ valorIndicador(cargandoIncidencias(), errorIncidencias(), incidenciasAbiertas().length) }}</strong>
+      <small>{{ incidenciasAltaPrioridad() }} de prioridad alta</small>
+    </button>
+    <button type="button" class="gh-indicador" (click)="irASinPractica()">
+      <span class="gh-indicador__etiqueta">Sin práctica registrada</span>
+      <strong>{{ valorIndicador(cargandoSinPractica(), errorSinPractica(), sinPractica().length) }}</strong>
+      <small>{{ perfilIncompleto() }} con perfil incompleto</small>
+    </button>
+  </section>
+
+  <div class="gh-columnas">
+    <section class="gh-seccion" aria-labelledby="gh-solicitudes-titulo">
+      <div class="gh-seccion__cabecera">
+        <div>
+          <h2 id="gh-solicitudes-titulo">Solicitudes por revisar</h2>
+          <p>Solicitudes de todos los estudiantes, de la más antigua a la más reciente.</p>
+        </div>
+        <button type="button" class="gh-enlace" (click)="abrirRevisiones()">Ver todas</button>
+      </div>
+
+      <div class="gh-filtros" role="group" aria-label="Filtrar solicitudes">
+        @for (opcion of filtros; track opcion.valor) {
+          <button type="button" [attr.aria-pressed]="filtro() === opcion.valor" (click)="elegirFiltro(opcion.valor)">
+            {{ opcion.etiqueta }} <span>{{ conteoFiltro(opcion.valor) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (errorSolicitudes()) {
+        <p class="gh-alerta" role="alert">{{ errorSolicitudes() }}</p>
+      } @else if (cargandoSolicitudes()) {
+        <p class="gh-estado" role="status">Cargando solicitudes…</p>
+      } @else if (solicitudesFiltradas().length > 0) {
+        <ul class="gh-lista">
+          @for (solicitud of solicitudesFiltradas(); track solicitud.id_practica) {
+            <li>
+              <button type="button" class="gh-fila" (click)="abrirSolicitud(solicitud.id_practica)">
+                <span class="gh-avatar gh-avatar--chico" aria-hidden="true">{{ iniciales(solicitud.estudiante) }}</span>
+                <span class="gh-fila__texto">
+                  <strong>{{ solicitud.estudiante }}</strong>
+                  <small>{{ solicitud.centro_practica }}</small>
+                </span>
+                <span class="gh-fila__fecha">
+                  {{ textoAntiguedad(solicitud.fecha_registro) }}
+                  <small>{{ formatearFecha(solicitud.fecha_registro) }}</small>
+                </span>
+                <app-estado-badge [estado]="solicitud.estado" />
+                <svg class="gh-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 6 6 6-6 6" />
+                </svg>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else if (solicitudes().length === 0) {
+        <p class="gh-estado">No hay solicitudes pendientes de revisión.</p>
+      } @else {
+        <p class="gh-estado">No hay solicitudes en este estado.</p>
+      }
+    </section>
+
+    <section class="gh-seccion" aria-labelledby="gh-incidencias-titulo">
+      <div class="gh-seccion__cabecera">
+        <div>
+          <h2 id="gh-incidencias-titulo">Incidencias abiertas recientes</h2>
+          <p>Incidencias de todas las prácticas que no están resueltas ni cerradas.</p>
+        </div>
+        <button type="button" class="gh-enlace" (click)="irA('/incidencias')">Ver todas</button>
+      </div>
+
+      @if (errorIncidencias()) {
+        <p class="gh-alerta" role="alert">{{ errorIncidencias() }}</p>
+      } @else if (cargandoIncidencias()) {
+        <p class="gh-estado" role="status">Cargando incidencias…</p>
+      } @else if (incidenciasRecientes().length > 0) {
+        <ul class="gh-lista">
+          @for (incidencia of incidenciasRecientes(); track incidencia.id_incidencia) {
+            <li class="gh-incidencia">
+              <p class="gh-incidencia__descripcion">{{ incidencia.descripcion }}</p>
+              <p class="gh-incidencia__meta">
+                {{ incidencia.estudiante ?? incidencia.usuario }} · {{ formatearFecha(incidencia.fecha) }}
+              </p>
+              <p class="gh-incidencia__etiquetas">
+                <span
+                  class="gh-prioridad"
+                  [class.gh-prioridad--alta]="incidencia.prioridad === 'ALTA' || incidencia.prioridad === 'CRITICA'">
+                  Prioridad {{ etiquetaPrioridad(incidencia.prioridad) }}
+                </span>
+                <span>{{ etiquetaEstadoIncidencia(incidencia.estado) }}</span>
+              </p>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="gh-estado">No hay incidencias abiertas.</p>
+      }
+    </section>
+  </div>
+
+  <section class="gh-seccion" #seccionSinPractica aria-labelledby="gh-sin-practica-titulo">
+    <div class="gh-seccion__cabecera">
+      <div>
+        <h2 id="gh-sin-practica-titulo">Estudiantes que necesitan apoyo para iniciar</h2>
+        <p>Envía un recordatorio a cada estudiante seleccionado. Se permite un recordatorio por estudiante al día.</p>
+      </div>
+    </div>
+
+    @if (errorSinPractica()) {
+      <p class="gh-alerta" role="alert">{{ errorSinPractica() }}</p>
+    } @else if (cargandoSinPractica()) {
+      <p class="gh-estado" role="status">Cargando estudiantes…</p>
+    } @else if (sinPractica().length === 0) {
+      <p class="gh-estado">Todos los estudiantes tienen una práctica registrada.</p>
+    } @else {
+      <div class="gh-acciones">
+        <label class="gh-todos">
+          <input
+            type="checkbox"
+            [checked]="todosSeleccionados()"
+            [disabled]="seleccionables().length === 0 || enviandoId() !== null"
+            (change)="alternarTodos($event)" />
+          Seleccionar todos
+        </label>
+        <button
+          type="button"
+          class="gh-primario"
+          [disabled]="seleccionadosEnviables().length === 0 || enviandoId() !== null || confirmacionPendiente() !== null"
+          (click)="enviarSeleccionados()">
+          {{ etiquetaEnvio() }}
+        </button>
+        @if (fallidos().length > 0 && enviandoId() === null) {
+          <button type="button" class="gh-secundario" (click)="reintentarFallidos()">
+            Reintentar {{ plural(fallidos().length, 'envío fallido', 'envíos fallidos') }}
+          </button>
+        }
+      </div>
+
+      @if (confirmacionPendiente(); as ids) {
+        <div class="gh-confirmacion" role="group" aria-label="Confirmar envío de recordatorios">
+          <p>Se enviará {{ plural(ids.length, 'recordatorio', 'recordatorios') }}, uno a uno, a los estudiantes seleccionados.</p>
+          <div class="gh-acciones">
+            <button type="button" class="gh-primario" (click)="confirmarEnvio()">Confirmar envío</button>
+            <button type="button" class="gh-secundario" (click)="cancelarEnvio()">Cancelar</button>
+          </div>
+        </div>
+      }
+
+      @if (resumenLote()) {
+        <p class="gh-resumen-lote" role="status">{{ resumenLote() }}</p>
+      }
+
+      <ul class="gh-lista">
+        @for (estudiante of sinPractica(); track estudiante.id_usuario) {
+          <li class="gh-estudiante">
+            <label class="gh-estudiante__seleccion">
+              <input
+                type="checkbox"
+                [checked]="seleccionados().includes(estudiante.id_usuario)"
+                [disabled]="estudiante.recordatorio_enviado_hoy || enviandoId() !== null"
+                (change)="alternarSeleccion(estudiante.id_usuario, $event)" />
+              <span>
+                <strong>{{ estudiante.nombre }} {{ estudiante.apellido }}</strong>
+                <small>{{ motivoSinPractica(estudiante) }}</small>
+              </span>
+            </label>
+            <span class="gh-estudiante__estado">
+              @if (enviandoId() === estudiante.id_usuario) {
+                Enviando…
+              } @else if (resultados()[estudiante.id_usuario]; as resultado) {
+                <span
+                  [class.gh-error]="resultado.error"
+                  [attr.role]="resultado.error ? 'alert' : 'status'">
+                  {{ resultado.mensaje }}
+                </span>
+              } @else if (estudiante.recordatorio_enviado_hoy) {
+                Enviado hoy
+              }
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+</main>
