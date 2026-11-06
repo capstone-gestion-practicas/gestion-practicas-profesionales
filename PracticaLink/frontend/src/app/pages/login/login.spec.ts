@@ -170,4 +170,54 @@ describe('Login', () => {
       expect(mensaje.nativeElement.textContent).toContain('Ingresa un correo válido');
     });
   });
+
+  describe('credenciales en memoria', () => {
+    const contexto: ContextoUsuarioResponse = {
+      usuario: { id_usuario: 1, nombre: 'Ana', apellido: 'Pérez', correo: 'ana@example.test' },
+      roles: ['ESTUDIANTE'],
+      perfil: null,
+      practica_actual: null
+    };
+
+    afterEach(() => sessionStorage.clear());
+
+    it('limpia contraseña y confirmación tras un inicio de sesión exitoso', () => {
+      authService.login.and.returnValue(of({ access_token: 'sintetico' } as LoginResponse));
+      authService.obtenerContexto.and.returnValue(of(contexto));
+      component.correo = 'ana@example.test';
+      component.password = 'ClaveSintetica1';
+      component.confirmarPassword = 'ClaveSintetica1';
+
+      component.iniciarSesion();
+
+      expect(component.password).toBe('');
+      expect(component.confirmarPassword).toBe('');
+    });
+
+    it('ionViewWillEnter reinicia credenciales, mensajes y visibilidad', () => {
+      component.correo = 'ana@example.test';
+      component.nombre = 'Ana';
+      component.apellido = 'Pérez';
+      component.password = 'ClaveSintetica1';
+      component.confirmarPassword = 'ClaveSintetica1';
+      component.mostrarPassword = true;
+      component.correoTocado = true;
+      component.error = 'Correo o contraseña incorrectos.';
+      component.mensaje = 'Algún mensaje';
+      component.modoRegistro = true;
+
+      component.ionViewWillEnter();
+
+      expect(component.correo).toBe('');
+      expect(component.nombre).toBe('');
+      expect(component.apellido).toBe('');
+      expect(component.password).toBe('');
+      expect(component.confirmarPassword).toBe('');
+      expect(component.mostrarPassword).toBeFalse();
+      expect(component.correoTocado).toBeFalse();
+      expect(component.error).toBe('');
+      expect(component.mensaje).toBe('');
+      expect(component.modoRegistro).toBeFalse();
+    });
+  });
 });

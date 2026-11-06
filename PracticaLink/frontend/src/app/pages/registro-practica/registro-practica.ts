@@ -1,3 +1,4 @@
+import { SesionService } from '../../core/session/sesion.service';
 import { formatearFechaHoraChile } from '../../core/utils/fechas';
 import { fechaSeguimientoValida, hoySantiago, MEDIOS_CONTACTO, SeguimientoCreate } from '../../core/models/seguimiento.models';
 import { CommonModule } from '@angular/common';
@@ -44,6 +45,7 @@ export class RegistroPractica implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly sesion: SesionService,
     private readonly practicas: PracticaService,
     private readonly authStore: AuthStore
   ) {}
@@ -185,9 +187,7 @@ export class RegistroPractica implements OnInit, OnDestroy {
             this.error += ' No repitas el envío; solicita verificar el resultado antes de registrar nuevamente.';
           }
           if (error.status === 401) {
-            sessionStorage.removeItem('access_token');
-            this.authStore.limpiar();
-            this.router.navigate(['/login']);
+            this.sesion.cerrar();
           }
         }
       });

@@ -15,9 +15,14 @@
       <dl class="student-profile__datos">
         <div><dt>Nombre</dt><dd>{{ valor(ctx.usuario.nombre) }}</dd></div>
         <div><dt>Apellidos</dt><dd>{{ valor(ctx.usuario.apellido) }}</dd></div>
-        <div><dt>Correo institucional</dt><dd>{{ valor(ctx.usuario.correo) }}</dd></div>
+        <div>
+          <dt>Correo institucional</dt>
+          <dd>{{ valor(ctx.usuario.correo) }}</dd>
+          <button type="button" class="student-profile__copiar" [disabled]="!correo()" (click)="copiarCorreo()">Copiar correo</button>
+        </div>
         <div><dt>RUT</dt><dd>{{ valor(ctx.perfil?.rut) }}</dd></div>
       </dl>
+      <p class="student-profile__estado-copia" role="status" aria-live="polite">{{ mensajeCopia() }}</p>
     </section>
 
     <section class="student-card" aria-labelledby="datos-academicos-titulo">

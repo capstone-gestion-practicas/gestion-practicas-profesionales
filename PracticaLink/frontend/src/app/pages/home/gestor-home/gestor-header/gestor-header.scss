@@ -1,0 +1,324 @@
+:host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-focus-ring, var(--color-primary));
+  outline-offset: 2px;
+}
+
+.gh-shell {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ===== Sidebar ===== */
+
+.gh-sidebar {
+  display: flex;
+  flex: 0 0 240px;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-on);
+  overflow-y: auto;
+}
+
+.gh-sidebar__marca {
+  color: inherit;
+  text-decoration: none;
+}
+
+.gh-sidebar__etiqueta {
+  margin: 0;
+  color: var(--color-sidebar-text);
+  font-size: var(--font-size-meta);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.gh-nav {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gh-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gh-nav__enlace {
+  flex: 1 1 auto;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-sidebar-text);
+  text-align: left;
+}
+
+.gh-nav__enlace:hover {
+  background: var(--color-sidebar-hover);
+  color: var(--color-sidebar-on);
+}
+
+.gh-nav__enlace:focus-visible {
+  outline-color: var(--color-sidebar-focus);
+}
+
+.gh-nav__enlace[aria-current='page'] {
+  background: var(--color-sidebar-active);
+  color: var(--color-sidebar-on);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--color-sidebar-on);
+}
+
+.gh-nav__contador {
+  position: absolute;
+  right: var(--space-3);
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-warning-soft);
+  color: var(--color-warning-on);
+  font-size: var(--font-size-meta);
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ===== Barra superior y contenido ===== */
+
+.gh-principal {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.gh-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.gh-menu {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.gh-menu svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.gh-herramientas {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.gh-cambio,
+.gh-campana,
+.gh-cuenta__alternar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.gh-cambio {
+  padding: var(--space-2) var(--space-3);
+}
+
+.gh-campana {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+}
+
+.gh-campana svg,
+.gh-chevron {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gh-chevron {
+  width: 16px;
+  height: 16px;
+}
+
+.gh-campana__cuenta {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--color-warning-soft);
+  color: var(--color-warning-on);
+  font-size: var(--font-size-meta);
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.gh-cuenta {
+  position: relative;
+}
+
+.gh-cuenta__alternar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+}
+
+.gh-avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-on);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.gh-cuenta__nombre {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gh-cuenta__menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 10;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.gh-cuenta__menu button {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.gh-cuenta__menu button:hover,
+.gh-cuenta__menu button:focus-visible {
+  background: var(--color-surface-muted);
+}
+
+/* Área de contenido: el scroll lo gestionan las páginas (ion-content) o GestorHome. */
+.gh-area {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gh-velo {
+  display: none;
+}
+
+/* ===== Responsive: sidebar plegable en 900 px o menos ===== */
+
+@media (max-width: 900px) {
+  .gh-sidebar {
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    flex-basis: auto;
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform .25s ease, visibility .25s ease;
+  }
+
+  .gh-sidebar--abierto {
+    transform: none;
+    visibility: visible;
+  }
+
+  .gh-menu {
+    display: inline-flex;
+  }
+
+  .gh-velo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(20, 38, 32, .4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-sidebar {
+    transition: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .gh-cuenta__nombre {
+    display: none;
+  }
+}

@@ -6,7 +6,9 @@
         <h1>Gestión de incidencias</h1>
         <p class="heading-subtitle">Registra situaciones que requieren atención y mantén su estado actualizado.</p>
       </div>
-      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      @if (mostrarVolver()) {
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      }
     </header>
 
     @if (mensaje) { <p class="success-message" role="status">{{ mensaje }}</p> }

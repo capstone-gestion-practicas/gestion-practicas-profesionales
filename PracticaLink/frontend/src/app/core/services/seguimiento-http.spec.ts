@@ -7,6 +7,7 @@ import { authInterceptor } from '../interceptors/auth.interceptor';
 import { routes } from '../../app.routes';
 import { authGuard } from '../guards/auth.guard';
 import { roleGuard } from '../guards/role.guard';
+import { aplanarRutas } from '../../app.routes.testing';
 
 describe('HU013 HTTP contract', () => {
   let http: HttpTestingController;
@@ -59,7 +60,7 @@ describe('HU013 HTTP contract', () => {
   });
 
   it('preserves authentication and management role guards', () => {
-    const route = routes.find(item => item.path === 'practicas/:id/seguimiento/nuevo')!;
+    const route = aplanarRutas(routes).find(item => item.path === 'practicas/:id/seguimiento/nuevo')!;
     expect(route.canActivate).toEqual([authGuard, roleGuard]);
     expect(route.data?.['roles']).toEqual(['GESTOR', 'ADMINISTRADOR']);
   });

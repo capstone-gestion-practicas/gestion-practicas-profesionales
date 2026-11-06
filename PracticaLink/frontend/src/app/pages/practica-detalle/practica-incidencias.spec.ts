@@ -1,3 +1,4 @@
+import { NavController } from '@ionic/angular';
 import { By } from '@angular/platform-browser';
 import { HttpResponse } from '@angular/common/http';
 import { IncidenciaEstado } from './incidencia-estado';
@@ -43,7 +44,8 @@ describe('HU015 consulta persistente', () => {
     await TestBed.configureTestingModule({ imports: [PracticaDetalle], providers: [
       { provide: PracticaService, useValue: service },
       { provide: ActivatedRoute, useValue: { paramMap: parametros } },
-      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) }
+      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
+      { provide: NavController, useValue: jasmine.createSpyObj('NavController', ['navigateRoot']) }
     ] }).compileComponents();
     TestBed.inject(AuthStore).setContexto({
       usuario: { id_usuario: 101, nombre: 'Gestor', apellido: 'Sintético', correo: 'test@example.invalid' },
@@ -195,7 +197,7 @@ describe('HU015 consulta persistente', () => {
       expect(service.obtenerIncidencias).toHaveBeenCalledTimes(1);
       if (status === 401) {
         expect(TestBed.inject(AuthStore).contexto()).toBeNull();
-        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/login']);
+        expect(TestBed.inject(NavController).navigateRoot).toHaveBeenCalledWith(['/login']);
       }
     });
   }

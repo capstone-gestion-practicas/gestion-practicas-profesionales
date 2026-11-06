@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthStore } from '../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 import {
   IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
   IonContent, IonSpinner, IonGrid, IonRow, IonCol
@@ -18,6 +20,7 @@ import { RevisionService } from '../../core/services/revision.service';
   styleUrl: './revisiones.scss'
 })
 export class Revisiones implements OnInit {
+  private readonly authStore = inject(AuthStore);
   solicitudes: SolicitudRevisionResumen[] = [];
   cargando = true;
   error = '';
@@ -45,6 +48,10 @@ export class Revisiones implements OnInit {
 
   revisar(idPractica: number): void {
     this.router.navigate(['/revisiones', idPractica]);
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void { this.router.navigate(['/home']); }

@@ -9,9 +9,11 @@
           principales de cada estudiante.
         </p>
       </div>
-      <ion-button fill="outline" class="back-button" (click)="volver()">
-        Volver
-      </ion-button>
+      @if (mostrarVolver()) {
+        <ion-button fill="outline" class="back-button" (click)="volver()">
+          Volver
+        </ion-button>
+      }
     </div>
 
     @if (cargando) {

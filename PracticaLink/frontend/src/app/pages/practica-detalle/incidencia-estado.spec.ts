@@ -1,3 +1,4 @@
+import { NavController } from '@ionic/angular';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -35,7 +36,8 @@ describe('HU016 gestión e historial', () => {
     service.cambiarEstadoIncidencia.and.returnValue(new Subject<HttpResponse<IncidenciaEstadoResponse>>());
     await TestBed.configureTestingModule({ imports: [IncidenciaEstado], providers: [
       { provide: PracticaService, useValue: service },
-      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) }
+      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
+      { provide: NavController, useValue: jasmine.createSpyObj('NavController', ['navigateRoot']) }
     ] }).compileComponents();
     TestBed.inject(AuthStore).setContexto({
       usuario: { id_usuario: 101, nombre: 'Gestor', apellido: 'Sintético', correo: 'test@example.com' },
@@ -162,7 +164,7 @@ describe('HU016 gestión e historial', () => {
       component.destino = 'EN_ATENCION'; component.guardar();
       expect(component.errorCambio).not.toBe('');
       expect(component.errorCambio).not.toContain('internal-secret');
-      if (status === 401) expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/login']);
+      if (status === 401) expect(TestBed.inject(NavController).navigateRoot).toHaveBeenCalledWith(['/login']);
     });
   }
 

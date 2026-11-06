@@ -6,9 +6,11 @@
         <h1>Enviar notificaciones</h1>
         <p>Envía un aviso a un estudiante o a todos los estudiantes activos.</p>
       </div>
-      <ion-button class="back-home-button" fill="outline" (click)="volver()">
-        Volver al inicio
-      </ion-button>
+      @if (mostrarVolver()) {
+        <ion-button class="back-home-button" fill="outline" (click)="volver()">
+          Volver al inicio
+        </ion-button>
+      }
     </header>
 
     <ion-card class="send-notifications-card">

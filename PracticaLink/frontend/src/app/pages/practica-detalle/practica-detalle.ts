@@ -1,3 +1,4 @@
+import { SesionService } from '../../core/session/sesion.service';
 import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
@@ -82,6 +83,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly sesion: SesionService,
     private readonly practicas: PracticaService,
     private readonly auth: AuthStore
   ) {}
@@ -328,9 +330,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
         this.errorSeguimientos = mensajes[error.status]
           ?? 'No fue posible conectar para consultar los seguimientos.';
         if (error.status === 401) {
-          sessionStorage.removeItem('access_token');
-          this.auth.limpiar();
-          this.router.navigate(['/login']);
+          this.sesion.cerrar();
         }
       }
     });
@@ -381,9 +381,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
         this.errorIncidencias = mensajes[error.status]
           ?? 'No fue posible conectar para consultar las incidencias.';
         if (error.status === 401) {
-          sessionStorage.removeItem('access_token');
-          this.auth.limpiar();
-          this.router.navigate(['/login']);
+          this.sesion.cerrar();
         }
       }
     });

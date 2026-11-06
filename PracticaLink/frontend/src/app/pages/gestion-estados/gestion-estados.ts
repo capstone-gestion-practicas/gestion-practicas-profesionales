@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -36,6 +36,7 @@ import {
 } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 
 @Component({
   selector: 'app-gestion-estados',
@@ -67,6 +68,7 @@ import { AuthStore } from '../../core/store/auth.store';
   styleUrl: './gestion-estados.scss'
 })
 export class GestionEstados implements OnInit {
+  private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   estados: EstadoPracticaDetalle[] = [];
   gestores: GestorPractica[] = [];
@@ -303,6 +305,23 @@ export class GestionEstados implements OnInit {
 
   historialDe(idPractica: number): HistorialEstadoPractica[] {
     return this.historiales.get(idPractica) ?? [];
+  }
+
+  /**
+   * Distingue el vacío legítimo por alcance (gestor sin prácticas asignadas) del vacío por filtro.
+   * Un error HTTP se muestra antes, en su propia tarjeta, y nunca llega aquí.
+   */
+  mensajeListaVacia(): string {
+    if (this.practicas.length === 0) {
+      return this.esAdministrador
+        ? 'No hay prácticas registradas.'
+        : 'Aún no tienes prácticas asignadas. Un administrador debe asignártelas para verlas aquí.';
+    }
+    return 'No hay prácticas que coincidan con la búsqueda o el filtro aplicado.';
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
   }
 
   volver(): void {

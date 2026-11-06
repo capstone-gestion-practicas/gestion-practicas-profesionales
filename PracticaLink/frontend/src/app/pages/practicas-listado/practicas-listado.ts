@@ -11,6 +11,7 @@ import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
 import { PracticaIncidenciasPendientesItem, PracticaResumen } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
+import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 
 type EstadoResumen = 'inactivo' | 'cargando' | 'listo' | 'error';
 
@@ -192,6 +193,10 @@ export class PracticasListado implements OnInit, OnDestroy {
 
   verAntecedentes(idPractica: number): void {
     this.router.navigate(['/practicas', idPractica]);
+  }
+
+  mostrarVolver(): boolean {
+    return !esEspacioGestorDedicado(this.auth.obtenerContextoActual());
   }
 
   volver(): void { this.router.navigate(['/home']); }

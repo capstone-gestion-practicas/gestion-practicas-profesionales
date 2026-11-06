@@ -164,6 +164,9 @@ export class Login {
           'access_token',
           loginResponse.access_token
         );
+        // La contraseña ya no se necesita: no debe permanecer en memoria tras la autenticación.
+        this.password = '';
+        this.confirmarPassword = '';
 
         this.authService.obtenerContexto().subscribe({
           next: (contexto) => {
@@ -187,6 +190,23 @@ export class Login {
         this.error = 'Correo o contraseña incorrectos.';
       }
     });
+  }
+
+  /**
+   * Ionic reactiva esta página al volver a mostrarla (p. ej., tras cerrar sesión).
+   * El formulario no debe conservar credenciales ni mensajes de una sesión anterior.
+   */
+  ionViewWillEnter(): void {
+    this.correo = '';
+    this.password = '';
+    this.confirmarPassword = '';
+    this.nombre = '';
+    this.apellido = '';
+    this.mostrarPassword = false;
+    this.correoTocado = false;
+    this.error = '';
+    this.mensaje = '';
+    this.modoRegistro = false;
   }
 
   continuarDespuesDeNovedades(): void {

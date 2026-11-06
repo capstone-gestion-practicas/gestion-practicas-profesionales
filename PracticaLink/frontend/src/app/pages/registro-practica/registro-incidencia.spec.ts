@@ -1,3 +1,4 @@
+import { NavController } from '@ionic/angular';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -33,6 +34,7 @@ describe('HU015 formulario remoto', () => {
     service.registrarIncidencia.and.returnValue(new Subject<HttpResponse<IncidenciaResponse>>());
     await TestBed.configureTestingModule({ imports: [RegistroPractica], providers: [
       provideRouter([]), { provide: PracticaService, useValue: service },
+      { provide: NavController, useValue: jasmine.createSpyObj<NavController>('NavController', ['navigateRoot']) },
       { provide: ActivatedRoute, useValue: {
         snapshot: { data: { tipoRegistro: 'incidencia' } }, paramMap: of(convertToParamMap({ id: '15' }))
       } }
@@ -115,7 +117,7 @@ describe('HU015 formulario remoto', () => {
         component.guardar(); expect(service.registrarIncidencia).toHaveBeenCalledTimes(1);
       }
       expect(write).not.toHaveBeenCalled();
-      if (status === 401) expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/login']);
+      if (status === 401) expect(TestBed.inject(NavController).navigateRoot).toHaveBeenCalledWith(['/login']);
     });
   }
 

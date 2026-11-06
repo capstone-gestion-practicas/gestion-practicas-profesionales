@@ -1,0 +1,11 @@
+@if (mostrarCabecera()) {
+  <app-gestor-header>
+    <div class="gl-contenido">
+      <router-outlet />
+    </div>
+  </app-gestor-header>
+} @else {
+  <div class="gl-contenido">
+    <router-outlet />
+  </div>
+}

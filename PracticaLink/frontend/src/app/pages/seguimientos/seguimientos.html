@@ -6,7 +6,9 @@
         <h1>Seguimientos</h1>
         <p class="heading-subtitle">Registra observaciones y consulta la evolución de cada práctica.</p>
       </div>
-      <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      @if (mostrarVolver()) {
+        <ion-button fill="outline" (click)="volver()">Volver</ion-button>
+      }
     </header>
 
     @if (mensaje) { <p class="success-message" role="status">{{ mensaje }}</p> }
