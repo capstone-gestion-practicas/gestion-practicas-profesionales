@@ -96,18 +96,25 @@ export class Home implements OnInit {
   });
   readonly puedeRevisarPracticas = computed(() => {
     const roles = this.contexto()?.roles ?? [];
-    return roles.includes('GESTOR') || roles.includes('ADMINISTRADOR');
+    return roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') !== 'ADMINISTRADOR';
   });
   /** Usuarios con doble rol (estudiante y gestión): pueden abrir el espacio V3 del estudiante. */
-  readonly tieneEspacioEstudiante = computed(
-    () => this.contexto()?.roles.includes('ESTUDIANTE') === true && this.puedeRevisarPracticas()
-  );
+  readonly tieneEspacioEstudiante = computed(() => {
+    const roles = this.contexto()?.roles ?? [];
+    return roles.includes('ESTUDIANTE') && (roles.includes('GESTOR') || roles.includes('ADMINISTRADOR'));
+  });
 
-  readonly esAdministrador = computed(
-    () => this.contexto()?.roles.includes('ADMINISTRADOR') === true
-  );
+  readonly esAdministrador = computed(() => {
+    const roles = this.contexto()?.roles ?? [];
+    const seleccionado = sessionStorage.getItem('practicalink-workspace');
+    return roles.includes('ADMINISTRADOR') && seleccionado !== 'GESTOR';
+  });
   /** Gestor sin administración: su espacio operativo lo presenta GestorHome dentro de GestorLayout. */
-  readonly espacioGestorDedicado = computed(() => esEspacioGestorDedicado(this.contexto()));
+  readonly espacioGestorDedicado = computed(() => {
+    const roles = this.contexto()?.roles ?? [];
+    return esEspacioGestorDedicado(this.contexto())
+      || (roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') === 'GESTOR');
+  });
   cargando = true;
   usuariosAdmin: UsuarioAdministrable[] = [];
   estudiantesSinPractica: EstudianteSinPractica[] = [];
@@ -130,8 +137,10 @@ export class Home implements OnInit {
 
     if (this.contexto()) {
       this.cargando = false;
-      this.cargarDashboardAdmin();
-      this.cargarEstudiantesSinPractica();
+      if (this.esAdministrador()) {
+        this.cargarDashboardAdmin();
+        this.cargarEstudiantesSinPractica();
+      }
       return;
     }
 
@@ -139,8 +148,10 @@ export class Home implements OnInit {
       next: (contexto) => {
         this.authStore.setContexto(contexto);
         this.cargando = false;
-        this.cargarDashboardAdmin();
-        this.cargarEstudiantesSinPractica();
+        if (this.esAdministrador()) {
+          this.cargarDashboardAdmin();
+          this.cargarEstudiantesSinPractica();
+        }
       },
       error: () => {
         this.cerrarSesion();

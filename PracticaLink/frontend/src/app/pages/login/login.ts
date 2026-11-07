@@ -62,6 +62,7 @@ export class Login {
   mensaje = '';
   mostrarPassword = false;
   correoTocado = false;
+  private destinoDespuesDeLogin = '/home';
 
   constructor(
     private readonly authService: AuthService,
@@ -172,9 +173,15 @@ export class Login {
           next: (contexto) => {
             this.authStore.setContexto(contexto);
             this.cargando = false;
+            const roles = new Set(contexto.roles);
+            const espacios = ['ESTUDIANTE', 'GESTOR', 'DOCENTE', 'ADMINISTRADOR'].filter(rol => roles.has(rol));
+            this.destinoDespuesDeLogin = espacios.length > 1 ? '/espacios'
+              : roles.has('DOCENTE') && !roles.has('GESTOR') && !roles.has('ADMINISTRADOR') && !roles.has('ESTUDIANTE')
+                ? '/docente/practicas' : '/home';
+            sessionStorage.setItem('practicalink-workspace', espacios.length > 1 ? '' : (espacios[0] ?? 'ESTUDIANTE'));
             const versionVista = localStorage.getItem('practicalink-version-novedades');
             if (versionVista === this.appVersion) {
-              this.router.navigate(['/home']);
+              this.router.navigate([this.destinoDespuesDeLogin]);
             } else {
               this.novedadesAbiertas = true;
             }
@@ -212,7 +219,7 @@ export class Login {
   continuarDespuesDeNovedades(): void {
     localStorage.setItem('practicalink-version-novedades', this.appVersion);
     this.novedadesAbiertas = false;
-    this.router.navigate(['/home']);
+    this.router.navigate([this.destinoDespuesDeLogin]);
   }
 
   private correoValido(correo: string): boolean {

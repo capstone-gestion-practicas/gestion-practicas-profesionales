@@ -1,0 +1,5 @@
+<main class="workspace"><p class="eyebrow">PRACTICALINK</p><h1>Selecciona un espacio de trabajo</h1><p>El acceso a cada operación se valida nuevamente en el servidor.</p>
+  <section aria-label="Espacios disponibles">@for (espacio of espacios(); track espacio.rol) {
+    <a class="workspace-card" [routerLink]="espacio.ruta" (click)="seleccionar(espacio.rol)"><span>{{ espacio.nombre }}</span><small>{{ espacio.rol }}</small></a>
+  }</section>
+</main>

@@ -1,3 +1,4 @@
+import { DocenteService } from '../../features/docente/docente.service';
 import { NavController } from '@ionic/angular';
 import { By } from '@angular/platform-browser';
 import { HttpResponse } from '@angular/common/http';
@@ -41,7 +42,12 @@ describe('HU015 consulta persistente', () => {
     service.obtenerSeguimientos.and.returnValue(of(empty));
     service.obtenerIncidencias.and.returnValue(of(historial));
     parametros = new BehaviorSubject(convertToParamMap({ id: '15' }));
+    const docentes = jasmine.createSpyObj<DocenteService>('DocenteService', ['consultarAsignacion']);
+    docentes.consultarAsignacion.and.returnValue(of({
+      id_practica: 15, docente_actual: null, docentes_disponibles: []
+    }));
     await TestBed.configureTestingModule({ imports: [PracticaDetalle], providers: [
+      { provide: DocenteService, useValue: docentes },
       { provide: PracticaService, useValue: service },
       { provide: ActivatedRoute, useValue: { paramMap: parametros } },
       { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },

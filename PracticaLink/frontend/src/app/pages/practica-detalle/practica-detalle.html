@@ -39,6 +39,9 @@
             <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
           }
         } @else if (detalle; as practica) {
+          @if (puedeAsignarDocente) {
+            <app-docente-asignacion [idPractica]="practica.id_practica" />
+          }
           <section class="practice-summary" aria-label="Antecedentes de la práctica">
             <div class="summary-grid">
               <div class="summary-item">

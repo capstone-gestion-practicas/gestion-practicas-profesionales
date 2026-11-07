@@ -1,0 +1,15 @@
+<section class="teacher-assignment" aria-labelledby="teacher-assignment-title">
+  <h2 id="teacher-assignment-title">Asignación docente</h2>
+  <p>Selecciona una cuenta DOCENTE activa. Al reemplazar o retirar, registra el motivo.</p>
+  @if (cargando) { <p>Consultando asignación…</p> }
+  @else if (asignacion) {
+  <p>Asignado actualmente: <strong>{{ asignacion.docente_actual?.nombre || 'Sin docente' }}</strong></p>
+  <form (ngSubmit)="guardar()">
+    <ion-item><ion-label position="stacked">Docente</ion-label><select name="idDocente" [(ngModel)]="idDocente" [disabled]="enviando"><option value="">Selecciona una acción</option>@for (docente of asignacion.docentes_disponibles; track docente.id_usuario) { <option [value]="docente.id_usuario" [disabled]="docente.id_usuario === asignacion.docente_actual?.id_usuario">{{ docente.nombre }} · {{ docente.correo }}</option> }<option value="__RETIRAR__" [disabled]="!asignacion.docente_actual">Retirar docente asignado</option></select></ion-item>
+    <ion-item><ion-label position="stacked">Motivo de reemplazo o retiro</ion-label><ion-input name="motivo" [(ngModel)]="motivo" [disabled]="enviando"></ion-input></ion-item>
+    @if (resultadoActualizado) { <p role="status">{{ mensaje }}</p> }
+    @if (error) { <p role="alert">{{ error }}</p> }
+    <ion-button type="submit" [disabled]="enviando">@if (enviando) { <ion-spinner name="crescent"></ion-spinner> } Aplicar cambio</ion-button>
+  </form>
+  }
+</section>

@@ -1,0 +1,7 @@
+.workspace { max-width: 720px; margin: 10vh auto; padding: 24px; color: #172b4d; }
+.eyebrow { font-weight: 700; color: #58728f; letter-spacing: .1em; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); }
+section { display: grid; gap: 14px; margin-top: 28px; }
+.workspace-card { display: flex; justify-content: space-between; gap: 16px; padding: 22px; border: 1px solid #dfe7ef; border-radius: 14px; background: white; color: inherit; text-decoration: none; }
+.workspace-card:focus-visible { outline: 3px solid #2477b1; outline-offset: 3px; }
+.workspace-card small { color: #65758b; }

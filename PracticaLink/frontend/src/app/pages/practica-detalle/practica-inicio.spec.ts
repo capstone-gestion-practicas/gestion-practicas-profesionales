@@ -1,3 +1,4 @@
+import { DocenteService } from '../../features/docente/docente.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
@@ -35,7 +36,12 @@ describe('Inicio de práctica en detalle', () => {
     service.obtenerHistorial.and.returnValue(of({ id_practica: 15, items: [], limit: 50, offset: 0, hay_mas: false }));
     service.iniciar.and.returnValue(of(respuesta));
     parametros = new BehaviorSubject(convertToParamMap({ id: '15' }));
+    const docentes = jasmine.createSpyObj<DocenteService>('DocenteService', ['consultarAsignacion']);
+    docentes.consultarAsignacion.and.returnValue(of({
+      id_practica: 15, docente_actual: null, docentes_disponibles: []
+    }));
     await TestBed.configureTestingModule({ imports: [PracticaDetalle], providers: [
+      { provide: DocenteService, useValue: docentes },
       { provide: PracticaService, useValue: service },
       { provide: AuthStore, useValue: { contexto: () => ({ roles }) } },
       { provide: ActivatedRoute, useValue: { paramMap: parametros } },

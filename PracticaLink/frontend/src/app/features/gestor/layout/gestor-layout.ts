@@ -21,5 +21,9 @@ import { GestorHeader } from '../../../pages/home/gestor-home/gestor-header/gest
 export class GestorLayout {
   private readonly authStore = inject(AuthStore);
 
-  protected readonly mostrarCabecera = computed(() => esEspacioGestorDedicado(this.authStore.contexto()));
+  protected readonly mostrarCabecera = computed(() => {
+    const roles = this.authStore.contexto()?.roles ?? [];
+    return esEspacioGestorDedicado(this.authStore.contexto())
+      || (roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') === 'GESTOR');
+  });
 }

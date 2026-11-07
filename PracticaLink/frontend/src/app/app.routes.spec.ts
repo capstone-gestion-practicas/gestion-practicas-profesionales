@@ -14,14 +14,23 @@ describe('Practice consultation routing', () => {
     for (const path of ['', 'login', 'home', 'usuarios', 'revisiones', 'revisiones/:id', 'practicas', 'practicas/:id', '**']) {
       expect(aplanarRutas(routes).some(route => route.path === path)).toBeTrue();
     }
-    const route = aplanarRutas(routes).find(route => route.path === 'practicas')!;
-    const detalle = aplanarRutas(routes).find(route => route.path === 'practicas/:id')!;
+    const route = aplanarRutas(routes).find(route => route.path === 'practicas' && route.data?.['roles']?.includes('GESTOR'))!;
+    const detalle = aplanarRutas(routes).find(route => route.path === 'practicas/:id' && route.data?.['roles']?.includes('GESTOR'))!;
     expect(detalle.canActivate).toEqual([authGuard, roleGuard]);
     expect(detalle.data?.['roles']).toEqual(['GESTOR', 'ADMINISTRADOR']);
     expect(route.canActivate).toEqual([authGuard, roleGuard]);
     expect(route.data?.['roles']).toEqual(['GESTOR', 'ADMINISTRADOR']);
     expect(routes[routes.length - 1].path).toBe('**');
     expect(aplanarRutas(routes).find(route => route.path === 'revisiones')?.data?.['roles']).toEqual(['GESTOR']);
+  });
+
+  it('protects the docente workspace and its assigned practice views', () => {
+    const docente = routes.find(route => route.path === 'docente')!;
+    expect(docente.data?.['roles']).toEqual(['DOCENTE']);
+    expect(docente.children?.map(route => route.path)).toContain('practicas');
+    expect(docente.children?.filter(route => route.path?.startsWith('practicas')).every(route => route.data?.['roles']?.includes('DOCENTE'))).toBeTrue();
+    expect(aplanarRutas(routes).find(route => route.path === 'espacios')?.data?.['roles'])
+      .toEqual(['ESTUDIANTE', 'GESTOR', 'DOCENTE', 'ADMINISTRADOR']);
   });
 
   it('protects the nested student space and preserves compatible legacy routes', () => {
@@ -44,7 +53,7 @@ describe('Practice consultation routing', () => {
       { provide: AuthService, useValue: jasmine.createSpyObj('AuthService', ['obtenerContexto']) }]
     });
     for (const path of ['practicas', 'practicas/:id']) {
-    const route = aplanarRutas(routes).find(route => route.path === path)!;
+    const route = aplanarRutas(routes).find(route => route.path === path && route.data?.['roles']?.includes('GESTOR'))!;
     for (const rol of ['GESTOR', 'ADMINISTRADOR', 'ESTUDIANTE']) {
       TestBed.inject(AuthStore).setContexto({
         usuario: { id_usuario: 1, nombre: 'Sintético', apellido: 'Prueba', correo: 'test@example.com' },
@@ -115,7 +124,7 @@ describe('Practice consultation routing', () => {
     ];
 
     for (const politica of rutasGestion) {
-      const route = aplanarRutas(routes).find(item => item.path === politica.path)!;
+      const route = aplanarRutas(routes).find(item => item.path === politica.path && item.data?.['roles']?.includes('GESTOR'))!;
       expect(route.canActivate).toEqual([authGuard, roleGuard]);
       expect(route.data?.['roles']).toEqual(politica.rolesPermitidos);
       for (const caso of roleSets) {
