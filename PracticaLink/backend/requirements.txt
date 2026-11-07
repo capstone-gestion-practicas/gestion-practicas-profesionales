@@ -10,3 +10,5 @@ PyJWT
 email-validator
 httpx
 firebase-admin
+
+pypdf>=6,<7

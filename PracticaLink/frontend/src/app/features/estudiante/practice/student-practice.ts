@@ -1,3 +1,4 @@
+import { InformeFinal } from '../../informe-final/informe-final';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, output, signal } from '@angular/core';
@@ -23,7 +24,7 @@ const MENSAJES_ESTADO: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-student-practice',
   standalone: true,
-  imports: [CommonModule, FormsModule, EstadoBadge],
+  imports: [CommonModule, FormsModule, EstadoBadge, InformeFinal],
   templateUrl: './student-practice.html',
   styleUrl: './student-practice.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

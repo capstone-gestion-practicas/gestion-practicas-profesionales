@@ -1,3 +1,4 @@
+import { InformeFinal } from '../informe-final/informe-final';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
@@ -8,7 +9,7 @@ import { DocenteService, PracticaDocente } from './docente.service';
 
 @Component({
   standalone: true, selector: 'app-docente-practicas',
-  imports: [CommonModule, RouterLink, IonContent, IonButton, IonSpinner],
+  imports: [CommonModule, RouterLink, IonContent, IonButton, IonSpinner, InformeFinal],
   templateUrl: './docente-practicas.html', styleUrl: './docente-practicas.scss'
 })
 export class DocentePracticas implements OnInit {
