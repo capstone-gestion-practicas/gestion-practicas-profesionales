@@ -47,6 +47,48 @@ class PracticaActualContextTests(unittest.TestCase):
         self.assertEqual(model.cargo_funcion, "Desarrollador")
 
 
+class AuthDocenteContextTests(unittest.TestCase):
+    def test_context_route_accepts_multirole_docente(self) -> None:
+        contexto = {
+            "usuario": {"id_usuario": 55, "nombre": "Docente", "apellido": "Gestor", "correo": "multi@example.com"},
+            "roles": ["ADMINISTRADOR", "DOCENTE", "GESTOR"], "perfil": None, "practica_actual": None,
+        }
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 55
+        try:
+            with patch("app.core.permissions.obtener_contexto_usuario", return_value={"roles": contexto["roles"]}), \
+                 patch("app.auth.routes.obtener_contexto_usuario", return_value=contexto):
+                with TestClient(app) as client:
+                    response = client.get("/auth/context")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["roles"], contexto["roles"])
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_context_route_accepts_docente_role_from_database_context(self) -> None:
+        contexto = {
+            "usuario": {"id_usuario": 55, "nombre": "Docente", "apellido": "Prueba", "correo": "docente@example.com"},
+            "roles": ["DOCENTE"], "perfil": None, "practica_actual": None,
+        }
+        db = MagicMock(name="db")
+        original_overrides = dict(app.dependency_overrides)
+        app.dependency_overrides[get_db] = lambda: db
+        app.dependency_overrides[get_current_user_id] = lambda: 55
+        try:
+            with patch("app.core.permissions.obtener_contexto_usuario", return_value={"roles": ["DOCENTE"]}), \
+                 patch("app.auth.routes.obtener_contexto_usuario", return_value=contexto):
+                with TestClient(app) as client:
+                    response = client.get("/auth/context")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["roles"], ["DOCENTE"])
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+
 class ObtenerContextoUsuarioTests(unittest.TestCase):
     def test_executes_fn_contexto_usuario_with_authenticated_user_id(self) -> None:
         db = MagicMock()
@@ -136,6 +178,7 @@ class AuthContextRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
         }
         contexto = self._contexto_base(practica_actual=practica_actual)

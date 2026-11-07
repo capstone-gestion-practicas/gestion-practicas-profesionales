@@ -1,0 +1,7 @@
+.teacher-assignment { margin: 18px 0; padding: 20px; border: 1px solid #dfe7ef; border-radius: 14px; background: #fff; }
+.teacher-assignment h2 { margin-top: 0; }
+.teacher-assignment form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; align-items: end; }
+.teacher-assignment ion-button, .teacher-assignment p { grid-column: 1 / -1; }
+@media (max-width: 600px) { .teacher-assignment form { grid-template-columns: 1fr; } }
+
+.teacher-assignment select { width: 100%; padding: 12px; border: 1px solid #ccd7e3; border-radius: 8px; background: #fff; color: #172b4d; }

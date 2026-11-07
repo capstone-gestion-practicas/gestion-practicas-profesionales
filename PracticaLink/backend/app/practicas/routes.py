@@ -328,9 +328,18 @@ def asignar_gestor(
     id_usuario: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    resultado = asignar_gestor_practica(
-        db, id_practica, id_usuario, datos.id_gestor
-    )
+    try:
+        resultado = asignar_gestor_practica(
+            db, id_practica, id_usuario, datos.id_gestor
+        )
+    except IntegrityError as error:
+        if getattr(getattr(error.orig, "diag", None), "constraint_name", None) != "practica_docente_distinto_gestor":
+            raise
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No se puede asignar como GESTOR a la persona DOCENTE de esta práctica",
+        ) from error
     errores = {
         "USUARIO_NO_AUTORIZADO": (403, "No tiene permisos para asignar gestores"),
         "GESTOR_NO_DISPONIBLE": (409, "El gestor seleccionado no está activo"),

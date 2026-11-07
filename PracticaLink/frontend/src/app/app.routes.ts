@@ -45,6 +45,22 @@ export const routes: Routes = [
         .then(m => m.Login)
   },
   {
+    path: 'espacios',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ESTUDIANTE', 'GESTOR', 'DOCENTE', 'ADMINISTRADOR'] },
+    loadComponent: () => import('./features/espacios-trabajo/espacios-trabajo').then(m => m.EspaciosTrabajo)
+  },
+  {
+    path: 'docente',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['DOCENTE'] },
+    children: [
+      { path: 'practicas', canActivate: [authGuard, roleGuard], data: { roles: ['DOCENTE'] }, loadComponent: () => import('./features/docente/docente-practicas').then(m => m.DocentePracticas) },
+      { path: 'practicas/:id', canActivate: [authGuard, roleGuard], data: { roles: ['DOCENTE'] }, loadComponent: () => import('./features/docente/docente-practicas').then(m => m.DocentePracticas) },
+      { path: '', pathMatch: 'full', redirectTo: 'practicas' }
+    ]
+  },
+  {
     path: 'usuarios',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },

@@ -13,11 +13,12 @@ import { EventoHistorial, PracticaDetalleGestionResponse } from '../../core/mode
 import { PracticaService } from '../../core/services/practica.service';
 
 import { AuthStore } from '../../core/store/auth.store';
+import { DocenteAsignacion } from '../../features/gestor/docente-asignacion/docente-asignacion';
 import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/utils/fechas';
 
 @Component({
   selector: 'app-practica-detalle', standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado],
+  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion],
   templateUrl: './practica-detalle.html', styleUrl: './practica-detalle.scss'
 })
 export class PracticaDetalle implements OnInit, OnDestroy {
@@ -65,6 +66,11 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   private parametros?: Subscription;
   readonly formatearFechaHora = formatearFechaHoraChile;
   readonly formatearFecha = formatearFechaCalendario;
+
+  get puedeAsignarDocente(): boolean {
+    const roles = this.auth.contexto()?.roles ?? [];
+    return roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') !== 'ADMINISTRADOR';
+  }
 
   get nombreUsuario(): string {
     const usuario = this.auth.contexto()?.usuario;

@@ -1002,3 +1002,12 @@ Angular migró a ese contrato. Las funciones públicas legacy
 `20261028010000`) quedan sin consumidores; no se eliminan (SQL versionado). La función
 de registro legacy no informa `tipo` y falla por la restricción EP05, por diseño.
 Los scripts manuales `scripts/BD/fixes/ep05-*.sql` quedan como históricos.
+
+
+### S4.1 · Rol DOCENTE y asignación por GESTOR (local; pendiente de despliegue)
+
+La migración incremental `supabase/migrations/20261107110000_s41_docente_assignment.sql` incorpora DOCENTE, `practica.id_docente` nullable, una restricción que impide igualdad con `id_gestor`, e historial de asignaciones. La función privada solo permite asignar, reemplazar o retirar a un GESTOR activo responsable y en estados `APROBADA`/`EN_CURSO`. El docente consulta exclusivamente sus prácticas asignadas. Las acciones no autorizadas no se resuelven con el selector visual: se comprueban en FastAPI y SQL.
+
+FastAPI usa `DOCENTE_ASSIGNMENT_DATABASE_URL` únicamente para estas operaciones; no debe reutilizar la conexión general. El login de despliegue debe ser una identidad dedicada, distinta de las conexiones generales y de inicio de práctica, miembro de `pl_s41_docente_executor`, sin acceso directo a tablas, RLS bypass ni membresía de `pl_s41_docente_owner`. La migración no concede EXECUTE a `anon`, `authenticated`, `service_role` ni PUBLIC. Antes de habilitar este flujo, el responsable de despliegue debe provisionar y verificar la identidad en el entorno de destino comprobando de forma segura `current_user` y `has_function_privilege`; no registrar ni mostrar la URL de conexión. No se ha consultado ni modificado Supabase real, y no se ha confirmado un principal de backend en este worktree.
+
+El detalle docente es de solo lectura en S4.1. Carga de informe, evaluación y cierre académico siguen pendientes de S4.2–S4.4. La prueba SQL sintética `tests/integration/s41_asignacion_docente.sql` requiere una base PostgreSQL desechable con el esquema y migración aplicados; termina con ROLLBACK. La concurrencia debe completarse con dos sesiones locales, no con mocks.

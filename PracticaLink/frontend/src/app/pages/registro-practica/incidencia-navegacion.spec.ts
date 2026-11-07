@@ -1,3 +1,4 @@
+import { DocenteService } from '../../features/docente/docente.service';
 import { PracticaDetalle } from '../practica-detalle/practica-detalle';
 import { AuthStore } from '../../core/store/auth.store';
 import { TestBed } from '@angular/core/testing';
@@ -24,7 +25,12 @@ describe('HU015 navegación con Router real', () => {
     service = jasmine.createSpyObj('PracticaService', ['obtenerDetalle', 'registrarIncidencia', 'obtenerSeguimientos', 'obtenerHistorial', 'obtenerIncidencias']);
     service.obtenerDetalle.and.callFake(id => of(detalle(Number(id))));
     service.registrarIncidencia.and.returnValue(new Subject<HttpResponse<IncidenciaResponse>>());
+    const docentes = jasmine.createSpyObj<DocenteService>('DocenteService', ['consultarAsignacion']);
+    docentes.consultarAsignacion.and.returnValue(of({
+      id_practica: 15, docente_actual: null, docentes_disponibles: []
+    }));
     TestBed.configureTestingModule({ providers: [
+      { provide: DocenteService, useValue: docentes },
       provideRouter([{ path: 'practicas/:id', component: PracticaDetalle }, { path: 'practicas/:id/incidencias/nueva', component: RegistroPractica,
         data: { tipoRegistro: 'incidencia' } }]),
       { provide: PracticaService, useValue: service }

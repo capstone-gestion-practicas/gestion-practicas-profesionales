@@ -80,7 +80,8 @@ def login(
         Depends(require_roles(
             "ESTUDIANTE",
             "GESTOR",
-            "ADMINISTRADOR"
+            "ADMINISTRADOR",
+            "DOCENTE"
         ))
     ]
 )

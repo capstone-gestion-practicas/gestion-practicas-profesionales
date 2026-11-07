@@ -1,0 +1,22 @@
+<ion-content class="teacher-page">
+  <main>
+    <header><div><p class="eyebrow">ESPACIO DOCENTE</p><h1>{{ esDetalle ? 'Detalle de práctica asignada' : 'Mis prácticas asignadas' }}</h1></div>
+      <nav aria-label="Acciones de cuenta"><ion-button fill="outline" routerLink="/espacios">Cambiar espacio</ion-button><ion-button fill="clear" (click)="cerrarSesion()">Cerrar sesión</ion-button></nav>
+      @if (esDetalle) { <ion-button fill="outline" routerLink="/docente/practicas">Volver a prácticas</ion-button> }
+    </header>
+    @if (cargando) { <div class="state"><ion-spinner aria-hidden="true"></ion-spinner><p>Cargando prácticas asignadas…</p></div> }
+    @else if (error) { <div class="state"><p role="alert">{{ error }}</p><ion-button fill="outline" (click)="cargar()">Reintentar</ion-button></div> }
+    @else if (esDetalle && practica; as item) {
+      <article class="practice-card"><h2>{{ item.estudiante }}</h2><dl>
+        <div><dt>Estado</dt><dd>{{ item.estado }}</dd></div><div><dt>Centro de práctica</dt><dd>{{ item.centro_practica }}</dd></div>
+        <div><dt>Inicio</dt><dd>{{ item.fecha_inicio || 'Sin fecha registrada' }}</dd></div><div><dt>Término</dt><dd>{{ item.fecha_termino || 'Sin fecha registrada' }}</dd></div>
+        <div><dt>Cargo o función</dt><dd>{{ item.cargo_funcion || 'Sin información' }}</dd></div><div><dt>Descripción</dt><dd>{{ item.descripcion || 'Sin información' }}</dd></div>
+      </dl></article>
+    } @else if (practicas.length === 0) { <p class="state">Todavía no tienes prácticas asignadas.</p> }
+    @else { <section class="practice-list" aria-label="Prácticas asignadas">
+      @for (item of practicas; track item.id_practica) { <article class="practice-card"><div><h2>{{ item.estudiante }}</h2><p>{{ item.centro_practica }}</p></div>
+        <span class="status">{{ item.estado }}</span><ion-button [routerLink]="['/docente/practicas', item.id_practica]">Ver detalle</ion-button>
+      </article> }
+    </section> }
+  </main>
+</ion-content>
