@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { AuthStore } from '../../core/store/auth.store';
 import {
   IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonRow, IonSpinner, IonTextarea
 } from '@ionic/angular';
@@ -45,6 +46,7 @@ export class RevisionDetalle implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly revisionService = inject(RevisionService);
+  private readonly authStore = inject(AuthStore);
 
   solicitud: SolicitudRevisionDetalle | null = null;
   cargando = true;
@@ -64,7 +66,9 @@ export class RevisionDetalle implements OnInit {
   }
 
   get puedeDecidir(): boolean {
-    return this.solicitud !== null && esRevisable(this.solicitud.estado);
+    return this.authStore.contexto()?.roles.includes('GESTOR') === true
+      && this.solicitud !== null
+      && esRevisable(this.solicitud.estado);
   }
 
   get motivoSinDecision(): string | null {

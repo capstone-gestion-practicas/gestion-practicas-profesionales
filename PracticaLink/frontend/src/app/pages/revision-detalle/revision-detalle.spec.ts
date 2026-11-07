@@ -420,8 +420,15 @@ describe('RevisionDetalle', () => {
   });
 
   describe('roles', () => {
-    it('GESTOR y ADMINISTRADOR ven el mismo panel de revisión (la restricción de rol está en las rutas)', () => {
+    it('ADMINISTRADOR sin GESTOR no puede decidir aunque se monte el componente', () => {
       authStore.setContexto(contexto(['ADMINISTRADOR']));
+      createLoadedComponent();
+      expect(boton('Aprobar')).toBeUndefined();
+      expect(component.puedeDecidir).toBeFalse();
+    });
+
+    it('una cuenta ADMINISTRADOR + GESTOR puede decidir como GESTOR', () => {
+      authStore.setContexto(contexto(['ADMINISTRADOR', 'GESTOR']));
       createLoadedComponent();
       expect(boton('Aprobar')).toBeDefined();
     });

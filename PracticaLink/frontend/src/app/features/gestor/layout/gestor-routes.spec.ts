@@ -39,11 +39,12 @@ describe('Rutas del gestor bajo GestorLayout', () => {
     expect(home?.data?.['roles']).toEqual(['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR']);
   });
 
-  it('conserva los roles originales de cada módulo', () => {
+  it('limita revisión a GESTOR y conserva los roles originales de otros módulos', () => {
     const roles = (ruta: string): unknown => hijos.find(hijo => hijo.path === ruta)?.data?.['roles'];
     expect(roles('notificaciones')).toEqual(['ESTUDIANTE', 'GESTOR', 'ADMINISTRADOR']);
     expect(roles('envio-notificaciones')).toEqual(['GESTOR', 'ADMINISTRADOR']);
-    expect(roles('revisiones/:id')).toEqual(['GESTOR', 'ADMINISTRADOR']);
+    expect(roles('revisiones')).toEqual(['GESTOR']);
+    expect(roles('revisiones/:id')).toEqual(['GESTOR']);
     expect(roles('practicas/:id')).toEqual(['GESTOR', 'ADMINISTRADOR']);
   });
 

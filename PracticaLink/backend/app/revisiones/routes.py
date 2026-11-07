@@ -12,8 +12,10 @@ from app.revisiones.schemas import (
     SolicitudRevisionResumen,
 )
 from app.revisiones.service import (
+    GestorAsignadoAOtroError,
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
+    UsuarioNoAutorizadoError,
     listar_solicitudes,
     obtener_solicitud,
     resolver_solicitud,
@@ -24,7 +26,7 @@ from app.services.push_service import enviar_push_notificacion
 router = APIRouter(
     prefix="/revisiones",
     tags=["Revisión de prácticas"],
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+    dependencies=[Depends(require_roles("GESTOR"))],
 )
 
 
@@ -80,4 +82,16 @@ def resolver(
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "La solicitud ya no se encuentra en revisión",
+        ) from error
+    except GestorAsignadoAOtroError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "La práctica ya está asignada a otro gestor",
+        ) from error
+    except UsuarioNoAutorizadoError as error:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "No tiene permisos para revisar esta solicitud",
         ) from error
