@@ -1,117 +1,144 @@
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import {
-  IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
-  IonContent, IonItem, IonLabel, IonModal, IonSelect, IonSelectOption,
-  IonSpinner, IonTextarea, IonGrid, IonRow, IonCol
+  IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonRow, IonSpinner, IonTextarea
 } from '@ionic/angular';
 
-import {
-  DecisionRevision,
-  SolicitudRevisionDetalle
-} from '../../core/models/revision.models';
-import { EstadoPracticaDetalle } from '../../core/models/practica.models';
+import { DecisionRevision, SolicitudRevisionDetalle } from '../../core/models/revision.models';
 import { RevisionService } from '../../core/services/revision.service';
-import { PracticaService } from '../../core/services/practica.service';
 import { formatoHorasEstimadas } from '../../core/utils/horas-estimadas';
+import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
+import { antiguedadDias, fechaEnvio } from '../revisiones/solicitudes-listado';
+import {
+  LONGITUD_MAXIMA_OBSERVACION,
+  fechaCorta,
+  horasTexto,
+  jornadaTexto,
+  motivoSinDecision,
+  esRevisable,
+  requiereObservacion,
+  tituloDecision,
+  valorOInformado
+} from './detalle-solicitud';
 
+/** Parámetros del listado de origen que se conservan al volver. */
+const CLAVES_ORIGEN = ['estado', 'q', 'orden', 'pagina'] as const;
+
+/**
+ * Detalle de una solicitud: antecedentes, práctica y panel de decisión. Las decisiones se
+ * ofrecen solo en los estados que el backend acepta. El formulario genérico de estado se
+ * retiró de esta pantalla; sus servicios siguen disponibles en los flujos administrativos.
+ */
 @Component({
-  selector: 'app-revision-detalle', standalone: true,
-  imports: [CommonModule, FormsModule, IonContent, IonCard, IonCardHeader,
-    IonCardTitle, IonCardContent, IonButton, IonItem, IonLabel, IonSelect,
-    IonSelectOption, IonModal, IonSpinner, IonTextarea, IonGrid, IonRow, IonCol],
-  templateUrl: './revision-detalle.html', styleUrl: './revision-detalle.scss'
+  selector: 'app-revision-detalle',
+  standalone: true,
+  imports: [
+    FormsModule, IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonRow,
+    IonSpinner, IonTextarea, EstadoBadge
+  ],
+  templateUrl: './revision-detalle.html',
+  styleUrl: './revision-detalle.scss'
 })
 export class RevisionDetalle implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly revisionService = inject(RevisionService);
+
   solicitud: SolicitudRevisionDetalle | null = null;
   cargando = true;
   error = '';
-  modalAbierto = false;
-  guardando = false;
+  /** Decisión elegida en el panel; el panel de confirmación solo se muestra tras elegirla. */
   decision: DecisionRevision = 'APROBADA';
+  decisionAbierta = false;
   observacion = '';
-  estados: EstadoPracticaDetalle[] = [];
-  idEstadoSeleccionado: number | null = null;
-  observacionEstado = '';
-  guardandoEstado = false;
-  mensajeEstado = '';
-  errorEstado = '';
+  guardando = false;
+  readonly longitudMaxima = LONGITUD_MAXIMA_OBSERVACION;
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly revisionService: RevisionService,
-    private readonly practicaService: PracticaService
-  ) {}
+  private idPractica = NaN;
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    forkJoin({
-      solicitud: this.revisionService.obtener(id),
-      estados: this.practicaService.listarEstados()
-    }).subscribe({
-      next: ({ solicitud, estados }) => {
-        this.solicitud = solicitud;
-        this.estados = estados;
-        this.idEstadoSeleccionado = estados.find(
-          estado => estado.nombre.toUpperCase() === solicitud.estado.toUpperCase()
-        )?.id_estado ?? null;
-        this.cargando = false;
-      },
-      error: () => { this.error = 'No fue posible cargar la solicitud.'; this.cargando = false; }
-    });
+    this.idPractica = Number(this.route.snapshot.paramMap.get('id'));
+    this.cargar();
   }
 
-  guardarEstado(): void {
-    if (!this.solicitud || this.idEstadoSeleccionado === null) return;
-    this.guardandoEstado = true;
-    this.errorEstado = '';
-    this.mensajeEstado = '';
-    this.practicaService.actualizarEstado(
-      this.solicitud.id_practica,
-      this.idEstadoSeleccionado,
-      this.observacionEstado.trim() || null
-    ).subscribe({
-      next: respuesta => {
-        this.solicitud = { ...this.solicitud!, estado: respuesta.estado };
-        this.idEstadoSeleccionado = respuesta.id_estado;
-        this.observacionEstado = '';
-        this.mensajeEstado = respuesta.mensaje;
-        this.guardandoEstado = false;
+  get puedeDecidir(): boolean {
+    return this.solicitud !== null && esRevisable(this.solicitud.estado);
+  }
+
+  get motivoSinDecision(): string | null {
+    return this.solicitud ? motivoSinDecision(this.solicitud.estado) : null;
+  }
+
+  get requiereObservacion(): boolean {
+    return requiereObservacion(this.decision);
+  }
+
+  get tituloDecision(): string {
+    return tituloDecision(this.decision);
+  }
+
+  cargar(): void {
+    this.cargando = true;
+    this.error = '';
+    if (!Number.isInteger(this.idPractica) || this.idPractica < 1) {
+      this.error = 'La solicitud indicada no es válida.';
+      this.cargando = false;
+      return;
+    }
+    this.revisionService.obtener(this.idPractica).subscribe({
+      next: solicitud => {
+        this.solicitud = solicitud;
+        this.cargando = false;
       },
-      error: (error: HttpErrorResponse) => {
-        this.guardandoEstado = false;
-        this.errorEstado = error.error?.detail ?? 'No fue posible actualizar el estado.';
+      error: () => {
+        this.error = 'No fue posible cargar la solicitud.';
+        this.cargando = false;
       }
     });
   }
 
   abrirDecision(decision: DecisionRevision): void {
+    if (!this.puedeDecidir) {
+      this.error = this.motivoSinDecision ?? 'Esta solicitud no admite decisiones.';
+      return;
+    }
     this.decision = decision;
     this.observacion = '';
     this.error = '';
-    this.modalAbierto = true;
+    this.decisionAbierta = true;
   }
 
-  cerrarModal(): void { if (!this.guardando) this.modalAbierto = false; }
+  cancelarDecision(): void {
+    if (this.guardando) return;
+    this.decisionAbierta = false;
+    this.observacion = '';
+    this.error = '';
+  }
 
   confirmar(): void {
-    if (!this.solicitud) return;
-    if (this.decision !== 'APROBADA' && !this.observacion.trim()) {
+    // Evita un segundo envío mientras la decisión anterior sigue en curso.
+    if (!this.solicitud || this.guardando) return;
+    if (!this.puedeDecidir) {
+      this.error = this.motivoSinDecision ?? 'Esta solicitud no admite decisiones.';
+      return;
+    }
+    if (this.requiereObservacion && !this.observacion.trim()) {
       this.error = 'Debes ingresar una observación.';
       return;
     }
     this.guardando = true;
+    this.error = '';
     this.revisionService.resolver(
       this.solicitud.id_practica,
       this.decision,
       this.observacion.trim() || null
     ).subscribe({
-      next: () => { this.guardando = false; this.router.navigate(['/revisiones']); },
+      next: () => {
+        this.guardando = false;
+        this.router.navigate(['/revisiones'], { queryParams: this.parametrosOrigen() });
+      },
       error: (error: HttpErrorResponse) => {
         this.guardando = false;
         this.error = error.error?.detail ?? 'No fue posible guardar la decisión.';
@@ -119,7 +146,36 @@ export class RevisionDetalle implements OnInit {
     });
   }
 
-  volver(): void { this.router.navigate(['/revisiones']); }
+  /** Vuelve al listado con el mismo estado, búsqueda, orden y página de origen. */
+  volver(): void {
+    this.router.navigate(['/revisiones'], { queryParams: this.parametrosOrigen() });
+  }
+
+  fechaEnvio(): string {
+    return this.solicitud ? fechaEnvio(this.solicitud) : '';
+  }
+
+  antiguedad(): string {
+    const dias = this.solicitud ? antiguedadDias(this.solicitud) : null;
+    if (dias === null) return '';
+    return dias === 1 ? 'hace 1 día' : `hace ${dias} días`;
+  }
+
+  valor(texto: string | null | undefined): string {
+    return valorOInformado(texto);
+  }
+
+  fecha(iso: string | null | undefined): string {
+    return fechaCorta(iso);
+  }
+
+  horas(horas: number | null | undefined): string {
+    return horasTexto(horas);
+  }
+
+  jornada(horasSemanales: number | null | undefined): string {
+    return jornadaTexto(horasSemanales);
+  }
 
   estimacionHoras(
     fechaInicio: string | null,
@@ -127,5 +183,14 @@ export class RevisionDetalle implements OnInit {
     horasSemanales: number | null
   ): string {
     return formatoHorasEstimadas(fechaInicio, fechaTermino, horasSemanales);
+  }
+
+  private parametrosOrigen(): Params {
+    const params: Params = {};
+    for (const clave of CLAVES_ORIGEN) {
+      const valor = this.route.snapshot.queryParamMap?.get(clave);
+      if (valor) params[clave] = valor;
+    }
+    return params;
   }
 }

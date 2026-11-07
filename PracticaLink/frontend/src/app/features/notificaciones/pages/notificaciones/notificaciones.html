@@ -1,9 +1,116 @@
+@if (presentacionGestor) {
+<ion-content class="notif-gestor">
+  <div class="notif-gestor__cuerpo">
+    <header class="notif-cabecera">
+      <div>
+        <p class="notif-eyebrow">CENTRO DE NOTIFICACIONES</p>
+        <h1>Notificaciones</h1>
+        <p class="notif-subtitulo">{{ subtituloGestor }}</p>
+      </div>
+      @if (servicio.noLeidas() > 0) {
+        <button type="button" class="btn-secundario" [disabled]="actualizando" (click)="marcarTodas()">
+          Marcar todas como leídas
+        </button>
+      }
+    </header>
+
+    @if (estadoPermisoPush === 'pendiente') {
+      <section class="aviso-push" aria-labelledby="aviso-push-titulo">
+        <div>
+          <h2 id="aviso-push-titulo">Recibe avisos en este dispositivo</h2>
+          <p>Te avisaremos de nuevas solicitudes y respuestas aunque no tengas PracticaLink abierto.</p>
+        </div>
+        <div class="aviso-push__acciones">
+          <button type="button" class="btn-texto" (click)="ahoraNo()">Ahora no</button>
+          <button type="button" class="btn-primario" (click)="activarPush()">Activar</button>
+        </div>
+      </section>
+    } @else if (estadoPermisoPush === 'concedido') {
+      <p class="push-activo">✓ Notificaciones activadas en este dispositivo</p>
+    }
+    @if (mensajePush) {
+      <p class="nota-push" role="status">{{ mensajePush }}</p>
+    }
+
+    <div class="chips" role="group" aria-label="Filtrar notificaciones">
+      <button type="button" class="chip" [attr.aria-pressed]="filtro === 'todas'" (click)="elegirFiltro('todas')">
+        Todas <span class="chip__cuenta">({{ totalNotificaciones }})</span>
+      </button>
+      <button type="button" class="chip" [attr.aria-pressed]="filtro === 'no_leidas'" (click)="elegirFiltro('no_leidas')">
+        No leídas <span class="chip__cuenta">({{ totalNoLeidas }})</span>
+      </button>
+      @for (opcion of filtrosSeccion; track opcion.valor) {
+        <button type="button" class="chip" [attr.aria-pressed]="filtro === opcion.valor" (click)="elegirFiltro(opcion.valor)">
+          {{ opcion.etiqueta }} <span class="chip__cuenta">({{ totalSeccion(opcion.valor) }})</span>
+        </button>
+      }
+    </div>
+
+    @if (cargando) {
+      <div class="center"><ion-spinner name="crescent"></ion-spinner></div>
+    } @else if (error) {
+      <div class="estado-vacio estado-vacio--error">
+        <p class="error-text" role="alert">{{ error }}</p>
+        <button type="button" class="btn-secundario" (click)="cargar()">Reintentar</button>
+      </div>
+    } @else if (visiblesGestor.length === 0) {
+      <div class="estado-vacio" role="status">
+        <span class="estado-vacio__icono" aria-hidden="true"><ion-icon name="checkmark-outline"></ion-icon></span>
+        <p class="estado-vacio__titulo">Estás al día</p>
+        <p>No hay notificaciones en este filtro.</p>
+      </div>
+    } @else {
+      @for (grupo of gruposGestor; track grupo.titulo) {
+        <section class="grupo" [attr.aria-labelledby]="'grupo-' + $index">
+          <h2 class="grupo__titulo" [id]="'grupo-' + $index">{{ grupo.titulo }}</h2>
+          <ul class="lista">
+            @for (notificacion of grupo.items; track notificacion.id_notificacion) {
+              <li class="fila" [class.fila--no-leida]="!notificacion.fecha_leida">
+                <span class="fila__icono" [attr.data-seccion]="presentacion(notificacion).seccion" aria-hidden="true">
+                  <ion-icon [name]="presentacion(notificacion).icono"></ion-icon>
+                </span>
+                <div class="fila__cuerpo">
+                  <p class="fila__titulo">
+                    @if (!notificacion.fecha_leida) {
+                      <span class="punto" aria-hidden="true"></span>
+                      <span class="visualmente-oculto">Sin leer: </span>
+                    }
+                    {{ notificacion.titulo }}
+                  </p>
+                  <p class="fila__mensaje">{{ notificacion.mensaje }}</p>
+                  <p class="fila__meta">
+                    <span class="etiqueta-seccion">{{ presentacion(notificacion).etiqueta }}</span>
+                    ·
+                    <time [attr.datetime]="notificacion.fecha_creacion" [attr.title]="fechaExacta(notificacion)">
+                      {{ fechaRelativa(notificacion) }}
+                    </time>
+                  </p>
+                </div>
+                <div class="fila__acciones">
+                  @if (accionDe(notificacion); as accion) {
+                    <a class="btn-accion" [routerLink]="accion.comandos" (click)="marcarComoLeida(notificacion)">{{ accion.etiqueta }}</a>
+                  }
+                  @if (!notificacion.fecha_leida) {
+                    <button type="button" class="btn-check" aria-label="Marcar como leída" (click)="marcarComoLeida(notificacion)">
+                      <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </div>
+</ion-content>
+} @else {
 <ion-content class="notifications-content" [class.notifications-content--estudiante]="presentacionEstudiante">
   <ion-grid class="notifications-wrapper"><ion-row><ion-col size="12">
     <header class="page-heading">
       <div>
         @if (!presentacionEstudiante) {
-          <p class="module-label">EP08 · Centro de notificaciones</p>
+          <p class="module-label">CENTRO DE NOTIFICACIONES</p>
         }
         <h1>Notificaciones</h1>
         @if (servicio.noLeidas(); as cantidad) {
@@ -76,3 +183,4 @@
     }
   </ion-col></ion-row></ion-grid>
 </ion-content>
+}

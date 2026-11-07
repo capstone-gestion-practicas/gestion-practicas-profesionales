@@ -8,26 +8,26 @@
     <nav aria-label="Accesos de gestión">
       <ul class="gh-nav">
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'inicio' ? 'page' : null" (click)="irA('/home')">Inicio</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'inicio' ? 'page' : null" (click)="irA('/home')"><ion-icon name="home-outline" aria-hidden="true"></ion-icon><span>Inicio</span></button>
         </li>
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'solicitudes' ? 'page' : null" (click)="irA('/revisiones')">Solicitudes</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'solicitudes' ? 'page' : null" (click)="irA('/revisiones')"><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><span>Solicitudes</span></button>
           @let porRevisar = solicitudesPorRevisar();
           @if (porRevisar !== null && porRevisar > 0) {
             <span class="gh-nav__contador" [attr.aria-label]="porRevisar + ' solicitudes por revisar'">{{ porRevisar }}</span>
           }
         </li>
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'estados' ? 'page' : null" (click)="irA('/gestion-estados')">Estados</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'estados' ? 'page' : null" (click)="irA('/gestion-estados')"><ion-icon name="options-outline" aria-hidden="true"></ion-icon><span>Estados</span></button>
         </li>
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'seguimientos' ? 'page' : null" (click)="irA('/seguimientos')">Seguimientos</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'seguimientos' ? 'page' : null" (click)="irA('/seguimientos')"><ion-icon name="pulse-outline" aria-hidden="true"></ion-icon><span>Seguimientos</span></button>
         </li>
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'incidencias' ? 'page' : null" (click)="irA('/incidencias')">Incidencias</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'incidencias' ? 'page' : null" (click)="irA('/incidencias')"><ion-icon name="warning-outline" aria-hidden="true"></ion-icon><span>Incidencias</span></button>
         </li>
         <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'avisos' ? 'page' : null" (click)="irA('/envio-notificaciones')">Avisos</button>
+          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'avisos' ? 'page' : null" (click)="irA('/envio-notificaciones')"><ion-icon name="paper-plane-outline" aria-hidden="true"></ion-icon><span>Avisos</span></button>
         </li>
       </ul>
     </nav>
@@ -56,7 +56,7 @@
         @if (tieneEspacioEstudiante()) {
           <button type="button" class="gh-cambio" (click)="irAEspacioEstudiante()">Mi práctica</button>
         }
-        <button type="button" class="gh-campana" aria-label="Abrir notificaciones" (click)="abrirNotificaciones()">
+        <button type="button" class="gh-campana" [class.gh-campana--activa]="seccionActiva() === 'notificaciones'" [attr.aria-current]="seccionActiva() === 'notificaciones' ? 'page' : null" aria-label="Abrir notificaciones" (click)="abrirNotificaciones()">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />

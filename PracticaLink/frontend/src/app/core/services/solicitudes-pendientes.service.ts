@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 
+import { SolicitudRevisionResumen } from '../models/revision.models';
 import { RevisionService } from './revision.service';
 
 /** Estados que cuentan como «por revisar» en el espacio de gestión. */
@@ -32,5 +33,13 @@ export class SolicitudesPendientesService {
         this.enCurso = false;
       }
     });
+  }
+
+  /**
+   * Publica el contador a partir de un listado ya cargado por la página de solicitudes,
+   * para no repetir la petición. Mantiene la misma regla que refrescar().
+   */
+  publicar(solicitudes: readonly SolicitudRevisionResumen[]): void {
+    this.total.set(solicitudes.filter(solicitud => esPorRevisar(solicitud.estado)).length);
   }
 }

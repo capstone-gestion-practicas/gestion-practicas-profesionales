@@ -8,6 +8,7 @@ import { PracticaEstadoResumen } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { GestionEstados } from './gestion-estados';
+import { codigosInternosVisibles } from '../../shared/testing/codigos-internos';
 
 describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
   let fixture: ComponentFixture<GestionEstados>;
@@ -108,5 +109,11 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
   it('el administrador conserva el botón Volver', () => {
     crear(['ADMINISTRADOR'], [practica()]);
     expect(texto()).toContain('Volver');
+  });
+
+  it('no muestra códigos internos y usa la etiqueta del ciclo de las prácticas', () => {
+    crear(['GESTOR'], [practica()]);
+    expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
+    expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('CICLO DE LAS PRÁCTICAS');
   });
 });

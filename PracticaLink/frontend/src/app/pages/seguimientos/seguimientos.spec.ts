@@ -7,6 +7,7 @@ import { PracticaEstadoResumen } from '../../core/models/practica.models';
 import { SeguimientoResponse, SeguimientosHistorialResponse } from '../../core/models/seguimiento.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { Seguimientos } from './seguimientos';
+import { codigosInternosVisibles } from '../../shared/testing/codigos-internos';
 
 describe('Seguimientos (contrato EP05)', () => {
   let fixture: ComponentFixture<Seguimientos>;
@@ -120,5 +121,10 @@ describe('Seguimientos (contrato EP05)', () => {
     expect('registrarSeguimientoPractica' in PracticaService.prototype).toBeFalse();
     expect(typeof PracticaService.prototype.obtenerSeguimientos).toBe('function');
     expect(typeof PracticaService.prototype.registrarSeguimiento).toBe('function');
+  });
+
+  it('no muestra códigos internos y usa la etiqueta de acompañamiento', () => {
+    expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
+    expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('ACOMPAÑAMIENTO');
   });
 });

@@ -82,7 +82,7 @@ function describeCarga(nombre: string, rutas: Routes): void {
           provideHttpClientTesting(),
           AuthStore,
           { provide: NotificacionService, useValue: { noLeidas: signal(0) } },
-          { provide: SolicitudesPendientesService, useValue: { total: signal<number | null>(null), refrescar: () => undefined } }
+          { provide: SolicitudesPendientesService, useValue: { total: signal<number | null>(null), refrescar: () => undefined, publicar: () => undefined } }
         ]
       });
       TestBed.inject(NavController);

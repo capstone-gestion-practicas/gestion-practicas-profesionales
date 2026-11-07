@@ -48,6 +48,7 @@ const rutas: Routes = [
     children: [
       { path: 'hijo', component: HijoHttpPrueba },
       { path: 'revisiones', loadComponent: () => import('../../../pages/revisiones/revisiones').then(m => m.Revisiones) },
+      { path: 'revisiones/:id', loadComponent: () => import('../../../pages/revision-detalle/revision-detalle').then(m => m.RevisionDetalle) },
       { path: 'gestion-estados', loadComponent: () => import('../../../pages/gestion-estados/gestion-estados').then(m => m.GestionEstados) },
       { path: 'seguimientos', loadComponent: () => import('../../../pages/seguimientos/seguimientos').then(m => m.Seguimientos) },
       { path: 'incidencias', loadComponent: () => import('../../../pages/incidencias/incidencias').then(m => m.Incidencias) }
@@ -109,7 +110,7 @@ describe('Carga de módulos del gestor bajo GestorLayout (integración, flush de
         provideHttpClientTesting(),
         AuthStore,
         { provide: NotificacionService, useValue: { noLeidas: signal(0) } },
-        { provide: SolicitudesPendientesService, useValue: { total: signal<number | null>(null), refrescar: () => undefined } }
+        { provide: SolicitudesPendientesService, useValue: { total: signal<number | null>(null), refrescar: () => undefined, publicar: () => undefined } }
       ]
     });
     TestBed.inject(NavController);
@@ -152,6 +153,24 @@ describe('Carga de módulos del gestor bajo GestorLayout (integración, flush de
       await fixture.whenStable();
       expect(texto()).toContain('Ana Soto');
       expect(texto()).not.toContain('Cargando');
+    });
+
+    it('Detalle de solicitud por URL directa: carga sin interacción, sin formulario genérico y con estado', async () => {
+      await montar(['GESTOR'], '/revisiones/7?estado=registrada&q=ana');
+      responder('/solicitudes/7', {
+        id_practica: 7, fecha_registro: '2026-10-01T08:00:00', estado: 'REGISTRADA',
+        estudiante: 'Ana Soto', rut_estudiante: '12.345.678-5', correo_estudiante: 'ana@practicalink.cl',
+        carrera: 'Informática', sede: 'Santiago', centro_practica: 'Centro demostrativo',
+        rut_empresa: null, direccion_empresa: null, correo_empresa: null, contacto_nombre: null,
+        contacto_cargo: null, fecha_inicio: null, fecha_termino: null, horas: null,
+        cargo_funcion: null, descripcion: null
+      });
+      await fixture.whenStable();
+      expect(texto()).toContain('Ana Soto');
+      expect(texto()).toContain('Registrada');
+      expect(texto()).not.toContain('Cargando');
+      expect(texto()).not.toContain('Guardar estado');
+      expect(document.querySelector('app-gestor-header')).not.toBeNull();
     });
 
     it('Seguimientos: sale del estado de carga y muestra la práctica', async () => {
