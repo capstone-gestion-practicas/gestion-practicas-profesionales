@@ -2,11 +2,10 @@
   <ion-grid class="review-wrapper"><ion-row><ion-col size="12">
     <div class="page-heading">
       <div class="heading-copy">
-        <p class="module-label">EP03 · Revisión</p>
-        <h1>Solicitudes de práctica</h1>
+        <p class="module-label">Gestión de prácticas</p>
+        <h1>Solicitudes</h1>
         <p class="heading-subtitle">
-          Revisa las solicitudes registradas, su estado actual y los datos
-          principales de cada estudiante.
+          Revisa, aprueba u observa las solicitudes de práctica de los estudiantes.
         </p>
       </div>
       @if (mostrarVolver()) {
@@ -25,8 +24,9 @@
       </ion-card>
     } @else if (error) {
       <ion-card class="state-card state-card-error">
-        <ion-card-content>
+        <ion-card-content class="state-card-content">
           <p class="error" role="alert">{{ error }}</p>
+          <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
         </ion-card-content>
       </ion-card>
     } @else if (solicitudes.length === 0) {
@@ -36,35 +36,136 @@
         </ion-card-content>
       </ion-card>
     } @else {
-      @for (solicitud of solicitudes; track solicitud.id_practica) {
-        <ion-card class="request-card">
-          <ion-card-header>
-            <ion-card-title>{{ solicitud.estudiante }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="request-meta">
-              <p>
-                <span>RUT</span>
-                <strong>{{ solicitud.rut_estudiante }}</strong>
-              </p>
-              <p>
-                <span>Centro</span>
-                <strong>{{ solicitud.centro_practica }}</strong>
-              </p>
-              <p class="request-status">
-                <span>Estado</span>
-                <strong>{{ solicitud.estado }}</strong>
-              </p>
+      <section class="panel-solicitudes" aria-label="Listado de solicitudes">
+        <div class="controles">
+          <label class="campo campo-busqueda">
+            <span>Buscar</span>
+            <input
+              type="search"
+              placeholder="Nombre del estudiante o centro de práctica"
+              [value]="busqueda()"
+              (input)="alBuscar(valorDe($event))"
+              (change)="confirmarBusqueda()" />
+          </label>
+          <label class="campo campo-orden">
+            <span>Ordenar por</span>
+            <select (change)="alOrdenar(valorDe($event))">
+              @for (opcion of opcionesOrden; track opcion.valor) {
+                <option [value]="opcion.valor" [selected]="opcion.valor === orden()">{{ opcion.etiqueta }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="filtros" role="group" aria-label="Filtrar por estado">
+          <button type="button" class="filtro" [attr.aria-pressed]="estados().length === 0" (click)="mostrarTodas()">
+            Todas <span class="filtro__cuenta">({{ conteos().total }})</span>
+          </button>
+          @for (opcion of opcionesEstado; track opcion.estado) {
+            <button
+              type="button"
+              class="filtro"
+              [attr.aria-pressed]="estados().includes(opcion.estado)"
+              (click)="alternarEstado(opcion.estado)">
+              {{ opcion.etiqueta }} <span class="filtro__cuenta">({{ conteos()[opcion.estado] }})</span>
+            </button>
+          }
+        </div>
+
+        <p class="resumen-listado">
+          {{ conteos().total }} solicitudes en el listado · {{ porRevisar() }} por revisar (registradas y en revisión)
+        </p>
+
+        @if (estadosDesconocidos().length > 0) {
+          <p class="aviso-filtro" role="status">
+            Se ignoraron filtros no válidos en la dirección: {{ estadosDesconocidos().join(', ') }}.
+          </p>
+        }
+
+        @if (filtradas().length === 0) {
+          <div class="sin-resultados">
+            <p>No hay solicitudes con estos filtros.</p>
+            <ion-button fill="clear" (click)="limpiarFiltros()">Limpiar filtros</ion-button>
+          </div>
+        } @else {
+          <table class="tabla-solicitudes">
+            <caption class="visualmente-oculto">Solicitudes de práctica, ordenadas según el criterio elegido</caption>
+            <thead>
+              <tr>
+                <th scope="col">Estudiante</th>
+                <th scope="col">Empresa</th>
+                <th scope="col">Enviada</th>
+                <th scope="col">Estado</th>
+                <th scope="col"><span class="visualmente-oculto">Acción</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (solicitud of pagina().elementos; track solicitud.id_practica) {
+                <tr>
+                  <td>
+                    <span class="estudiante">{{ solicitud.estudiante }}</span>
+                    <span class="rut">RUT {{ solicitud.rut_estudiante }}</span>
+                  </td>
+                  <td>{{ solicitud.centro_practica }}</td>
+                  <td>
+                    <span>{{ fechaEnvio(solicitud) }}</span>
+                    <span class="antiguedad">{{ antiguedad(solicitud) }}</span>
+                  </td>
+                  <td><app-estado-badge [estado]="solicitud.estado" /></td>
+                  <td>
+                    <ion-button
+                      fill="outline"
+                      size="small"
+                      [attr.aria-label]="'Revisar antecedentes de ' + solicitud.estudiante"
+                      (click)="revisar(solicitud.id_practica)">
+                      Revisar antecedentes
+                    </ion-button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <ul class="lista-tarjetas">
+            @for (solicitud of pagina().elementos; track solicitud.id_practica) {
+              <li class="solicitud-tarjeta">
+                <div class="tarjeta__cabecera">
+                  <div>
+                    <p class="estudiante">{{ solicitud.estudiante }}</p>
+                    <p class="rut">RUT {{ solicitud.rut_estudiante }}</p>
+                  </div>
+                  <app-estado-badge [estado]="solicitud.estado" />
+                </div>
+                <dl class="tarjeta__datos">
+                  <div><dt>Empresa</dt><dd>{{ solicitud.centro_practica }}</dd></div>
+                  <div><dt>Enviada</dt><dd>{{ fechaEnvio(solicitud) }} · {{ antiguedad(solicitud) }}</dd></div>
+                </dl>
+                <ion-button
+                  expand="block"
+                  [attr.aria-label]="'Revisar antecedentes de ' + solicitud.estudiante"
+                  (click)="revisar(solicitud.id_practica)">
+                  Revisar antecedentes
+                </ion-button>
+              </li>
+            }
+          </ul>
+
+          <footer class="paginacion">
+            <p class="resumen-pagina" aria-live="polite">
+              Mostrando {{ pagina().desde }}–{{ pagina().hasta }} de {{ filtradas().length }} solicitudes
+            </p>
+            <div class="paginacion__controles">
+              <ion-button fill="outline" size="small" [disabled]="pagina().pagina <= 1" (click)="paginaAnterior()">
+                Anterior
+              </ion-button>
+              <span class="paginacion__pagina">Página {{ pagina().pagina }} de {{ pagina().paginas }}</span>
+              <ion-button fill="outline" size="small" [disabled]="pagina().pagina >= pagina().paginas" (click)="paginaSiguiente()">
+                Siguiente
+              </ion-button>
             </div>
-            <ion-button
-              expand="block"
-              class="request-action"
-              (click)="revisar(solicitud.id_practica)">
-              Revisar antecedentes
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-      }
+          </footer>
+        }
+      </section>
     }
   </ion-col></ion-row></ion-grid>
 </ion-content>

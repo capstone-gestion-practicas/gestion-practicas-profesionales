@@ -2,7 +2,7 @@
   <ion-grid class="incidents-wrapper"><ion-row><ion-col size="12">
     <header class="page-heading">
       <div>
-        <p class="module-label">EP06 · Incidencias y alertas</p>
+        <p class="module-label">ATENCIÓN</p>
         <h1>Gestión de incidencias</h1>
         <p class="heading-subtitle">Registra situaciones que requieren atención y mantén su estado actualizado.</p>
       </div>
@@ -25,7 +25,7 @@
       </section>
 
       <ion-card class="create-card">
-        <ion-card-header><p class="module-label">HU06.1</p><ion-card-title>Registrar incidencia</ion-card-title></ion-card-header>
+        <ion-card-header><ion-card-title>Registrar incidencia</ion-card-title></ion-card-header>
         <ion-card-content>
           @if (practicas.length) {
             <div class="form-grid">
@@ -71,7 +71,7 @@
                     @if (incidencia.fecha_resolucion) { <span>Atendida {{ incidencia.fecha_resolucion | date:'dd/MM/yyyy HH:mm' }}</span> }
                   </div>
                   <p class="incident-state">Estado: <strong>{{ incidencia.estado }}</strong></p>
-                  <p class="student-email">El cambio de estado se gestiona desde la ficha de la práctica (HU016).</p>
+                  <p class="student-email">El cambio de estado se gestiona desde la ficha de la práctica.</p>
                 </ion-card-content>
               </ion-card>
             }

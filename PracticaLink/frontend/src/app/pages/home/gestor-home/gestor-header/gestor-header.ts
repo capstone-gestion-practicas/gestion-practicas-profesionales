@@ -18,8 +18,19 @@ import { SesionService } from '../../../../core/session/sesion.service';
 import { SolicitudesPendientesService } from '../../../../core/services/solicitudes-pendientes.service';
 import { NotificacionService } from '../../../../features/notificaciones/services/notificacion.service';
 import { BrandMark } from '../../../../shared/components/brand-mark/brand-mark';
+import { IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import {
+  documentTextOutline,
+  homeOutline,
+  notificationsOutline,
+  optionsOutline,
+  paperPlaneOutline,
+  pulseOutline,
+  warningOutline
+} from 'ionicons/icons';
 
-export type SeccionGestor = 'inicio' | 'solicitudes' | 'estados' | 'seguimientos' | 'incidencias' | 'avisos';
+export type SeccionGestor = 'inicio' | 'solicitudes' | 'estados' | 'seguimientos' | 'incidencias' | 'avisos' | 'notificaciones';
 
 /**
  * Shell del espacio de gestión: sidebar de navegación y barra superior. Envuelve el
@@ -29,7 +40,7 @@ export type SeccionGestor = 'inicio' | 'solicitudes' | 'estados' | 'seguimientos
 @Component({
   selector: 'app-gestor-header',
   standalone: true,
-  imports: [BrandMark, RouterLink],
+  imports: [BrandMark, RouterLink, IonIcon],
   templateUrl: './gestor-header.html',
   styleUrl: './gestor-header.scss',
   changeDetection: ChangeDetectionStrategy.Default
@@ -72,11 +83,19 @@ export class GestorHeader implements OnInit {
     if (ruta.startsWith('/seguimientos')) return 'seguimientos';
     if (ruta.startsWith('/incidencias')) return 'incidencias';
     if (ruta.startsWith('/envio-notificaciones')) return 'avisos';
+    if (ruta.startsWith('/notificaciones')) return 'notificaciones';
     return null;
   });
 
   private readonly cuenta = viewChild<ElementRef<HTMLElement>>('cuenta');
   private readonly botonMenuMovil = viewChild<ElementRef<HTMLButtonElement>>('botonMenuMovil');
+
+  constructor() {
+    addIcons({
+      homeOutline, documentTextOutline, optionsOutline, pulseOutline, warningOutline,
+      paperPlaneOutline, notificationsOutline
+    });
+  }
 
   ngOnInit(): void {
     this.pendientes.refrescar();

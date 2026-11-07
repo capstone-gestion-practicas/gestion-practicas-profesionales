@@ -8,6 +8,7 @@ import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token
 import { Notificacion, NotificacionesResumen } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { Notificaciones } from './notificaciones';
+import { codigosInternosVisibles } from '../../../../shared/testing/codigos-internos';
 
 describe('Notificaciones: presentación por espacio', () => {
   let fixture: ComponentFixture<Notificaciones>;
@@ -107,7 +108,7 @@ describe('Notificaciones: presentación por espacio', () => {
 
     it('muestra el contador de no leídas y «Marcar todas» deshabilitado sin pendientes', async () => {
       await renderizar();
-      expect(botonPorTexto('Marcar todas')?.hasAttribute('disabled')).toBeTrue();
+      expect((botonPorTexto('Marcar todas') as unknown as { disabled: boolean }).disabled).toBeTrue();
     });
 
     it('«Marcar todas» llama al servicio cuando hay no leídas', async () => {
@@ -149,17 +150,35 @@ describe('Notificaciones: presentación por espacio', () => {
   describe('ruta original /notificaciones (gestor y administrador)', () => {
     beforeEach(() => configurar(null));
 
-    it('conserva el botón de push, «Volver al inicio» y la etiqueta EP08', async () => {
+    it('conserva el botón de push, «Volver al inicio» y la etiqueta de módulo', async () => {
       await renderizar();
       expect(botonPorTexto('Activar push')).toBeDefined();
       expect(botonPorTexto('Volver al inicio')).toBeDefined();
-      expect(texto()).toContain('EP08 · Centro de notificaciones');
+      expect(texto()).toContain('CENTRO DE NOTIFICACIONES');
     });
 
     it('no aplica la clase de presentación estudiantil', async () => {
       await renderizar();
       expect(fixture.nativeElement.querySelector('ion-content')?.classList)
         .not.toContain('notifications-content--estudiante');
+    });
+  });
+
+  describe('códigos internos en textos visibles', () => {
+    it('gestor y administrador: muestra CENTRO DE NOTIFICACIONES y ningún código EP/HU', async () => {
+      configurar(null);
+      await renderizar();
+      expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('CENTRO DE NOTIFICACIONES');
+      expect(fixture.nativeElement.querySelector('h1')?.textContent?.trim()).toBe('Notificaciones');
+      expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
+    });
+
+    it('estudiante: no muestra etiqueta de módulo ni códigos EP/HU', async () => {
+      configurar('estudiante');
+      await renderizar();
+      expect(fixture.nativeElement.querySelector('.module-label')).toBeNull();
+      expect(texto()).not.toContain('CENTRO DE NOTIFICACIONES');
+      expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
     });
   });
 });

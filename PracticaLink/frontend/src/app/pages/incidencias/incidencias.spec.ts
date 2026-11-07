@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { environment } from '../../../environments/environment';
 import { Incidencias } from './incidencias';
+import { codigosInternosVisibles } from '../../shared/testing/codigos-internos';
 
 describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
   let http: HttpTestingController;
@@ -64,5 +65,15 @@ describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
     });
     // Tras crear se recarga la lista legada, no se inserta la respuesta EP06.
     cargarListados();
+  });
+
+  it('no muestra códigos internos y usa las etiquetas de atención, incluido el registro', () => {
+    const fixture = TestBed.createComponent(Incidencias);
+    fixture.detectChanges();
+    cargarListados([]);
+    fixture.detectChanges();
+    expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
+    expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('ATENCIÓN');
+    expect(fixture.nativeElement.textContent).toContain('Registrar incidencia');
   });
 });

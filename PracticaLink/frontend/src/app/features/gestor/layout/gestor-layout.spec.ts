@@ -124,7 +124,7 @@ describe('GestorLayout', () => {
         },
         {
           provide: SolicitudesPendientesService,
-          useValue: { total: pendientes, refrescar }
+          useValue: { total: pendientes, refrescar, publicar: () => undefined }
         },
         {
           provide: NavController,

@@ -125,3 +125,275 @@ ion-card.unread { border-inline-start:4px solid var(--ion-color-primary); }
 .notifications-content--estudiante .filtro__cuenta {
   font-weight: 500;
 }
+
+/* ===== Centro de notificaciones del GESTOR (presentación nueva) ===== */
+
+.notif-gestor {
+  --nt-fondo: #F4F0E8;
+  --nt-superficie: #FFFDF8;
+  --nt-borde: #E4DED2;
+  --nt-verde: #1F4D3A;
+  --nt-texto2: #55605A;
+  --nt-naranja: #B4400E;
+  --nt-no-leida: #F6FAF7;
+  --nt-aviso: #EEF3F9;
+  --background: var(--nt-fondo);
+}
+
+.notif-gestor__cuerpo {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  color: #1E2A24;
+}
+
+.notif-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.notif-eyebrow {
+  margin: 0 0 6px;
+  color: var(--nt-verde);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.notif-cabecera h1 { margin: 0 0 6px; font-size: 2rem; line-height: 1.15; color: #1E2A24; }
+
+.notif-subtitulo { margin: 0; color: var(--nt-texto2); }
+
+/* Botones: áreas táctiles de 44 px; sin mayúsculas. */
+.btn-secundario,
+.btn-primario,
+.btn-texto,
+.chip,
+.btn-accion,
+.btn-check {
+  font: inherit;
+  cursor: pointer;
+  text-transform: none;
+}
+
+.btn-secundario {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--nt-verde);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--nt-verde);
+  font-weight: 600;
+}
+
+.btn-primario {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--nt-verde);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.btn-texto {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--nt-texto2);
+  font-weight: 600;
+}
+
+.btn-secundario:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-secundario:focus-visible,
+.btn-primario:focus-visible,
+.btn-texto:focus-visible,
+.chip:focus-visible,
+.btn-accion:focus-visible,
+.btn-check:focus-visible {
+  outline: 2px solid var(--nt-verde);
+  outline-offset: 2px;
+}
+
+/* Aviso de push */
+.aviso-push {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--nt-aviso);
+}
+
+.aviso-push h2 { margin: 0 0 4px; font-size: 1.05rem; color: #1E2A24; }
+.aviso-push p { margin: 0; color: var(--nt-texto2); }
+.aviso-push__acciones { display: flex; gap: 8px; align-items: center; }
+
+.push-activo { margin: 0 0 16px; color: var(--nt-verde); font-weight: 600; font-size: .9rem; }
+.nota-push { margin: 0 0 16px; color: var(--nt-texto2); }
+
+/* Chips de filtro */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+.chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--nt-borde);
+  border-radius: 999px;
+  background: var(--nt-superficie);
+  color: #1E2A24;
+  font-weight: 600;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--nt-verde);
+  background: var(--nt-verde);
+  color: #FFFFFF;
+}
+
+.chip__cuenta { font-weight: 500; opacity: .9; }
+
+/* Grupos y filas */
+.grupo { margin-bottom: 22px; }
+
+.grupo__titulo {
+  margin: 0 0 8px;
+  color: var(--nt-texto2);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.fila {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 16px;
+  border: 1px solid var(--nt-borde);
+  border-radius: 14px;
+  background: var(--nt-superficie);
+}
+
+.fila--no-leida { background: var(--nt-no-leida); }
+
+.fila__icono {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #E6EFE9;
+  color: var(--nt-verde);
+}
+
+.fila__icono[data-seccion='estados'] { background: #E8EEF6; color: #2D4F7C; }
+.fila__icono[data-seccion='general'] { background: #EFEAE0; color: var(--nt-texto2); }
+
+.fila__icono ion-icon { font-size: 20px; }
+
+.fila__titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  color: #1E2A24;
+  font-weight: 700;
+}
+
+.punto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nt-naranja);
+}
+
+.fila__mensaje { margin: 0 0 6px; color: var(--nt-texto2); line-height: 1.45; }
+
+.fila__meta { margin: 0; color: var(--nt-texto2); font-size: .85rem; }
+
+.etiqueta-seccion { font-weight: 600; color: var(--nt-verde); }
+
+.fila__acciones { display: flex; align-items: center; gap: 8px; }
+
+.btn-accion {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--nt-verde);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--nt-verde);
+  font-weight: 600;
+  font-size: .9rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-check {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--nt-borde);
+  border-radius: 10px;
+  background: var(--nt-superficie);
+  color: var(--nt-verde);
+}
+
+/* Estado vacío */
+.estado-vacio {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px 16px;
+  border: 1px dashed var(--nt-borde);
+  border-radius: 14px;
+  background: var(--nt-superficie);
+  color: var(--nt-texto2);
+  text-align: center;
+}
+
+.estado-vacio__icono {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: #E6EFE9;
+  color: var(--nt-verde);
+}
+
+.estado-vacio__titulo { margin: 0; color: #1E2A24; font-weight: 700; font-size: 1.05rem; }
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .notif-gestor__cuerpo { padding: 16px 12px 32px; }
+  .notif-cabecera h1 { font-size: 1.6rem; }
+  .fila { grid-template-columns: 40px minmax(0, 1fr); }
+  .fila__acciones { grid-column: 1 / -1; justify-content: flex-start; }
+  .aviso-push__acciones { width: 100%; justify-content: flex-end; }
+}
