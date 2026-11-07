@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.core.database import engine
 from app.auth.routes import router as auth_router
+from app.informes.routes import router as informes_router
 from app.docentes.routes import router as docentes_router
 from app.practicas.routes import router as practicas_router
 from app.estudiantes.routes import router as estudiantes_router
@@ -48,6 +49,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(docentes_router)
+app.include_router(informes_router)
 # EP06 antes que prácticas: GET /practicas/con-incidencias-pendientes (HU017)
 # no debe ser capturado por GET /practicas/{id_practica}. Registro único.
 app.include_router(incidencias_ep06_router)

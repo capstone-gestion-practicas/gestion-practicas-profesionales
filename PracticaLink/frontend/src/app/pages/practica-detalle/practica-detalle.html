@@ -39,6 +39,7 @@
             <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
           }
         } @else if (detalle; as practica) {
+          @if (puedeAsignarDocente) { <app-informe-final [idPractica]="practica.id_practica" /> }
           @if (puedeAsignarDocente) {
             <app-docente-asignacion [idPractica]="practica.id_practica" />
           }

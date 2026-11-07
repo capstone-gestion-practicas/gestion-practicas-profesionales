@@ -7,6 +7,7 @@
     @if (cargando) { <div class="state"><ion-spinner aria-hidden="true"></ion-spinner><p>Cargando prácticas asignadas…</p></div> }
     @else if (error) { <div class="state"><p role="alert">{{ error }}</p><ion-button fill="outline" (click)="cargar()">Reintentar</ion-button></div> }
     @else if (esDetalle && practica; as item) {
+      <app-informe-final [idPractica]="item.id_practica" />
       <article class="practice-card"><h2>{{ item.estudiante }}</h2><dl>
         <div><dt>Estado</dt><dd>{{ item.estado }}</dd></div><div><dt>Centro de práctica</dt><dd>{{ item.centro_practica }}</dd></div>
         <div><dt>Inicio</dt><dd>{{ item.fecha_inicio || 'Sin fecha registrada' }}</dd></div><div><dt>Término</dt><dd>{{ item.fecha_termino || 'Sin fecha registrada' }}</dd></div>

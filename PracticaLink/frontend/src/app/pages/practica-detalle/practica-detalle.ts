@@ -1,3 +1,4 @@
+import { InformeFinal } from '../../features/informe-final/informe-final';
 import { SesionService } from '../../core/session/sesion.service';
 import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
@@ -18,7 +19,7 @@ import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/ut
 
 @Component({
   selector: 'app-practica-detalle', standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion],
+  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion, InformeFinal],
   templateUrl: './practica-detalle.html', styleUrl: './practica-detalle.scss'
 })
 export class PracticaDetalle implements OnInit, OnDestroy {

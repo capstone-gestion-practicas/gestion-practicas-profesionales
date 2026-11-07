@@ -33,6 +33,7 @@
       <button class="student-practice__action" type="button" (click)="reintentarDetalle()">Reintentar</button>
     </section>
   } @else if (detalle(); as practica) {
+    <app-informe-final [idPractica]="practica.id_practica" [estudiante]="true" />
     <div class="student-practice__metricas">
       @if (fechaCalendario(practica.fecha_inicio); as fechaInicio) { <article class="student-card student-practice__metrica"><span>Inicio</span><strong>{{ fechaInicio }}</strong></article> }
       @if (fechaCalendario(practica.fecha_termino); as fechaTermino) { <article class="student-card student-practice__metrica"><span>Término</span><strong>{{ fechaTermino }}</strong></article> }

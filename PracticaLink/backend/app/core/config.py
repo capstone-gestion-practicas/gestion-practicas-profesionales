@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     supabase_database_url: str
     inicio_practica_database_url: str | None = None
     docente_assignment_database_url: str | None = None
+    informe_database_url: str | None = None
+    informe_storage_url: str | None = None
+    informe_storage_key: str | None = None
+    informe_storage_bucket: str = 'informes-finales'
     seguimientos_database_url: str | None = None
 
     seguimientos_lectura_database_url: str | None = None

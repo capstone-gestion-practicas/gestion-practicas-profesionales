@@ -1,0 +1,10 @@
+:host { display: block; margin-block: 1rem; }
+section { padding: 1.25rem; border: 1px solid var(--ion-color-light-shade, #dce2e8); border-radius: 1rem; background: var(--ion-background-color, white); }
+h2 { margin-top: 0; font-size: 1.2rem; }
+button { padding: .65rem 1rem; margin: .3rem .5rem .3rem 0; border: 1px solid var(--ion-color-primary, #3156a3); border-radius: .5rem; color: var(--ion-color-primary, #3156a3); background: transparent; cursor: pointer; }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--ion-color-primary, #3156a3); outline-offset: 3px; }
+label { display: block; margin-block: 1rem; }
+input { display: block; max-width: 100%; margin-top: .5rem; }
+[role=alert] { color: var(--ion-color-danger, #aa1728); }
+p { overflow-wrap: anywhere; }
