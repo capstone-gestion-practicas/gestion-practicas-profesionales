@@ -14,8 +14,10 @@ os.environ.setdefault("JWT_SECRET_KEY", "unit-test-secret")
 
 from app.revisiones.service import listar_solicitudes, obtener_solicitud  # noqa: E402
 from app.revisiones.service import (  # noqa: E402
+    GestorAsignadoAOtroError,
     SolicitudNoEncontradaError,
     SolicitudNoRevisableError,
+    UsuarioNoAutorizadoError,
     resolver_solicitud,
 )
 from app.core.database import get_db  # noqa: E402
@@ -31,7 +33,7 @@ from app.revisiones.schemas import (  # noqa: E402
 class ListarSolicitudesTests(unittest.TestCase):
     def test_returns_minimal_data_for_each_solicitud(self) -> None:
         db = MagicMock(name="db")
-        db.execute.return_value.mappings.return_value.all.return_value = [
+        db.execute.return_value.scalar_one.return_value = [
             {
                 "id_practica": 101,
                 "fecha_registro": datetime(2026, 9, 1, 10, 30, 0),
@@ -76,14 +78,11 @@ class ListarSolicitudesTests(unittest.TestCase):
 
         db.execute.assert_called_once()
         sql = str(db.execute.call_args.args[0])
-        self.assertIn("SELECT p.id_practica", sql)
-        self.assertIn("CONCAT(u.nombre, ' ', u.apellido) AS estudiante", sql)
-        self.assertIn("ep.nombre AS estado", sql)
-        self.assertIn("WHERE ep.nombre IN ('REGISTRADA', 'EN_REVISION', 'OBSERVADA')", sql)
+        self.assertIn("fn_listar_solicitudes_revision", sql)
 
     def test_returns_empty_list_when_there_are_no_solicitudes(self) -> None:
         db = MagicMock(name="db")
-        db.execute.return_value.mappings.return_value.all.return_value = []
+        db.execute.return_value.scalar_one.return_value = []
 
         resultado = listar_solicitudes(db)
 
@@ -136,7 +135,7 @@ class ListarSolicitudesRouteTests(unittest.TestCase):
 class ObtenerSolicitudTests(unittest.TestCase):
     def test_returns_expected_antecedents(self) -> None:
         db = MagicMock(name="db")
-        db.execute.return_value.mappings.return_value.first.return_value = {
+        db.execute.return_value.scalar_one_or_none.return_value = {
             "id_practica": 101,
             "fecha_registro": datetime(2026, 9, 1, 10, 30, 0),
             "estado": "REGISTRADA",
@@ -154,6 +153,7 @@ class ObtenerSolicitudTests(unittest.TestCase):
             "fecha_inicio": date(2026, 3, 2),
             "fecha_termino": date(2026, 6, 30),
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -166,11 +166,12 @@ class ObtenerSolicitudTests(unittest.TestCase):
         self.assertEqual(resultado["estado"], "REGISTRADA")
         db.execute.assert_called_once()
         sql = str(db.execute.call_args.args[0])
-        self.assertIn("WHERE p.id_practica = :id_practica", sql)
+        self.assertIn("fn_obtener_solicitud_revision", sql)
+        self.assertEqual(db.execute.call_args.args[1], {"id_practica": 101})
 
     def test_returns_none_when_request_does_not_exist(self) -> None:
         db = MagicMock(name="db")
-        db.execute.return_value.mappings.return_value.first.return_value = None
+        db.execute.return_value.scalar_one_or_none.return_value = None
 
         resultado = obtener_solicitud(db, 999)
 
@@ -205,6 +206,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -230,30 +232,8 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
 
-    def test_allows_administrador_to_access_detail(self) -> None:
+    def test_rejects_administrador_without_gestor_role_on_detail(self) -> None:
         db = MagicMock(name="db")
-        expected_response = {
-            "id_practica": 202,
-            "fecha_registro": "2026-09-02T11:00:00",
-            "estado": "EN_REVISION",
-            "estudiante": "Bruno Soto",
-            "rut_estudiante": "11.222.333-4",
-            "correo_estudiante": "bruno@practicalink.cl",
-            "carrera": "Ingenieria",
-            "sede": "Valparaiso",
-            "centro_practica": "Centro Norte",
-            "rut_empresa": None,
-            "direccion_empresa": None,
-            "correo_empresa": None,
-            "contacto_nombre": None,
-            "contacto_cargo": None,
-            "fecha_inicio": None,
-            "fecha_termino": None,
-            "horas": None,
-            "cargo_funcion": None,
-            "descripcion": None,
-        }
-
         original_overrides = self._override_dependencies(db, user_id=77)
 
         try:
@@ -262,15 +242,13 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
                 "app.revisiones.routes.obtener_solicitud",
-                return_value=expected_response,
             ) as obtener_mock:
                 with TestClient(app) as client:
                     response = client.get("/revisiones/solicitudes/202")
 
-                self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.json(), expected_response)
+                self.assertEqual(response.status_code, 403)
                 contexto_mock.assert_called_once_with(db=db, id_usuario=77)
-                obtener_mock.assert_called_once_with(db, 202)
+                obtener_mock.assert_not_called()
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
@@ -338,6 +316,7 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -367,19 +346,8 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
 
-    def test_allows_administrador_to_access_listado(self) -> None:
+    def test_rejects_administrador_without_gestor_role_on_listado(self) -> None:
         db = MagicMock(name="db")
-        expected_response = [
-            {
-                "id_practica": 202,
-                "fecha_registro": "2026-09-02T09:15:00",
-                "estado": "EN_REVISION",
-                "estudiante": "Bruno Soto",
-                "rut_estudiante": "11.222.333-4",
-                "centro_practica": "Centro Norte",
-            }
-        ]
-
         original_overrides = self._override_dependencies(db, user_id=77)
 
         try:
@@ -388,15 +356,13 @@ class ObtenerSolicitudRouteTests(unittest.TestCase):
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
                 "app.revisiones.routes.listar_solicitudes",
-                return_value=expected_response,
             ) as listar_mock:
                 with TestClient(app) as client:
                     response = client.get("/revisiones/solicitudes")
 
-                self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.json(), expected_response)
+                self.assertEqual(response.status_code, 403)
                 contexto_mock.assert_called_once_with(db=db, id_usuario=77)
-                listar_mock.assert_called_once_with(db)
+                listar_mock.assert_not_called()
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
@@ -569,6 +535,51 @@ class ResolverSolicitudTests(unittest.TestCase):
             resolver_solicitud(db, 999, 55, datos)
 
         db.commit.assert_not_called()
+        db.rollback.assert_called_once_with()
+
+    def test_resolver_rolls_back_when_actor_is_not_active_gestor(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {"error": "USUARIO_NO_AUTORIZADO"}
+
+        with self.assertRaises(UsuarioNoAutorizadoError):
+            resolver_solicitud(db, 101, 55, DecisionRevisionRequest(decision="APROBADA"))
+
+        db.commit.assert_not_called()
+        db.rollback.assert_called_once_with()
+
+    def test_resolver_rolls_back_when_practice_belongs_to_another_manager(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {"error": "GESTOR_ASIGNADO_A_OTRO"}
+
+        with self.assertRaises(GestorAsignadoAOtroError):
+            resolver_solicitud(db, 101, 55, DecisionRevisionRequest(decision="APROBADA"))
+
+        db.commit.assert_not_called()
+        db.rollback.assert_called_once_with()
+
+    def test_resolver_rolls_back_when_database_execution_fails(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.side_effect = RuntimeError("synthetic database failure")
+
+        with self.assertRaisesRegex(RuntimeError, "synthetic database failure"):
+            resolver_solicitud(db, 101, 55, DecisionRevisionRequest(decision="APROBADA"))
+
+        db.commit.assert_not_called()
+        db.rollback.assert_called_once_with()
+
+    def test_resolver_rolls_back_when_commit_fails(self) -> None:
+        db = MagicMock(name="db")
+        db.execute.return_value.scalar_one.return_value = {
+            "id_practica": 101,
+            "estado": "APROBADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+        db.commit.side_effect = RuntimeError("synthetic commit failure")
+
+        with self.assertRaisesRegex(RuntimeError, "synthetic commit failure"):
+            resolver_solicitud(db, 101, 55, DecisionRevisionRequest(decision="APROBADA"))
+
+        db.rollback.assert_called_once_with()
 
 
 class ResolverSolicitudRouteTests(unittest.TestCase):
@@ -610,14 +621,8 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)
 
-    def test_allows_administrador_to_resolve(self) -> None:
+    def test_rejects_administrador_without_gestor_role(self) -> None:
         db = MagicMock(name="db")
-        expected_response = {
-            "id_practica": 202,
-            "estado": "OBSERVADA",
-            "mensaje": "Solicitud revisada correctamente",
-        }
-
         original_overrides = self._override_dependencies(db, user_id=77)
 
         try:
@@ -626,7 +631,6 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                 return_value={"roles": ["ADMINISTRADOR"]},
             ) as contexto_mock, patch(
                 "app.revisiones.routes.resolver_solicitud",
-                return_value=expected_response,
             ) as resolver_mock:
                 with TestClient(app) as client:
                     response = client.patch(
@@ -637,9 +641,38 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                         },
                     )
 
+                self.assertEqual(response.status_code, 403)
+                contexto_mock.assert_called_once_with(db=db, id_usuario=77)
+                resolver_mock.assert_not_called()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_allows_administrador_with_gestor_role_to_resolve(self) -> None:
+        db = MagicMock(name="db")
+        expected_response = {
+            "id_practica": 202,
+            "estado": "OBSERVADA",
+            "mensaje": "Solicitud revisada correctamente",
+        }
+        original_overrides = self._override_dependencies(db, user_id=77)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["ADMINISTRADOR", "GESTOR"]},
+            ), patch(
+                "app.revisiones.routes.resolver_solicitud",
+                return_value=expected_response,
+            ) as resolver_mock:
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/202",
+                        json={"decision": "OBSERVADA", "observacion": "Faltan antecedentes"},
+                    )
+
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.json(), expected_response)
-                contexto_mock.assert_called_once_with(db=db, id_usuario=77)
                 resolver_mock.assert_called_once()
         finally:
             app.dependency_overrides.clear()
@@ -716,6 +749,55 @@ class ResolverSolicitudRouteTests(unittest.TestCase):
                     response.json()["detail"],
                     "La solicitud ya no se encuentra en revisión",
                 )
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_returns_409_when_practice_is_assigned_to_another_manager(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = self._override_dependencies(db, user_id=55)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ), patch(
+                "app.revisiones.routes.resolver_solicitud",
+                side_effect=GestorAsignadoAOtroError,
+            ):
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/101",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 409)
+                self.assertEqual(response.json()["detail"], "La práctica ya está asignada a otro gestor")
+                db.rollback.assert_called_once_with()
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(original_overrides)
+
+    def test_returns_403_when_sql_rejects_inactive_gestor(self) -> None:
+        db = MagicMock(name="db")
+        original_overrides = self._override_dependencies(db, user_id=55)
+
+        try:
+            with patch(
+                "app.core.permissions.obtener_contexto_usuario",
+                return_value={"roles": ["GESTOR"]},
+            ), patch(
+                "app.revisiones.routes.resolver_solicitud",
+                side_effect=UsuarioNoAutorizadoError,
+            ):
+                with TestClient(app) as client:
+                    response = client.patch(
+                        "/revisiones/solicitudes/101",
+                        json={"decision": "APROBADA"},
+                    )
+
+                self.assertEqual(response.status_code, 403)
+                db.rollback.assert_called_once_with()
         finally:
             app.dependency_overrides.clear()
             app.dependency_overrides.update(original_overrides)

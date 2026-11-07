@@ -12,6 +12,14 @@ class SolicitudNoRevisableError(Exception):
     pass
 
 
+class UsuarioNoAutorizadoError(Exception):
+    pass
+
+
+class GestorAsignadoAOtroError(Exception):
+    pass
+
+
 def listar_solicitudes(db: Session) -> list[dict]:
     return db.execute(text("""
         SELECT public.fn_listar_solicitudes_revision()
@@ -30,20 +38,36 @@ def resolver_solicitud(
     id_usuario: int,
     datos: DecisionRevisionRequest,
 ) -> dict:
-    resultado = db.execute(text("""
-        SELECT public.fn_revisar_practica(
-            :id_practica, :id_usuario, :decision, :observacion
-        )
-    """), {
-        "id_practica": id_practica,
-        "id_usuario": id_usuario,
-        "decision": datos.decision,
-        "observacion": datos.observacion.strip() if datos.observacion else None,
-    }).scalar_one()
+    try:
+        resultado = db.execute(text("""
+            SELECT public.fn_revisar_practica(
+                :id_practica, :id_usuario, :decision, :observacion
+            )
+        """), {
+            "id_practica": id_practica,
+            "id_usuario": id_usuario,
+            "decision": datos.decision,
+            "observacion": datos.observacion.strip() if datos.observacion else None,
+        }).scalar_one()
+    except Exception:
+        db.rollback()
+        raise
     error = resultado.get("error")
     if error == "SOLICITUD_NO_ENCONTRADA":
+        db.rollback()
         raise SolicitudNoEncontradaError
     if error in {"SOLICITUD_NO_REVISABLE", "DECISION_INVALIDA"}:
+        db.rollback()
         raise SolicitudNoRevisableError
-    db.commit()
+    if error == "USUARIO_NO_AUTORIZADO":
+        db.rollback()
+        raise UsuarioNoAutorizadoError
+    if error == "GESTOR_ASIGNADO_A_OTRO":
+        db.rollback()
+        raise GestorAsignadoAOtroError
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return resultado

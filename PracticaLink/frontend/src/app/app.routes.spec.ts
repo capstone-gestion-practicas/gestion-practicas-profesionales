@@ -21,7 +21,7 @@ describe('Practice consultation routing', () => {
     expect(route.canActivate).toEqual([authGuard, roleGuard]);
     expect(route.data?.['roles']).toEqual(['GESTOR', 'ADMINISTRADOR']);
     expect(routes[routes.length - 1].path).toBe('**');
-    expect(aplanarRutas(routes).find(route => route.path === 'revisiones')?.data?.['roles']).toEqual(['GESTOR', 'ADMINISTRADOR']);
+    expect(aplanarRutas(routes).find(route => route.path === 'revisiones')?.data?.['roles']).toEqual(['GESTOR']);
   });
 
   it('protects the nested student space and preserves compatible legacy routes', () => {
@@ -92,7 +92,7 @@ describe('Practice consultation routing', () => {
     }
   });
 
-  it('keeps management routes restricted while allowing users with a management role', () => {
+  it('restricts review to gestores and preserves administrator access to practice management', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -100,17 +100,24 @@ describe('Practice consultation routing', () => {
         { provide: AuthService, useValue: jasmine.createSpyObj('AuthService', ['obtenerContexto']) }
       ]
     });
-    const rutasGestion = ['practicas', 'revisiones'].map(path => aplanarRutas(routes).find(item => item.path === path)!);
+    const rutasGestion = [
+      { path: 'practicas', rolesPermitidos: ['GESTOR', 'ADMINISTRADOR'] },
+      { path: 'revisiones', rolesPermitidos: ['GESTOR'] },
+      { path: 'revisiones/:id', rolesPermitidos: ['GESTOR'] }
+    ];
     const roleSets = [
-      { roles: ['ESTUDIANTE'], autorizado: false },
-      { roles: ['GESTOR'], autorizado: true },
-      { roles: ['ADMINISTRADOR'], autorizado: true },
-      { roles: ['ESTUDIANTE', 'GESTOR'], autorizado: true },
-      { roles: ['ESTUDIANTE', 'ADMINISTRADOR'], autorizado: true }
+      { roles: ['ESTUDIANTE'], puedeGestionarPracticas: false, puedeRevisar: false },
+      { roles: ['GESTOR'], puedeGestionarPracticas: true, puedeRevisar: true },
+      { roles: ['ADMINISTRADOR'], puedeGestionarPracticas: true, puedeRevisar: false },
+      { roles: ['ESTUDIANTE', 'GESTOR'], puedeGestionarPracticas: true, puedeRevisar: true },
+      { roles: ['ESTUDIANTE', 'ADMINISTRADOR'], puedeGestionarPracticas: true, puedeRevisar: false },
+      { roles: ['ADMINISTRADOR', 'GESTOR'], puedeGestionarPracticas: true, puedeRevisar: true }
     ];
 
-    for (const route of rutasGestion) {
+    for (const politica of rutasGestion) {
+      const route = aplanarRutas(routes).find(item => item.path === politica.path)!;
       expect(route.canActivate).toEqual([authGuard, roleGuard]);
+      expect(route.data?.['roles']).toEqual(politica.rolesPermitidos);
       for (const caso of roleSets) {
         TestBed.inject(AuthStore).setContexto({
           usuario: { id_usuario: 1, nombre: 'Sintético', apellido: 'Prueba', correo: 'test@example.com' },
@@ -122,7 +129,10 @@ describe('Practice consultation routing', () => {
           { data: route.data } as ActivatedRouteSnapshot,
           {} as RouterStateSnapshot
         ));
-        if (caso.autorizado) {
+        const autorizado = politica.path === 'practicas'
+          ? caso.puedeGestionarPracticas
+          : caso.puedeRevisar;
+        if (autorizado) {
           expect(result).toBeTrue();
         } else {
           expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/home');

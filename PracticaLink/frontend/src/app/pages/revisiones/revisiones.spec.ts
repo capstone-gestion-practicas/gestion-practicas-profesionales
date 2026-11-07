@@ -418,7 +418,7 @@ describe('Revisiones', () => {
     });
 
     it('el administrador conserva el botón Volver', () => {
-      authStore.setContexto(contextoCon(['ADMINISTRADOR']));
+      authStore.setContexto(contextoCon(['ADMINISTRADOR', 'GESTOR']));
       crear();
       expect(component.mostrarVolver()).toBeTrue();
       expect(texto()).toContain('Volver');

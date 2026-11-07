@@ -87,14 +87,14 @@ export const routes: Routes = [
       {
         path: 'revisiones',
         canActivate: [authGuard, roleGuard],
-        data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+        data: { roles: ['GESTOR'] },
         loadComponent: () =>
           import('./pages/revisiones/revisiones').then(m => m.Revisiones)
       },
       {
         path: 'revisiones/:id',
         canActivate: [authGuard, roleGuard],
-        data: { roles: ['GESTOR', 'ADMINISTRADOR'] },
+        data: { roles: ['GESTOR'] },
         loadComponent: () =>
           import('./pages/revision-detalle/revision-detalle')
             .then(m => m.RevisionDetalle)
