@@ -40,16 +40,21 @@ def get_informe_db():
            AND NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
             WHERE n.nspname='informes_privados' AND p.proname IN ('consultar','reservar','confirmar','archivo','limpieza','iniciar_evaluacion','resolver_evaluacion','historial_evaluacion')
             AND NOT has_function_privilege(current_user,p.oid,'EXECUTE'))
-           AND (SELECT count(*)=8 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+           AND (SELECT count(*)=9 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
                 WHERE n.nspname='informes_privados' AND p.oid IN (
                  to_regprocedure('informes_privados.consultar(bigint,bigint)'),
                  to_regprocedure('informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint)'),
+                 to_regprocedure('informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint,text)'),
                  to_regprocedure('informes_privados.confirmar(bigint,bigint,uuid)'),
                  to_regprocedure('informes_privados.archivo(bigint,bigint)'),
                  to_regprocedure('informes_privados.limpieza()'),
                  to_regprocedure('informes_privados.iniciar_evaluacion(bigint,bigint,uuid,bigint,bigint)'),
                  to_regprocedure('informes_privados.resolver_evaluacion(bigint,bigint,uuid,uuid,text,text)'),
                  to_regprocedure('informes_privados.historial_evaluacion(bigint,bigint)')))
+           AND NOT EXISTS (SELECT 1 FROM pg_roles client
+                WHERE client.rolname IN ('anon','authenticated','service_role')
+                AND has_function_privilege(client.oid,
+                 to_regprocedure('informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint,text)'), 'EXECUTE'))
            AND has_function_privilege(current_user,'public.fn_cerrar_practica(bigint,bigint,text)','EXECUTE')
            AND NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
                 WHERE n.nspname='informes_privados' AND p.proname NOT IN

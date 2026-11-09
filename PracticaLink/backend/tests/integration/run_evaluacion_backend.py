@@ -39,7 +39,7 @@ def main():
     try:
         pg.start()
         for path in sorted((ROOT/'PracticaLink/supabase/migrations').glob('*.sql')):
-            if '20261103130000' < path.name[:14] <= '20261109100000':
+            if '20261103130000' < path.name[:14] <= '20261110100000':
                 pg.sql('BEGIN;\n'+path.read_text()+'\nCOMMIT;')
         sql = preflight_sql()
         if pg.sql('BEGIN; SET LOCAL ROLE pl_s42_executor; '+sql+'; ROLLBACK;').stdout.strip() != 't':
@@ -47,6 +47,9 @@ def main():
         for change in [
             'GRANT SELECT ON public.evaluacion_informe TO pl_s42_executor;',
             'GRANT pl_s43_cierre_owner TO pl_s42_executor;',
+            'DROP FUNCTION informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint,text);',
+            'REVOKE EXECUTE ON FUNCTION informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint,text) FROM pl_s42_executor;',
+            'GRANT EXECUTE ON FUNCTION informes_privados.reservar(bigint,bigint,uuid,bigint,text,text,bigint,text) TO authenticated;',
             'REVOKE EXECUTE ON FUNCTION informes_privados.iniciar_evaluacion(bigint,bigint,uuid,bigint,bigint) FROM pl_s42_executor;']:
             result = pg.sql('BEGIN; '+change+' SET LOCAL ROLE pl_s42_executor; '+sql+'; ROLLBACK;').stdout.strip()
             if result != 'f': raise RuntimeError('preflight accepted unsafe/missing privileges')
@@ -74,8 +77,8 @@ def http_tests(pg):
         return URL.create('postgresql+psycopg',username=user,password=password,host=pg.host,port=5432,database='ep04_integration').render_as_string(hide_password=False)
     class MemoryStorage:
         def __init__(self): self.objects={}
-        def verify(self): pass
-        def put(self,key,data,digest):
+        def verify(self,mime=None): pass
+        def put(self,key,data,digest,mime='application/pdf'):
             if hashlib.sha256(data).hexdigest()!=digest: raise RuntimeError('hash mismatch')
             if key in self.objects and self.objects[key]!=data: raise RuntimeError('overwrite attempted')
             self.objects[key]=data
@@ -150,6 +153,35 @@ def http_tests(pg):
         expect(start(433,second['id_documento'],2,uuid4()),403)
         count=pg.sql("SELECT count(*) FROM public.notificacion WHERE id_practica=430 AND tipo='INFORME_FINAL_EVALUADO'").stdout.strip()
         if count!='4': raise RuntimeError('duplicate academic notifications')
+        # A separate practice exercises the public binary DOCX contract with real SQL,
+        # real validators/JWT and the same in-memory Storage (never Supabase).
+        from tests.test_docx import fixture
+        original=fixture(); delivery_key=uuid4(); base='/practicas/431/informe-final'
+        upload_headers={**headers(430,delivery_key),'Content-Type':'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'Version-Esperada':'0','Nombre-Archivo':'informe.docx'}
+        expect(client.post(base,headers=headers(431),content=original),422)
+        denied={**upload_headers,**headers(431)}
+        expect(client.post(base,headers=denied,content=original),403)
+        delivered=expect(client.post(base,headers=upload_headers,content=original),200)
+        if delivered['formato']!='DOCX': raise RuntimeError('format lost')
+        expect(client.post(base,headers=upload_headers,content=original),200)
+        for actor in (430,431,432):
+            response=client.get(base+'/archivo',headers=headers(actor))
+            if response.status_code!=200 or response.content!=original: raise RuntimeError('original DOCX not preserved')
+            if response.headers['content-type']!=upload_headers['Content-Type'] or response.headers['cache-control']!='no-store' or response.headers['x-content-type-options']!='nosniff' or 'informe-final.docx' not in response.headers['content-disposition']: raise RuntimeError('unsafe DOCX download headers')
+        expect(client.get(base+'/archivo',headers=headers(434)),403)
+        expect(client.get(base+'/archivo',headers=headers(435)),403)
+        ev=expect(client.post('/practicas/431/evaluaciones/inicio',headers=headers(432,uuid4()),json={'id_documento':delivered['id_documento'],'version':1}),200)
+        replacement={**upload_headers,**headers(430,uuid4()),'Version-Esperada':'1'}
+        expect(client.post(base,headers=replacement,content=original),409)
+        expect(client.post(f"/practicas/431/evaluaciones/{ev['id_evaluacion']}/resolucion",headers=headers(432,uuid4()),json={'resultado':'CON_OBSERVACIONES','observaciones':'Corregir documento'}),200)
+        writer=PdfWriter();writer.add_blank_page(width=100,height=100);stream=io.BytesIO();writer.write(stream)
+        replacement.update({'Content-Type':'application/pdf','Nombre-Archivo':'corregido.pdf'})
+        updated=expect(client.post(base,headers=replacement,content=stream.getvalue()),200)
+        if updated['version']!=2 or updated['formato']!='PDF': raise RuntimeError('format replacement failed')
+        academic=expect(client.get('/practicas/431/evaluaciones',headers=headers(430)),200)
+        if academic['resultado_vigente'] is not None: raise RuntimeError('approval inherited by another version')
+        print('PASS HTTP DOCX + PostgreSQL: original bytes/hash, JWT ownership, historical PDF, retries, academic locking and DOCX-to-PDF correction',flush=True)
         print('PASS HTTP + PostgreSQL: JWT, real private executor/preflight, upload mock Storage, evaluation, reassignment, idempotency and secure closure',flush=True)
     return 0
 

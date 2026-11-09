@@ -12,6 +12,7 @@ from app.main import app
 from app.core.security import get_current_user_id
 from app.informes.routes import get_service
 from app.informes.service import Informes
+from app.informes.formats import Download
 from app.informes.pdf import validar_pdf, MAX_BYTES
 
 
@@ -55,24 +56,24 @@ class InformeServiceTests(unittest.TestCase):
     def test_reservation_commit_precedes_upload_then_confirmation(self):
         key = uuid4(); data = pdf()
         self.db.execute.return_value.scalar_one.side_effect = [
-            {}, {'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'},
+            {'propietario_estudiante': True}, {'formato': 'PDF', 'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'},
             {'id_documento': 1, 'version': 1, 'confirmada': '2026-11-08'}]
-        result = self.service.entregar(7, 8, key, 0, 'informe.pdf', data)
+        result = self.service.entregar(7, 8, key, 0, 'informe.pdf', data, 'PDF')
         self.assertEqual(result['version'], 1)
-        self.storage.put.assert_called_once_with('synthetic.pdf', data, hashlib.sha256(data).hexdigest())
+        self.storage.put.assert_called_once_with('synthetic.pdf', data, hashlib.sha256(data).hexdigest(), 'application/pdf')
         self.assertEqual(self.db.commit.call_count, 3)
         self.assertEqual(self.db.execute.call_args_list[1].args[1]['a'], 8)
         self.assertEqual(self.db.execute.call_args_list[2].args[1]['k'], str(key))
 
     def test_confirmed_retry_does_not_upload_or_confirm_again(self):
-        self.db.execute.return_value.scalar_one.side_effect = [{},
-            {'estado': 'CONFIRMADA', 'id_documento': 1, 'version': 1, 'confirmada': '2026-11-08'}]
+        self.db.execute.return_value.scalar_one.side_effect = [{'propietario_estudiante': True},
+            {'formato': 'PDF', 'estado': 'CONFIRMADA', 'id_documento': 1, 'version': 1, 'confirmada': '2026-11-08'}]
         self.service.entregar(7, 8, uuid4(), 0, 'informe.pdf', pdf())
         self.storage.put.assert_not_called()
         self.assertEqual(self.db.execute.call_count, 2)
 
     def test_storage_failure_preserves_old_report_and_reservation(self):
-        self.db.execute.return_value.scalar_one.side_effect = [{}, {'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'}]
+        self.db.execute.return_value.scalar_one.side_effect = [{'propietario_estudiante': True}, {'formato': 'PDF', 'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'}]
         self.storage.put.side_effect = RuntimeError('synthetic storage failure')
         with self.assertRaises(HTTPException) as error:
             self.service.entregar(7, 8, uuid4(), 1, 'informe.pdf', pdf())
@@ -81,14 +82,14 @@ class InformeServiceTests(unittest.TestCase):
         self.storage.delete.assert_not_called()
 
     def test_ambiguous_confirmation_never_deletes_object(self):
-        self.db.execute.return_value.scalar_one.side_effect = [{}, {'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'}, RuntimeError()]
+        self.db.execute.return_value.scalar_one.side_effect = [{'propietario_estudiante': True}, {'formato': 'PDF', 'estado': 'RESERVADA', 'objeto': 'synthetic.pdf'}, RuntimeError()]
         with self.assertRaises(HTTPException):
             self.service.entregar(7, 8, uuid4(), 0, 'informe.pdf', pdf())
         self.db.rollback.assert_called_once()
         self.storage.delete.assert_not_called()
 
     def test_download_revalidates_assignment_after_storage_io(self):
-        data = pdf(); item = {'objeto': 'x', 'tamano': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+        data = pdf(); item = {'formato': 'PDF', 'mime_type': 'application/pdf', 'objeto': 'x', 'tamano': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
         self.db.execute.return_value.scalar_one.side_effect = [item, RuntimeError()]
         self.storage.read.return_value = data
         with self.assertRaises(HTTPException):
@@ -121,7 +122,7 @@ class InformeRouteTests(unittest.TestCase):
             'Content-Type': 'application/pdf', 'Idempotency-Key': str(key),
             'Version-Esperada': '0', 'Nombre-Archivo': 'informe.pdf', 'Id-Actor': '999'})
         self.assertEqual(result.status_code, 200)
-        self.service.entregar.assert_called_once_with(7, 8, key, 0, 'informe.pdf', data)
+        self.service.entregar.assert_called_once_with(7, 8, key, 0, 'informe.pdf', data, 'PDF')
 
     def test_http_authorization_and_conflict_errors_are_preserved(self):
         for status in [403, 404, 409, 503]:
@@ -138,7 +139,7 @@ class InformeRouteTests(unittest.TestCase):
         self.service.entregar.assert_not_called()
 
     def test_download_is_attachment_and_uncacheable(self):
-        self.service.descargar.return_value = b'synthetic'
+        self.service.descargar.return_value = Download(b'synthetic', 'PDF', 'application/pdf')
         response = self.client.get('/practicas/7/informe-final/archivo')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['cache-control'], 'no-store')
