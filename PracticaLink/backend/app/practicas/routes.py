@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.informes.database import get_informe_db
+from app.core.academic_auth import require_academic_bearer
 from app.core.config import settings
 from app.core.inicio_practica_database import get_inicio_practica_db
 from app.core.permissions import require_roles
@@ -358,16 +360,17 @@ def asignar_gestor(
 @router.post(
     "/{id_practica}/cierre",
     response_model=CerrarPracticaResponse,
-    dependencies=[Depends(require_roles("GESTOR", "ADMINISTRADOR"))],
+    dependencies=[Depends(require_academic_bearer), Depends(require_roles("GESTOR"))],
 )
 def finalizar_practica(
     datos: CerrarPracticaRequest,
     id_practica: int = Path(ge=1, le=9223372036854775807),
     id_usuario: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_informe_db),
+    push_db: Session = Depends(get_db),
 ):
     resultado = cerrar_practica(
-        db, id_practica, id_usuario, datos.observacion
+        db, id_practica, id_usuario, datos.observacion, push_db=push_db
     )
     errores = {
         "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),

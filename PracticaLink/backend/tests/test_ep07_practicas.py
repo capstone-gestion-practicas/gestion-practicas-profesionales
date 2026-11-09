@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.informes.database import get_informe_db
 from app.core.security import get_current_user_id
 from app.main import app
 
@@ -21,6 +22,7 @@ class Ep07PracticasTests(unittest.TestCase):
         self.db = MagicMock()
         self.db.execute.return_value.scalar_one.return_value = []
         app.dependency_overrides[get_db] = lambda: self.db
+        app.dependency_overrides[get_informe_db] = lambda: self.db
         app.dependency_overrides[get_current_user_id] = lambda: 23
         self.contexto = self.enterContext(patch(
             "app.core.permissions.obtener_contexto_usuario",
@@ -30,7 +32,7 @@ class Ep07PracticasTests(unittest.TestCase):
             "sqlalchemy.engine.Engine.connect",
             side_effect=AssertionError("Conexión real prohibida"),
         ))
-        self.client = self.enterContext(TestClient(app))
+        self.client = self.enterContext(TestClient(app, headers={"Authorization": "Bearer synthetic-unit-token"}))
 
     def restore_overrides(self):
         app.dependency_overrides.clear()

@@ -1,0 +1,47 @@
+<section aria-label="Evaluación académica">
+  <h3>Evaluación académica del informe</h3>
+  @if (cargando()) { <p role="status">Consultando evaluación…</p> }
+  @if (enviando()) { <p role="status">Registrando operación…</p> }
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (error()) { <button type="button" (click)="cargar()" [disabled]="cargando() || enviando()">Actualizar evaluación</button> }
+  @if (datos(); as item) {
+    <p>Versión vigente: {{ item.version }} · Estado del informe: {{ item.estado_informe }}</p>
+    @if (item.resultado_vigente; as resultadoActual) {
+      <p>Resultado académico: <strong>{{ resultadoActual.resultado }}</strong></p>
+      @if (resultadoActual.observaciones) { <p class="observaciones">{{ resultadoActual.observaciones }}</p> }
+      @if (resultadoActual.resultado === 'CON_OBSERVACIONES' && estudiante) {
+        <p>Corrige el informe según las observaciones y entrega una nueva versión desde Informe final. La nueva versión requiere otra evaluación.</p>
+      }
+    } @else if (item.evaluacion_pendiente) { <p>Evaluación en curso. No se puede reemplazar el PDF.</p> }
+    @else { <p>Sin resultado académico para la versión vigente.</p> }
+    @if (aprobacionVigente(item)) { <p>Existe aprobación académica vigente. El GESTOR responsable debe confirmar las demás condiciones y cerrar oficialmente la práctica. El reemplazo está bloqueado.</p> }
+    @else { <p>Sin aprobación académica vigente para cerrar.</p> }
+    @if (puedeIniciar()) { <button type="button" (click)="iniciar()">Iniciar evaluación</button> }
+    @if (docente && item.evaluacion_pendiente) {
+      <fieldset [disabled]="!puedeResolver()">
+        <legend>Resolver evaluación de la versión {{ item.evaluacion_pendiente.version }}</legend>
+        <label>Resultado <select [(ngModel)]="resultado"><option value="APROBADO">APROBADO</option><option value="CON_OBSERVACIONES">CON_OBSERVACIONES</option></select></label>
+        <label>Observaciones {{ resultado === 'CON_OBSERVACIONES' ? '(obligatorias)' : '(opcionales)' }}
+          <textarea [(ngModel)]="observaciones" maxlength="2000" rows="4"></textarea>
+        </label>
+        <p>{{ observaciones.length }}/2000</p>
+        <button type="button" (click)="resolver()" [disabled]="resultado === 'CON_OBSERVACIONES' && !observaciones.trim()">Registrar resultado</button>
+      </fieldset>
+    }
+    <h4>Historial académico</h4>
+    @if (!item.historial.length) { <p>Todavía no hay evaluaciones registradas.</p> }
+    <ol>
+      @for (evaluacion of item.historial; track evaluacion.id_evaluacion) {
+        <li><p>Versión {{ evaluacion.version }} · {{ evaluacion.estado }} · {{ evaluacion.resultado || 'Sin resultado' }}</p>
+          <p>Inicio: {{ evaluacion.inicio | date:'dd/MM/yyyy HH:mm' }} · Término: {{ (evaluacion.termino | date:'dd/MM/yyyy HH:mm') || 'Pendiente' }}</p>
+          @if (evaluacion.observaciones) { <p class="observaciones">{{ evaluacion.observaciones }}</p> }
+          @if (evaluacion.motivo) { <p class="observaciones">{{ evaluacion.motivo }}</p> }
+          <ul>@for (evento of evaluacion.eventos; track evento.id_evento) {
+            <li>{{ evento.tipo }} · {{ evento.fecha | date:'dd/MM/yyyy HH:mm' }} @if (evento.detalle) { <span class="observaciones">{{ evento.detalle }}</span> }</li>
+          }</ul>
+        </li>
+      }
+    </ol>
+  }
+</section>

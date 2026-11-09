@@ -1,3 +1,4 @@
+import { ConsultaAcademica, Evaluacion, EvaluacionService } from '../evaluaciones/evaluacion.service';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { HttpErrorResponse, HttpEvent, HttpEventType, HttpResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -12,10 +13,14 @@ const actual: Informe = { id_practica: 7, estado: 'ENTREGADO', version: 1, id_do
 describe('Informe final: sección académica', () => {
   let fixture: ComponentFixture<InformeFinal>;
   let api: jasmine.SpyObj<InformeService>;
+  let academico: jasmine.SpyObj<EvaluacionService>;
+  const estado: ConsultaAcademica = { id_practica: 7, id_documento: 9, version: 1, estado_informe: 'ENTREGADO', evaluacion_pendiente: null, resultado_vigente: null, historial: [] };
   beforeEach(async () => {
     api = jasmine.createSpyObj<InformeService>('InformeService', ['consultar', 'entregar', 'descargar']);
     api.consultar.and.returnValue(of(actual));
-    await TestBed.configureTestingModule({ imports: [InformeFinal], providers: [{ provide: InformeService, useValue: api }] }).compileComponents();
+    academico = jasmine.createSpyObj<EvaluacionService>('EvaluacionService', ['consultar']);
+    academico.consultar.and.returnValue(of(estado));
+    await TestBed.configureTestingModule({ imports: [InformeFinal], providers: [{ provide: InformeService, useValue: api }, { provide: EvaluacionService, useValue: academico }] }).compileComponents();
     fixture = TestBed.createComponent(InformeFinal);
     fixture.componentRef.setInput('idPractica', 7); fixture.componentRef.setInput('estudiante', true);
     fixture.detectChanges();
@@ -25,7 +30,7 @@ describe('Informe final: sección académica', () => {
     const pending = new Subject<Informe>(); api.consultar.and.returnValue(pending);
     fixture.componentInstance.cargar(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Consultando informe');
-    pending.next(actual); fixture.detectChanges();
+    pending.next(actual); pending.complete(); fixture.detectChanges();
     expect(api.consultar).toHaveBeenCalledOnceWith(7);
     expect(fixture.nativeElement.textContent).toContain('Versión: 1');
     expect(fixture.nativeElement.textContent).toContain('Reemplazar informe');
@@ -47,7 +52,7 @@ describe('Informe final: sección académica', () => {
     expect(api.entregar).not.toHaveBeenCalled();
   });
   it('mantiene clave y versión en reintentos; bloquea doble envío y refresca tras confirmar', () => {
-    const panel = fixture.componentInstance; panel.cargar();
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
     panel.archivo = new File(['synthetic'], 'informe.pdf', { type: 'application/pdf' });
     api.entregar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
     panel.entregar(); const first = api.entregar.calls.mostRecent().args;
@@ -79,6 +84,33 @@ describe('Informe final: sección académica', () => {
       expect(fixture.nativeElement.querySelector('[role=alert]')).toBeNull();
     });
   }
+  it('bloquea reemplazo tras APROBADO aunque la disponibilidad anterior estuviera habilitada', () => {
+    const aprobada: Evaluacion = { id_evaluacion: 'uuid', id_practica: 7, id_documento: 9, version: 1,
+      id_docente: 20, estado: 'RESUELTA', resultado: 'APROBADO', observaciones: null, motivo: null,
+      inicio: '2026-11-09T12:00:00Z', termino: '2026-11-09T13:00:00Z' };
+    academico.consultar.and.returnValue(of({ ...estado, resultado_vigente: aprobada }));
+    fixture.componentInstance.cargar(); fixture.detectChanges();
+    fixture.componentInstance.archivo = new File(['x'], 'informe.pdf'); fixture.componentInstance.entregar();
+    expect(api.entregar).not.toHaveBeenCalled(); expect(fixture.nativeElement.querySelector('input[type=file]')).toBeNull();
+  });
+  it('habilita corrección y reentrega CON_OBSERVACIONES conservando S4.2', () => {
+    const observada: Evaluacion = { id_evaluacion: 'uuid', id_practica: 7, id_documento: 9, version: 1,
+      id_docente: 20, estado: 'RESUELTA', resultado: 'CON_OBSERVACIONES', observaciones: 'Corregir', motivo: null,
+      inicio: '2026-11-09T12:00:00Z', termino: '2026-11-09T13:00:00Z' };
+    academico.consultar.and.returnValue(of({ ...estado, resultado_vigente: observada }));
+    fixture.componentInstance.cargar(); fixture.detectChanges();
+    expect(fixture.componentInstance.puedeEntregar()).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('entrega una nueva versión');
+    expect(fixture.nativeElement.querySelector('input[type=file]')).not.toBeNull();
+  });
+  it('no habilita entrega con lectura académica fallida o versión diferente', () => {
+    academico.consultar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    fixture.componentInstance.cargar(); fixture.detectChanges();
+    expect(fixture.componentInstance.puedeEntregar()).toBeFalse();
+    academico.consultar.and.returnValue(of({ ...estado, version: 2 }));
+    fixture.componentInstance.cargar(); fixture.detectChanges();
+    expect(fixture.componentInstance.puedeEntregar()).toBeFalse();
+  });
   it('descarta respuestas de la práctica anterior y limpia datos al cambiar identificador', () => {
     const pending = new Subject<Informe>(); api.consultar.and.returnValue(pending);
     fixture.componentInstance.cargar();

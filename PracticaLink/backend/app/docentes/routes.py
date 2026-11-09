@@ -26,6 +26,8 @@ def obtener_practicas_asignadas(
     except GestionAsignacionDocenteError as error:
         if error.codigo == "USUARIO_NO_AUTORIZADO":
             raise HTTPException(403, "Se requiere un rol DOCENTE activo") from None
+        if error.codigo == "CONFLICTO_ASIGNACION":
+            raise HTTPException(409, "La asignación cambió; vuelve a consultar") from None
         raise HTTPException(503, "No fue posible consultar las prácticas asignadas") from None
 
 
@@ -48,6 +50,9 @@ def actualizar_asignacion(
             "GESTOR_NO_RESPONSABLE": (403, "Solo el GESTOR responsable puede modificar la asignación"),
             "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
             "DOCENTE_NO_VALIDO": (409, "La cuenta no tiene un rol DOCENTE activo"),
+            "DOCENTE_IGUAL_ESTUDIANTE": (409, "El DOCENTE no puede evaluar su propia práctica"),
+            "DATOS_INVALIDOS": (400, "Motivo inválido; máximo 2.000 caracteres"),
+            "CONFLICTO_ASIGNACION": (409, "La asignación o evaluación cambió; actualiza e intenta nuevamente"),
             "DOCENTE_IGUAL_GESTOR": (409, "El GESTOR responsable no puede ser también el DOCENTE asignado"),
             "ESTADO_NO_PERMITIDO": (409, "El estado actual no permite modificar la asignación docente"),
             "ASIGNACION_SIN_CAMBIOS": (409, "La asignación no presenta cambios"),
@@ -72,6 +77,8 @@ def consultar_practica_asignada(
             raise HTTPException(404, "La práctica no existe o no está asignada a este docente") from None
         if error.codigo == "USUARIO_NO_AUTORIZADO":
             raise HTTPException(403, "Se requiere un rol DOCENTE activo") from None
+        if error.codigo == "CONFLICTO_ASIGNACION":
+            raise HTTPException(409, "La asignación cambió; vuelve a consultar") from None
         raise HTTPException(503, "No fue posible consultar la práctica") from None
 
 
@@ -88,6 +95,7 @@ def consultar_asignacion(
         errores = {"USUARIO_NO_AUTORIZADO": (403, "Se requiere un GESTOR activo"),
                    "GESTOR_NO_RESPONSABLE": (403, "Solo el GESTOR responsable puede ver la asignación"),
                    "PRACTICA_NO_ENCONTRADA": (404, "La práctica no existe"),
+                   "CONFLICTO_ASIGNACION": (409, "La asignación cambió; vuelve a consultar"),
                    "ESTADO_NO_PERMITIDO": (409, "El estado no permite gestionar docentes")}
         codigo, mensaje = errores.get(error.codigo, (503, "No fue posible consultar la asignación"))
         raise HTTPException(codigo, mensaje) from None

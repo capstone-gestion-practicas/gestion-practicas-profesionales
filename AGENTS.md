@@ -1,173 +1,136 @@
-# PracticaLink — Instrucciones de desarrollo para Codex
+# PracticaLink — Instrucciones para Codex
 
 ## Alcance y forma de trabajo
+- Estas instrucciones cubren todo el repositorio; respeta el alcance explícito del usuario.
+- Trabaja exclusivamente en el worktree indicado. Antes de editar, verifica `pwd`,
+  `git rev-parse --show-toplevel`, `git branch --show-current` y el estado Git.
+- Si la ruta/rama no coincide o estás en `main`/`develop`, detente y solicita instrucciones.
+- Analiza código, contratos y pruebas pertinentes antes de implementar.
+- Diagnósticos y auditorías son de solo lectura salvo autorización expresa.
+- Preserva modificaciones locales, archivos nuevos y otros worktrees; no toques el stash.
+- Haz cambios pequeños y revisables. Separa documentación, refactorización, funcionalidad
+  y seguridad cuando tengan objetivos independientes; evita movimientos ajenos al alcance.
+- No amplíes la tarea; respeta sus etapas y puntos de detención.
 
-Estas instrucciones cubren todo el repositorio. Respeta las instrucciones
-explícitas del usuario y el alcance autorizado para cada tarea.
+## Modelos y esfuerzo
+Esta matriz orienta recomendaciones; `AGENTS.md` no cambia automáticamente el modelo.
 
-- Analiza el código, los contratos y las pruebas relacionadas antes de implementar.
-- Revisa el estado Git y preserva modificaciones locales ajenas a la tarea.
-- Trabaja mediante cambios pequeños, coherentes y revisables. No mezcles
-  movimientos de archivos con correcciones funcionales no autorizadas.
-- Si se solicita diagnóstico o propuesta, no implementes cambios.
-- Explica decisiones relevantes, riesgos y limitaciones. No amplíes el alcance
-  sin autorización.
+| Modelo y esfuerzo | Uso preferente |
+| --- | --- |
+| Luna Low | Consultas, documentación breve y cambios mínimos de bajo riesgo. |
+| Luna Medium | Tests sencillos y ajustes locales de CSS/HTML. |
+| Terra Medium | Angular/Ionic de complejidad moderada. |
+| Sol Medium | FastAPI, PostgreSQL y desarrollo general. |
+| Sol High | Arquitectura, concurrencia y depuración compleja. |
+| Astra High | Seguridad crítica excepcional que requiera análisis adicional. |
 
-## Arquitectura y responsabilidades
+- Complejidad y riesgo prevalecen sobre tecnología o cantidad de líneas. Permisos,
+  identidad y transacciones críticas no son tareas simples por afectar pocos archivos.
+- Antes de una tarea significativa, recomienda cambiar modelo/esfuerzo solo si conoces
+  el activo y existe una ventaja clara. Explica el motivo en una frase, sin repetirlo.
+- No interrumpas tareas pequeñas ni solicites confirmación solo por el modelo.
+- El usuario selecciona el modelo. No inventes el activo ni anuncies cambios no realizados;
+  un valor de configuración no demuestra por sí solo la selección efectiva de la sesión.
+- La disponibilidad depende del entorno. No delegues ni crees subagentes salvo petición explícita.
 
-PracticaLink es un monolito modular con Angular/TypeScript/Ionic,
-FastAPI/Python y PostgreSQL en Supabase.
+## Eficiencia de lectura y comunicación
+- Empieza por archivos y funciones citados; amplía la investigación según evidencia.
+- Usa `rg`/`rg --files` con rutas y patrones concretos antes de búsquedas generales.
+- Lee fragmentos relevantes; archivos completos solo cuando el contexto lo requiera.
+- Agrupa consultas independientes y limita su salida. Reutiliza lo ya inspeccionado;
+  relee si hubo cambios o persiste una incertidumbre relevante.
+- Consulta documentación por área, sin cargarla completa de forma rutinaria.
+- Resume logs y conserva causas, errores y resultados útiles; evita volcados extensos.
+- Da actualizaciones y respuestas breves, sin repetir contexto, planes ni restricciones.
+  Incluye el detalle necesario para revisar decisiones, evidencia y riesgos.
+- La corrección y la seguridad prevalecen sobre el ahorro de tokens.
 
-- Organiza funcionalidades backend por dominio siguiendo el patrón existente:
-  `routes.py`, `schemas.py` y `service.py`.
-- El backend está en transición: comprueba la estructura real antes de mover
-  componentes desde `api/routes/`, `services/` y `schemas/`.
-- Mantén las rutas centradas en HTTP, contratos y dependencias; los casos de uso
-  pertenecen a servicios. Reserva `core/` para responsabilidades transversales.
-- Evita ciclos de imports, imports de rutas desde servicios y nuevas dependencias
-  desde `core/` hacia módulos de negocio.
-- Documenta dependencias SQL entre dominios: separar carpetas no garantiza
-  independencia de datos.
-- No introduzcas microservicios, repositorios genéricos, buses ni otras
-  abstracciones sin una necesidad concreta y acordada.
-- Refactoriza un módulo o responsabilidad por vez; no reorganices todo el backend
-  en una sola intervención.
-
-## Preservación de contratos
-
-Durante refactorizaciones estructurales, conserva:
-
-- Métodos y URLs, códigos HTTP y mensajes actuales.
-- Modelos públicos, nombres de campos, tipos, obligatoriedad, defaults y nulabilidad.
-- Autenticación, roles y uso del identificador del usuario autenticado.
-- Funciones PostgreSQL, parámetros, casts y serialización JSON.
-- Commit, rollback, bloqueos, sesión utilizada y atomicidad.
-- Contratos TypeScript, consumidores frontend y compatibilidad OpenAPI.
-
-`GET /auth/context` combina identidad, roles y datos académicos. No cambies su
-contrato, consulta o semántica de autorización como efecto secundario de mover
-archivos. No descompongas una operación SQL atómica en escrituras independientes.
-Los cambios de comportamiento requieren un alcance explícito y pruebas propias.
+## Arquitectura y contratos
+- Conserva el monolito modular Angular/TypeScript/Ionic, FastAPI y PostgreSQL/Supabase.
+- Backend por dominio siguiendo `routes.py`, `schemas.py` y `service.py`. Comprueba
+  la estructura real antes de mover código de `api/routes/`, `services/` o `schemas/`.
+- HTTP y dependencias en rutas; casos de uso en servicios; `core/` para lo transversal.
+- Evita ciclos, imports de rutas desde servicios y dependencias de `core/` hacia negocio.
+- Documenta dependencias SQL entre dominios. No introduzcas microservicios, repositorios
+  genéricos, buses u otras abstracciones sin necesidad acordada; refactoriza una responsabilidad a la vez.
+- En refactorizaciones conserva métodos/URLs, códigos/mensajes HTTP, modelos públicos,
+  campos, tipos, obligatoriedad, defaults, nulabilidad y compatibilidad OpenAPI/TypeScript.
+- Preserva autenticación, roles, asignaciones e identidad del usuario autenticado;
+  funciones SQL, firmas, parámetros, casts, JSON, sesión, commit/rollback y bloqueos.
+- No dividas operaciones SQL atómicas en escrituras independientes.
+- No cambies contrato, consulta o autorización de `GET /auth/context` como efecto
+  secundario de mover archivos. Cambios de comportamiento requieren alcance explícito y pruebas propias.
+- No edites migraciones aplicadas; utiliza migraciones incrementales.
 
 ## Seguridad y operaciones sensibles
-
-- No expongas secretos, tokens, contraseñas, cadenas de conexión ni datos
-  personales en código, pruebas, documentación, logs o respuestas.
-- No vuelques archivos `.env` ni uses credenciales de demostración documentadas
-  para acceder a servicios. Usa información sintética en pruebas.
-- No modifiques bases reales ni ejecutes SQL, migraciones o cambios de permisos
-  automáticamente. Requieren autorización explícita para el entorno y la operación.
-- No conectes pruebas unitarias a Supabase ni a proveedores externos.
-- No instales o actualices dependencias, ejecutes servicios externos, inicies o
-  detengas servicios, despliegues o cambies configuración de seguridad sin
-  autorización dentro de la tarea.
-- Reporta vulnerabilidades con evidencia sin revelar secretos. No las corrijas
-  automáticamente dentro de una refactorización estructural.
-- Prepara un resultado revisable y espera revisión humana antes de operaciones
-  sensibles. No interpretes un permiso técnico como autorización funcional.
+- No expongas secretos, tokens, contraseñas, conexiones ni datos personales en código,
+  pruebas, documentación, logs o respuestas. No vuelques `.env` ni uses credenciales
+  de demostración documentadas para acceder a servicios; usa datos sintéticos en pruebas.
+- No accedas a bases reales ni ejecutes SQL, migraciones o cambios de permisos sin
+  autorización explícita para el entorno y la operación. Las pruebas unitarias no
+  se conectan a Supabase ni a proveedores externos.
+- No instales/actualices dependencias, ejecutes servicios externos, inicies/detengas
+  servicios, despliegues o cambies configuración de seguridad sin autorización dentro de la tarea.
+- Reporta vulnerabilidades con evidencia sin secretos; no las corrijas automáticamente
+  dentro de una refactorización ni amplíes el alcance sin autorización.
+- Prepara resultados revisables y espera revisión humana antes de operaciones sensibles.
+  Un permiso técnico no constituye autorización funcional.
+- Guards y controles visuales no sustituyen la autorización backend/SQL.
 
 ## Frontend
-
-- Conserva el tipado estricto y las comprobaciones de plantillas de Angular.
-- Mantén HTTP en servicios y utiliza los mecanismos existentes de estado,
-  incluyendo los métodos de `AuthStore` para modificar el contexto.
-- Conserva guards y permisos backend: ocultar botones no sustituye autorización.
-- Respeta la nulabilidad de `perfil` y `practica_actual`.
-- Mantén estados de carga, error y recuperación en operaciones asíncronas.
-- Respeta `.editorconfig` y la configuración Prettier de `package.json`.
-  Evita cambios masivos de formato y renombrados ajenos a la tarea.
+- Conserva TypeScript y plantillas estrictas; no uses `any` ni ignores errores para eludir controles.
+- Mantén HTTP en servicios y modifica el contexto mediante los métodos de `AuthStore`.
+- Respeta `perfil`/`practica_actual` nullable, guards y estados de carga, error y recuperación.
+- Respeta `.editorconfig` y Prettier de `package.json`; evita formato masivo y renombrados ajenos.
+- Usa `NG_CLI_ANALYTICS=false` con Angular CLI; no alteres `angular.json` por Analytics.
 
 ## Pruebas y validación
-
-- Backend: utiliza `unittest`, `unittest.mock` y `TestClient`, según las
-  convenciones actuales. Antes de trasladar una funcionalidad, agrega pruebas
-  de caracterización donde falten.
-- Prueba comportamiento observable, permisos, identidad autenticada y errores
-  relevantes. Conserva pruebas existentes; no debilites assertions para ocultar fallos.
-- Aísla base de datos y proveedores con mocks. Restaura patches y
+- Backend: sigue `unittest`, `unittest.mock` y `TestClient`. Antes de trasladar una
+  funcionalidad, añade pruebas de caracterización donde falten.
+- Prueba comportamiento observable, permisos, identidad y errores relevantes.
+  Conserva pruebas y aserciones; no las debilites para ocultar fallos.
+- Aísla base de datos/proveedores con mocks en pruebas unitarias. Restaura patches y
   `dependency_overrides`; al mover símbolos, actualiza mocks donde se utilizan.
-- Distingue pruebas con mocks de integración real con PostgreSQL. Los mocks
-  no acreditan funciones SQL, bloqueos ni transacciones reales.
-- Ejecuta las suites pertinentes; amplía la validación cuando el alcance o
-  las dependencias afectadas lo justifiquen.
+- Distingue mocks de PostgreSQL real: los primeros no acreditan SQL, bloqueos ni atomicidad.
+- Ejecuta primero pruebas focalizadas; amplía según riesgo, dependencias afectadas o fallos.
+  Ejecuta suite completa y build cuando el alcance o el usuario lo exijan; para cambios
+  frontend relevantes, ejecuta build si está permitido y hay dependencias locales.
+- Respeta restricciones de solo lectura: no ejecutes validaciones que escriban artefactos
+  salvo autorización. Informa antes de tests/build frontend que generen caché o artefactos.
+- Si falta una dependencia, navegador o permiso, informa sin instalar herramientas.
+  No inventes comandos de lint/formato ni descargues herramientas mediante `npx`.
+- Reporta comandos y resultados reales: aprobados, fallidos y no ejecutados; separa deuda de regresiones.
 
-Desde `PracticaLink/backend`, usa el entorno virtual existente. Ejemplo para
-Estudiantes y permisos:
-
+Desde `PracticaLink/backend`, utiliza el entorno virtual existente:
 ```bash
-.venv/bin/python -B -m unittest tests.test_estudiantes tests.test_permissions -v
+.venv/bin/python -B -m unittest tests.nombre_del_modulo -v
+.venv/bin/python -B -m unittest discover -s tests -v
 ```
-
-En Windows:
-
-```powershell
-.\.venv\Scripts\python.exe -B -m unittest tests.test_estudiantes tests.test_permissions -v
-```
-
-Para validar todo el backend, utiliza el mismo intérprete con
-`-B -m unittest discover -s tests -v`.
-
 Desde `PracticaLink/frontend`:
-
 ```bash
-npm test -- --watch=false --browsers=ChromeHeadless
-npm run build
+NG_CLI_ANALYTICS=false npm test -- --watch=false --browsers=ChromeHeadless
+NG_CLI_ANALYTICS=false npm run build
 ```
-
-Ejecuta el build para cambios frontend relevantes. Las pruebas y el build frontend
-pueden generar caché y artefactos: informa antes de ejecutarlos y respeta las
-restricciones de la tarea. No hay comandos de lint o formato automatizado definidos
-actualmente; no inventes comandos ni descargues herramientas mediante `npx`.
-
-Si falta una dependencia, navegador o permiso, informa el bloqueo sin instalar
-herramientas automáticamente. Reporta comandos y resultados reales; distingue
-pruebas aprobadas, fallidas y no ejecutadas.
 
 ## Git y revisión humana
-
-- Trabaja en ramas `feature/*` o `fix/*` derivadas de `develop` actualizado.
-- Integra mediante Pull Request hacia `develop`; reserva `main` para versiones
-  estabilizadas y su promoción mediante un PR separado.
-- No crees o cambies ramas, hagas commits, push, merges ni operaciones destructivas
-  sin autorización explícita. No actualices automáticamente un checkout con trabajo
-  pendiente.
-- Preserva archivos modificados y sin seguimiento ajenos a la tarea; no los
-  descartes, sobrescribas ni incluyas en la entrega.
-- No uses `git add .` indiscriminadamente. Cuando esté autorizado preparar cambios,
-  selecciona archivos explícitos y revisa el diff preparado.
-- Mantén las entregas pequeñas para revisión humana antes de integrarlas.
-- Antes de modificar archivos, verifica la rama activa mediante
-  `git branch --show-current`. Si estás en `main` o `develop`, detente y solicita
-  instrucciones para preparar una rama de trabajo.
-- Mantén separados los cambios de documentación general, refactorización,
-  nuevas funcionalidades y correcciones de seguridad cuando tengan
-  objetivos independientes.
+- Codex usa Git exclusivamente en modo de lectura. Solo el usuario realiza TODAS
+  las operaciones Git de escritura, incluida preparación del índice, creación/cambio
+  de ramas, commits, integración y publicación. No manipules el stash ni descartes cambios.
+- El flujo objetivo es `feature/*` o `fix/*` hacia `develop` mediante PR; `main` recibe
+  versiones estabilizadas mediante PR separado. Esto no autoriza a Codex a ejecutar esas operaciones.
+- No actualices automáticamente el checkout ni incluyas cambios ajenos en la entrega.
 
 ## Code Review Rules
-
-- Señala permisos omitidos, identidad tomada del cliente y exposición de secretos.
-- Revisa compatibilidad HTTP, OpenAPI, TypeScript y PostgreSQL.
-- Revisa atomicidad, commit/rollback, dependencias circulares y acoplamientos nuevos.
-- Exige evidencia de pruebas proporcional al cambio; no confundas tests existentes
-  con tests ejecutados o comportamiento real verificado.
-- Distingue defectos confirmados, riesgos potenciales y aspectos no verificados.
+- Prioriza permisos omitidos, identidad tomada del cliente y exposición de secretos.
+- Revisa compatibilidad HTTP/OpenAPI/TypeScript/SQL, atomicidad, commit/rollback,
+  dependencias circulares y acoplamientos nuevos.
+- Exige evidencia proporcional al cambio; distingue defectos confirmados, riesgos y aspectos no verificados.
 
 ## Documentación y entrega
-
-Consulta según el área:
-
-- `README.md`: propósito y flujo Git.
-- `DOCUMENTACION_INSTALACION.md`: instalación y ejecución local.
-- `PracticaLink/backend/app/BACK_CONTEXT.md`: contexto backend.
-- `PracticaLink/frontend/src/app/APP_CONTEXT.md`: contexto frontend.
-- `scripts/BD/`: esquema y correcciones SQL versionadas.
-- Pruebas cercanas a la funcionalidad modificada.
-
-Contrasta la documentación con el código y reporta discrepancias. Actualiza la
-documentación pertinente cuando el cambio autorizado la afecte; no presentes
-funcionalidades pendientes como implementadas.
-
-Al entregar, resume archivos modificados, decisiones, comandos ejecutados,
-pruebas y resultados, riesgos y verificaciones pendientes. Indica cualquier
-cambio de comportamiento expresamente autorizado. No afirmes que algo funciona
-solo porque su código o su prueba existen.
+- Consulta según el área: `README.md`, `DOCUMENTACION_INSTALACION.md`,
+  `PracticaLink/backend/app/BACK_CONTEXT.md`, `PracticaLink/frontend/src/app/APP_CONTEXT.md`,
+  migraciones en `PracticaLink/supabase/migrations/`, `scripts/BD/` cuando corresponda y pruebas cercanas.
+- Contrasta documentación con código, reporta discrepancias y actualiza solo la documentación
+  afectada por el alcance autorizado. No presentes funcionalidades pendientes como implementadas.
+- Resume archivos modificados, decisiones, cambios de comportamiento autorizados, comandos,
+  pruebas/resultados, riesgos y verificaciones pendientes. No afirmes funcionamiento solo por existir código o tests.

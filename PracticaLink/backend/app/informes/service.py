@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import text
 from app.informes.pdf import validar_pdf
+from app.core.sql_errors import sql_http_error
 
 
 class Informes:
@@ -24,11 +25,7 @@ class Informes:
                 self.db.rollback()
             except Exception:
                 pass
-            code = getattr(getattr(error, 'orig', None), 'sqlstate', None)
-            status = {'42501': 403, 'P0404': 404, 'P0409': 409, '23505': 409}.get(code, 503)
-            raise HTTPException(status, {403: 'No tienes acceso académico a esta práctica',
-                404: 'Práctica o informe no disponible', 409: 'La entrega cambió o ya no está habilitada',
-                503: 'No fue posible completar la operación de informes'}[status]) from None
+            raise sql_http_error(error, 'No fue posible completar la operación de informes') from None
 
     def consultar(self, practica: int, actor: int):
         return self.call('consultar', {'p': practica, 'a': actor})
