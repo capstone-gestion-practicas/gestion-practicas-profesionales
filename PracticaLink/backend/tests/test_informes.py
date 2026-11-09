@@ -22,7 +22,12 @@ def pdf(encrypted=False, active=False):
     if encrypted:
         writer.encrypt('synthetic-password')
     if active:
-        writer.add_js('app.alert("synthetic");')
+        from pypdf.generic import DictionaryObject, NameObject, TextStringObject
+        action = DictionaryObject({
+            NameObject("/S"): NameObject("/JavaScript"),
+            NameObject("/JS"): TextStringObject('app.alert("synthetic");'),
+        })
+        writer._root_object[NameObject("/OpenAction")] = writer._add_object(action)
     output = io.BytesIO(); writer.write(output)
     return output.getvalue()
 
