@@ -17,7 +17,12 @@ externas ni instrucciones de procesamiento. Todos los XML se inspeccionan, inclu
 comentarios, cambios eliminados y alternativas de compatibilidad.
 
 Se rechazan macros, ActiveX, OLE, paquetes incrustados, altChunk, plantillas remotas,
-partes desconocidas y campos activos. Solo se permiten campos PAGE, NUMPAGES, REF,
+partes desconocidas y campos activos. Las propiedades variantes usan una lista
+positiva de tipos escalares de texto, números, booleanos, fechas, identificadores
+y valores vacíos. Se rechazan tipos binarios/opacos y desconocidos en cualquier
+nivel; los escalares no admiten hijos y los contenedores variant/vector/array
+solo admiten hijos tipados coherentes y presupuestos acotados. Esto no constituye
+validación XSD completa ni inspección antimalware universal de sus valores. Solo se permiten campos PAGE, NUMPAGES, REF,
 PAGEREF y HYPERLINK literal restringido. Los campos divididos entre runs se ensamblan;
 los campos anidados se rechazan. Las relaciones externas solo admiten hipervínculos
 HTTP/HTTPS/mailto, sin consultar destinos. PNG/JPEG se verifican y decodifican con
@@ -71,7 +76,9 @@ pruebas de presupuestos reducen constantes solo en el parser de prueba para evit
 fixtures costosos. Las pruebas de informes conservan sus mocks de BD y Storage;
 no acreditan integración con servicios reales.
 
-Pendiente: corpus real de Word/LibreOffice y ajuste experimental de presupuestos.
+Un DOCX básico exportado por LibreOffice fue validado dentro de Bubblewrap tras
+el endurecimiento de propiedades. Pendiente: corpus representativo de Word y
+LibreOffice y ajuste experimental de presupuestos.
 Este es un perfil conservador de estructura y seguridad, no una validación completa
 XSD de WordprocessingML ni garantía de renderizado o ausencia universal de malware.
 Documentos con extensiones, firmas, imágenes o campos fuera del perfil se rechazan.

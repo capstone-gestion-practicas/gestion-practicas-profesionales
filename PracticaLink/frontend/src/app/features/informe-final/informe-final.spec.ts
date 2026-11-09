@@ -137,11 +137,22 @@ describe('Informe final: sección académica', () => {
       new File([new ArrayBuffer(10485761)], 'x.docx', { type: FORMATOS_INFORME.DOCX.mime }),
       new File(['x'], 'x.pdf', { type: FORMATOS_INFORME.DOCX.mime }),
       new File(['x'], 'x.docx', { type: 'application/pdf' }),
-      new File(['x'], 'x.docm', { type: FORMATOS_INFORME.DOCX.mime }), new File(['x'], 'x.docx')]) {
+      new File(['x'], 'x.docm', { type: FORMATOS_INFORME.DOCX.mime }), new File(['x'], 'x.txt')]) {
       seleccionar(file); panel.entregar();
       expect(panel.archivo).toBeNull(); expect(panel.error()).not.toBe('');
     }
     expect(api.entregar).not.toHaveBeenCalled();
+  });
+  it('acepta MIME vacío en selección PDF/DOCX y mantiene el límite de tamaño', () => {
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+    for (const name of ['informe.PDF', 'informe.docx']) {
+      const file = new File(['original'], name);
+      seleccionar(file); expect(panel.archivo).toBe(file); expect(panel.error()).toBe('');
+    }
+    for (const file of [new File([], 'x.docx'), new File([new ArrayBuffer(10485761)], 'x.pdf'),
+      new File(['original'], 'x.doc'), new File(['original'], 'x.docm')]) {
+      seleccionar(file); expect(panel.archivo).toBeNull(); expect(panel.error()).not.toBe('');
+    }
   });
   it('explica Storage solo PDF y conserva clave/version en reintento DOCX', () => {
     const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
@@ -240,6 +251,30 @@ describe('InformeService: contrato HTTP aislado', () => {
     api.descargar(7).subscribe({ error: (error: HttpErrorResponse) => expect(error.status).toBe(502) });
     http.expectOne(`${environment.apiUrl}/practicas/7/informe-final/archivo`).flush(
       new Blob(['x']), { headers: { 'Content-Type': 'text/html' } });
+  });
+  for (const [name, mime] of [['informe.PDF', FORMATOS_INFORME.PDF.mime],
+    ['informe.docx', FORMATOS_INFORME.DOCX.mime]]) {
+    it(`envía MIME canónico para ${name} con MIME del navegador vacío`, () => {
+      const file = new File(['original'], name);
+      expect(file.type).toBe('');
+      api.entregar(7, file, 'same-key', 2).subscribe();
+      const request = http.expectOne(`${environment.apiUrl}/practicas/7/informe-final`);
+      expect(request.request.body).toBe(file);
+      expect(request.request.headers.get('Content-Type')).toBe(mime);
+      expect(request.request.headers.get('Idempotency-Key')).toBe('same-key');
+      expect(request.request.headers.get('Version-Esperada')).toBe('2');
+      expect(request.request.headers.get('Nombre-Archivo')).toBe(encodeURIComponent(name));
+      request.flush(entregada);
+    });
+  }
+  it('rechaza MIME vacío en extensiones ajenas, archivos vacíos o excesivos sin HTTP', () => {
+    for (const file of [new File(['x'], 'x.docm'), new File(['x'], 'x.zip'), new File([], 'x.pdf'),
+      new File([new ArrayBuffer(10485761)], 'x.docx')]) {
+      let status = 0;
+      api.entregar(7, file, 'key', 0).subscribe({ error: (error: HttpErrorResponse) => { status = error.status; } });
+      expect(status).toBe(422);
+    }
+    http.expectNone(`${environment.apiUrl}/practicas/7/informe-final`);
   });
 
 });

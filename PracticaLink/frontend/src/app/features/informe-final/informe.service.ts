@@ -17,7 +17,7 @@ export function errorArchivo(file: File): string | null {
   const formato = name.endsWith('.pdf') ? FORMATOS_INFORME.PDF
     : name.endsWith('.docx') ? FORMATOS_INFORME.DOCX : null;
   if (!formato) return 'Solo se admiten archivos .pdf y .docx.';
-  if (file.type.toLowerCase() !== formato.mime) return 'El tipo MIME del archivo no coincide con PDF o DOCX. Comprueba el archivo y vuelve a seleccionarlo.';
+  if (file.type !== '' && file.type.toLowerCase() !== formato.mime) return 'El tipo MIME del archivo no coincide con PDF o DOCX. Comprueba el archivo y vuelve a seleccionarlo.';
   return null;
 }
 
@@ -53,8 +53,12 @@ export class InformeService {
   entregar(id: number, file: File, key: string, version: number): Observable<HttpEvent<EntregaInforme>> {
     const error = errorArchivo(file);
     if (error) return throwError(() => new HttpErrorResponse({ status: 422, error: { detail: error } }));
+    // An absent browser MIME is not a content verdict: the server still parses bytes.
+    const mime = file.type === ''
+      ? (file.name.toLowerCase().endsWith('.pdf') ? FORMATOS_INFORME.PDF.mime : FORMATOS_INFORME.DOCX.mime)
+      : file.type.toLowerCase();
     return this.http.post<EntregaInforme>(this.ruta(id), file, {
-      headers: { 'Content-Type': file.type.toLowerCase(), 'Idempotency-Key': key,
+      headers: { 'Content-Type': mime, 'Idempotency-Key': key,
         'Version-Esperada': String(version), 'Nombre-Archivo': encodeURIComponent(file.name) },
       observe: 'events', reportProgress: true
     });

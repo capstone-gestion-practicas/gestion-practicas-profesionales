@@ -23,6 +23,12 @@ R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 P = 'http://schemas.openxmlformats.org/package/2006/relationships'
 C = 'http://schemas.openxmlformats.org/package/2006/content-types'
 A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+VT = 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes'
+CUSTOM = 'http://schemas.openxmlformats.org/officeDocument/2006/custom-properties'
+VT_SCALARS = frozenset({'bool', 'bstr', 'lpstr', 'lpwstr', 'i1', 'i2', 'i4', 'i8',
+    'int', 'ui1', 'ui2', 'ui4', 'ui8', 'uint', 'r4', 'r8', 'decimal', 'cy',
+    'date', 'filetime', 'clsid', 'error', 'empty', 'null'})
+VT_CONTAINERS = frozenset({'variant', 'vector', 'array'})
 MAIN = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml'
 REL = 'application/vnd.openxmlformats-package.relationships+xml'
 WORD_TYPES = {kind: 'application/vnd.openxmlformats-officedocument.wordprocessingml.' + suffix + '+xml'
@@ -137,6 +143,60 @@ def package(data):
     return files
 
 
+def property_value(element):
+    """Closed scalar profile; containers never authorize an uninspected child.
+
+    Called on every VT end event, including metadata inside alternate wrappers.
+    It checks direct edges only; the XML budget and per-node checks bound nesting.
+    """
+    kind = element.tag[len('{' + VT + '}'):]
+    require(kind in VT_SCALARS | VT_CONTAINERS)
+    if kind in VT_SCALARS:
+        require(len(element) == 0)
+        require(set(element.attrib) <= {'{http://www.w3.org/XML/1998/namespace}space'})
+        if kind in ('empty', 'null'): require(not (element.text or '').strip())
+        return
+    require(not (element.text or '').strip())
+    require(all(not (child.tail or '').strip() for child in element))
+    if kind == 'variant':
+        require(not element.attrib and len(element) == 1)
+        require(element[0].tag.startswith('{' + VT + '}'))
+        return
+    base = element.get('baseType')
+    require(base in VT_SCALARS | {'variant'})
+    require(all(child.tag == '{' + VT + '}' + base for child in element))
+    if kind == 'vector':
+        require(set(element.attrib) == {'baseType', 'size'})
+        size = element.get('size', '')
+        require(re.fullmatch(r'[0-9]{1,6}', size) is not None)
+        require(int(size) == len(element))
+    else:
+        require(set(element.attrib) == {'baseType', 'lBounds', 'uBounds'})
+        bounds = []
+        for key in ('lBounds', 'uBounds'):
+            raw = element.get(key, '')
+            require(len(raw) <= 192)
+            values = raw.split(',')
+            require(1 <= len(values) <= 16)
+            require(all(re.fullmatch(r'-?[0-9]{1,10}', value.strip()) for value in values))
+            bounds.append([int(value) for value in values])
+        require(len(bounds[0]) == len(bounds[1]))
+        count = 1
+        for lower, upper in zip(*bounds):
+            require(-(2**31) <= lower <= upper < 2**31)
+            count *= upper - lower + 1
+            require(count <= MAX_NODES)
+        require(count == len(element))
+
+
+def custom_properties(root):
+    if root.tag != '{' + CUSTOM + '}Properties': return
+    for prop in root:
+        require(prop.tag == '{' + CUSTOM + '}property' and len(prop) == 1)
+        require(not (prop.text or '').strip() and not (prop[0].tail or '').strip())
+        require(prop[0].tag.startswith('{' + VT + '}'))
+
+
 def xml(raw, budget):
     from defusedxml import ElementTree
     require(len(raw) <= MAX_XML)
@@ -150,8 +210,11 @@ def xml(raw, budget):
             if root is None: root = element
             for tag in [element.tag, *element.attrib]:
                 if tag.startswith('{'): require(tag[1:].split('}', 1)[0] in NAMESPACES)
-        else: depth -= 1
+        else:
+            if element.tag.startswith('{' + VT + '}'): property_value(element)
+            depth -= 1
     require(root is not None and depth == 0)
+    custom_properties(root)
     return root
 
 

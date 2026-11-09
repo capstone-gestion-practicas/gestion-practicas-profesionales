@@ -179,6 +179,70 @@ class DocxValidationTests(unittest.TestCase):
         self.rejected(fixture(root_rels=[]))
 
 
+    def properties(self, value):
+        xml = (f'<Properties xmlns="{worker.CUSTOM}" xmlns:vt="{worker.VT}" xmlns:w="{worker.W}" '
+               'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+               '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="2" name="Synthetic">'
+               + value + '</property></Properties>').encode()
+        return fixture(extra={'docProps/custom.xml': (xml,
+            'application/vnd.openxmlformats-officedocument.custom-properties+xml')},
+            root_rels=[{'Id':'root', 'Type':worker.R+'/officeDocument', 'Target':'word/document.xml'},
+                       {'Id':'custom', 'Type':worker.R+'/custom-properties', 'Target':'docProps/custom.xml'}])
+
+    def test_binary_custom_properties_are_rejected_even_in_nested_variants(self):
+        for kind in ['blob', 'oblob', 'storage', 'ostorage', 'stream', 'ostream', 'vstream',
+                     'object', 'package', 'unknownPropertyType']:
+            for value in [f'<vt:{kind}>0M8R4KGxGuE=</vt:{kind}>',
+                          f'<vt:variant><vt:variant><vt:{kind}>AA==</vt:{kind}></vt:variant></vt:variant>',
+                          f'<vt:vector baseType="variant" size="1"><vt:variant><vt:{kind}>AA==</vt:{kind}></vt:variant></vt:vector>']:
+                with self.subTest(kind=kind, value=value): self.rejected(self.properties(value))
+
+    def test_scalar_properties_remain_valid_and_original_bytes_are_preserved(self):
+        values = {'bool':'true', 'bstr':'Texto', 'lpstr':'Informe', 'lpwstr':'Práctica',
+                  'i1':'-1', 'i2':'-2', 'i4':'-4', 'i8':'-8', 'int':'1', 'ui1':'1',
+                  'ui2':'2', 'ui4':'4', 'ui8':'8', 'uint':'1', 'r4':'1.5', 'r8':'2.5',
+                  'decimal':'1.25', 'cy':'1.0000', 'date':'2026-11-09T12:00:00Z',
+                  'filetime':'2026-11-09T12:00:00Z', 'clsid':'{D5CDD505-2E9C-101B-9397-08002B2CF9AE}',
+                  'error':'0', 'empty':'', 'null':''}
+        self.assertEqual(set(values), worker.VT_SCALARS)
+        for kind, text in values.items():
+            with self.subTest(kind=kind):
+                data=self.properties(f'<vt:{kind}>{text}</vt:{kind}>')
+                before=bytes(data)
+                self.assertEqual(docx.validar_docx(data),hashlib.sha256(before).hexdigest())
+                self.assertEqual(data,before)
+
+    def test_scalar_vectors_arrays_variants_and_application_metadata_remain_valid(self):
+        for value in ['<vt:variant><vt:lpwstr>Texto</vt:lpwstr></vt:variant>',
+                      '<vt:vector baseType="lpstr" size="2"><vt:lpstr>Uno</vt:lpstr><vt:lpstr>Dos</vt:lpstr></vt:vector>',
+                      '<vt:array baseType="i4" lBounds="0" uBounds="1"><vt:i4>1</vt:i4><vt:i4>2</vt:i4></vt:array>',
+                      '<vt:vector baseType="variant" size="2"><vt:variant><vt:lpstr>Heading</vt:lpstr></vt:variant><vt:variant><vt:i4>1</vt:i4></vt:variant></vt:vector>']:
+            with self.subTest(value=value):
+                data=self.properties(value)
+                self.assertEqual(docx.validar_docx(data),hashlib.sha256(data).hexdigest())
+        application='http://schemas.openxmlformats.org/officeDocument/2006/extended-properties'
+        raw=(f'<Properties xmlns="{application}" xmlns:vt="{worker.VT}">'
+             '<HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Title</vt:lpstr></vt:variant>'
+             '<vt:variant><vt:i4>1</vt:i4></vt:variant></vt:vector></HeadingPairs>'
+             '<TitlesOfParts><vt:vector size="1" baseType="lpstr"><vt:lpstr>Informe</vt:lpstr></vt:vector></TitlesOfParts></Properties>').encode()
+        data=fixture(extra={'docProps/app.xml':(raw,'application/vnd.openxmlformats-officedocument.extended-properties+xml')},
+            root_rels=[{'Id':'root','Type':worker.R+'/officeDocument','Target':'word/document.xml'},
+                       {'Id':'app','Type':worker.R+'/extended-properties','Target':'docProps/app.xml'}])
+        self.assertEqual(docx.validar_docx(data),hashlib.sha256(data).hexdigest())
+
+    def test_container_declarations_and_scalar_wrappers_cannot_hide_binary_properties(self):
+        for value in ['<vt:lpstr><vt:oblob>AA==</vt:oblob></vt:lpstr>',
+                      '<vt:lpstr><w:p>nested</w:p></vt:lpstr>',
+                      '<vt:variant><w:p><vt:lpstr>nested</vt:lpstr></w:p></vt:variant>',
+                      '<vt:variant><vt:lpstr>A</vt:lpstr><vt:i4>1</vt:i4></vt:variant>',
+                      '<vt:vector baseType="oblob" size="1"><vt:lpstr>A</vt:lpstr></vt:vector>',
+                      '<vt:array baseType="blob" lBounds="0" uBounds="0"><vt:lpstr>A</vt:lpstr></vt:array>',
+                      '<vt:vector baseType="lpstr" size="2"><vt:lpstr>A</vt:lpstr></vt:vector>',
+                      '<vt:lpstr xsi:type="vt:oblob">AA==</vt:lpstr>',
+                      '<oblob>AA==</oblob>']:
+            with self.subTest(value=value): self.rejected(self.properties(value))
+
+
 class DocxIsolationTests(unittest.TestCase):
     def probe(self, code):
         # Keep the actual worker bootstrap and its resource limits; substitute only parsing.
