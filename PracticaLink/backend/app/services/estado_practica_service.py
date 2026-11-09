@@ -2,7 +2,8 @@ from pydantic import ValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.practicas.schemas import ActualizarEstadoPracticaRequest, ActualizarEstadoPracticaResponse
+from app.practicas.schemas import ActualizarEstadoPracticaRequest, ActualizarEstadoPracticaResponse, CerrarPracticaResponse
+from app.core.sql_errors import sql_http_error
 from app.services.push_service import enviar_push_notificacion
 
 
@@ -94,24 +95,43 @@ def asignar_gestor_practica(
 
 
 def cerrar_practica(
-    db: Session, id_practica: int, id_usuario: int, observacion: str | None
+    db: Session, id_practica: int, id_usuario: int, observacion: str | None,
+    push_db: Session | None = None,
 ) -> dict:
-    resultado = db.execute(text("""
-        SELECT public.fn_cerrar_practica(
-            :id_practica, :id_usuario, :observacion
-        )
-    """), {
-        "id_practica": id_practica,
-        "id_usuario": id_usuario,
-        "observacion": observacion,
-    }).scalar_one()
-    if isinstance(resultado, dict) and resultado.get("error"):
-        return resultado
-    db.commit()
+    # db MUST be the private academic executor. Never read push tables with it.
+    try:
+        resultado = db.execute(text("""
+            SELECT public.fn_cerrar_practica(
+                :id_practica, :id_usuario, :observacion
+            )
+        """), {
+            "id_practica": id_practica,
+            "id_usuario": id_usuario,
+            "observacion": observacion,
+        }).scalar_one()
+        if isinstance(resultado, dict) and resultado.get("error"):
+            return resultado
+        public = CerrarPracticaResponse.model_validate(resultado)
+        if public.id_practica != id_practica:
+            raise ValueError("Respuesta de cierre incoherente")
+        db.commit()
+    except Exception as error:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        raise sql_http_error(error, "No fue posible cerrar la práctica.") from None
     id_notificacion = resultado.get("id_notificacion")
     id_destinatario = resultado.get("id_usuario_notificado")
-    if id_notificacion is not None and id_destinatario is not None:
-        enviar_push_notificacion(db, int(id_notificacion), int(id_destinatario))
+    if push_db is not None and id_notificacion is not None and id_destinatario is not None:
+        # SQL already persisted exactly one notification. Push is best effort after commit.
+        try:
+            enviar_push_notificacion(push_db, int(id_notificacion), int(id_destinatario))
+        except Exception:
+            try:
+                push_db.rollback()
+            except Exception:
+                pass
     return resultado
 
 

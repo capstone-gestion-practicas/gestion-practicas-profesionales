@@ -1,0 +1,12 @@
+:host { display: block; margin-top: 1rem; }
+section { border-top: 1px solid var(--ion-color-light-shade, #dce2e8); padding-top: 1rem; }
+button, select, textarea { font: inherit; max-width: 100%; }
+button { padding: .65rem 1rem; margin: .3rem .5rem .3rem 0; border: 1px solid var(--ion-color-primary, #3156a3); border-radius: .5rem; background: transparent; color: var(--ion-color-primary, #3156a3); }
+button:disabled { opacity: .55; }
+label, textarea { display: block; margin-block: .5rem; }
+textarea { width: 100%; box-sizing: border-box; }
+fieldset { min-width: 0; border: 1px solid var(--ion-color-light-shade, #dce2e8); border-radius: .5rem; }
+button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--ion-color-primary, #3156a3); outline-offset: 3px; }
+p, li { overflow-wrap: anywhere; }
+.observaciones { white-space: pre-wrap; }
+[role=alert] { color: var(--ion-color-danger, #aa1728); }

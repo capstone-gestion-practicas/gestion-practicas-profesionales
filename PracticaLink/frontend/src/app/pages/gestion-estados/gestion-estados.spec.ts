@@ -1,7 +1,8 @@
+import { EstadoAcademico, Evaluacion, EvaluacionService } from '../../features/evaluaciones/evaluacion.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
 import { PracticaEstadoResumen } from '../../core/models/practica.models';
@@ -15,6 +16,7 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
   let component: GestionEstados;
   let practicaService: jasmine.SpyObj<PracticaService>;
   let authStore: AuthStore;
+  let academico: jasmine.SpyObj<EvaluacionService>;
 
   const contextoCon = (roles: string[]): ContextoUsuarioResponse => ({
     usuario: { id_usuario: 1, nombre: 'Gestor', apellido: 'Demo', correo: 'gestor@practicalink.cl' },
@@ -55,8 +57,10 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
     practicaService = jasmine.createSpyObj<PracticaService>('PracticaService', [
       'listarPracticasParaGestion',
       'listarEstados',
-      'listarGestores'
+      'listarGestores',
+      'cerrarPractica'
     ]);
+    academico = jasmine.createSpyObj<EvaluacionService>('EvaluacionService', ['vigente']);
     practicaService.listarEstados.and.returnValue(of([]));
     practicaService.listarGestores.and.returnValue(of([]));
 
@@ -64,6 +68,7 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
       imports: [GestionEstados],
       providers: [
         AuthStore,
+        { provide: EvaluacionService, useValue: academico },
         { provide: PracticaService, useValue: practicaService },
         { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate']) },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } }
@@ -116,4 +121,56 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
     expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
     expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('CICLO DE LAS PRÁCTICAS');
   });
+  const evaluacion: Evaluacion = { id_evaluacion: 'uuid', id_practica: 7, id_documento: 9, version: 1,
+    id_docente: 20, estado: 'RESUELTA', resultado: 'APROBADO', observaciones: null, motivo: null,
+    inicio: '2026-11-09T12:00:00Z', termino: '2026-11-09T13:00:00Z' };
+  const aprobado: EstadoAcademico = { id_practica: 7, id_documento: 9, version: 1,
+    estado_informe: 'ENTREGADO', evaluacion_pendiente: null, resultado_vigente: evaluacion };
+  const candidata = (): PracticaEstadoResumen => ({ ...practica(), id_gestor: 1, fecha_termino: '2020-01-01' });
+
+  it('mantiene cierre deshabilitado hasta verificar aprobación vigente', () => {
+    const item = candidata(); crear(['GESTOR'], [item]); fixture.detectChanges();
+    expect(component.puedeFinalizar(item)).toBeFalse();
+    component.finalizarPractica(item); expect(practicaService.cerrarPractica).not.toHaveBeenCalled();
+    academico.vigente.and.returnValue(of(aprobado)); component.consultarAprobacion(item); fixture.detectChanges();
+    expect(academico.vigente).toHaveBeenCalledOnceWith(7); expect(component.puedeFinalizar(item)).toBeTrue();
+    expect(texto()).toContain('Aprobación académica vigente de la versión 1');
+  });
+  it('no habilita cierre con aprobación de otro documento o versión', () => {
+    const item = candidata(); crear(['GESTOR'], [item]);
+    academico.vigente.and.returnValue(of({ ...aprobado, version: 2 })); component.consultarAprobacion(item);
+    expect(component.puedeFinalizar(item)).toBeFalse();
+    academico.vigente.and.returnValue(of({ ...aprobado, id_documento: 10 })); component.consultarAprobacion(item);
+    component.finalizarPractica(item); expect(practicaService.cerrarPractica).not.toHaveBeenCalled();
+  });
+  it('ADMINISTRADOR solo y GESTOR ajeno no adquieren permisos de cierre', () => {
+    const item = candidata(); crear(['ADMINISTRADOR'], [item]); component.consultarAprobacion(item);
+    component.finalizarPractica(item); expect(academico.vigente).not.toHaveBeenCalled();
+    authStore.setContexto(contextoCon(['GESTOR']));
+    component.consultarAprobacion({ ...item, id_gestor: 2 }); component.finalizarPractica({ ...item, id_gestor: 2 });
+    expect(practicaService.cerrarPractica).not.toHaveBeenCalled();
+  });
+  it('cuenta multirrol conserva permiso académico como GESTOR responsable', () => {
+    const item = candidata(); crear(['ADMINISTRADOR', 'GESTOR'], [item]);
+    academico.vigente.and.returnValue(of(aprobado)); component.consultarAprobacion(item);
+    expect(component.puedeFinalizar(item)).toBeTrue();
+  });
+  it('cierre usa el endpoint existente, evita doble envío e invalida aprobación ante conflicto', () => {
+    const item = candidata(); crear(['GESTOR'], [item]);
+    academico.vigente.and.returnValue(of(aprobado)); component.consultarAprobacion(item);
+    const cierre = new Subject<import('../../core/models/practica.models').CerrarPracticaResponse>();
+    practicaService.cerrarPractica.and.returnValue(cierre); component.finalizarPractica(item); component.finalizarPractica(item);
+    expect(practicaService.cerrarPractica).toHaveBeenCalledOnceWith(7, null);
+    cierre.error(new HttpErrorResponse({ status: 409 })); expect(component.puedeFinalizar(item)).toBeFalse();
+    expect(component.guardandoCierreId).toBeNull();
+  });
+  it('consulta fallida y recarga del listado invalidan cualquier autorización visual anterior', () => {
+    const item = candidata(); crear(['GESTOR'], [item]);
+    academico.vigente.and.returnValue(of(aprobado)); component.consultarAprobacion(item);
+    component.cargar(); expect(component.puedeFinalizar(item)).toBeFalse();
+    academico.vigente.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    component.consultarAprobacion(item); expect(component.puedeFinalizar(item)).toBeFalse();
+    expect(component.erroresAcademicos.get(7)).toContain('Sin acceso');
+  });
+
 });

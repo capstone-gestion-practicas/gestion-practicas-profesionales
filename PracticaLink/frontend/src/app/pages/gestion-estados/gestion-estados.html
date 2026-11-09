@@ -92,10 +92,13 @@
                   }
                   <div class="practice-actions">
                     <ion-button (click)="abrirCambio(practica)">Revisar y actualizar estado</ion-button>
-                    @if (puedeFinalizar(practica)) {
+                    @if (candidataCierre(practica)) {
+                      <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>
+                      <p role="status">{{ mensajeAcademico(practica.id_practica) }}</p>
+                      @if (erroresAcademicos.get(practica.id_practica); as errorAcademico) { <p role="alert">{{ errorAcademico }}</p> }
                       <ion-button
                         color="success"
-                        [disabled]="guardandoCierreId === practica.id_practica"
+                        [disabled]="guardandoCierreId !== null || !puedeFinalizar(practica)"
                         (click)="finalizarPractica(practica)">
                         {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
                       </ion-button>
@@ -187,10 +190,13 @@
               }
               <div class="practice-actions">
                 <ion-button (click)="abrirCambio(practica)">Actualizar estado</ion-button>
-                @if (puedeFinalizar(practica)) {
+                @if (candidataCierre(practica)) {
+                      <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>
+                      <p role="status">{{ mensajeAcademico(practica.id_practica) }}</p>
+                      @if (erroresAcademicos.get(practica.id_practica); as errorAcademico) { <p role="alert">{{ errorAcademico }}</p> }
                   <ion-button
                     color="success"
-                    [disabled]="guardandoCierreId === practica.id_practica"
+                    [disabled]="guardandoCierreId !== null || !puedeFinalizar(practica)"
                     (click)="finalizarPractica(practica)">
                     {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
                   </ion-button>

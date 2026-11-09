@@ -1,7 +1,7 @@
 <section aria-labelledby="informe-final-title">
   <h2 id="informe-final-title">Informe final</h2>
-  <p>Entrega y consulta del informe PDF. La evaluación y el cierre son etapas posteriores.</p>
-  <button type="button" (click)="cargar()" [disabled]="cargando() || enviando()">{{ abierto() ? 'Actualizar informe' : 'Consultar disponibilidad e informe' }}</button>
+  <p>Entrega y consulta del informe PDF. La aprobación académica requiere evaluación DOCENTE; el cierre requiere confirmación del GESTOR.</p>
+  <button type="button" (click)="cargar()" [disabled]="cargando() || enviando() || evaluando()">{{ abierto() ? 'Actualizar informe' : 'Consultar disponibilidad e informe' }}</button>
   @if (cargando()) { <p role="status">Consultando informe…</p> }
   @if (error()) { <p role="alert">{{ error() }}</p> }
   @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
@@ -9,15 +9,21 @@
     <p>Estado: {{ item.estado }} · Versión: {{ item.version }}</p>
     @if (item.id_documento) {
       <p>{{ item.nombre }} · {{ item.tamano }} bytes · {{ item.fecha }}</p>
-      <button type="button" (click)="descargar()" [disabled]="cargando() || enviando()">Descargar informe vigente</button>
+      <button type="button" (click)="descargar()" [disabled]="cargando() || enviando() || evaluando()">Descargar informe vigente</button>
     }
     @if (estudiante) {
       <p>Fecha de habilitación: {{ item.fecha_habilitada || 'Sin fecha registrada' }} (Chile).</p>
-      @if (item.habilitada) {
+      @if (puedeEntregar()) {
         <label>PDF no cifrado, máximo 10 MiB <input type="file" accept=".pdf,application/pdf" (change)="seleccionar($event)" [disabled]="enviando()" /></label>
         <button type="button" (click)="entregar()" [disabled]="!archivo || enviando()">{{ enviando() ? 'Entregando…' : item.version ? 'Reemplazar informe' : 'Entregar informe' }}</button>
-      } @else { <p>La entrega no está habilitada: requiere práctica EN_CURSO, fecha de término alcanzada, docente activo y evaluación sin iniciar.</p> }
+      } @else { <p>La entrega no está habilitada: requiere práctica EN_CURSO, fecha de término alcanzada, docente activo y un informe que permita entrega. Durante la evaluación o después de APROBADO no se admite reemplazo.</p> }
     }
   }
   @if (enviando()) { <p role="status">{{ progreso() === null ? 'Validando y confirmando entrega…' : 'Enviando archivo: ' + progreso() + '%' }}</p> }
 </section>
+
+@if (abierto()) {
+  <app-evaluacion-panel [idPractica]="idPractica" [docente]="docente" [estudiante]="estudiante"
+    [inicial]="academico()" [cargaExterna]="true" (estado)="academico.set($event)" (ocupado)="evaluando.set($event)"
+    (cambio)="refrescarInforme()" />
+}

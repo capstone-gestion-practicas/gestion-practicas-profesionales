@@ -1,9 +1,10 @@
+import { EvaluacionService, EstadoAcademico, aprobacionVigente } from '../../features/evaluaciones/evaluacion.service';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Injector, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, Subscription, forkJoin, map } from 'rxjs';
 import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
 import {
   IonBadge,
@@ -67,7 +68,14 @@ import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
   templateUrl: './gestion-estados.html',
   styleUrl: './gestion-estados.scss'
 })
-export class GestionEstados implements OnInit {
+export class GestionEstados implements OnInit, OnDestroy {
+  private readonly injector = inject(Injector);
+  private readonly consultasAcademicas = new Subscription();
+  readonly estadosAcademicos = new Map<number, EstadoAcademico>();
+  readonly erroresAcademicos = new Map<number, string>();
+  readonly consultandoAcademico = new Set<number>();
+  private generacionAcademica = 0;
+  ngOnDestroy(): void { this.consultasAcademicas.unsubscribe(); }
   private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   estados: EstadoPracticaDetalle[] = [];
@@ -109,6 +117,8 @@ export class GestionEstados implements OnInit {
 
   cargar(): void {
     this.cargando = true;
+    this.generacionAcademica++; this.estadosAcademicos.clear(); this.erroresAcademicos.clear();
+    this.consultandoAcademico.clear();
     this.error = '';
     forkJoin({
       practicas: this.practicaService.listarPracticasParaGestion(),
@@ -168,8 +178,43 @@ export class GestionEstados implements OnInit {
   }
 
   puedeFinalizar(practica: PracticaEstadoResumen): boolean {
-    return practica.estado === 'EN_CURSO'
-      && this.fechaTerminoVencida(practica.fecha_termino);
+    return this.candidataCierre(practica) && aprobacionVigente(this.estadosAcademicos.get(practica.id_practica));
+  }
+
+  candidataCierre(practica: PracticaEstadoResumen): boolean {
+    const contexto = this.authStore.obtenerContextoActual();
+    return contexto?.roles.includes('GESTOR') === true
+      && practica.id_gestor === contexto.usuario.id_usuario
+      && practica.estado === 'EN_CURSO' && this.fechaTerminoVencida(practica.fecha_termino);
+  }
+
+  consultarAprobacion(practica: PracticaEstadoResumen): void {
+    const id = practica.id_practica;
+    if (!this.candidataCierre(practica) || this.consultandoAcademico.has(id) || this.guardandoCierreId !== null) return;
+    const generacion = this.generacionAcademica;
+    this.estadosAcademicos.delete(id); this.erroresAcademicos.delete(id); this.consultandoAcademico.add(id);
+    this.consultasAcademicas.add(this.injector.get(EvaluacionService).vigente(id).subscribe({
+      next: estado => {
+        if (generacion !== this.generacionAcademica) return;
+        this.estadosAcademicos.set(id, estado); this.consultandoAcademico.delete(id);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (generacion !== this.generacionAcademica) return;
+        this.consultandoAcademico.delete(id);
+        this.erroresAcademicos.set(id, [401, 403, 404].includes(error.status)
+          ? 'Sin acceso a la evaluación. Revisa tu sesión y asignación.'
+          : 'No se pudo verificar la aprobación. Actualiza antes de cerrar.');
+      }
+    }));
+  }
+
+  mensajeAcademico(id: number): string {
+    if (this.consultandoAcademico.has(id)) return 'Consultando aprobación académica…';
+    const estado = this.estadosAcademicos.get(id);
+    if (!estado) return 'Consulta la evaluación antes de cerrar.';
+    return aprobacionVigente(estado)
+      ? `Aprobación académica vigente de la versión ${estado.version}. El servidor verificará las demás condiciones de cierre.`
+      : 'Sin aprobación académica vigente: no se puede cerrar la práctica.';
   }
 
   nombreEstado(estado: string): string {
@@ -261,7 +306,7 @@ export class GestionEstados implements OnInit {
   }
 
   finalizarPractica(practica: PracticaEstadoResumen): void {
-    if (!this.puedeFinalizar(practica)) return;
+    if (!this.puedeFinalizar(practica) || this.guardandoCierreId !== null) return;
     this.guardandoCierreId = practica.id_practica;
     this.error = '';
     this.practicaService.cerrarPractica(practica.id_practica, null).subscribe({
@@ -274,6 +319,7 @@ export class GestionEstados implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.guardandoCierreId = null;
+        this.estadosAcademicos.delete(practica.id_practica);
         this.error = error.error?.detail ?? 'No fue posible finalizar la práctica.';
       }
     });

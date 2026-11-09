@@ -7,9 +7,9 @@ class AsignacionDocenteRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id_docente: int | None = Field(gt=0)
-    motivo: str | None = None
+    motivo: str | None = Field(default=None, strict=True, max_length=2000)
 
-    @field_validator("motivo", mode="before")
+    @field_validator("motivo")
     @classmethod
     def limpiar_motivo(cls, valor: str | None) -> str | None:
         if valor is None:

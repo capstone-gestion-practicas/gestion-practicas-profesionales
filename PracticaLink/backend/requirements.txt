@@ -11,4 +11,4 @@ email-validator
 httpx
 firebase-admin
 
-pypdf>=6,<7
+pypdf==7.0.0

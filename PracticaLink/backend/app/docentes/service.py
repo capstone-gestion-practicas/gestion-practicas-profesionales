@@ -1,6 +1,12 @@
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from app.core.sql_errors import sql_http_error
 from sqlalchemy.orm import Session
+
+
+def _codigo_sql(error: Exception) -> str:
+    status = sql_http_error(error, "No disponible").status_code
+    return {400: "DATOS_INVALIDOS", 403: "USUARIO_NO_AUTORIZADO",
+            404: "PRACTICA_NO_ENCONTRADA", 409: "CONFLICTO_ASIGNACION"}.get(status, "FALLO_OPERACION")
 
 
 class GestionAsignacionDocenteError(Exception):
@@ -30,9 +36,9 @@ def gestionar_asignacion_docente(
     except Exception as error:
         try:
             db.rollback()
-        except SQLAlchemyError:
+        except Exception:
             pass
-        raise GestionAsignacionDocenteError("FALLO_OPERACION") from error
+        raise GestionAsignacionDocenteError(_codigo_sql(error)) from None
 
 def listar_practicas_docente(db: Session, id_docente: int) -> list[dict]:
     try:
@@ -44,12 +50,14 @@ def listar_practicas_docente(db: Session, id_docente: int) -> list[dict]:
             raise GestionAsignacionDocenteError(resultado["error"])
         db.commit()
         return resultado
+    except GestionAsignacionDocenteError:
+        raise
     except Exception as error:
         try:
             db.rollback()
-        except SQLAlchemyError:
+        except Exception:
             pass
-        raise GestionAsignacionDocenteError("FALLO_OPERACION") from error
+        raise GestionAsignacionDocenteError(_codigo_sql(error)) from None
 
 
 def obtener_practica_docente(db: Session, id_docente: int, id_practica: int) -> dict:
@@ -74,5 +82,5 @@ def obtener_asignacion_docente(db: Session, id_practica: int, id_actor: int) -> 
         raise
     except Exception as error:
         try: db.rollback()
-        except SQLAlchemyError: pass
-        raise GestionAsignacionDocenteError("FALLO_OPERACION") from error
+        except Exception: pass
+        raise GestionAsignacionDocenteError(_codigo_sql(error)) from None

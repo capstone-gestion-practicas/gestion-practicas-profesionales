@@ -15,7 +15,7 @@ const MENSAJES_ESTADO: Readonly<Record<string, string>> = {
   REGISTRADA: 'Tu práctica fue registrada.',
   EN_REVISION: 'Tu práctica está siendo revisada.',
   OBSERVADA: 'Tu práctica tiene observaciones. Revisa el historial y responde lo solicitado.',
-  APROBADA: 'Tu práctica fue aprobada.',
+  APROBADA: 'Tu solicitud de práctica fue aprobada. La aprobación académica requiere la evaluación del informe final.',
   EN_CURSO: 'Tu práctica está en curso.',
   FINALIZADA: 'Tu práctica finalizó.',
   RECHAZADA: 'Tu práctica fue rechazada. Revisa el historial para conocer las observaciones disponibles.'
