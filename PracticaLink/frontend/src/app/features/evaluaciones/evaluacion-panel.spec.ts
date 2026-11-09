@@ -54,7 +54,7 @@ describe('EvaluacionPanel: flujo académico', () => {
     expect(primero.slice(0, 3)).toEqual([7, 9, 1]); expect(primero[3]).toMatch(/^[0-9a-f-]{36}$/);
     api.consultar.and.returnValue(of(enCurso())); envio.next(pendiente); fixture.detectChanges();
     expect(panel.enviando()).toBeFalse(); expect(panel.datos()?.evaluacion_pendiente).toEqual(pendiente);
-    expect(fixture.nativeElement.textContent).toContain('El PDF queda bloqueado');
+    expect(fixture.nativeElement.textContent).toContain('El informe queda bloqueado');
   });
   it('resuelve APROBADO y actualiza resultado e historial', () => {
     cargarEnCurso();
@@ -118,7 +118,7 @@ describe('EvaluacionPanel: flujo académico', () => {
     expect(fixture.nativeElement.textContent).toContain('entrega una nueva versión');
     expect(fixture.nativeElement.textContent).toContain('Corregir análisis');
   });
-  it('no inicia evaluación sin PDF confirmado visible', () => {
+  it('no inicia evaluación sin informe confirmado visible', () => {
     api.consultar.and.returnValue(of({ ...inicial(), id_documento: null, version: 0, estado_informe: 'SIN_ENTREGAR' }));
     panel.cargar(); panel.iniciar(); expect(api.iniciar).not.toHaveBeenCalled();
   });

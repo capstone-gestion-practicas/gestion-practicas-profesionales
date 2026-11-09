@@ -75,7 +75,7 @@ export class EvaluacionPanel implements OnChanges, OnDestroy {
     const key = this.clave(JSON.stringify(['inicio', this.idPractica, datos.id_documento, datos.version]));
     this.preparar();
     this.subscriptions.add(this.api.iniciar(this.idPractica, datos.id_documento, datos.version, key).subscribe({
-      next: () => this.confirmada('Evaluación iniciada. El PDF queda bloqueado durante la evaluación.'),
+      next: () => this.confirmada('Evaluación iniciada. El informe queda bloqueado durante la evaluación.'),
       error: (error: HttpErrorResponse) => this.fallo(error)
     }));
   }

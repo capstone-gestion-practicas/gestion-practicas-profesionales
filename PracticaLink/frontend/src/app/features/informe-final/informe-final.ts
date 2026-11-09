@@ -3,7 +3,7 @@ import { ConsultaAcademica, EvaluacionService, aprobacionVigente } from '../eval
 import { ChangeDetectionStrategy, Component, Injector, Input, OnChanges, OnDestroy, inject, signal } from '@angular/core';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { Subscription, forkJoin } from 'rxjs';
-import { Informe, InformeService } from './informe.service';
+import { Informe, InformeService, errorArchivo } from './informe.service';
 
 @Component({ selector: 'app-informe-final', standalone: true,
   imports: [EvaluacionPanel], templateUrl: './informe-final.html', styleUrl: './informe-final.scss',
@@ -66,13 +66,19 @@ export class InformeFinal implements OnChanges, OnDestroy {
     if (!(event.target instanceof HTMLInputElement) || this.enviando()) return;
     this.archivo = event.target.files?.[0] ?? null; this.key = null; this.versionEnvio = null;
     this.error.set(''); this.mensaje.set('');
-    if (this.archivo && (!this.archivo.name.toLowerCase().endsWith('.pdf') || this.archivo.size === 0 || this.archivo.size > 10485760)) {
-      this.error.set('Selecciona un PDF no vacío de máximo 10 MiB.'); this.archivo = null;
+    if (this.archivo) {
+      const error = errorArchivo(this.archivo);
+      if (error) {
+        this.error.set(error); this.archivo = null; event.target.value = '';
+      }
     }
   }
+
   entregar(): void {
     const informe = this.informe();
     if (this.enviando() || !this.estudiante || !this.archivo || !informe || !this.puedeEntregar() || this.evaluando()) return;
+    const error = errorArchivo(this.archivo);
+    if (error) { this.error.set(error); return; }
     this.key ??= crypto.randomUUID(); this.versionEnvio ??= informe.version;
     this.enviando.set(true); this.progreso.set(null); this.error.set(''); this.mensaje.set('');
     this.subscriptions.add(this.api().entregar(this.idPractica, this.archivo, this.key, this.versionEnvio).subscribe({
@@ -90,19 +96,26 @@ export class InformeFinal implements OnChanges, OnDestroy {
     if (this.cargando() || this.enviando() || this.evaluando() || !this.informe()?.id_documento) return;
     this.cargando.set(true); this.error.set('');
     this.subscriptions.add(this.api().descargar(this.idPractica).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob); const link = document.createElement('a');
-        link.href = url; link.download = 'informe-final.pdf'; link.click();
+      next: archivo => {
+        const url = URL.createObjectURL(archivo.blob); const link = document.createElement('a');
+        link.href = url; link.download = archivo.nombre; link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000); this.cargando.set(false);
       }, error: (e: HttpErrorResponse) => { this.cargando.set(false); this.mostrarError(e); }
     }));
   }
   private mostrarError(e: HttpErrorResponse): void {
-    this.error.set(e.status === 401 ? 'Tu sesión no es válida. Inicia sesión nuevamente.'
+    const body: unknown = e.error;
+    const storageNoDisponible = e.status === 503 && typeof body === 'object' && body !== null
+      && 'detail' in body && body.detail === 'El formato todavía no está habilitado en Storage';
+    this.error.set(storageNoDisponible ? 'DOCX todavía no está disponible en el almacenamiento. Puedes entregar un PDF o reintentar más tarde con la misma clave.'
+      : e.status === 401 ? 'Tu sesión no es válida. Inicia sesión nuevamente.'
       : e.status === 403 ? 'No tienes acceso académico al informe.'
       : e.status === 409 ? 'La entrega cambió o ya no está habilitada. Actualiza la información; para otra entrega vuelve a seleccionar el archivo.'
       : e.status === 413 ? 'El máximo permitido es 10 MiB.'
-      : e.status === 422 ? 'PDF inválido, cifrado o con contenido no permitido.'
+      : e.status === 415 ? 'Formato no admitido. Selecciona PDF o DOCX Transitional.'
+      : e.status === 422 ? 'Informe inválido, cifrado o con contenido no permitido. Solo se admiten PDF y DOCX Transitional.'
+      : e.status === 429 ? 'La validación está ocupada. Espera y reintenta la misma entrega.'
+      : e.status === 503 ? 'El validador o el almacenamiento no está disponible. Puedes reintentar la misma entrega; DOCX requiere estar habilitado en el almacenamiento.'
       : e.status === 404 ? 'No hay un informe disponible.'
       : 'No fue posible completar la operación. Puedes reintentar.');
   }

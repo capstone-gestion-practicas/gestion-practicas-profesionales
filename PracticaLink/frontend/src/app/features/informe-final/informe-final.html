@@ -1,6 +1,6 @@
 <section aria-labelledby="informe-final-title">
   <h2 id="informe-final-title">Informe final</h2>
-  <p>Entrega y consulta del informe PDF. La aprobación académica requiere evaluación DOCENTE; el cierre requiere confirmación del GESTOR.</p>
+  <p>Entrega y consulta del informe PDF o DOCX Transitional. La aprobación académica requiere evaluación DOCENTE; el cierre requiere confirmación del GESTOR.</p>
   <button type="button" (click)="cargar()" [disabled]="cargando() || enviando() || evaluando()">{{ abierto() ? 'Actualizar informe' : 'Consultar disponibilidad e informe' }}</button>
   @if (cargando()) { <p role="status">Consultando informe…</p> }
   @if (error()) { <p role="alert">{{ error() }}</p> }
@@ -8,13 +8,14 @@
   @if (informe(); as item) {
     <p>Estado: {{ item.estado }} · Versión: {{ item.version }}</p>
     @if (item.id_documento) {
-      <p>{{ item.nombre }} · {{ item.tamano }} bytes · {{ item.fecha }}</p>
+      <p>Formato: {{ item.formato }} · {{ item.nombre }} · {{ item.tamano }} bytes · {{ item.fecha }}</p>
       <button type="button" (click)="descargar()" [disabled]="cargando() || enviando() || evaluando()">Descargar informe vigente</button>
     }
     @if (estudiante) {
       <p>Fecha de habilitación: {{ item.fecha_habilitada || 'Sin fecha registrada' }} (Chile).</p>
       @if (puedeEntregar()) {
-        <label>PDF no cifrado, máximo 10 MiB <input type="file" accept=".pdf,application/pdf" (change)="seleccionar($event)" [disabled]="enviando()" /></label>
+        <label>PDF o DOCX Transitional, máximo 10 MiB <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" (change)="seleccionar($event)" [disabled]="enviando()" /></label>
+        <p>El servidor valida el contenido. No se admiten PDF cifrados, DOC, DOCM ni macros.</p>
         <button type="button" (click)="entregar()" [disabled]="!archivo || enviando()">{{ enviando() ? 'Entregando…' : item.version ? 'Reemplazar informe' : 'Entregar informe' }}</button>
       } @else { <p>La entrega no está habilitada: requiere práctica EN_CURSO, fecha de término alcanzada, docente activo y un informe que permita entrega. Durante la evaluación o después de APROBADO no se admite reemplazo.</p> }
     }

@@ -29,7 +29,7 @@ Un fallo de red/503 permite reintentar la misma operación con la misma clave.
 401/403/404/409 limpian la información académica y exigen actualizar antes de actuar.
 Cambiar de práctica cancela las suscripciones y limpia los intentos anteriores.
 
-La entrega PDF reutiliza S4.2 y exige disponibilidad del servidor y consulta
+La entrega PDF/DOCX reutiliza el componente compartido de informes y exige disponibilidad del servidor y consulta
 académica coherente con la misma versión. EN_EVALUACION o APROBADO bloquean
 reemplazos. CON_OBSERVACIONES orienta a corregir y reentregar; el resultado anterior
 permanece en el historial y la nueva versión requiere otra evaluación.

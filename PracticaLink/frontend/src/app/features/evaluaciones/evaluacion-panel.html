@@ -13,7 +13,7 @@
       @if (resultadoActual.resultado === 'CON_OBSERVACIONES' && estudiante) {
         <p>Corrige el informe según las observaciones y entrega una nueva versión desde Informe final. La nueva versión requiere otra evaluación.</p>
       }
-    } @else if (item.evaluacion_pendiente) { <p>Evaluación en curso. No se puede reemplazar el PDF.</p> }
+    } @else if (item.evaluacion_pendiente) { <p>Evaluación en curso. No se puede reemplazar el informe.</p> }
     @else { <p>Sin resultado académico para la versión vigente.</p> }
     @if (aprobacionVigente(item)) { <p>Existe aprobación académica vigente. El GESTOR responsable debe confirmar las demás condiciones y cerrar oficialmente la práctica. El reemplazo está bloqueado.</p> }
     @else { <p>Sin aprobación académica vigente para cerrar.</p> }
