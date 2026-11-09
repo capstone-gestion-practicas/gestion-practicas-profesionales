@@ -14,7 +14,8 @@ class AcademicExecutorTests(unittest.TestCase):
             dependency = database.get_informe_db()
             self.assertIs(next(dependency),db)
             query = str(db.execute.call_args.args[0])
-            for signature in ['iniciar_evaluacion(bigint,bigint,uuid,bigint,bigint)',
+            for signature in ['reservar(bigint,bigint,uuid,bigint,text,text,bigint,text)',
+                'reservar(bigint,bigint,uuid,bigint,text,text,bigint)', 'iniciar_evaluacion(bigint,bigint,uuid,bigint,bigint)',
                 'resolver_evaluacion(bigint,bigint,uuid,uuid,text,text)',
                 'historial_evaluacion(bigint,bigint)', 'public.fn_cerrar_practica(bigint,bigint,text)']:
                 self.assertIn(signature,query)

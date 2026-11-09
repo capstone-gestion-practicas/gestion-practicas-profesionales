@@ -1,14 +1,16 @@
 import { ConsultaAcademica, Evaluacion, EvaluacionService } from '../evaluaciones/evaluacion.service';
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
 import { HttpErrorResponse, HttpEvent, HttpEventType, HttpResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { InformeFinal } from './informe-final';
-import { Informe, InformeService } from './informe.service';
+import { EntregaInforme, Informe, InformeService, FORMATOS_INFORME } from './informe.service';
 
 const actual: Informe = { id_practica: 7, estado: 'ENTREGADO', version: 1, id_documento: 9,
-  nombre: 'informe.pdf', tamano: 20, fecha: '2026-11-08', habilitada: true, fecha_habilitada: '2026-11-07' };
+  formato: 'PDF', mime_type: 'application/pdf', nombre: 'informe.pdf', tamano: 20, fecha: '2026-11-08', habilitada: true, fecha_habilitada: '2026-11-07' };
+
+const entregada: EntregaInforme = { id_entrega: 'uuid', id_documento: 9, version: 2, fecha: '2026-11-09', estado: 'ENTREGADO', formato: 'PDF', mime_type: 'application/pdf' };
 
 describe('Informe final: sección académica', () => {
   let fixture: ComponentFixture<InformeFinal>;
@@ -36,7 +38,7 @@ describe('Informe final: sección académica', () => {
     expect(fixture.nativeElement.textContent).toContain('Reemplazar informe');
   });
   it('muestra SIN_ENTREGAR y fecha sin ofrecer reemplazo si no está habilitado', () => {
-    api.consultar.and.returnValue(of({ ...actual, estado: 'SIN_ENTREGAR', version: 0, id_documento: null, habilitada: false }));
+    api.consultar.and.returnValue(of({ ...actual, estado: 'SIN_ENTREGAR', version: 0, id_documento: null, formato: null, mime_type: null, nombre: null, habilitada: false }));
     fixture.componentInstance.cargar(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('SIN_ENTREGAR');
     expect(fixture.nativeElement.textContent).toContain('2026-11-07');
@@ -56,13 +58,13 @@ describe('Informe final: sección académica', () => {
     panel.archivo = new File(['synthetic'], 'informe.pdf', { type: 'application/pdf' });
     api.entregar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
     panel.entregar(); const first = api.entregar.calls.mostRecent().args;
-    const pending = new Subject<HttpEvent<{ version: number }>>(); api.entregar.and.returnValue(pending);
+    const pending = new Subject<HttpEvent<EntregaInforme>>(); api.entregar.and.returnValue(pending);
     panel.entregar(); panel.entregar();
     expect(api.entregar).toHaveBeenCalledTimes(2);
     expect(api.entregar.calls.mostRecent().args).toEqual(first);
     pending.next({ type: HttpEventType.UploadProgress, loaded: 5, total: 10 });
     expect(panel.progreso()).toBe(50);
-    pending.next(new HttpResponse({ body: { version: 2 } })); fixture.detectChanges();
+    pending.next(new HttpResponse({ body: entregada })); fixture.detectChanges();
     expect(panel.enviando()).toBeFalse();
     expect(api.consultar).toHaveBeenCalledTimes(2);
     expect(fixture.nativeElement.textContent).toContain('La entrega no implica aprobación ni cierre');
@@ -74,7 +76,7 @@ describe('Informe final: sección académica', () => {
     expect(api.entregar).not.toHaveBeenCalled();
     expect(fixture.nativeElement.querySelector('input[type=file]')).toBeNull();
   });
-  for (const status of [403, 409, 413, 422, 503]) {
+  for (const status of [401, 403, 404, 409, 413, 415, 422, 429, 503]) {
     it(`presenta error ${status} y permite nueva consulta`, () => {
       api.consultar.and.returnValue(throwError(() => new HttpErrorResponse({ status })));
       fixture.componentInstance.cargar(); fixture.detectChanges();
@@ -111,6 +113,81 @@ describe('Informe final: sección académica', () => {
     fixture.componentInstance.cargar(); fixture.detectChanges();
     expect(fixture.componentInstance.puedeEntregar()).toBeFalse();
   });
+  function seleccionar(file: File): void {
+    const input = document.createElement('input'); input.type = 'file';
+    const files = new DataTransfer(); files.items.add(file); input.files = files.files;
+    input.addEventListener('change', event => fixture.componentInstance.seleccionar(event));
+    input.dispatchEvent(new Event('change'));
+  }
+  it('acepta PDF y DOCX con tipo correcto y muestra formato real', () => {
+    api.consultar.and.returnValue(of({ ...actual, formato: 'DOCX', mime_type: FORMATOS_INFORME.DOCX.mime, nombre: 'informe.docx' }));
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Formato: DOCX');
+    expect(fixture.nativeElement.textContent).toContain('informe.docx');
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input[type=file]');
+    expect(input.accept).toContain('.docx'); expect(input.accept).not.toContain('.docm');
+    for (const [name, mime] of [['x.pdf', 'application/pdf'], ['x.docx', FORMATOS_INFORME.DOCX.mime]]) {
+      const file = new File(['original'], name, { type: mime }); seleccionar(file);
+      expect(panel.archivo).toBe(file); expect(panel.error()).toBe('');
+    }
+  });
+  it('rechaza archivos vacíos, grandes, MIME discordante y formatos ajenos antes de enviar', () => {
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+    for (const file of [new File([], 'x.pdf', { type: 'application/pdf' }),
+      new File([new ArrayBuffer(10485761)], 'x.docx', { type: FORMATOS_INFORME.DOCX.mime }),
+      new File(['x'], 'x.pdf', { type: FORMATOS_INFORME.DOCX.mime }),
+      new File(['x'], 'x.docx', { type: 'application/pdf' }),
+      new File(['x'], 'x.docm', { type: FORMATOS_INFORME.DOCX.mime }), new File(['x'], 'x.txt')]) {
+      seleccionar(file); panel.entregar();
+      expect(panel.archivo).toBeNull(); expect(panel.error()).not.toBe('');
+    }
+    expect(api.entregar).not.toHaveBeenCalled();
+  });
+  it('acepta MIME vacío en selección PDF/DOCX y mantiene el límite de tamaño', () => {
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+    for (const name of ['informe.PDF', 'informe.docx']) {
+      const file = new File(['original'], name);
+      seleccionar(file); expect(panel.archivo).toBe(file); expect(panel.error()).toBe('');
+    }
+    for (const file of [new File([], 'x.docx'), new File([new ArrayBuffer(10485761)], 'x.pdf'),
+      new File(['original'], 'x.doc'), new File(['original'], 'x.docm')]) {
+      seleccionar(file); expect(panel.archivo).toBeNull(); expect(panel.error()).not.toBe('');
+    }
+  });
+  it('explica Storage solo PDF y conserva clave/version en reintento DOCX', () => {
+    const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+    seleccionar(new File(['original'], 'informe.docx', { type: FORMATOS_INFORME.DOCX.mime }));
+    api.entregar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503,
+      error: { detail: 'El formato todavía no está habilitado en Storage' } })));
+    panel.entregar(); const first = api.entregar.calls.mostRecent().args;
+    expect(panel.error()).toContain('DOCX todavía no está disponible');
+    panel.entregar(); expect(api.entregar.calls.mostRecent().args).toEqual(first);
+  });
+  it('descarga DOCX con nombre recibido del servicio sin perder el original', fakeAsync(() => {
+      const panel = fixture.componentInstance; panel.cargar();
+      const blob = new Blob(['original'], { type: FORMATOS_INFORME.DOCX.mime });
+      api.descargar.and.returnValue(of({ blob, nombre: 'informe-final.docx' }));
+      const create = spyOn(URL, 'createObjectURL').and.returnValue('blob:synthetic');
+      const revoke = spyOn(URL, 'revokeObjectURL');
+      let downloaded = '';
+      spyOn(HTMLAnchorElement.prototype, 'click').and.callFake(function (this: HTMLAnchorElement) { downloaded = this.download; });
+      panel.descargar(); expect(downloaded).toBe('informe-final.docx');
+      expect(create).toHaveBeenCalledOnceWith(blob); expect(panel.cargando()).toBeFalse();
+      tick(1000); expect(revoke).toHaveBeenCalledOnceWith('blob:synthetic');
+  }));
+  for (const [status, message] of [[413, '10 MiB'], [415, 'Formato no admitido'],
+    [422, 'Informe inválido'], [429, 'validación está ocupada'], [503, 'validador o el almacenamiento']] as const) {
+    it(`explica error de entrega ${status} sin perder archivo ni clave`, () => {
+      const panel = fixture.componentInstance; panel.cargar(); fixture.detectChanges();
+      const file = new File(['original'], 'informe.docx', { type: FORMATOS_INFORME.DOCX.mime });
+      seleccionar(file);
+      api.entregar.and.returnValue(throwError(() => new HttpErrorResponse({ status })));
+      panel.entregar(); const first = api.entregar.calls.mostRecent().args;
+      expect(panel.error()).toContain(message); expect(panel.archivo).toBe(file);
+      expect(panel.enviando()).toBeFalse(); panel.entregar();
+      expect(api.entregar.calls.mostRecent().args).toEqual(first);
+    });
+  }
   it('descarta respuestas de la práctica anterior y limpia datos al cambiar identificador', () => {
     const pending = new Subject<Informe>(); api.consultar.and.returnValue(pending);
     fixture.componentInstance.cargar();
@@ -139,8 +216,65 @@ describe('InformeService: contrato HTTP aislado', () => {
     request.flush({ version: 2 });
   });
   it('descarga bytes desde FastAPI sin URL pública ni firmada', () => {
-    api.descargar(7).subscribe(blob => expect(blob.type).toBe('application/pdf'));
+    api.descargar(7).subscribe(archivo => { expect(archivo.blob.type).toBe('application/pdf'); expect(archivo.nombre).toBe('informe-final.pdf'); });
     const request = http.expectOne(`${environment.apiUrl}/practicas/7/informe-final/archivo`);
-    expect(request.request.responseType).toBe('blob'); request.flush(new Blob(['synthetic'], { type: 'application/pdf' }));
+    expect(request.request.responseType).toBe('blob'); request.flush(new Blob(['synthetic'], { type: 'application/pdf' }), { headers: { 'Content-Type': 'application/pdf' } });
   });
+  it('envía DOCX binario con MIME, nombre codificado y versión esperada', () => {
+    const file = new File(['original'], 'informe final.docx', { type: FORMATOS_INFORME.DOCX.mime });
+    api.entregar(7, file, 'same-key', 2).subscribe();
+    const request = http.expectOne(`${environment.apiUrl}/practicas/7/informe-final`);
+    expect(request.request.body).toBe(file);
+    expect(request.request.headers.get('Content-Type')).toBe(FORMATOS_INFORME.DOCX.mime);
+    expect(request.request.headers.get('Nombre-Archivo')).toBe('informe%20final.docx');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('same-key');
+    expect(request.request.headers.get('Version-Esperada')).toBe('2');
+    request.flush({ ...entregada, formato: 'DOCX', mime_type: FORMATOS_INFORME.DOCX.mime });
+  });
+  it('no envía HTTP para MIME discordante', () => {
+    api.entregar(7, new File(['x'], 'x.docx', { type: 'application/pdf' }), 'key', 0).subscribe({
+      error: (error: HttpErrorResponse) => expect(error.status).toBe(422)
+    });
+    http.expectNone(`${environment.apiUrl}/practicas/7/informe-final`);
+  });
+  it('consulta SIN_ENTREGAR con formato y MIME nulos', () => {
+    const empty: Informe = { ...actual, estado: 'SIN_ENTREGAR', version: 0, id_documento: null, nombre: null, formato: null, mime_type: null };
+    api.consultar(7).subscribe(value => { expect(value.formato).toBeNull(); expect(value.mime_type).toBeNull(); });
+    http.expectOne(`${environment.apiUrl}/practicas/7/informe-final`).flush(empty);
+  });
+  it('deriva la extensión DOCX del Content-Type HTTP sin Content-Disposition', () => {
+    api.descargar(7).subscribe(archivo => { expect(archivo.nombre).toBe('informe-final.docx'); expect(archivo.blob.size).toBe(8); });
+    http.expectOne(`${environment.apiUrl}/practicas/7/informe-final/archivo`).flush(
+      new Blob(['original'], { type: FORMATOS_INFORME.DOCX.mime }), { headers: { 'Content-Type': FORMATOS_INFORME.DOCX.mime } });
+  });
+  it('rechaza descarga con MIME desconocido en lugar de inventar extensión', () => {
+    api.descargar(7).subscribe({ error: (error: HttpErrorResponse) => expect(error.status).toBe(502) });
+    http.expectOne(`${environment.apiUrl}/practicas/7/informe-final/archivo`).flush(
+      new Blob(['x']), { headers: { 'Content-Type': 'text/html' } });
+  });
+  for (const [name, mime] of [['informe.PDF', FORMATOS_INFORME.PDF.mime],
+    ['informe.docx', FORMATOS_INFORME.DOCX.mime]]) {
+    it(`envía MIME canónico para ${name} con MIME del navegador vacío`, () => {
+      const file = new File(['original'], name);
+      expect(file.type).toBe('');
+      api.entregar(7, file, 'same-key', 2).subscribe();
+      const request = http.expectOne(`${environment.apiUrl}/practicas/7/informe-final`);
+      expect(request.request.body).toBe(file);
+      expect(request.request.headers.get('Content-Type')).toBe(mime);
+      expect(request.request.headers.get('Idempotency-Key')).toBe('same-key');
+      expect(request.request.headers.get('Version-Esperada')).toBe('2');
+      expect(request.request.headers.get('Nombre-Archivo')).toBe(encodeURIComponent(name));
+      request.flush(entregada);
+    });
+  }
+  it('rechaza MIME vacío en extensiones ajenas, archivos vacíos o excesivos sin HTTP', () => {
+    for (const file of [new File(['x'], 'x.docm'), new File(['x'], 'x.zip'), new File([], 'x.pdf'),
+      new File([new ArrayBuffer(10485761)], 'x.docx')]) {
+      let status = 0;
+      api.entregar(7, file, 'key', 0).subscribe({ error: (error: HttpErrorResponse) => { status = error.status; } });
+      expect(status).toBe(422);
+    }
+    http.expectNone(`${environment.apiUrl}/practicas/7/informe-final`);
+  });
+
 });

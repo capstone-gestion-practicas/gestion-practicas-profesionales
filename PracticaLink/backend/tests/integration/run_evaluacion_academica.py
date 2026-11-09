@@ -15,7 +15,8 @@ HERE = Path(__file__).parent
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--docker-local', action='store_true', required=True)
-    parser.parse_args()
+    parser.add_argument('--pdf-docx', action='store_true', help='Also apply the incremental format migration before S4.3 regressions')
+    args = parser.parse_args()
     name = 'practicalink-s43-' + uuid4().hex[:12]
     image = 'postgres:18.6'
     subprocess.run(['docker', 'image', 'inspect', image], check=True, stdout=subprocess.DEVNULL)
@@ -119,6 +120,9 @@ def main():
         check(before == sql("SELECT to_jsonb(c)-'id_evaluacion' FROM public.cierre_practica c WHERE id_practica=530"), 'legacy closure altered')
         check(legacy == sql('SELECT to_jsonb(p) FROM public.practica p WHERE id_practica=530'), 'legacy practice altered')
         print('PASS upgrade: incremental migration and historical preservation', flush=True)
+        if args.pdf_docx:
+            sql((ROOT / 'PracticaLink/supabase/migrations/20261110100000_informes_pdf_docx.sql').read_text(), True)
+            print('PASS PDF/DOCX migration before unchanged S4.3 regression scenarios', flush=True)
         sql((HERE / 's43_historial_finalizada.sql').read_text())
         print('PASS E03: non-superuser DML, RLS, rollback and immutable legacy final history', flush=True)
         sql((HERE / 's41_asignacion_docente.sql').read_text())

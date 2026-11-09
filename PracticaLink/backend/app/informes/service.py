@@ -2,7 +2,7 @@ import hashlib
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import text
-from app.informes.pdf import validar_pdf
+from app.informes.formats import validate, metadata, check_name, Download
 from app.core.sql_errors import sql_http_error
 
 
@@ -13,7 +13,7 @@ class Informes:
     def call(self, name: str, params: dict):
         signatures = {
             'consultar': '(:p,:a)', 'archivo': '(:p,:a)',
-            'reservar': '(:p,:a,CAST(:k AS uuid),:v,:h,:n,:b)',
+            'reservar': '(:p,:a,CAST(:k AS uuid),:v,:h,:n,:b,CAST(:f AS text))',
             'confirmar': '(:p,:a,CAST(:k AS uuid))', 'limpieza': '()'
         }
         try:
@@ -30,15 +30,25 @@ class Informes:
     def consultar(self, practica: int, actor: int):
         return self.call('consultar', {'p': practica, 'a': actor})
 
-    def entregar(self, practica: int, actor: int, key: UUID, expected: int, name: str, data: bytes):
+    def propietario(self, practica: int, actor: int):
+        current = self.consultar(practica, actor)
+        if current.get('propietario_estudiante') is not True:
+            raise HTTPException(403, 'Solo el estudiante propietario puede entregar el informe')
+        return current
+
+    def entregar(self, practica: int, actor: int, key: UUID, expected: int, name: str, data: bytes, formato: str = 'PDF'):
         # Reject unauthorized users before spending resources on the parser.
-        self.consultar(practica, actor)
-        digest = validar_pdf(data)
+        self.propietario(practica, actor)
+        check_name(name, formato)
+        digest = validate(data, formato)
         reservation = self.call('reservar', {'p': practica, 'a': actor, 'k': str(key),
-            'v': expected, 'h': digest, 'n': name, 'b': len(data)})
+            'v': expected, 'h': digest, 'n': name, 'b': len(data), 'f': formato})
+        mime, _ = metadata(reservation.get('formato'))
+        if reservation['formato'] != formato:
+            raise HTTPException(503, 'Metadatos del informe no disponibles')
         if reservation['estado'] != 'CONFIRMADA':
             try:
-                self.storage.put(reservation['objeto'], data, digest)
+                self.storage.put(reservation['objeto'], data, digest, mime)
             except HTTPException:
                 raise
             except Exception:
@@ -46,13 +56,16 @@ class Informes:
             # No inline compensation: an ambiguous commit may already be confirmed.
             reservation = self.call('confirmar', {'p': practica, 'a': actor, 'k': str(key)})
         return {'id_entrega': str(key), 'id_documento': reservation['id_documento'],
-                'version': reservation['version'], 'fecha': reservation['confirmada'], 'estado': 'ENTREGADO'}
+                'version': reservation['version'], 'fecha': reservation['confirmada'], 'estado': 'ENTREGADO', 'formato': formato, 'mime_type': mime}
 
     def descargar(self, practica: int, actor: int):
         params = {'p': practica, 'a': actor}
         item = self.call('archivo', params)
+        mime, _ = metadata(item.get('formato'), item.get('mime_type'))
+        if item.get('mime_type') != mime:
+            raise HTTPException(503, 'Metadatos del informe no disponibles')
         try:
-            self.storage.verify()
+            self.storage.verify(mime)
             data = self.storage.read(item['objeto'])
         except HTTPException:
             raise
@@ -64,7 +77,7 @@ class Informes:
         current = self.call('archivo', params)
         if current != item:
             raise HTTPException(409, 'El informe vigente cambió; vuelve a consultar')
-        return data
+        return Download(data, item['formato'], mime)
 
     def limpiar(self):
         keys = self.call('limpieza', {})
