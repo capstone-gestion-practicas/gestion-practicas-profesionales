@@ -1,0 +1,18 @@
+{
+  "DEUDA_BACKEND.md": "403306a3ce2e4291baa7da8568857c742ad4ec0f4220fcb60d0fefd04a81b07d",
+  "README.md": "76d9b98d3c04e266078948649ad873684c979162fb36cebbb3e7aa12cacae91e",
+  "apply.py": "300b6d5395a0d568bad0989d28058e7f1601f707a1f6ce18f5c08166c5d89b82",
+  "backup.py": "becf63b9d7f994345d06eea9cfb5bb5c88b57492ec78f330982a1cf2aefb8dc9",
+  "common.py": "78a5d7ad1eccae97df7cc36d058eb1634d84d7f30c7cdda112e3e20178b2ef6a",
+  "ensayo.py": "b7d46303e06436f87ad7b92d6765524ea09ecfe520d9a8d45f467dd3144f55f8",
+  "ep06_01_compatible_roundtrip.sql": "5da1cffe3570af401a03d2f0265639251bd39ac0eb5e9230d3784803ad8897bc",
+  "identificar_servicio.py": "246b6a99d2e2ef04b6ffbdfb1754d39c902537297cf16625745268c50f8526a0",
+  "manifiesto.json": "5a9e82694017b45a48a0fa8fc9bfc59ddb0310e49ecba2a39b1bf3c4270dbbd7",
+  "postflight.sql": "4b9e1c049e9c8c07f2479c2ac6f374b8fbedcda02f7c107c1c7bbcd2ef897cdb",
+  "preflight.py": "32217bd8abafcc994d4d571a3c5426d426c08b874d826cc03f3008524e21e239",
+  "preparar_toc.py": "cfcd29c6f79ad71a9057208aab64ddcae9844c69ab2bfb9321d2835c1bdcc11b",
+  "runtime_principals.sql": "7949fae1a8bec17963629e995ab583cc55035d8415413fd77ee6e5ba068c8965",
+  "storage-private.json": "4c811911e6b5f172d3aba171e7c92b240fa645415e0cbcbca28b44c3bb01fd86",
+  "test_preparacion.py": "601b1d8d02b312a8f4cf4f944294ceccaf71533a5e98849b17dbbe42c652336a",
+  "verificar_restore.py": "37993c44c2fe7e2000c3a8e24b0faccbfe2464568a47872fe0426b43df0fc815"
+}

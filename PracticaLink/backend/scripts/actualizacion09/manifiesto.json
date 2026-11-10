@@ -1,0 +1,265 @@
+{
+  "base": "00057b2",
+  "scope": "historical one-shot reconciliation, already validated; not reentrant; new target/operation approval required",
+  "original_files": [
+    {
+      "order": 1,
+      "path": "PracticaLink/supabase/migrations/20261017000000_initial_schema.sql",
+      "sha256": "2e2ccfaf9e87a047675389ac970886ee770b2ed8bef61fd3ca0a2a75388b4858",
+      "action": "preserve",
+      "source_transaction_frame": "not_executed"
+    },
+    {
+      "order": 2,
+      "path": "PracticaLink/supabase/migrations/20261017010000_create_notificacion.sql",
+      "sha256": "a26412b9fdc79a0258cca6540252084db26cc7685b19b1ca2f881843acfddad2",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 3,
+      "path": "PracticaLink/supabase/migrations/20261017020000_backend_operations.sql",
+      "sha256": "5753aa605f0581cd919afb067d66ca72f70daa5b9ebf8952d92c9a18387322f4",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 4,
+      "path": "PracticaLink/supabase/migrations/20261017030000_horas_semanales_practica.sql",
+      "sha256": "eb96e52dcec9a15825fd9820e4c683360a56cf4a3d5fca1e3ee43862618b3da4",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 5,
+      "path": "PracticaLink/supabase/migrations/20261017040000_respuesta_observacion_estudiante.sql",
+      "sha256": "5556de7ecc158bb690381ccd9119b55711289d704f7f3e0b57456f157345a67b",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 6,
+      "path": "PracticaLink/supabase/migrations/20261028010000_ep05_seguimientos.sql",
+      "sha256": "f0de9b06988efff6bdb5d4c22c925efdc09f86c38b2c10f209a9212ff3990e8a",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 7,
+      "path": "PracticaLink/supabase/migrations/20261028020000_ep06_incidencias_alertas.sql",
+      "sha256": "bfbe6980410cee07df7c77075fb20bcba5ea330e6c701a908a6e08138e36dc0f",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 8,
+      "path": "PracticaLink/supabase/migrations/20261028030000_ep06_correo_estudiante_incidencias.sql",
+      "sha256": "8e259bbfee13d6ae39898b43bdf5b773f065bd25e748dc7c908d62ed2e13cf22",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 9,
+      "path": "PracticaLink/supabase/migrations/20261028040000_estudiantes_sin_practica.sql",
+      "sha256": "9b0957a676d06bac9a19acf1c046a705d3af5deea46aa7197eac1b292d55828b",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 10,
+      "path": "PracticaLink/supabase/migrations/20261028050000_recordatorios_con_notificacion.sql",
+      "sha256": "f1983eea87bc6a153f9cc86f7cf9dd5d8e79ab686fbc15181acfa898194fcc83",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 11,
+      "path": "PracticaLink/supabase/migrations/20261028060000_estado_perfil_practica_estudiantes.sql",
+      "sha256": "5ed002ccbfe281424d876bd6849de35e2067b4adf8b7a4f900abb549525b7665",
+      "action": "preserve",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 12,
+      "path": "PracticaLink/supabase/migrations/20261028070000_push_devices.sql",
+      "sha256": "95708ff5c8b7f6b8206c3a03ae5afa2a7b4e69717caefc2bc26c38274c40b290",
+      "action": "reconcile_history_only",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 13,
+      "path": "PracticaLink/supabase/migrations/20261028080000_mensajes_push_gestor.sql",
+      "sha256": "9bac141f8b5e153f0cbfcf46485a536abf51a6fda7949d744c93c3b1911b9b2b",
+      "action": "reconcile_history_only",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 14,
+      "path": "PracticaLink/supabase/migrations/20261028090000_mensaje_push_broadcast.sql",
+      "sha256": "ccf796ad45a80f6795c058c62817ee9fc95d6e764a452eaa6a7863884b1d9627",
+      "action": "reconcile_history_only",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 15,
+      "path": "PracticaLink/supabase/migrations/20261101131500_push_un_solo_dispositivo_activo.sql",
+      "sha256": "f106c5927b1eecefc2099f61a6402672fad2434401404aaa36995c60e2e1a112",
+      "action": "reconcile_history_only",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 16,
+      "path": "PracticaLink/supabase/migrations/20261102170000_ep07_cierre_asignaciones.sql",
+      "sha256": "76ff02a092ed6e7450f7b6eb13c1e1d393d2b7789899517aed8ec69ce68dbd79",
+      "action": "reconcile_history_only",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 17,
+      "path": "PracticaLink/supabase/migrations/20261103100000_ep07_bloqueo_salida_finalizada.sql",
+      "sha256": "0e7f79b86aa820f337b9e040d1b35102bc2ae3ab52960f2a7c29cbbb40c46b16",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 18,
+      "path": "PracticaLink/supabase/migrations/20261103110000_ep07_autorizacion_gestor_estado_generico.sql",
+      "sha256": "a23c4d104095a04df62dbb3b4f09916ba7b0f4282230e932d9ffd4ade052c7f0",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 19,
+      "path": "PracticaLink/supabase/migrations/20261103120000_ep07_autorizacion_seguimientos.sql",
+      "sha256": "bbb7290ab626c33c0e75850d6329d62a693b384869b5da67e4a30ecde96e33b8",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 20,
+      "path": "PracticaLink/supabase/migrations/20261103130000_ep07_versionar_inicio_practica.sql",
+      "sha256": "072bb14506d2c25e74491d4d2688824531236059c582a65d60ecd16f9478b881",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 21,
+      "path": "PracticaLink/supabase/migrations/20261103140000_ep07_unificar_seguimientos_ep05.sql",
+      "sha256": "8024950f7f3c8942e81f084dbc10e5af3f1fb15dde4c81d7284e46f12a45a9f9",
+      "action": "execute_and_register",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": 22,
+      "path": "PracticaLink/supabase/migrations/20261103150000_ep07_corregir_recordatorios_cierre.sql",
+      "sha256": "9e339927a0fb581df237c5a6bcc6665f30782c98cce03a778eebf51e2bfcf82d",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 23,
+      "path": "PracticaLink/supabase/migrations/20261107100000_ep08_revision_autoasignacion_gestor.sql",
+      "sha256": "16e09ea0459a1da4ab7154741c539d129f2755494b1a65025789290e6f02c79a",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 24,
+      "path": "PracticaLink/supabase/migrations/20261107110000_s41_docente_assignment.sql",
+      "sha256": "e95aabcabb0bf87cada0cf19370bba172c93d887dd0ce0a54ebb4c30c6eff449",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 25,
+      "path": "PracticaLink/supabase/migrations/20261108100000_s42_informe_final.sql",
+      "sha256": "66b2704666da3cd31fab12836011312163717b6758278922dac3409f9ab4b173",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 26,
+      "path": "PracticaLink/supabase/migrations/20261109100000_s43_evaluacion_academica.sql",
+      "sha256": "7404b26cd4e21e60856f944692c9f4ed02942e3851bc219e2710688bf4cb755c",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": 27,
+      "path": "PracticaLink/supabase/migrations/20261110100000_informes_pdf_docx.sql",
+      "sha256": "5b4d3f7ba50fb286340f0f9e079ef11b9445206fe10dd1e95ef5555afe1c3542",
+      "action": "execute_and_register",
+      "source_transaction_frame": "none"
+    },
+    {
+      "order": "EP06-1",
+      "path": "scripts/BD/fixes/ep06-01-modelo-incidencias.sql",
+      "sha256": "d23dc6b6dca3ed6b8d09634687e2b58104fb2491f049e8427b6102697e7790ab",
+      "action": "reviewed_candidate",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-2",
+      "path": "scripts/BD/fixes/ep06-02-permisos-incidencias.sql",
+      "sha256": "88c599a63c6b9eebd48ea9d92d2315f34d9105dc215644f18f2fd8ac8b322250",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-3",
+      "path": "scripts/BD/fixes/ep06-03-registrar-incidencia.sql",
+      "sha256": "ca0b1d4712138f7703ee33a9f0f4fa056f37f981ff26fa5f007cc38095c2a9bf",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-4",
+      "path": "scripts/BD/fixes/ep06-04-consultar-incidencias.sql",
+      "sha256": "77be45f780f9732953e0a480720d70bde049c939ae03d2a259b0a28ca377de17",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-5",
+      "path": "scripts/BD/fixes/ep06-05-permisos-estados-incidencias.sql",
+      "sha256": "401959398f83e06409686a4db8b6dd055bc8b7fd238b7d6b12ce957d8fe55487",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-6",
+      "path": "scripts/BD/fixes/ep06-06-cambiar-estado-incidencia.sql",
+      "sha256": "222539bece991deb90f73629ab74ceb759b0c9f47a094878b52b9d23172b9a9c",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-7",
+      "path": "scripts/BD/fixes/ep06-07-consultar-historial-incidencia.sql",
+      "sha256": "2d18ceb79224d6136cb49593c8da761694096efc0afa8e099e726e207758523e",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-8",
+      "path": "scripts/BD/fixes/ep06-08-resumen-pendientes.sql",
+      "sha256": "e2186e802eee1d3e5517cbeb7cf9741b13430a6d2a4d33515545cb92194cfa79",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    },
+    {
+      "order": "EP06-9",
+      "path": "scripts/BD/fixes/ep06-09-corregir-resumen-pendientes.sql",
+      "sha256": "5ebe2d57fa6713eea013b4b4d0404545fefe78bd4dfebac8fb9e8ef2564b232b",
+      "action": "execute_no_fictitious_migration_version",
+      "source_transaction_frame": "adopted"
+    }
+  ],
+  "candidate": {
+    "file": "ep06_01_compatible_roundtrip.sql",
+    "sha256": "5da1cffe3570af401a03d2f0265639251bd39ac0eb5e9230d3784803ad8897bc",
+    "replaces_at_execution_only": "scripts/BD/fixes/ep06-01-modelo-incidencias.sql",
+    "requires_explicit_review": true
+  },
+  "rollback": "No down migration; maintenance and forward recovery; do not restore unsafe closing functions"
+}
