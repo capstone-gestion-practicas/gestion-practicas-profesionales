@@ -8,12 +8,14 @@
       <span class="brand-name">PracticaLink</span>
       <span class="brand-spacer"></span>
       @if (contexto(); as ctx) {
-        @if (puedeRevisarPracticas()) {
+        @if (mostrarAccesosGestion()) {
           <nav class="quick-nav" aria-label="Accesos de gestión">
             @if (esAdministrador()) {
               <button type="button" (click)="gestionarUsuarios()">Usuarios</button>
             }
-            <button type="button" (click)="revisarPracticas()">Solicitudes</button>
+            @if (puedeRevisarPracticas()) {
+              <button type="button" (click)="revisarPracticas()">Solicitudes</button>
+            }
             <button type="button" (click)="gestionarEstados()">Estados</button>
             <button type="button" (click)="gestionarSeguimientos()">Seguimientos</button>
             <button type="button" (click)="gestionarIncidencias()">Incidencias</button>
@@ -64,57 +66,63 @@
             </div>
           </div>
 
-          @if (errorDashboardAdmin) {
-            <p class="module-warning" role="alert">{{ errorDashboardAdmin }}</p>
-          }
-
           <ion-grid class="admin-metrics">
             <ion-row>
               <ion-col size="12" size-md="4">
                 <ion-card class="metric-card">
-                  <ion-card-content><span>Usuarios activos</span><strong>{{ usuariosActivos() }}</strong><small>cuentas habilitadas</small></ion-card-content>
+                  <ion-card-content><span>Usuarios activos</span><strong>{{ textoMetrica(estadoUsuarios, usuariosActivos()) }}</strong><small>cuentas habilitadas</small></ion-card-content>
                 </ion-card>
               </ion-col>
               <ion-col size="12" size-md="4">
                 <ion-card class="metric-card">
-                  <ion-card-content><span>Gestores activos</span><strong>{{ gestoresActivos() }}</strong><small>con rol de revisión</small></ion-card-content>
+                  <ion-card-content><span>Gestores activos</span><strong>{{ textoMetrica(estadoUsuarios, gestoresActivos()) }}</strong><small>con rol de revisión</small></ion-card-content>
                 </ion-card>
               </ion-col>
-              <ion-col size="12" size-md="4">
-                <ion-card class="metric-card emphasis">
-                  <ion-card-content>
-                    <span>Solicitudes pendientes</span>
-                    <strong>{{ solicitudesPendientes() }}</strong>
-                    <small>requieren seguimiento</small>
-                    <ion-button fill="clear" size="small" (click)="abrirSolicitudesPendientes()">
-                      Ver solicitudes
-                    </ion-button>
-                  </ion-card-content>
-                </ion-card>
-              </ion-col>
+              @if (tieneRolGestor()) {
+                <ion-col size="12" size-md="4">
+                  <ion-card class="metric-card emphasis">
+                    <ion-card-content>
+                      <span>Solicitudes pendientes</span>
+                      <strong>{{ textoMetrica(estadoSolicitudes, solicitudesPendientes()) }}</strong>
+                      <small>requieren seguimiento</small>
+                      <ion-button fill="clear" size="small" (click)="abrirSolicitudesPendientes()">
+                        Ver solicitudes
+                      </ion-button>
+                    </ion-card-content>
+                  </ion-card>
+                </ion-col>
+              }
             </ion-row>
           </ion-grid>
 
           <section class="state-metrics-section" aria-label="Prácticas por estado">
             <div class="state-metrics-heading">
               <h2>Prácticas por estado</h2>
-              <span>{{ metricasPracticasEstado.length }} estados</span>
+              @if (estadoPracticasEstado === 'listo') {
+                <span>{{ metricasPracticasEstado.length }} estados</span>
+              }
             </div>
-            <ion-grid class="admin-metrics">
-              <ion-row>
-                @for (metrica of metricasPracticasEstado; track metrica.id_estado) {
-                  <ion-col size="6" size-sm="4" size-lg="3">
-                    <ion-card class="metric-card" button="true" (click)="abrirPracticasEstado(metrica.nombre)">
-                      <ion-card-content>
-                        <span>{{ nombreEstado(metrica.nombre) }}</span>
-                        <strong>{{ metrica.cantidad }}</strong>
-                        <small>{{ metrica.cantidad === 1 ? 'práctica' : 'prácticas' }}</small>
-                      </ion-card-content>
-                    </ion-card>
-                  </ion-col>
-                }
-              </ion-row>
-            </ion-grid>
+            @if (estadoPracticasEstado === 'error') {
+              <p class="module-warning" role="alert">No disponible: no fue posible cargar las prácticas por estado.</p>
+            } @else if (estadoPracticasEstado === 'cargando') {
+              <p class="empty-state">Cargando prácticas por estado…</p>
+            } @else {
+              <ion-grid class="admin-metrics">
+                <ion-row>
+                  @for (metrica of metricasPracticasEstado; track metrica.id_estado) {
+                    <ion-col size="6" size-sm="4" size-lg="3">
+                      <ion-card class="metric-card" button="true" (click)="abrirPracticasEstado(metrica.nombre)">
+                        <ion-card-content>
+                          <span>{{ nombreEstado(metrica.nombre) }}</span>
+                          <strong>{{ metrica.cantidad }}</strong>
+                          <small>{{ metrica.cantidad === 1 ? 'práctica' : 'prácticas' }}</small>
+                        </ion-card-content>
+                      </ion-card>
+                    </ion-col>
+                  }
+                </ion-row>
+              </ion-grid>
+            }
           </section>
 
           @if (errorEstudiantesSinPractica) {
@@ -184,7 +192,10 @@
                     @if (solicitudesRecientes().length) {
                       <ion-list lines="full">
                         @for (solicitud of solicitudesRecientes(); track solicitud.id_practica) {
-                          <ion-item button detail="true" (click)="abrirDetalleSolicitud(solicitud.id_practica)">
+                          <ion-item
+                            [button]="puedeRevisarPracticas()"
+                            [detail]="puedeRevisarPracticas()"
+                            (click)="puedeRevisarPracticas() && abrirDetalleSolicitud(solicitud.id_practica)">
                             <ion-label>
                               <h3>{{ solicitud.estudiante }}</h3>
                               <p>{{ solicitud.centro_practica }} · {{ solicitud.fecha_registro }}</p>
