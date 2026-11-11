@@ -1,0 +1,34 @@
+@if (candidata()) {
+  <section class="cierre" aria-labelledby="cierre-titulo" [attr.aria-busy]="consultando() || cerrando()">
+    <h2 id="cierre-titulo">Cierre de práctica</h2>
+
+    @if (finalizada()) {
+      <p class="cierre__exito" role="status">{{ mensajeExito() }}</p>
+    } @else {
+      <p class="cierre__ayuda">
+        La práctica alcanzó su fecha de término. Verifica la aprobación académica vigente antes de finalizarla.
+      </p>
+
+      <div class="cierre__acciones">
+        <ion-button
+          fill="outline"
+          [disabled]="consultando() || cerrando()"
+          (click)="consultarAprobacion()">
+          @if (consultando()) { <ion-spinner name="crescent" aria-hidden="true"></ion-spinner> }
+          Consultar aprobación académica
+        </ion-button>
+        <ion-button
+          color="success"
+          [disabled]="!puedeFinalizar()"
+          [attr.aria-busy]="cerrando()"
+          (click)="finalizar()">
+          {{ cerrando() ? 'Finalizando...' : 'Finalizar práctica' }}
+        </ion-button>
+      </div>
+
+      <p class="cierre__estado" role="status">{{ mensajeAprobacion() }}</p>
+      @if (errorConsulta()) { <p class="cierre__error" role="alert">{{ errorConsulta() }}</p> }
+      @if (errorCierre()) { <p class="cierre__error" role="alert">{{ errorCierre() }}</p> }
+    }
+  </section>
+}
