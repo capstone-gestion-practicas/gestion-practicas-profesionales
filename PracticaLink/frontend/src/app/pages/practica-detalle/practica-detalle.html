@@ -22,7 +22,11 @@
           }
           <div class="page-actions">
             <ion-button fill="outline" (click)="registrarIncidencia()">Nueva incidencia</ion-button>
-            <ion-button (click)="registrarSeguimiento()">Registrar seguimiento</ion-button>
+            @if (puedeRegistrarSeguimiento) {
+              <ion-button (click)="registrarSeguimiento()">Registrar seguimiento</ion-button>
+            } @else {
+              <p class="hint-seguimiento">Los seguimientos se registran cuando la práctica está en curso.</p>
+            }
           </div>
         </div>
         <p class="subtitle">

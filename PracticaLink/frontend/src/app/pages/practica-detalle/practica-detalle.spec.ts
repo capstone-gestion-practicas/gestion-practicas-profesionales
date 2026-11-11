@@ -115,11 +115,27 @@ describe('PracticaDetalle', () => {
   });
 
   it('opens the follow-up registration from the detail page', () => {
+    // La acción solo existe con la práctica EN_CURSO (el detalle por defecto está FINALIZADA).
+    service.obtenerDetalle.and.returnValue(of({ ...detalle, estado: { id_estado: 5, nombre: 'EN_CURSO', es_final: false } }));
+    component.cargar(); fixture.detectChanges();
     const button = Array.from(fixture.nativeElement.querySelectorAll('ion-button') as NodeListOf<HTMLElement>)
       .find(item => item.textContent?.trim() === 'Registrar seguimiento');
     button!.click();
     expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([
       '/practicas', '15', 'seguimiento', 'nuevo'
     ]);
+  });
+  it('registra seguimientos solo con la práctica EN_CURSO y explica la ausencia de la acción', () => {
+    const botonSeguimiento = (): HTMLElement | undefined => (Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[])
+      .find(boton => boton.textContent?.trim() === 'Registrar seguimiento');
+    for (const [nombre, id_estado, es_final, enCurso] of [
+      ['APROBADA', 4, false, false], ['EN_CURSO', 5, false, true], ['FINALIZADA', 6, true, false],
+    ] as const) {
+      service.obtenerDetalle.and.returnValue(of({ ...detalle, estado: { id_estado, nombre, es_final } }));
+      component.cargar(); fixture.detectChanges();
+      expect(!!botonSeguimiento()).withContext(nombre).toBe(enCurso);
+      expect(fixture.nativeElement.textContent.includes('se registran cuando la práctica está en curso'))
+        .withContext(nombre).toBe(!enCurso);
+    }
   });
 });
