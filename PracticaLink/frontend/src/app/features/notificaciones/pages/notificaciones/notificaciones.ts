@@ -30,7 +30,7 @@ import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
-import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token';
+import { ESPACIO_PAGINA, EspacioPagina } from '../../../../core/navigation/espacio-pagina.token';
 import {
   FILTROS_SECCION,
   GrupoFecha,
@@ -77,7 +77,7 @@ export class Notificaciones implements OnInit {
     readonly servicio: NotificacionService,
     private readonly authStore: AuthStore,
     private readonly router: Router,
-    @Optional() @Inject(ESPACIO_PAGINA) private readonly espacio: 'estudiante' | null = null
+    @Optional() @Inject(ESPACIO_PAGINA) private readonly espacio: EspacioPagina | null = null
   ) {
     addIcons({
       checkmarkOutline, notificationsOutline, documentTextOutline, chatbubbleEllipsesOutline,
@@ -101,9 +101,9 @@ export class Notificaciones implements OnInit {
       : this.notificaciones;
   }
 
-  /** Presentación del espacio V3 del estudiante. Lo define la ruta, no la URL. */
+  /** Presentación V3 compartida por el espacio del estudiante y el del docente. Lo define la ruta, no la URL. */
   get presentacionEstudiante(): boolean {
-    return this.espacio === 'estudiante';
+    return this.espacio === 'estudiante' || this.espacio === 'docente';
   }
 
   /** Presentación nueva solo para el gestor sin administración; el administrador conserva la anterior. */
@@ -265,7 +265,11 @@ export class Notificaciones implements OnInit {
 
   abrir(notificacion: Notificacion): void {
     const irADestino = () => {
-      if (notificacion.tipo === 'NUEVA_PRACTICA') {
+      if (this.espacio === 'docente') {
+        if (notificacion.id_practica !== null) {
+          this.router.navigate(['/docente/practicas', notificacion.id_practica]);
+        }
+      } else if (notificacion.tipo === 'NUEVA_PRACTICA') {
         this.router.navigate(['/revisiones', notificacion.id_practica]);
       } else if (
         notificacion.tipo === 'CAMBIO_ESTADO'
@@ -295,6 +299,10 @@ export class Notificaciones implements OnInit {
   }
 
   volver(): void {
+    if (this.espacio === 'docente') {
+      this.router.navigate(['/docente/practicas']);
+      return;
+    }
     this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/inicio'] : ['/home']);
   }
 

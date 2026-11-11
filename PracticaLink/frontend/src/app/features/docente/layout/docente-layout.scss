@@ -1,0 +1,4 @@
+/* Ajustes propios del espacio docente; la base visual viene de student-layout.scss. */
+.student-layout__nav-item--active {
+  box-shadow: inset 4px 0 0 var(--color-success-soft);
+}

@@ -16,9 +16,11 @@
   @if (menuAbierto()) {
     <div id="student-account-menu" class="student-account__menu">
       <p class="student-account__nombre">{{ nombre() }}</p>
+      @if (mostrarPerfil()) {
       <button class="student-account__item" type="button" (click)="abrirPerfil()">
         Mi perfil
       </button>
+      }
       <button #primeraAccion class="student-account__item" type="button" (click)="salirDesdeMenu()">
         Cerrar sesión
       </button>

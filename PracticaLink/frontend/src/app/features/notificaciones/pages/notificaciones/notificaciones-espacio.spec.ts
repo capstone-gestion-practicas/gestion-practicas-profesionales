@@ -4,7 +4,8 @@ import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 import { Observable, Subject, of, throwError } from 'rxjs';
 
-import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token';
+import { ESPACIO_PAGINA, EspacioPagina } from '../../../../core/navigation/espacio-pagina.token';
+import { Router } from '@angular/router';
 import { Notificacion, NotificacionesResumen } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { Notificaciones } from './notificaciones';
@@ -21,7 +22,7 @@ describe('Notificaciones: presentación por espacio', () => {
     mensaje: 'Tu práctica fue revisada', fecha_creacion: '2026-01-01T12:00:00Z', fecha_leida: null
   } as unknown as Notificacion;
 
-  function configurar(espacio: 'estudiante' | null, respuesta: Observable<NotificacionesResumen> = of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen)): void {
+  function configurar(espacio: EspacioPagina | null, respuesta: Observable<NotificacionesResumen> = of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen)): void {
     TestBed.resetTestingModule();
     noLeidas = signal(0);
     listar = jasmine.createSpy('listar').and.returnValue(respuesta);
@@ -179,6 +180,32 @@ describe('Notificaciones: presentación por espacio', () => {
       expect(fixture.nativeElement.querySelector('.module-label')).toBeNull();
       expect(texto()).not.toContain('CENTRO DE NOTIFICACIONES');
       expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
+    });
+  });
+
+  describe('espacio del docente', () => {
+    beforeEach(() => configurar('docente', of({ notificaciones: [notificacion], no_leidas: 1 } as NotificacionesResumen)));
+
+    it('usa la presentación V3 con filtros y no muestra «Volver al inicio» del gestor', async () => {
+      await renderizar();
+      expect(fixture.nativeElement.querySelector('.notifications-content--estudiante')).not.toBeNull();
+      expect(botonPorTexto('Volver al inicio')).toBeUndefined();
+    });
+
+    it('abre la práctica en el detalle docente al pulsar una notificación con id_practica', async () => {
+      await renderizar();
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.resolveTo(true);
+      fixture.componentInstance.abrir(notificacion);
+      expect(router.navigate).toHaveBeenCalledWith(['/docente/practicas', 15]);
+    });
+
+    it('«Volver» lleva al listado de prácticas del docente', async () => {
+      await renderizar();
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.resolveTo(true);
+      fixture.componentInstance.volver();
+      expect(router.navigate).toHaveBeenCalledWith(['/docente/practicas']);
     });
   });
 });

@@ -54,9 +54,17 @@ export const routes: Routes = [
     path: 'docente',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['DOCENTE'] },
+    loadComponent: () => import('./features/docente/layout/docente-layout').then(m => m.DocenteLayout),
     children: [
       { path: 'practicas', canActivate: [authGuard, roleGuard], data: { roles: ['DOCENTE'] }, loadComponent: () => import('./features/docente/docente-practicas').then(m => m.DocentePracticas) },
       { path: 'practicas/:id', canActivate: [authGuard, roleGuard], data: { roles: ['DOCENTE'] }, loadComponent: () => import('./features/docente/docente-practicas').then(m => m.DocentePracticas) },
+      {
+        path: 'notificaciones',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['DOCENTE'] },
+        providers: [{ provide: ESPACIO_PAGINA, useValue: 'docente' }],
+        loadComponent: () => import('./features/notificaciones/pages/notificaciones/notificaciones').then(m => m.Notificaciones)
+      },
       { path: '', pathMatch: 'full', redirectTo: 'practicas' }
     ]
   },

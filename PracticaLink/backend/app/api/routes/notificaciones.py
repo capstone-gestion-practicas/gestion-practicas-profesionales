@@ -31,7 +31,7 @@ from app.services.notificacion_service import (
 router = APIRouter(
     prefix="/notificaciones",
     tags=["Notificaciones"],
-    dependencies=[Depends(require_roles("ESTUDIANTE", "GESTOR", "ADMINISTRADOR"))],
+    dependencies=[Depends(require_roles("ESTUDIANTE", "DOCENTE", "GESTOR", "ADMINISTRADOR"))],
 )
 
 

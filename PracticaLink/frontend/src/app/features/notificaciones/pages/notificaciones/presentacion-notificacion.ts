@@ -41,6 +41,8 @@ const PRESENTACION_POR_TIPO: Readonly<Record<string, PresentacionNotificacion>> 
     ...ESTADO, icono: 'checkmark-done-outline',
     accion: { etiqueta: 'Ver práctica', ruta: id => ['/practicas', id] }
   },
+  // La acción de la práctica depende del espacio (gestor o docente): la resuelve la página, no esta tabla.
+  PRACTICA_ASIGNADA: { ...ESTADO, icono: 'document-text-outline', accion: null },
   MENSAJE_GESTOR: { ...GENERAL, icono: 'megaphone-outline', accion: null }
 };
 
