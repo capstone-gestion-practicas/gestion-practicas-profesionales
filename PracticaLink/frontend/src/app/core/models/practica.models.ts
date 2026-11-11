@@ -192,6 +192,12 @@ export interface PracticaResumen {
   fecha_registro: string;
   estado: EstadoPracticaDetalle;
   fecha_ultimo_cambio_estado: string | null;
+  // Etapa 4a (backend) / 4b (frontend): campos añadidos a PracticaResumen.
+  rut_estudiante: string;
+  fecha_inicio: string | null;
+  fecha_termino: string | null;
+  id_gestor: number | null;
+  gestor: string | null;
 }
 
 export interface PracticasListadoResponse {

@@ -1,6 +1,7 @@
 import { InformeFinal } from '../../features/informe-final/informe-final';
 import { SesionService } from '../../core/session/sesion.service';
 import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
+import { filtrosRetornoPracticas } from '../../core/navigation/retorno-practicas';
 import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
@@ -508,5 +509,12 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     }
   }
 
-  volver(): void { this.router.navigate(['/practicas']); }
+  volver(): void {
+    const filtros = filtrosRetornoPracticas(this.route.snapshot?.queryParamMap);
+    if (filtros && Object.keys(filtros).length > 0) {
+      void this.router.navigate(['/practicas'], { queryParams: filtros });
+    } else {
+      void this.router.navigate(['/practicas']);
+    }
+  }
 }

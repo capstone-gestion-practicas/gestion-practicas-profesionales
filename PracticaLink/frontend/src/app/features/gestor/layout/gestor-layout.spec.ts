@@ -214,7 +214,7 @@ describe('GestorLayout', () => {
     });
 
     // Etapa 1: el sidebar pasa de seis accesos planos a cuatro agrupaciones. Se añade
-    // «Mis prácticas» (/practicas, antes sin acceso lateral) y «Estados» se conserva dentro
+    // «Prácticas» (/practicas, antes sin acceso lateral) y «Estados» se conserva dentro
     // de Prácticas para no perder el cierre ni el cambio de estado hasta etapas posteriores.
     it('muestra las cuatro agrupaciones y todos los destinos del sidebar', async () => {
       await irA('/revisiones');
@@ -226,7 +226,7 @@ describe('GestorLayout', () => {
       expect(titulos).toEqual(['Prácticas', 'Acompañamiento', 'Comunicaciones']);
       const etiquetas = Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
         .map(boton => boton.textContent?.trim());
-      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Mis prácticas', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
+      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Prácticas', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
       expect(elementoRuta().querySelector('.gh-sidebar')).not.toBeNull();
     });
 
@@ -243,11 +243,11 @@ describe('GestorLayout', () => {
         ['/home', 'inicio', 'Inicio'],
         ['/revisiones', 'practicas', 'Solicitudes'],
         ['/revisiones/5?estado=OBSERVADA', 'practicas', 'Solicitudes'],
-        ['/practicas', 'practicas', 'Mis prácticas'],
-        ['/practicas/15', 'practicas', 'Mis prácticas'],
-        ['/practicas/15?vista=incidencias', 'practicas', 'Mis prácticas'],
-        ['/practicas/15/seguimiento/nuevo', 'practicas', 'Mis prácticas'],
-        ['/practicas/15/incidencias/nueva', 'practicas', 'Mis prácticas'],
+        ['/practicas', 'practicas', 'Prácticas'],
+        ['/practicas/15', 'practicas', 'Prácticas'],
+        ['/practicas/15?vista=incidencias', 'practicas', 'Prácticas'],
+        ['/practicas/15/seguimiento/nuevo', 'practicas', 'Prácticas'],
+        ['/practicas/15/incidencias/nueva', 'practicas', 'Prácticas'],
         ['/gestion-estados?estado=EN_CURSO', 'practicas', 'Estados'],
         ['/seguimientos', 'acompanamiento', 'Seguimientos'],
         ['/incidencias', 'acompanamiento', 'Incidencias'],
@@ -268,13 +268,13 @@ describe('GestorLayout', () => {
       expect(elementoRuta().querySelector('.gh-campana')?.getAttribute('aria-current')).toBe('page');
     });
 
-    it('«Mis prácticas» navega a /practicas con el router', async () => {
+    it('«Prácticas» navega a /practicas con el router', async () => {
       await irA('/revisiones');
-      enlace('Mis prácticas').click();
+      enlace('Prácticas').click();
       await harness.fixture.whenStable();
       harness.fixture.detectChanges();
       expect(router.url).toBe('/practicas');
-      expect(seccionActiva()).toBe('Mis prácticas');
+      expect(seccionActiva()).toBe('Prácticas');
       expect(gruposActivos()).toEqual(['practicas']);
     });
 
@@ -374,12 +374,12 @@ describe('GestorLayout', () => {
       expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();
     });
 
-    it('elegir «Mis prácticas» desde el menú móvil navega y lo cierra', async () => {
+    it('elegir «Prácticas» desde el menú móvil navega y lo cierra', async () => {
       await irA('/revisiones');
       const boton = elementoRuta().querySelector('.gh-menu') as HTMLButtonElement;
       boton.click();
       harness.fixture.detectChanges();
-      enlace('Mis prácticas').click();
+      enlace('Prácticas').click();
       await harness.fixture.whenStable();
       harness.fixture.detectChanges();
       expect(router.url).toBe('/practicas');

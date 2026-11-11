@@ -16,7 +16,7 @@ export interface PestanaGestor {
 /** Prácticas: /revisiones exige GESTOR en el router y en la API (un ADMINISTRADOR solo recibiría 403). */
 export const PESTANAS_PRACTICAS: readonly PestanaGestor[] = [
   { etiqueta: 'Solicitudes', ruta: '/revisiones', rolesRequeridos: ['GESTOR'] },
-  { etiqueta: 'Mis prácticas', ruta: '/practicas' }
+  { etiqueta: 'Prácticas', ruta: '/practicas' }
 ];
 
 export const PESTANAS_ACOMPANAMIENTO: readonly PestanaGestor[] = [

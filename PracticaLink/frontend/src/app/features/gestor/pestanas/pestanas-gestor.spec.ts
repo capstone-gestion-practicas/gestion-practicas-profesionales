@@ -59,9 +59,9 @@ describe('PestanasGestor', () => {
     sessionStorage.removeItem(CLAVE_ESPACIO_TRABAJO);
   });
 
-  it('GESTOR ve Solicitudes y Mis prácticas, con la página actual marcada', () => {
+  it('GESTOR ve Solicitudes y Prácticas, con la página actual marcada', () => {
     const raiz = crear(['GESTOR'], PESTANAS_PRACTICAS, '/revisiones');
-    expect(etiquetas(raiz)).toEqual(['Solicitudes', 'Mis prácticas']);
+    expect(etiquetas(raiz)).toEqual(['Solicitudes', 'Prácticas']);
     expect(activa(raiz)).toBe('Solicitudes');
     expect(raiz.querySelectorAll('[aria-current="page"]').length).toBe(1);
     expect(raiz.querySelector('nav')?.getAttribute('aria-label')).toBe('Secciones de prueba');
@@ -176,10 +176,10 @@ describe('PestanasGestor con el router (historial del navegador)', () => {
     expect(activa(raiz())).toBe('Solicitudes');
 
     (Array.from(raiz().querySelectorAll('.pg-pestana') as NodeListOf<HTMLButtonElement>)
-      .find(boton => boton.textContent?.trim() === 'Mis prácticas') as HTMLButtonElement).click();
+      .find(boton => boton.textContent?.trim() === 'Prácticas') as HTMLButtonElement).click();
     await esperar();
     expect(router.url).toBe('/practicas');
-    expect(activa(raiz())).toBe('Mis prácticas');
+    expect(activa(raiz())).toBe('Prácticas');
 
     TestBed.inject(Location).back();
     await esperar();
@@ -189,6 +189,6 @@ describe('PestanasGestor con el router (historial del navegador)', () => {
     TestBed.inject(Location).forward();
     await esperar();
     expect(router.url).toBe('/practicas');
-    expect(activa(raiz())).toBe('Mis prácticas');
+    expect(activa(raiz())).toBe('Prácticas');
   });
 });

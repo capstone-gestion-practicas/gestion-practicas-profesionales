@@ -80,10 +80,14 @@ export class PracticaService {
     );
   }
 
-  listar(limit = 50, offset = 0, rut?: string): Observable<PracticasListadoResponse> {
+  // estado filtra en el servidor (GET /practicas?estado=...) antes de paginar; etapa 4a/4b.
+  listar(limit = 50, offset = 0, rut?: string, estado?: string): Observable<PracticasListadoResponse> {
     let params = new HttpParams().set('limit', limit).set('offset', offset);
     if (rut) {
       params = params.set('rut', rut);
+    }
+    if (estado) {
+      params = params.set('estado', estado);
     }
     return this.http.get<PracticasListadoResponse>(`${this.apiUrl}/practicas`, { params });
   }
