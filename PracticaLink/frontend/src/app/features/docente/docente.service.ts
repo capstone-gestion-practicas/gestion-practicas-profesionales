@@ -26,6 +26,9 @@ export interface PracticaDocente {
   fecha_termino: string | null;
   cargo_funcion: string | null;
   descripcion: string | null;
+  informe_estado: 'ENTREGADO' | 'EN_EVALUACION' | null;
+  informe_version: number | null;
+  evaluacion_resultado: 'APROBADO' | 'CON_OBSERVACIONES' | null;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -34,6 +35,10 @@ class PracticaDocenteResponse(BaseModel):
     fecha_termino: date | None = None
     cargo_funcion: str | None = None
     descripcion: str | None = None
+    # Resumen del informe final. null cuando no hay entrega; evaluacion_resultado es de la versión vigente.
+    informe_estado: Literal["ENTREGADO", "EN_EVALUACION"] | None = None
+    informe_version: int | None = None
+    evaluacion_resultado: Literal["APROBADO", "CON_OBSERVACIONES"] | None = None
 
 
 class DocenteDisponible(BaseModel):
