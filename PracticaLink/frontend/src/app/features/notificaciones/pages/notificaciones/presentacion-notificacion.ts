@@ -41,6 +41,23 @@ const PRESENTACION_POR_TIPO: Readonly<Record<string, PresentacionNotificacion>> 
     ...ESTADO, icono: 'checkmark-done-outline',
     accion: { etiqueta: 'Ver práctica', ruta: id => ['/practicas', id] }
   },
+  PRACTICA_INICIADA: {
+    ...ESTADO, icono: 'swap-horizontal-outline',
+    accion: { etiqueta: 'Ver práctica', ruta: () => ['/estudiante/mi-practica'] }
+  },
+  INCIDENCIA_ALTA: {
+    ...ESTADO, icono: 'flag-outline',
+    accion: { etiqueta: 'Ver práctica', ruta: id => ['/practicas', id] }
+  },
+  INCIDENCIA_CRITICA: {
+    ...ESTADO, icono: 'flag-outline',
+    accion: { etiqueta: 'Ver práctica', ruta: id => ['/practicas', id] }
+  },
+  GESTOR_ASIGNADO: {
+    ...ESTADO, icono: 'swap-horizontal-outline',
+    accion: { etiqueta: 'Ver práctica', ruta: id => ['/practicas', id] }
+  },
+  GESTOR_REASIGNADO: { ...ESTADO, icono: 'swap-horizontal-outline', accion: null },
   // La acción de la práctica depende del espacio (gestor o docente): la resuelve la página, no esta tabla.
   PRACTICA_ASIGNADA: { ...ESTADO, icono: 'document-text-outline', accion: null },
   MENSAJE_GESTOR: { ...GENERAL, icono: 'megaphone-outline', accion: null }

@@ -174,7 +174,14 @@ export class Notificaciones implements OnInit {
   accionDe(notificacion: Notificacion): { etiqueta: string; comandos: unknown[] } | null {
     const accion = presentarNotificacion(notificacion.tipo).accion;
     if (!accion || notificacion.id_practica === null) return null;
-    return { etiqueta: accion.etiqueta, comandos: accion.ruta(notificacion.id_practica) };
+    return { etiqueta: accion.etiqueta, comandos: this.rutaDeAccion(notificacion.id_practica, accion.ruta) };
+  }
+
+  /** La pantalla de la práctica depende del espacio desde el que se abre la notificación. */
+  private rutaDeAccion(idPractica: number, ruta: (id: number) => unknown[]): unknown[] {
+    if (this.espacio === 'docente') return ['/docente/practicas', idPractica];
+    if (this.espacio === 'estudiante') return ['/estudiante/mi-practica'];
+    return ruta(idPractica);
   }
 
   ahoraNo(): void {
@@ -274,8 +281,15 @@ export class Notificaciones implements OnInit {
       } else if (
         notificacion.tipo === 'CAMBIO_ESTADO'
         || notificacion.tipo === 'RECORDATORIO_SIN_PRACTICA'
+        || notificacion.tipo === 'PRACTICA_INICIADA'
+        || notificacion.tipo === 'PRACTICA_FINALIZADA'
       ) {
         this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/mi-practica'] : ['/home']);
+      } else if (
+        notificacion.id_practica !== null
+        && ['INCIDENCIA_ALTA', 'INCIDENCIA_CRITICA', 'GESTOR_ASIGNADO'].includes(notificacion.tipo)
+      ) {
+        this.router.navigate(['/practicas', notificacion.id_practica]);
       }
     };
 

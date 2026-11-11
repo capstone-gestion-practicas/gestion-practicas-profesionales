@@ -196,7 +196,7 @@ describe('Notificaciones: presentación por espacio', () => {
       await renderizar();
       const router = TestBed.inject(Router);
       spyOn(router, 'navigate').and.resolveTo(true);
-      fixture.componentInstance.abrir(notificacion);
+      fixture.componentInstance.abrir({ ...notificacion });
       expect(router.navigate).toHaveBeenCalledWith(['/docente/practicas', 15]);
     });
 
@@ -206,6 +206,44 @@ describe('Notificaciones: presentación por espacio', () => {
       spyOn(router, 'navigate').and.resolveTo(true);
       fixture.componentInstance.volver();
       expect(router.navigate).toHaveBeenCalledWith(['/docente/practicas']);
+    });
+  });
+  describe('acciones y navegación por tipo y espacio (avisos del ciclo)', () => {
+    const aviso = (tipo: string, leida = true): Notificacion => ({
+      ...notificacion, id_notificacion: 7, tipo, id_practica: 15,
+      fecha_leida: leida ? '2026-01-02T12:00:00Z' : null
+    } as unknown as Notificacion);
+
+    it('el docente abre la práctica en su espacio desde cualquier aviso con práctica', async () => {
+      configurar('docente', of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen));
+      await renderizar();
+      expect(fixture.componentInstance.accionDe(aviso('CAMBIO_ESTADO'))?.comandos).toEqual(['/docente/practicas', 15]);
+    });
+
+    it('el estudiante ve su práctica en mi-practica, no en la ruta de gestión', async () => {
+      configurar('estudiante', of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen));
+      await renderizar();
+      expect(fixture.componentInstance.accionDe(aviso('PRACTICA_FINALIZADA'))?.comandos).toEqual(['/estudiante/mi-practica']);
+      expect(fixture.componentInstance.accionDe(aviso('PRACTICA_INICIADA'))?.comandos).toEqual(['/estudiante/mi-practica']);
+    });
+
+    it('el gestor abre la práctica desde incidencias ALTA o CRITICA y desde su asignación', async () => {
+      configurar(null, of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen));
+      await renderizar();
+      const router = TestBed.inject(Router);
+      spyOn(router, 'navigate').and.resolveTo(true);
+      fixture.componentInstance.abrir(aviso('INCIDENCIA_ALTA'));
+      expect(router.navigate).toHaveBeenCalledWith(['/practicas', 15]);
+      fixture.componentInstance.abrir(aviso('INCIDENCIA_CRITICA'));
+      expect(router.navigate).toHaveBeenCalledWith(['/practicas', 15]);
+      fixture.componentInstance.abrir(aviso('GESTOR_ASIGNADO'));
+      expect(router.navigate).toHaveBeenCalledWith(['/practicas', 15]);
+    });
+
+    it('el gestor que pierde una práctica por reasignación no recibe acción de abrirla', async () => {
+      configurar(null, of({ notificaciones: [], no_leidas: 0 } as NotificacionesResumen));
+      await renderizar();
+      expect(fixture.componentInstance.accionDe(aviso('GESTOR_REASIGNADO'))).toBeNull();
     });
   });
 });
