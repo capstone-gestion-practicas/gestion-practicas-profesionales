@@ -56,6 +56,9 @@ const rutas: Routes = [
       { path: 'seguimientos', component: PaginaPrueba },
       { path: 'incidencias', component: PaginaPrueba },
       { path: 'envio-notificaciones', component: PaginaPrueba },
+      { path: 'practicas', component: PaginaPrueba },
+      { path: 'practicas/:id/seguimiento/nuevo', component: PaginaPrueba },
+      { path: 'practicas/:id/incidencias/nueva', component: PaginaPrueba },
       { path: 'practicas/:id', component: PaginaPrueba },
       { path: 'notificaciones', component: PaginaPrueba }
     ]
@@ -85,6 +88,15 @@ describe('GestorLayout', () => {
 
   const seccionActiva = (): string | null =>
     elementoRuta().querySelector('.gh-nav__enlace[aria-current="page"]')?.textContent?.trim() ?? null;
+
+  /** Agrupaciones marcadas como activas (debe haber como máximo una). */
+  const gruposActivos = (): string[] =>
+    Array.from(elementoRuta().querySelectorAll('.gh-nav__grupo--activo') as NodeListOf<HTMLElement>)
+      .map(grupo => grupo.dataset['grupo'] ?? '');
+
+  const enlace = (etiqueta: string): HTMLButtonElement =>
+    Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace') as NodeListOf<HTMLButtonElement>)
+      .find(boton => boton.textContent?.trim() === etiqueta) as HTMLButtonElement;
 
   const hojaMasProfunda = (): ActivatedRouteSnapshot => {
     let nodo = router.routerState.snapshot.root;
@@ -201,12 +213,76 @@ describe('GestorLayout', () => {
       expect(navController.navigateRoot).toHaveBeenCalledWith(['/login']);
     });
 
-    it('muestra las seis secciones del sidebar con sus etiquetas', async () => {
+    // Etapa 1: el sidebar pasa de seis accesos planos a cuatro agrupaciones. Se añade
+    // «Mis prácticas» (/practicas, antes sin acceso lateral) y «Estados» se conserva dentro
+    // de Prácticas para no perder el cierre ni el cambio de estado hasta etapas posteriores.
+    it('muestra las cuatro agrupaciones y todos los destinos del sidebar', async () => {
       await irA('/revisiones');
+      const grupos = Array.from(elementoRuta().querySelectorAll('.gh-nav__grupo') as NodeListOf<HTMLElement>)
+        .map(grupo => grupo.dataset['grupo']);
+      expect(grupos).toEqual(['inicio', 'practicas', 'acompanamiento', 'comunicaciones']);
+      const titulos = Array.from(elementoRuta().querySelectorAll('.gh-nav__titulo'))
+        .map(titulo => titulo.textContent?.trim());
+      expect(titulos).toEqual(['Prácticas', 'Acompañamiento', 'Comunicaciones']);
       const etiquetas = Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
         .map(boton => boton.textContent?.trim());
-      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
+      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Mis prácticas', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
       expect(elementoRuta().querySelector('.gh-sidebar')).not.toBeNull();
+    });
+
+    it('cada agrupación nombra accesiblemente su lista de destinos', async () => {
+      await irA('/revisiones');
+      for (const id of ['gh-grupo-practicas', 'gh-grupo-acompanamiento', 'gh-grupo-comunicaciones']) {
+        expect(elementoRuta().querySelector(`#${id}`)).withContext(id).not.toBeNull();
+        expect(elementoRuta().querySelector(`ul[aria-labelledby="${id}"]`)).withContext(id).not.toBeNull();
+      }
+    });
+
+    it('marca la agrupación y el destino activos, incluidas las rutas hijas', async () => {
+      const casos: [string, string, string][] = [
+        ['/home', 'inicio', 'Inicio'],
+        ['/revisiones', 'practicas', 'Solicitudes'],
+        ['/revisiones/5?estado=OBSERVADA', 'practicas', 'Solicitudes'],
+        ['/practicas', 'practicas', 'Mis prácticas'],
+        ['/practicas/15', 'practicas', 'Mis prácticas'],
+        ['/practicas/15?vista=incidencias', 'practicas', 'Mis prácticas'],
+        ['/practicas/15/seguimiento/nuevo', 'practicas', 'Mis prácticas'],
+        ['/practicas/15/incidencias/nueva', 'practicas', 'Mis prácticas'],
+        ['/gestion-estados?estado=EN_CURSO', 'practicas', 'Estados'],
+        ['/seguimientos', 'acompanamiento', 'Seguimientos'],
+        ['/incidencias', 'acompanamiento', 'Incidencias'],
+        ['/envio-notificaciones', 'comunicaciones', 'Avisos']
+      ];
+      for (const [url, grupo, destino] of casos) {
+        await irA(url);
+        expect(gruposActivos()).withContext(url).toEqual([grupo]);
+        expect(seccionActiva()).withContext(url).toBe(destino);
+        expect(elementoRuta().querySelectorAll('.gh-nav__enlace[aria-current="page"]').length).withContext(url).toBe(1);
+      }
+    });
+
+    it('el centro de notificaciones activa la campana y ninguna agrupación', async () => {
+      await irA('/notificaciones');
+      expect(gruposActivos()).toEqual([]);
+      expect(seccionActiva()).toBeNull();
+      expect(elementoRuta().querySelector('.gh-campana')?.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('«Mis prácticas» navega a /practicas con el router', async () => {
+      await irA('/revisiones');
+      enlace('Mis prácticas').click();
+      await harness.fixture.whenStable();
+      harness.fixture.detectChanges();
+      expect(router.url).toBe('/practicas');
+      expect(seccionActiva()).toBe('Mis prácticas');
+      expect(gruposActivos()).toEqual(['practicas']);
+    });
+
+    it('el contador de solicitudes permanece junto a Solicitudes dentro de Prácticas', async () => {
+      await irA('/seguimientos');
+      const contador = elementoRuta().querySelector('[data-grupo="practicas"] .gh-nav__contador') as HTMLElement;
+      expect(contador.textContent?.trim()).toBe('3');
+      expect(contador.closest('.gh-nav__item')?.textContent).toContain('Solicitudes');
     });
 
     it('Avisos queda activo en /envio-notificaciones', async () => {
@@ -298,6 +374,19 @@ describe('GestorLayout', () => {
       expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();
     });
 
+    it('elegir «Mis prácticas» desde el menú móvil navega y lo cierra', async () => {
+      await irA('/revisiones');
+      const boton = elementoRuta().querySelector('.gh-menu') as HTMLButtonElement;
+      boton.click();
+      harness.fixture.detectChanges();
+      enlace('Mis prácticas').click();
+      await harness.fixture.whenStable();
+      harness.fixture.detectChanges();
+      expect(router.url).toBe('/practicas');
+      expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();
+      expect(boton.getAttribute('aria-expanded')).toBe('false');
+    });
+
     it('la cabecera no supera el ancho de la ventana (sin scroll horizontal)', async () => {
       await irA('/revisiones');
       const cabecera = elementoRuta().querySelector('app-gestor-header') as HTMLElement;
@@ -348,6 +437,23 @@ describe('GestorLayout', () => {
       await crear(['GESTOR', 'ADMINISTRADOR']);
       await irA('/incidencias');
       expect(cabeceras().length).toBe(0);
+    });
+
+    it('GESTOR + ADMINISTRADOR con espacio GESTOR usa el sidebar agrupado; /gestion-estados queda en Prácticas', async () => {
+      sessionStorage.setItem('practicalink-workspace', 'GESTOR');
+      await crear(['GESTOR', 'ADMINISTRADOR']);
+      await irA('/gestion-estados');
+      expect(cabeceras().length).toBe(1);
+      expect(gruposActivos()).toEqual(['practicas']);
+      expect(seccionActiva()).toBe('Estados');
+    });
+
+    it('GESTOR + ADMINISTRADOR con espacio ADMINISTRADOR conserva la interfaz sin sidebar', async () => {
+      sessionStorage.setItem('practicalink-workspace', 'ADMINISTRADOR');
+      await crear(['GESTOR', 'ADMINISTRADOR']);
+      await irA('/gestion-estados');
+      expect(cabeceras().length).toBe(0);
+      expect(elementoRuta().querySelector('.gh-nav__grupo')).toBeNull();
     });
 
     it('ESTUDIANTE + GESTOR muestra el sidebar con el selector de espacio de estudiante', async () => {

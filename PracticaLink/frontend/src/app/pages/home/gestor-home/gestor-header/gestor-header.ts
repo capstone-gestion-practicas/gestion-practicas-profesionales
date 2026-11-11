@@ -22,6 +22,7 @@ import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   documentTextOutline,
+  folderOpenOutline,
   homeOutline,
   notificationsOutline,
   optionsOutline,
@@ -30,7 +31,42 @@ import {
   warningOutline
 } from 'ionicons/icons';
 
-export type SeccionGestor = 'inicio' | 'solicitudes' | 'estados' | 'seguimientos' | 'incidencias' | 'avisos' | 'notificaciones';
+/** Destino concreto del sidebar (o la campana) que corresponde a la URL actual. */
+export type SeccionGestor =
+  | 'inicio' | 'solicitudes' | 'practicas' | 'estados' | 'seguimientos' | 'incidencias' | 'avisos' | 'notificaciones';
+
+/** Agrupación principal del sidebar del gestor. */
+export type GrupoGestor = 'inicio' | 'practicas' | 'acompanamiento' | 'comunicaciones';
+
+const GRUPO_DE_SECCION: Readonly<Record<SeccionGestor, GrupoGestor | null>> = {
+  inicio: 'inicio',
+  solicitudes: 'practicas',
+  practicas: 'practicas',
+  estados: 'practicas',
+  seguimientos: 'acompanamiento',
+  incidencias: 'acompanamiento',
+  avisos: 'comunicaciones',
+  notificaciones: null
+};
+
+/** true si la ruta es exactamente la base o una ruta hija suya (/base/...). */
+function coincide(ruta: string, base: string): boolean {
+  return ruta === base || ruta.startsWith(`${base}/`);
+}
+
+/** Sección del espacio de gestión para una URL; null si no pertenece a él. */
+export function seccionGestorDeUrl(url: string): SeccionGestor | null {
+  const ruta = url.split(/[?#]/)[0];
+  if (ruta === '/home') return 'inicio';
+  if (coincide(ruta, '/revisiones')) return 'solicitudes';
+  if (coincide(ruta, '/practicas')) return 'practicas';
+  if (coincide(ruta, '/gestion-estados')) return 'estados';
+  if (coincide(ruta, '/seguimientos')) return 'seguimientos';
+  if (coincide(ruta, '/incidencias')) return 'incidencias';
+  if (coincide(ruta, '/envio-notificaciones')) return 'avisos';
+  if (coincide(ruta, '/notificaciones')) return 'notificaciones';
+  return null;
+}
 
 /**
  * Shell del espacio de gestión: sidebar de navegación y barra superior. Envuelve el
@@ -74,17 +110,13 @@ export class GestorHeader implements OnInit {
     { initialValue: this.router.url }
   );
 
-  /** Sección que corresponde a la URL actual; null si no pertenece al espacio de gestión. */
-  protected readonly seccionActiva = computed<SeccionGestor | null>(() => {
-    const ruta = this.urlActual().split('?')[0];
-    if (ruta === '/home') return 'inicio';
-    if (ruta.startsWith('/revisiones')) return 'solicitudes';
-    if (ruta.startsWith('/gestion-estados')) return 'estados';
-    if (ruta.startsWith('/seguimientos')) return 'seguimientos';
-    if (ruta.startsWith('/incidencias')) return 'incidencias';
-    if (ruta.startsWith('/envio-notificaciones')) return 'avisos';
-    if (ruta.startsWith('/notificaciones')) return 'notificaciones';
-    return null;
+  /** Destino que corresponde a la URL actual, incluidas sus rutas hijas; null si no pertenece al espacio. */
+  protected readonly seccionActiva = computed<SeccionGestor | null>(() => seccionGestorDeUrl(this.urlActual()));
+
+  /** Agrupación principal activa (Inicio, Prácticas, Acompañamiento o Comunicaciones). */
+  protected readonly grupoActivo = computed<GrupoGestor | null>(() => {
+    const seccion = this.seccionActiva();
+    return seccion ? GRUPO_DE_SECCION[seccion] : null;
   });
 
   private readonly cuenta = viewChild<ElementRef<HTMLElement>>('cuenta');
@@ -92,7 +124,7 @@ export class GestorHeader implements OnInit {
 
   constructor() {
     addIcons({
-      homeOutline, documentTextOutline, optionsOutline, pulseOutline, warningOutline,
+      homeOutline, documentTextOutline, folderOpenOutline, optionsOutline, pulseOutline, warningOutline,
       paperPlaneOutline, notificationsOutline
     });
   }
