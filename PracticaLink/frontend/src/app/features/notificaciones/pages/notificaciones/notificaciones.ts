@@ -30,7 +30,7 @@ import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
-import { ESPACIO_PAGINA } from '../../../../core/navigation/espacio-pagina.token';
+import { ESPACIO_PAGINA, EspacioPagina } from '../../../../core/navigation/espacio-pagina.token';
 import {
   FILTROS_SECCION,
   GrupoFecha,
@@ -77,7 +77,7 @@ export class Notificaciones implements OnInit {
     readonly servicio: NotificacionService,
     private readonly authStore: AuthStore,
     private readonly router: Router,
-    @Optional() @Inject(ESPACIO_PAGINA) private readonly espacio: 'estudiante' | null = null
+    @Optional() @Inject(ESPACIO_PAGINA) private readonly espacio: EspacioPagina | null = null
   ) {
     addIcons({
       checkmarkOutline, notificationsOutline, documentTextOutline, chatbubbleEllipsesOutline,
@@ -101,9 +101,9 @@ export class Notificaciones implements OnInit {
       : this.notificaciones;
   }
 
-  /** Presentación del espacio V3 del estudiante. Lo define la ruta, no la URL. */
+  /** Presentación V3 compartida por el espacio del estudiante y el del docente. Lo define la ruta, no la URL. */
   get presentacionEstudiante(): boolean {
-    return this.espacio === 'estudiante';
+    return this.espacio === 'estudiante' || this.espacio === 'docente';
   }
 
   /** Presentación nueva solo para el gestor sin administración; el administrador conserva la anterior. */
@@ -174,7 +174,14 @@ export class Notificaciones implements OnInit {
   accionDe(notificacion: Notificacion): { etiqueta: string; comandos: unknown[] } | null {
     const accion = presentarNotificacion(notificacion.tipo).accion;
     if (!accion || notificacion.id_practica === null) return null;
-    return { etiqueta: accion.etiqueta, comandos: accion.ruta(notificacion.id_practica) };
+    return { etiqueta: accion.etiqueta, comandos: this.rutaDeAccion(notificacion.id_practica, accion.ruta) };
+  }
+
+  /** La pantalla de la práctica depende del espacio desde el que se abre la notificación. */
+  private rutaDeAccion(idPractica: number, ruta: (id: number) => unknown[]): unknown[] {
+    if (this.espacio === 'docente') return ['/docente/practicas', idPractica];
+    if (this.espacio === 'estudiante') return ['/estudiante/mi-practica'];
+    return ruta(idPractica);
   }
 
   ahoraNo(): void {
@@ -265,13 +272,24 @@ export class Notificaciones implements OnInit {
 
   abrir(notificacion: Notificacion): void {
     const irADestino = () => {
-      if (notificacion.tipo === 'NUEVA_PRACTICA') {
+      if (this.espacio === 'docente') {
+        if (notificacion.id_practica !== null) {
+          this.router.navigate(['/docente/practicas', notificacion.id_practica]);
+        }
+      } else if (notificacion.tipo === 'NUEVA_PRACTICA') {
         this.router.navigate(['/revisiones', notificacion.id_practica]);
       } else if (
         notificacion.tipo === 'CAMBIO_ESTADO'
         || notificacion.tipo === 'RECORDATORIO_SIN_PRACTICA'
+        || notificacion.tipo === 'PRACTICA_INICIADA'
+        || notificacion.tipo === 'PRACTICA_FINALIZADA'
       ) {
         this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/mi-practica'] : ['/home']);
+      } else if (
+        notificacion.id_practica !== null
+        && ['INCIDENCIA_ALTA', 'INCIDENCIA_CRITICA', 'GESTOR_ASIGNADO'].includes(notificacion.tipo)
+      ) {
+        this.router.navigate(['/practicas', notificacion.id_practica]);
       }
     };
 
@@ -295,6 +313,10 @@ export class Notificaciones implements OnInit {
   }
 
   volver(): void {
+    if (this.espacio === 'docente') {
+      this.router.navigate(['/docente/practicas']);
+      return;
+    }
     this.router.navigate(this.enEspacioEstudiante() ? ['/estudiante/inicio'] : ['/home']);
   }
 

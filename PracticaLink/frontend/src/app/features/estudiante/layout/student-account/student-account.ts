@@ -20,6 +20,8 @@ export class StudentAccount {
   readonly nombre = input.required<string>();
   readonly inicial = input.required<string>();
   readonly cerrarSesion = output<void>();
+  /** El espacio docente no tiene página de perfil: el menú lo oculta con false. */
+  readonly mostrarPerfil = input(true);
 
   readonly menuAbierto = signal(false);
   private readonly injector = inject(Injector);

@@ -251,6 +251,16 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     this.cargarHistorial(0);
   }
 
+  /** Los seguimientos solo se registran con la práctica EN_CURSO (la API y la BD también lo exigen). */
+  get puedeRegistrarSeguimiento(): boolean {
+    return this.detalle?.estado.nombre === 'EN_CURSO';
+  }
+
+  /** Las incidencias también exigen EN_CURSO. */
+  get puedeRegistrarIncidencia(): boolean {
+    return this.detalle?.estado.nombre === 'EN_CURSO';
+  }
+
   registrarSeguimiento(): void {
     this.router.navigate(['/practicas', this.idPractica, 'seguimiento', 'nuevo']);
   }

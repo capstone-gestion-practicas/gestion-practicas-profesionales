@@ -41,6 +41,8 @@ import { NotificacionService } from '../../features/notificaciones/services/noti
 import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 import { GestorHome } from './gestor-home/gestor-home';
 
+export type EstadoCargaMetrica = 'cargando' | 'listo' | 'error';
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -98,6 +100,10 @@ export class Home implements OnInit {
     const roles = this.contexto()?.roles ?? [];
     return roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') !== 'ADMINISTRADOR';
   });
+  /** Tiene el rol GESTOR, requerido por los endpoints de solicitudes (independiente del workspace). */
+  readonly tieneRolGestor = computed(() => (this.contexto()?.roles ?? []).includes('GESTOR'));
+  /** Barra de accesos: la ven GESTOR o ADMINISTRADOR; cada botón se filtra por rol. */
+  readonly mostrarAccesosGestion = computed(() => this.puedeRevisarPracticas() || this.esAdministrador());
   /** Usuarios con doble rol (estudiante y gestión): pueden abrir el espacio V3 del estudiante. */
   readonly tieneEspacioEstudiante = computed(() => {
     const roles = this.contexto()?.roles ?? [];
@@ -124,7 +130,10 @@ export class Home implements OnInit {
   solicitudesAdmin: SolicitudRevisionResumen[] = [];
   practicasAdmin: PracticaEstadoResumen[] = [];
   metricasPracticasEstado: { id_estado: number; nombre: string; cantidad: number }[] = [];
-  errorDashboardAdmin = '';
+  /** Estado de carga independiente por métrica: un fallo no invalida las demás. */
+  estadoUsuarios: EstadoCargaMetrica = 'cargando';
+  estadoSolicitudes: EstadoCargaMetrica = 'cargando';
+  estadoPracticasEstado: EstadoCargaMetrica = 'cargando';
 
   ngOnInit(): void {
     const token = sessionStorage.getItem('access_token');
@@ -268,23 +277,65 @@ export class Home implements OnInit {
       return;
     }
 
-    this.errorDashboardAdmin = '';
+    // Cada métrica tiene su propia petición y su propio estado: un fallo no invalida las demás.
+    this.estadoUsuarios = 'cargando';
+    this.usuarioService.listar().subscribe({
+      next: usuarios => {
+        this.usuariosAdmin = usuarios;
+        this.estadoUsuarios = 'listo';
+      },
+      error: () => {
+        this.usuariosAdmin = [];
+        this.estadoUsuarios = 'error';
+      }
+    });
+
+    this.estadoPracticasEstado = 'cargando';
     forkJoin({
-      usuarios: this.usuarioService.listar(),
-      solicitudes: this.revisionService.listar(),
       estados: this.practicaService.listarEstados(),
       practicas: this.practicaService.listarPracticasParaGestion()
     }).subscribe({
-      next: ({ usuarios, solicitudes, estados, practicas }) => {
-        this.usuariosAdmin = usuarios;
-        this.solicitudesAdmin = solicitudes;
+      next: ({ estados, practicas }) => {
         this.practicasAdmin = practicas;
         this.metricasPracticasEstado = this.contarPracticasPorEstado(estados, practicas);
+        this.estadoPracticasEstado = 'listo';
       },
       error: () => {
-        this.errorDashboardAdmin = 'No fue posible cargar todas las métricas del dashboard.';
+        this.practicasAdmin = [];
+        this.metricasPracticasEstado = [];
+        this.estadoPracticasEstado = 'error';
       }
     });
+
+    // /revisiones/* exige GESTOR en el backend: solo se consulta si el usuario tiene ese rol.
+    if (this.tieneRolGestor()) {
+      this.cargarSolicitudesAdmin();
+    } else {
+      this.solicitudesAdmin = [];
+      this.estadoSolicitudes = 'listo';
+    }
+  }
+
+  private cargarSolicitudesAdmin(): void {
+    this.estadoSolicitudes = 'cargando';
+    this.revisionService.listar().subscribe({
+      next: solicitudes => {
+        this.solicitudesAdmin = solicitudes;
+        this.estadoSolicitudes = 'listo';
+      },
+      error: () => {
+        this.solicitudesAdmin = [];
+        this.estadoSolicitudes = 'error';
+      }
+    });
+  }
+
+  /** Texto visible de una métrica: nunca muestra un cero cuando la carga falló. */
+  textoMetrica(estado: EstadoCargaMetrica, valor: number): string {
+    if (estado === 'error') {
+      return 'No disponible';
+    }
+    return estado === 'cargando' ? '…' : String(valor);
   }
 
   /** Solo el dashboard del administrador usa este aviso; el gestor lo carga en GestorHome. */

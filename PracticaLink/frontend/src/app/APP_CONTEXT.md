@@ -171,7 +171,7 @@ Endpoints consumidos:
 - `GET /usuarios`: lista usuarios para el administrador.
 - `GET /usuarios/roles`: lista roles activos.
 - `POST /usuarios`: crea una cuenta y asigna sus roles.
-- `PATCH /usuarios/{id}`: actualiza datos, estado y roles.
+- `PATCH /usuarios/{id}`: actualiza datos, estado y roles. La opción «Eliminar cuenta» de `/usuarios` es una eliminación lógica: envía `activo = false` (la cuenta queda inactiva, no puede iniciar sesión y puede reactivarse en «Editar usuario»). No hay borrado físico; el administrador no puede desactivar su propia cuenta.
 
 Los archivos de `src/environments` determinan la URL usada en cada build. El
 proyecto nativo vive en `frontend/android` y se sincroniza con `npm run apk:sync`.

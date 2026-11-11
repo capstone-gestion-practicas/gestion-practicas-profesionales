@@ -2,9 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ModalController, NavController } from '@ionic/angular';
-import { Subject, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subject, of, throwError } from 'rxjs';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
+import { EstadoPracticaDetalle } from '../../core/models/practica.models';
+import { UsuarioAdministrable } from '../../core/models/usuario.models';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { PracticaService } from '../../core/services/practica.service';
@@ -130,6 +133,93 @@ describe('Home (administración y enrutamiento de espacios)', () => {
       const selector = fixture.nativeElement.querySelector('.workspace-switch') as HTMLButtonElement;
       selector.click();
       expect(router.navigate).toHaveBeenCalledWith(['/estudiante/inicio']);
+    });
+  });
+
+  describe('regresiones de navegación, permisos y métricas del administrador', () => {
+    let usuarioService: jasmine.SpyObj<UsuarioService>;
+    let revisionService: jasmine.SpyObj<RevisionService>;
+    let practicaService: jasmine.SpyObj<PracticaService>;
+
+    const estadoDemo = (id_estado: number, nombre: string): EstadoPracticaDetalle => ({
+      id_estado, nombre, descripcion: null, es_final: false, orden: id_estado
+    } as unknown as EstadoPracticaDetalle);
+    const usuarioDemo = (activo: boolean, roles: string[]): UsuarioAdministrable => ({
+      id_usuario: 9, nombre: 'Ana', apellido: 'Prueba', correo: 'ana@practicalink.cl', activo, roles
+    });
+    const botonesBarra = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('.quick-nav button') as NodeListOf<HTMLButtonElement>)
+        .map(boton => boton.textContent?.trim() ?? '');
+    const textoMetricaUsuarios = (): string =>
+      (fixture.nativeElement.querySelector('.admin-metrics strong') as HTMLElement).textContent?.trim() ?? '';
+    const tarjetaSolicitudes = (): HTMLElement | null =>
+      fixture.nativeElement.querySelector('.metric-card.emphasis strong');
+
+    beforeEach(() => {
+      usuarioService = TestBed.inject(UsuarioService) as jasmine.SpyObj<UsuarioService>;
+      revisionService = TestBed.inject(RevisionService) as jasmine.SpyObj<RevisionService>;
+      practicaService = TestBed.inject(PracticaService) as jasmine.SpyObj<PracticaService>;
+      usuarioService.listar.and.returnValue(of([usuarioDemo(true, ['ADMINISTRADOR'])]));
+      revisionService.listar.and.returnValue(of([]));
+      practicaService.listarEstados.and.returnValue(of([estadoDemo(1, 'REGISTRADA')]));
+    });
+
+    it('ADMINISTRADOR sin GESTOR ve Usuarios, sin Solicitudes, y no consulta /revisiones', () => {
+      crear(['ADMINISTRADOR']);
+      expect(botonesBarra()).toEqual(['Usuarios', 'Estados', 'Seguimientos', 'Incidencias', 'Enviar avisos']);
+      expect(revisionService.listar).not.toHaveBeenCalled();
+      expect(texto()).not.toContain('Solicitudes pendientes');
+    });
+
+    it('el botón Usuarios navega a /usuarios', () => {
+      crear(['ADMINISTRADOR']);
+      const usuarios = Array.from(fixture.nativeElement.querySelectorAll('.quick-nav button') as NodeListOf<HTMLButtonElement>)
+        .find(boton => boton.textContent?.trim() === 'Usuarios');
+      usuarios?.click();
+      expect(router.navigate).toHaveBeenCalledWith(['/usuarios']);
+    });
+
+    it('ADMINISTRADOR + GESTOR conserva Usuarios y Solicitudes y consulta solicitudes', () => {
+      crear(['ADMINISTRADOR', 'GESTOR']);
+      expect(botonesBarra()).toContain('Usuarios');
+      expect(botonesBarra()).toContain('Solicitudes');
+      expect(revisionService.listar).toHaveBeenCalledTimes(1);
+      expect(tarjetaSolicitudes()?.textContent?.trim()).toBe('0');
+    });
+
+    it('GESTOR sin administración no carga la lista de usuarios', () => {
+      crear(['GESTOR']);
+      expect(usuarioService.listar).not.toHaveBeenCalled();
+    });
+
+    it('muestra «No disponible» en vez de cero cuando falla la lista de usuarios', () => {
+      usuarioService.listar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      crear(['ADMINISTRADOR']);
+      expect(textoMetricaUsuarios()).toBe('No disponible');
+      expect(texto()).not.toContain('No fue posible cargar todas las métricas');
+    });
+
+    it('un fallo de usuarios no invalida las prácticas por estado', () => {
+      usuarioService.listar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      crear(['ADMINISTRADOR']);
+      const tarjetasEstado = fixture.nativeElement.querySelectorAll('.state-metrics-section .metric-card');
+      expect(tarjetasEstado.length).toBe(1);
+      expect(texto()).toContain('REGISTRADA');
+    });
+
+    it('un fallo de estados muestra «No disponible» y conserva la métrica de usuarios', () => {
+      practicaService.listarEstados.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      crear(['ADMINISTRADOR']);
+      expect(texto()).toContain('No disponible: no fue posible cargar las prácticas por estado.');
+      expect(fixture.nativeElement.querySelectorAll('.state-metrics-section .metric-card').length).toBe(0);
+      expect(textoMetricaUsuarios()).toBe('1');
+    });
+
+    it('un fallo de solicitudes de GESTOR muestra «No disponible» sin afectar a usuarios', () => {
+      revisionService.listar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      crear(['ADMINISTRADOR', 'GESTOR']);
+      expect(tarjetaSolicitudes()?.textContent?.trim()).toBe('No disponible');
+      expect(textoMetricaUsuarios()).toBe('1');
     });
   });
 

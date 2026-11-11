@@ -55,7 +55,7 @@ class CompletarPerfilEstudianteServiceTests(unittest.TestCase):
         sql, parametros = db.execute.call_args.args
         self.assertEqual(
             " ".join(str(sql).split()),
-            "SELECT fn_completar_perfil_estudiante( :id_usuario, "
+            "SELECT public.fn_completar_perfil_estudiante( :id_usuario, "
             "CAST(:datos AS JSONB) )",
         )
         self.assertEqual(set(parametros), {"id_usuario", "datos"})

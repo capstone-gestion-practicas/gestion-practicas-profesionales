@@ -12,8 +12,11 @@ describe('Prácticas asignadas al DOCENTE', () => {
   const practica: PracticaDocente = {
     id_practica: 15, estado: 'EN_CURSO', estudiante: 'Estudiante sintético',
     centro_practica: 'Centro sintético', fecha_inicio: null, fecha_termino: null,
-    cargo_funcion: null, descripcion: null
+    cargo_funcion: null, descripcion: null,
+    informe_estado: null, informe_version: null, evaluacion_resultado: null
   };
+  const conInforme = (datos: Partial<PracticaDocente>): PracticaDocente => ({ ...practica, ...datos });
+
   async function montar(id: string | null = null): Promise<void> {
     await TestBed.configureTestingModule({ imports: [DocentePracticas], providers: [
       provideRouter([]),
@@ -24,6 +27,7 @@ describe('Prácticas asignadas al DOCENTE', () => {
     fixture = TestBed.createComponent(DocentePracticas);
     fixture.detectChanges();
   }
+
   beforeEach(() => {
     api = jasmine.createSpyObj<DocenteService>('DocenteService', ['listar', 'obtener']);
     api.listar.and.returnValue(of([practica]));
@@ -39,6 +43,7 @@ describe('Prácticas asignadas al DOCENTE', () => {
     expect(fixture.nativeElement.textContent).toContain(practica.centro_practica);
     expect(fixture.nativeElement.textContent).toContain('Ver detalle');
   });
+
   it('consulta solo el identificador de la ruta y muestra detalle y campos nulos', async () => {
     await montar('15');
     expect(api.obtener).toHaveBeenCalledOnceWith('15');
@@ -47,6 +52,7 @@ describe('Prácticas asignadas al DOCENTE', () => {
     expect(fixture.nativeElement.textContent).toContain(practica.estudiante);
     expect(fixture.nativeElement.textContent).toContain('Sin fecha registrada');
   });
+
   it('muestra ausencia de asignaciones únicamente tras completar la carga', async () => {
     const respuesta = new Subject<PracticaDocente[]>();
     api.listar.and.returnValue(respuesta);
@@ -57,6 +63,7 @@ describe('Prácticas asignadas al DOCENTE', () => {
     expect(fixture.nativeElement.textContent).toContain('Todavía no tienes prácticas asignadas');
     expect(fixture.componentInstance.cargando).toBeFalse();
   });
+
   for (const status of [403, 404, 500]) {
     it(`presenta error ${status} en detalle sin mostrar datos y permite reintentar`, async () => {
       api.obtener.and.returnValue(throwError(() => new HttpErrorResponse({ status })));
@@ -74,11 +81,60 @@ describe('Prácticas asignadas al DOCENTE', () => {
       expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
     });
   }
+
   it('finaliza la carga y muestra error del listado', async () => {
     api.listar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
     await montar();
     expect(fixture.componentInstance.cargando).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('No fue posible cargar');
     expect(fixture.nativeElement.textContent).not.toContain('Todavía no tienes');
+  });
+
+  describe('insignias del informe y filtro «Por evaluar»', () => {
+    const otra = conInforme({ id_practica: 16, estudiante: 'Otra sintética' });
+
+    it('muestra la insignia de informe por evaluar y filtra solo esas prácticas', async () => {
+      api.listar.and.returnValue(of([
+        conInforme({ informe_estado: 'ENTREGADO', informe_version: 2 }),
+        otra
+      ]));
+      await montar();
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).toContain('Informe v2 entregado · por evaluar');
+      expect(texto).toContain('Informe aún no entregado');
+      expect(texto).toContain('Por evaluar (1)');
+
+      const pillPorEvaluar = Array.from(fixture.nativeElement.querySelectorAll('button.pill') as NodeListOf<HTMLButtonElement>)
+        .find(boton => boton.textContent?.includes('Por evaluar'))!;
+      pillPorEvaluar.click();
+      fixture.detectChanges();
+      expect(pillPorEvaluar.getAttribute('aria-pressed')).toBe('true');
+      expect(fixture.nativeElement.textContent).toContain(practica.estudiante);
+      expect(fixture.nativeElement.textContent).not.toContain(otra.estudiante);
+    });
+
+    it('distingue informe aprobado y evaluación con observaciones', async () => {
+      api.listar.and.returnValue(of([
+        conInforme({ informe_estado: 'ENTREGADO', informe_version: 1, evaluacion_resultado: 'APROBADO' }),
+        conInforme({ id_practica: 16, informe_estado: 'ENTREGADO', informe_version: 1, evaluacion_resultado: 'CON_OBSERVACIONES' })
+      ]));
+      await montar();
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).toContain('Informe aprobado');
+      expect(texto).toContain('Evaluación con observaciones');
+      expect(fixture.componentInstance.totalPorEvaluar).toBe(0);
+    });
+
+    it('muestra evaluación en curso cuando el informe está en evaluación sin resultado', async () => {
+      api.listar.and.returnValue(of([conInforme({ informe_estado: 'EN_EVALUACION', informe_version: 3 })]));
+      await montar();
+      expect(fixture.nativeElement.textContent).toContain('Evaluación en curso');
+    });
+
+    it('muestra el estado vacío cuando no hay prácticas asignadas', async () => {
+      api.listar.and.returnValue(of([]));
+      await montar();
+      expect(fixture.nativeElement.textContent).toContain('Todavía no tienes prácticas asignadas');
+    });
   });
 });

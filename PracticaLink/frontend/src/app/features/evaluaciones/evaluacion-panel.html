@@ -1,12 +1,12 @@
-<section aria-label="Evaluación académica">
+<section class="eval-panel" aria-label="Evaluación académica">
   <h3>Evaluación académica del informe</h3>
-  @if (cargando()) { <p role="status">Consultando evaluación…</p> }
-  @if (enviando()) { <p role="status">Registrando operación…</p> }
+  @if (cargando()) { <p class="eval-status" role="status">Consultando evaluación…</p> }
+  @if (enviando()) { <p class="eval-status" role="status">Registrando operación…</p> }
   @if (error()) { <p role="alert">{{ error() }}</p> }
-  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (mensaje()) { <p class="eval-status" role="status">{{ mensaje() }}</p> }
   @if (error()) { <button type="button" (click)="cargar()" [disabled]="cargando() || enviando()">Actualizar evaluación</button> }
   @if (datos(); as item) {
-    <p>Versión vigente: {{ item.version }} · Estado del informe: {{ item.estado_informe }}</p>
+    <p class="eval-meta">Versión vigente: {{ item.version }} · Estado del informe: {{ item.estado_informe }}</p>
     @if (item.resultado_vigente; as resultadoActual) {
       <p>Resultado académico: <strong>{{ resultadoActual.resultado }}</strong></p>
       @if (resultadoActual.observaciones) { <p class="observaciones">{{ resultadoActual.observaciones }}</p> }
@@ -17,21 +17,21 @@
     @else { <p>Sin resultado académico para la versión vigente.</p> }
     @if (aprobacionVigente(item)) { <p>Existe aprobación académica vigente. El GESTOR responsable debe confirmar las demás condiciones y cerrar oficialmente la práctica. El reemplazo está bloqueado.</p> }
     @else { <p>Sin aprobación académica vigente para cerrar.</p> }
-    @if (puedeIniciar()) { <button type="button" (click)="iniciar()">Iniciar evaluación</button> }
+    @if (puedeIniciar()) { <button type="button" class="btn-primary" (click)="iniciar()">Iniciar evaluación</button> }
     @if (docente && item.evaluacion_pendiente) {
-      <fieldset [disabled]="!puedeResolver()">
+      <fieldset class="eval-resolucion" [disabled]="!puedeResolver()">
         <legend>Resolver evaluación de la versión {{ item.evaluacion_pendiente.version }}</legend>
         <label>Resultado <select [(ngModel)]="resultado"><option value="APROBADO">APROBADO</option><option value="CON_OBSERVACIONES">CON_OBSERVACIONES</option></select></label>
         <label>Observaciones {{ resultado === 'CON_OBSERVACIONES' ? '(obligatorias)' : '(opcionales)' }}
           <textarea [(ngModel)]="observaciones" maxlength="2000" rows="4"></textarea>
         </label>
         <p>{{ observaciones.length }}/2000</p>
-        <button type="button" (click)="resolver()" [disabled]="resultado === 'CON_OBSERVACIONES' && !observaciones.trim()">Registrar resultado</button>
+        <button type="button" class="btn-primary" (click)="resolver()" [disabled]="resultado === 'CON_OBSERVACIONES' && !observaciones.trim()">Registrar resultado</button>
       </fieldset>
     }
-    <h4>Historial académico</h4>
+    <h4 class="eval-historial-titulo">Historial académico</h4>
     @if (!item.historial.length) { <p>Todavía no hay evaluaciones registradas.</p> }
-    <ol>
+    <ol class="eval-historial">
       @for (evaluacion of item.historial; track evaluacion.id_evaluacion) {
         <li><p>Versión {{ evaluacion.version }} · {{ evaluacion.estado }} · {{ evaluacion.resultado || 'Sin resultado' }}</p>
           <p>Inicio: {{ evaluacion.inicio | date:'dd/MM/yyyy HH:mm' }} · Término: {{ (evaluacion.termino | date:'dd/MM/yyyy HH:mm') || 'Pendiente' }}</p>

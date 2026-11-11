@@ -8,6 +8,10 @@
       </div>
     </header>
 
+    @if (errorAccion) {
+      <p class="error" role="alert">{{ errorAccion }}</p>
+    }
+
     @if (cargando) {
       <div class="center"><ion-spinner></ion-spinner></div>
     } @else if (error) {
@@ -31,6 +35,19 @@
               <ion-button expand="block" fill="outline" (click)="abrirEditar(usuario)">
                 Editar usuario
               </ion-button>
+              @if (usuario.activo) {
+                <ion-button
+                  expand="block"
+                  color="danger"
+                  fill="outline"
+                  [disabled]="desactivando || esUsuarioActual(usuario)"
+                  (click)="confirmarEliminar(usuario)">
+                  Eliminar cuenta
+                </ion-button>
+                @if (esUsuarioActual(usuario)) {
+                  <p class="note">No puedes eliminar tu propia cuenta.</p>
+                }
+              }
             </ion-card-content>
           </ion-card>
         }

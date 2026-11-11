@@ -10,6 +10,17 @@ import { catchError, map, of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { AuthStore } from '../store/auth.store';
 
+/**
+ * Destino cuando la ruta no admite el rol del usuario. Un docente sin rol de gestión
+ * no tiene más espacio que el suyo: /home no le corresponde, así que va a sus prácticas.
+ */
+export function destinoSinPermiso(roles: readonly string[]): string {
+  const esSoloDocente = roles.includes('DOCENTE')
+    && !roles.includes('GESTOR')
+    && !roles.includes('ADMINISTRADOR');
+  return esSoloDocente ? '/docente/practicas' : '/home';
+}
+
 export const roleGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot
 ) => {
@@ -29,7 +40,7 @@ export const roleGuard: CanActivateFn = (
 
     return tieneRol
       ? true
-      : router.createUrlTree(['/home']);
+      : router.createUrlTree([destinoSinPermiso(contextoActual.roles)]);
   }
 
   const token = sessionStorage.getItem('access_token');
@@ -48,7 +59,7 @@ export const roleGuard: CanActivateFn = (
 
       return tieneRol
         ? true
-        : router.createUrlTree(['/home']);
+        : router.createUrlTree([destinoSinPermiso(contexto.roles)]);
     }),
     catchError(() => {
       sessionStorage.removeItem('access_token');

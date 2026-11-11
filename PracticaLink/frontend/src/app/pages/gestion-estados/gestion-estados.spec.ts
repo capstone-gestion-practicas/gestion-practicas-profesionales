@@ -111,6 +111,16 @@ describe('GestionEstados (mensajes de lista y navegación de gestor)', () => {
     expect(texto()).not.toContain('Volver');
   });
 
+  it('el gestor abre el detalle de la práctica, donde asigna docente', () => {
+    crear(['GESTOR'], [practica()]);
+    const router = TestBed.inject(Router);
+    const boton = Array.from(fixture.nativeElement.querySelectorAll('ion-button') as NodeListOf<HTMLElement>)
+      .find(el => el.textContent?.trim() === 'Ver detalle');
+    expect(boton).toBeDefined();
+    boton?.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/practicas', 7]);
+  });
+
   it('el administrador conserva el botón Volver', () => {
     crear(['ADMINISTRADOR'], [practica()]);
     expect(texto()).toContain('Volver');

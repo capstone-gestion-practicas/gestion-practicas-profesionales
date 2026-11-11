@@ -47,6 +47,7 @@ class PracticaCreateTests(unittest.TestCase):
             fecha_inicio=date(2026, 3, 2),
             fecha_termino=date(2026, 6, 30),
             horas=360,
+            horas_semanales=None,
             cargo_funcion="Desarrollador",
             descripcion="Practica de caracterizacion",
         )
@@ -91,6 +92,7 @@ class RegistrarPracticaTests(unittest.TestCase):
             fecha_inicio=date(2026, 3, 2),
             fecha_termino=date(2026, 6, 30),
             horas=360,
+            horas_semanales=None,
             cargo_funcion="Desarrollador",
             descripcion="Practica de caracterizacion",
         )
@@ -163,6 +165,7 @@ class PracticasRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -308,6 +311,7 @@ class PracticasRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -361,6 +365,7 @@ class PracticasRouteTests(unittest.TestCase):
             "fecha_inicio": "2026-03-02",
             "fecha_termino": "2026-06-30",
             "horas": 360,
+            "horas_semanales": None,
             "cargo_funcion": "Desarrollador",
             "descripcion": "Practica de caracterizacion",
         }
@@ -500,6 +505,7 @@ class PracticasRouteTests(unittest.TestCase):
                     "fecha_inicio": "2026-03-02",
                     "fecha_termino": "2026-06-30",
                     "horas": 360,
+                    "horas_semanales": None,
                     "cargo_funcion": "Desarrollador",
                     "descripcion": "Practica de caracterizacion",
                 },

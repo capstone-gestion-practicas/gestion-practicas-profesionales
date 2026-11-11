@@ -4,13 +4,14 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
+  AlertController, IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
   IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
 } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 
 import { Rol, UsuarioAdministrable } from '../../core/models/usuario.models';
 import { UsuarioService } from '../../core/services/usuario.service';
+import { AuthStore } from '../../core/store/auth.store';
 
 @Component({
   selector: 'app-usuarios',
@@ -25,11 +26,15 @@ import { UsuarioService } from '../../core/services/usuario.service';
 export class Usuarios implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly router = inject(Router);
+  private readonly alertController = inject(AlertController);
+  private readonly authStore = inject(AuthStore);
 
   usuarios: UsuarioAdministrable[] = [];
   roles: Rol[] = [];
   cargando = true;
   error = '';
+  errorAccion = '';
+  desactivando = false;
   modalAbierto = false;
   guardando = false;
   usuarioEditando: UsuarioAdministrable | null = null;
@@ -140,6 +145,46 @@ export class Usuarios implements OnInit {
   }
 
   volver(): void { this.router.navigate(['/home']); }
+
+  /** La cuenta propia no puede desactivarse: el backend también lo impide (AUTOGESTION_NO_PERMITIDA). */
+  esUsuarioActual(usuario: UsuarioAdministrable): boolean {
+    return this.authStore.contexto()?.usuario.id_usuario === usuario.id_usuario;
+  }
+
+  async confirmarEliminar(usuario: UsuarioAdministrable): Promise<void> {
+    const alerta = await this.alertController.create({
+      header: 'Eliminar cuenta',
+      message: `La cuenta de ${usuario.nombre} ${usuario.apellido} quedará inactiva y no podrá iniciar sesión. `
+        + 'Sus datos se conservan y puede reactivarse desde Editar usuario.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Eliminar', role: 'destructive', handler: () => this.desactivar(usuario) }
+      ]
+    });
+    await alerta.present();
+  }
+
+  /** Eliminación lógica: reutiliza PATCH /usuarios/{id} con activo = false y conserva roles y datos. */
+  desactivar(usuario: UsuarioAdministrable): void {
+    this.desactivando = true;
+    this.errorAccion = '';
+    this.usuarioService.actualizar(usuario.id_usuario, {
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      activo: false,
+      roles: usuario.roles
+    }).subscribe({
+      next: () => {
+        this.desactivando = false;
+        this.cargar();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.desactivando = false;
+        this.errorAccion = typeof error.error?.detail === 'string'
+          ? error.error.detail : 'No fue posible eliminar la cuenta.';
+      }
+    });
+  }
 
   private correoValido(correo: string): boolean {
     const limpio = correo.trim();
