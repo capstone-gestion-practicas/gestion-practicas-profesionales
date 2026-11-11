@@ -181,6 +181,9 @@ def obtener_mi_practica(
 )
 def consultar_practicas(
     rut: str | None = Query(default=None, pattern=r"^[0-9]{7,8}-[0-9Kk]$"),
+    # Formato de ep.nombre (VARCHAR(50), p. ej. "EN_CURSO"): un valor bien formado pero
+    # inexistente no es 422, devuelve una página vacía (igual que un RUT sin coincidencias).
+    estado: str | None = Query(default=None, pattern=r"^[A-Za-z_]{1,50}$"),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     contexto: dict = Depends(require_roles("GESTOR", "ADMINISTRADOR")),
@@ -188,6 +191,8 @@ def consultar_practicas(
     db: Session = Depends(get_db),
 ):
     # Identidad desde el JWT y roles desde fn_contexto_usuario; el cliente no elige id_gestor.
+    # Idéntico para cuentas con ambos roles: ADMINISTRADOR en el token basta para ver todo,
+    # sin leer el espacio de trabajo elegido (eso vive solo en sessionStorage del cliente).
     roles = {str(rol).upper() for rol in contexto.get("roles", [])}
     id_gestor_asignado = None if "ADMINISTRADOR" in roles else id_usuario
     if rut is not None:
@@ -201,6 +206,7 @@ def consultar_practicas(
     return listar_practicas(
         db,
         rut=rut,
+        estado=estado.upper() if estado is not None else None,
         limit=limit,
         offset=offset,
         id_gestor_asignado=id_gestor_asignado,

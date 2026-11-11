@@ -258,10 +258,13 @@ class Ep07PracticasTests(unittest.TestCase):
     def _fila_listado(self, id_practica):
         return {
             "id_practica": id_practica, "id_estudiante": 7,
-            "estudiante_nombre": "Estudiante Sintético", "centro_nombre": "Centro sintético",
+            "estudiante_nombre": "Estudiante Sintético", "estudiante_rut": "11.111.111-1",
+            "centro_nombre": "Centro sintético",
             "fecha_registro": datetime(2026, 10, 17, 12, tzinfo=timezone.utc),
             "id_estado": 6, "estado_nombre": "APROBADA", "es_final": False,
             "fecha_ultimo_cambio_estado": None,
+            # Etapa 4a: campos añadidos al listado paginado.
+            "fecha_inicio": None, "fecha_termino": None, "id_gestor": None, "gestor_nombre": None,
         }
 
     def _fila_detalle(self):

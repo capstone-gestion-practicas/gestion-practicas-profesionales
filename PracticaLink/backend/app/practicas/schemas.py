@@ -239,6 +239,13 @@ class PracticaResumen(BaseModel):
     fecha_registro: datetime
     estado: EstadoPracticaLectura
     fecha_ultimo_cambio_estado: datetime | None
+    # Etapa 4a: campos añadidos para que /practicas pueda alimentar el listado
+    # principal de gestión sin perder paginación. Los campos anteriores no cambian.
+    rut_estudiante: str
+    fecha_inicio: date | None = None
+    fecha_termino: date | None = None
+    id_gestor: int | None = None
+    gestor: str | None = None
 
 
 class PracticasListadoResponse(BaseModel):
