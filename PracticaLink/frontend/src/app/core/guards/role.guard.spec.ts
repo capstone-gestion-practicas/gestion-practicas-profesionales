@@ -79,6 +79,41 @@ describe('roleGuard', () => {
     expect(router.serializeUrl(result)).toBe('/home');
   });
 
+  it('redirects a DOCENTE without management roles to /docente/practicas', () => {
+    authStore.setContexto({ ...contexto, roles: ['DOCENTE'] });
+    const result = executeGuard(['ADMINISTRADOR']) as UrlTree;
+
+    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/docente/practicas');
+  });
+
+  it('keeps /home for a DOCENTE who also has GESTOR or ADMINISTRADOR', () => {
+    authStore.setContexto({ ...contexto, roles: ['DOCENTE', 'GESTOR'] });
+    const conGestor = executeGuard(['ADMINISTRADOR']) as UrlTree;
+    authStore.setContexto({ ...contexto, roles: ['DOCENTE', 'ADMINISTRADOR'] });
+    const conAdmin = executeGuard(['ESTUDIANTE']) as UrlTree;
+    const router = TestBed.inject(Router);
+
+    expect(router.serializeUrl(conGestor)).toBe('/home');
+    expect(router.serializeUrl(conAdmin)).toBe('/home');
+  });
+
+  it('redirects a DOCENTE loaded from the API to /docente/practicas', (done) => {
+    sessionStorage.setItem('access_token', 'test-token');
+    authService.obtenerContexto.and.returnValue(of({ ...contexto, roles: ['DOCENTE'] }));
+    const route = { data: { roles: ['ESTUDIANTE'] } } as unknown as ActivatedRouteSnapshot;
+
+    const result = TestBed.runInInjectionContext(() => roleGuard(route, {} as RouterStateSnapshot));
+    if (!isObservable(result)) {
+      fail('Expected an observable guard result');
+      done();
+      return;
+    }
+    result.subscribe(valor => {
+      expect(TestBed.inject(Router).serializeUrl(valor as UrlTree)).toBe('/docente/practicas');
+      done();
+    });
+  });
+
   it('loads context from the API when the store is empty', (done) => {
     sessionStorage.setItem('access_token', 'test-token');
     authService.obtenerContexto.and.returnValue(of(contexto));
