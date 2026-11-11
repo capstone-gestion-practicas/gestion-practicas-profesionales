@@ -1,19 +1,24 @@
 <ion-content>
   <main class="main-panel">
-      <header class="topbar">
-        <div class="breadcrumb">
-          <button type="button" (click)="navegarA('/home')">PracticaLink</button>
-          <span class="separator">·</span>
-          <span class="current">Detalle de práctica</span>
-        </div>
+      <!-- En el espacio GESTOR la cabecera de GestorLayout sustituye a esta barra propia;
+           el ADMINISTRADOR (y GESTOR + ADMINISTRADOR fuera del espacio GESTOR) la conserva. -->
+      @if (!espacioGestor) {
+        <header class="topbar">
+          <div class="breadcrumb">
+            <button type="button" (click)="navegarA('/home')">PracticaLink</button>
+            <span class="separator">·</span>
+            <span class="current">Detalle de práctica</span>
+          </div>
 
-        <div class="topbar-actions" [attr.aria-label]="nombreUsuario">
-          <div class="avatar-mini">{{ inicialesUsuario }}</div>
-        </div>
-      </header>
+          <div class="topbar-actions" [attr.aria-label]="nombreUsuario">
+            <div class="avatar-mini">{{ inicialesUsuario }}</div>
+          </div>
+        </header>
+      }
 
       <section class="page-header">
-        <div class="eyebrow">EP04 · SEGUIMIENTO</div>
+        <ion-button fill="clear" class="enlace-volver" (click)="volver()">← Volver a prácticas</ion-button>
+        <div class="eyebrow">Detalle de práctica</div>
         <div class="header-row">
           @if (detalle; as practica) {
             <h1>{{ practica.estudiante.nombre }}</h1>

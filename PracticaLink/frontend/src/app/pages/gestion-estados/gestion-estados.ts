@@ -1,4 +1,10 @@
 import { EvaluacionService, EstadoAcademico, aprobacionVigente } from '../../features/evaluaciones/evaluacion.service';
+import {
+  esCandidataCierre,
+  fechaTerminoCumplida,
+  mensajeAprobacionAcademica,
+  mensajeErrorConsultaAcademica
+} from '../../features/gestor/cierre-practica/cierre-reglas';
 import { CommonModule } from '@angular/common';
 import { Component, Injector, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -169,12 +175,7 @@ export class GestionEstados implements OnInit, OnDestroy {
   }
 
   fechaTerminoVencida(fechaTermino: string | null): boolean {
-    if (!fechaTermino) return false;
-    const hoy = new Date();
-    const hoyIso = [hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate()]
-      .map((parte, indice) => indice === 0 ? String(parte) : String(parte).padStart(2, '0'))
-      .join('-');
-    return fechaTermino.slice(0, 10) <= hoyIso;
+    return fechaTerminoCumplida(fechaTermino);
   }
 
   puedeFinalizar(practica: PracticaEstadoResumen): boolean {
@@ -182,10 +183,7 @@ export class GestionEstados implements OnInit, OnDestroy {
   }
 
   candidataCierre(practica: PracticaEstadoResumen): boolean {
-    const contexto = this.authStore.obtenerContextoActual();
-    return contexto?.roles.includes('GESTOR') === true
-      && practica.id_gestor === contexto.usuario.id_usuario
-      && practica.estado === 'EN_CURSO' && this.fechaTerminoVencida(practica.fecha_termino);
+    return esCandidataCierre(practica, this.authStore.obtenerContextoActual());
   }
 
   consultarAprobacion(practica: PracticaEstadoResumen): void {
@@ -201,20 +199,13 @@ export class GestionEstados implements OnInit, OnDestroy {
       error: (error: HttpErrorResponse) => {
         if (generacion !== this.generacionAcademica) return;
         this.consultandoAcademico.delete(id);
-        this.erroresAcademicos.set(id, [401, 403, 404].includes(error.status)
-          ? 'Sin acceso a la evaluación. Revisa tu sesión y asignación.'
-          : 'No se pudo verificar la aprobación. Actualiza antes de cerrar.');
+        this.erroresAcademicos.set(id, mensajeErrorConsultaAcademica(error.status));
       }
     }));
   }
 
   mensajeAcademico(id: number): string {
-    if (this.consultandoAcademico.has(id)) return 'Consultando aprobación académica…';
-    const estado = this.estadosAcademicos.get(id);
-    if (!estado) return 'Consulta la evaluación antes de cerrar.';
-    return aprobacionVigente(estado)
-      ? `Aprobación académica vigente de la versión ${estado.version}. El servidor verificará las demás condiciones de cierre.`
-      : 'Sin aprobación académica vigente: no se puede cerrar la práctica.';
+    return mensajeAprobacionAcademica(this.consultandoAcademico.has(id), this.estadosAcademicos.get(id));
   }
 
   nombreEstado(estado: string): string {

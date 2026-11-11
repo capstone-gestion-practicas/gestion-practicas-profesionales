@@ -1,5 +1,6 @@
 import { InformeFinal } from '../../features/informe-final/informe-final';
 import { SesionService } from '../../core/session/sesion.service';
+import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
 import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
@@ -71,6 +72,15 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   get puedeAsignarDocente(): boolean {
     const roles = this.auth.contexto()?.roles ?? [];
     return roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') !== 'ADMINISTRADOR';
+  }
+
+  /**
+   * Espacio GESTOR efectivo (misma regla que GestorLayout): oculta la barra propia del detalle,
+   * que la cabecera persistente sustituye. Getter, como puedeAsignarDocente, porque la elección
+   * de espacio vive en sessionStorage y no es una señal.
+   */
+  get espacioGestor(): boolean {
+    return muestraEspacioGestor(this.auth.contexto());
   }
 
   get nombreUsuario(): string {
