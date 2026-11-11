@@ -127,9 +127,17 @@
               }
             </section>
           }
+
+          <!-- Cierre académico (etapa 3d): consulta y envío viven en CierrePractica;
+               el servidor autoriza (incluido el gestor responsable, que el detalle no expone). -->
+          @if (puedeCerrar) {
+            <app-cierre-practica [idPractica]="practica.id_practica" [candidata]="puedeCerrar"
+              (cerrada)="alCerrarPractica($event)" />
+          }
         }
       </section>
 
+      @if (mensajeCierre) { <p class="mensaje-cierre" role="status">{{ mensajeCierre }}</p> }
       @if (mensajeInicio) { <p role="status">{{ mensajeInicio }}</p> }
       @if (errorInicio) { <p role="alert">{{ errorInicio }}</p> }
       @if (requiereConsultaEstado) {
