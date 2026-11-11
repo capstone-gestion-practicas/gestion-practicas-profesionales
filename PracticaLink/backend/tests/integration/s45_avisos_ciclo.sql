@@ -49,6 +49,23 @@ DO $$ DECLARE a int; b int; BEGIN
   RAISE NOTICE 'OK 2: reasignación avisa al gestor saliente y al entrante';
 END $$;
 
+-- 2b) Autoasignación (quien asigna es el mismo gestor): no se avisa GESTOR_ASIGNADO.
+INSERT INTO usuario(nombre,apellido,correo,password_hash,activo,fecha_creacion,fecha_actualizacion)
+VALUES ('AG','Sint','ag@s45.invalid','x',true,now(),now());
+INSERT INTO usuario_rol(id_usuario,id_rol)
+SELECT u.id_usuario, r.id_rol FROM usuario u JOIN rol r ON ((r.nombre='GESTOR' OR r.nombre='ADMINISTRADOR') AND u.correo='ag@s45.invalid')
+WHERE u.correo='ag@s45.invalid';
+SELECT public.fn_asignar_gestor_practica(current_setting('s45.p')::bigint,
+  (SELECT id_usuario FROM usuario WHERE correo='ag@s45.invalid'),
+  (SELECT id_usuario FROM usuario WHERE correo='ag@s45.invalid')) ->> 'mensaje';
+DO $$ DECLARE n int; BEGIN
+  SELECT count(*) INTO n FROM notificacion WHERE tipo='GESTOR_ASIGNADO' AND id_usuario=(SELECT id_usuario FROM usuario WHERE correo='ag@s45.invalid');
+  IF n<>0 THEN RAISE EXCEPTION 'AUTOASIGNACION_NO_DEBE_AVISAR: %', n; END IF;
+  RAISE NOTICE 'OK 2b: autoasignación no genera GESTOR_ASIGNADO';
+END $$;
+-- Dejar la práctica con g2 para los pasos siguientes.
+SELECT public.fn_asignar_gestor_practica(current_setting('s45.p')::bigint, current_setting('s45.a')::bigint, current_setting('s45.g2')::bigint) ->> 'mensaje';
+
 -- 3) Incidencia ALTA: gestor asignado (g2) recibe el aviso.
 SELECT public.fn_registrar_incidencia(current_setting('s45.p')::bigint, current_setting('s45.g2')::bigint, CURRENT_DATE, 'Sintetica', 'ALTA') ->> 'alerta' AS alerta;
 DO $$ DECLARE n int; BEGIN

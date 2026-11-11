@@ -77,7 +77,8 @@ BEGIN
             VALUES (v_gestor_anterior,p_id_practica,'GESTOR_REASIGNADO','Práctica reasignada',
                 'La práctica dejó de estar a tu cargo como gestor responsable.');
         END IF;
-        IF p_id_gestor IS NOT NULL THEN
+        -- Solo si quien asigna es otro usuario: no se avisa una autoasignación.
+        IF p_id_gestor IS NOT NULL AND p_id_gestor IS DISTINCT FROM p_id_admin THEN
             INSERT INTO public.notificacion(id_usuario,id_practica,tipo,titulo,mensaje)
             VALUES (p_id_gestor,p_id_practica,'GESTOR_ASIGNADO','Práctica asignada',
                 'Se te asignó una práctica como gestor responsable.');
