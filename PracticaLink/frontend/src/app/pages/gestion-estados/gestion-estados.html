@@ -91,6 +91,7 @@
                     <p><strong>Gestor asignado:</strong> {{ practica.gestor }}</p>
                   }
                   <div class="practice-actions">
+                    <ion-button fill="outline" (click)="verDetalle(practica)">Ver detalle</ion-button>
                     <ion-button (click)="abrirCambio(practica)">Revisar y actualizar estado</ion-button>
                     @if (candidataCierre(practica)) {
                       <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>
@@ -189,6 +190,7 @@
                 <p class="state-description">{{ practica.descripcion_estado }}</p>
               }
               <div class="practice-actions">
+                <ion-button fill="outline" (click)="verDetalle(practica)">Ver detalle</ion-button>
                 <ion-button (click)="abrirCambio(practica)">Actualizar estado</ion-button>
                 @if (candidataCierre(practica)) {
                       <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>

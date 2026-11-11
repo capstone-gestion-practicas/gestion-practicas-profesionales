@@ -374,6 +374,11 @@ export class GestionEstados implements OnInit, OnDestroy {
     this.router.navigate(['/home']);
   }
 
+  /** Abre el detalle de la práctica, donde el gestor responsable puede asignar un docente. */
+  verDetalle(practica: PracticaEstadoResumen): void {
+    this.router.navigate(['/practicas', practica.id_practica]);
+  }
+
   private mostrarMensajeTemporal(): void {
     window.setTimeout(() => this.mensaje = '', 5000);
   }
