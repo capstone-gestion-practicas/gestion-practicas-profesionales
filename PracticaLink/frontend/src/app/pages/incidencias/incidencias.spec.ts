@@ -23,7 +23,7 @@ describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
   function cargarListados(incidencias: unknown[] = []): void {
     http.expectOne(request => request.method === 'GET'
       && request.url === `${environment.apiUrl}/practicas/gestion-estados`).flush([
-      { id_practica: 15, es_final: false, estudiante: 'Estudiante', centro_practica: 'Centro' }
+      { id_practica: 15, estado: 'EN_CURSO', es_final: false, estudiante: 'Estudiante', centro_practica: 'Centro' }
     ]);
     http.expectOne(request => request.method === 'GET'
       && request.url === `${environment.apiUrl}/incidencias`).flush(incidencias);
@@ -75,5 +75,28 @@ describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
     expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
     expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('ATENCIÓN');
     expect(fixture.nativeElement.textContent).toContain('Registrar incidencia');
+  });
+
+  it('no registra incidencias con la práctica fuera de EN_CURSO y muestra el motivo', () => {
+    const fixture = TestBed.createComponent(Incidencias);
+    fixture.detectChanges();
+    http.expectOne(request => request.method === 'GET'
+      && request.url === `${environment.apiUrl}/practicas/gestion-estados`).flush([
+      { id_practica: 16, estado: 'APROBADA', es_final: false, estudiante: 'Otro', centro_practica: 'Centro' }
+    ]);
+    http.expectOne(request => request.method === 'GET'
+      && request.url === `${environment.apiUrl}/incidencias`).flush([]);
+    fixture.detectChanges();
+
+    const componente = fixture.componentInstance;
+    componente.practicaSeleccionada = 16;
+    componente.tipo = 'SALUD';
+    componente.descripcion = 'Ausencia por salud';
+    expect(componente.puedeRegistrar()).toBeFalse();
+    componente.registrar();
+    http.expectNone(`${environment.apiUrl}/practicas/16/incidencias`);
+    expect(componente.error).toContain('Las incidencias se registran cuando la práctica está en curso.');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Las incidencias se registran cuando la práctica está en curso.');
   });
 });

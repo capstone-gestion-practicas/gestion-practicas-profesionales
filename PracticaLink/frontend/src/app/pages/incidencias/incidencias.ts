@@ -95,6 +95,12 @@ export class Incidencias implements OnInit {
   }
 
   // Pendiente = cualquier estado no cerrado. Cubre PENDIENTE/EN_ATENCION (EP06) y ABIERTA/EN_REVISION (legado).
+  /** Las incidencias solo se registran con la práctica seleccionada EN_CURSO (la BD también lo exige). */
+  puedeRegistrar(): boolean {
+    const seleccionada = this.practicas.find(practica => practica.id_practica === this.practicaSeleccionada);
+    return seleccionada?.estado.toUpperCase() === 'EN_CURSO';
+  }
+
   esPendiente(item: IncidenciaPractica): boolean {
     return item.estado !== 'RESUELTA' && item.estado !== 'CERRADA';
   }
@@ -110,6 +116,10 @@ export class Incidencias implements OnInit {
   registrar(): void {
     if (this.practicaSeleccionada === null || this.tipo === null || !this.descripcion.trim()) {
       this.error = 'Selecciona una práctica, un tipo e ingresa la descripción de la incidencia.';
+      return;
+    }
+    if (!this.puedeRegistrar()) {
+      this.error = 'Las incidencias se registran cuando la práctica está en curso.';
       return;
     }
     this.error = '';

@@ -21,7 +21,9 @@
             <h1>Detalle de práctica</h1>
           }
           <div class="page-actions">
-            <ion-button fill="outline" (click)="registrarIncidencia()">Nueva incidencia</ion-button>
+            @if (puedeRegistrarIncidencia) {
+              <ion-button fill="outline" (click)="registrarIncidencia()">Nueva incidencia</ion-button>
+            }
             @if (puedeRegistrarSeguimiento) {
               <ion-button (click)="registrarSeguimiento()">Registrar seguimiento</ion-button>
             } @else {

@@ -256,6 +256,11 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     return this.detalle?.estado.nombre === 'EN_CURSO';
   }
 
+  /** Las incidencias también exigen EN_CURSO. */
+  get puedeRegistrarIncidencia(): boolean {
+    return this.detalle?.estado.nombre === 'EN_CURSO';
+  }
+
   registrarSeguimiento(): void {
     this.router.navigate(['/practicas', this.idPractica, 'seguimiento', 'nuevo']);
   }
