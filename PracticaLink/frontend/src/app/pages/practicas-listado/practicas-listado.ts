@@ -12,17 +12,19 @@ import { PracticaIncidenciasPendientesItem, PracticaResumen } from '../../core/m
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
+import { PESTANAS_PRACTICAS, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 type EstadoResumen = 'inactivo' | 'cargando' | 'listo' | 'error';
 
 @Component({
   selector: 'app-practicas-listado',
   standalone: true,
-  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner],
+  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner, PestanasGestor],
   templateUrl: './practicas-listado.html',
   styleUrl: './practicas-listado.scss'
 })
 export class PracticasListado implements OnInit, OnDestroy {
+  readonly pestanas = PESTANAS_PRACTICAS;
   rutBusqueda = '';
   private rutActivo: string | undefined;
   private consulta?: Subscription;

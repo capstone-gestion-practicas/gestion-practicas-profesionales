@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { esEspacioGestorDedicado } from '../../../core/navigation/espacio-gestor';
+import { muestraEspacioGestor } from '../../../core/navigation/espacio-gestor';
 import { AuthStore } from '../../../core/store/auth.store';
 import { GestorHeader } from '../../../pages/home/gestor-home/gestor-header/gestor-header';
 
@@ -21,9 +21,5 @@ import { GestorHeader } from '../../../pages/home/gestor-home/gestor-header/gest
 export class GestorLayout {
   private readonly authStore = inject(AuthStore);
 
-  protected readonly mostrarCabecera = computed(() => {
-    const roles = this.authStore.contexto()?.roles ?? [];
-    return esEspacioGestorDedicado(this.authStore.contexto())
-      || (roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') === 'GESTOR');
-  });
+  protected readonly mostrarCabecera = computed(() => muestraEspacioGestor(this.authStore.contexto()));
 }

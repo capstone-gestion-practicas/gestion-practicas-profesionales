@@ -31,12 +31,14 @@ import {
   SeguimientoHistorialItem
 } from '../../core/models/seguimiento.models';
 import { PracticaService } from '../../core/services/practica.service';
+import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 @Component({
   selector: 'app-seguimientos',
   standalone: true,
   imports: [
     CommonModule,
+    PestanasGestor,
     FormsModule,
     IonBadge,
     IonButton,
@@ -61,6 +63,7 @@ export class Seguimientos implements OnInit {
   private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   readonly medios = MEDIOS_CONTACTO;
+  readonly pestanas = PESTANAS_ACOMPANAMIENTO;
   readonly historiales = new Map<number, SeguimientoHistorialItem[]>();
   readonly fechas = new Map<number, string>();
   readonly tipos = new Map<number, string>();

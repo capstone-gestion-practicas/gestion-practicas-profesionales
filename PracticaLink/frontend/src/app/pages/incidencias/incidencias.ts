@@ -29,12 +29,14 @@ import {
 } from '../../core/models/practica.models';
 import { TIPOS_INCIDENCIA, TipoIncidencia } from '../../core/models/incidencia.models';
 import { PracticaService } from '../../core/services/practica.service';
+import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 @Component({
   selector: 'app-incidencias',
   standalone: true,
   imports: [
     CommonModule,
+    PestanasGestor,
     FormsModule,
     IonBadge,
     IonButton,
@@ -60,6 +62,7 @@ export class Incidencias implements OnInit {
   incidencias: IncidenciaPractica[] = [];
   practicaSeleccionada: number | null = null;
   readonly tipos = TIPOS_INCIDENCIA;
+  readonly pestanas = PESTANAS_ACOMPANAMIENTO;
   tipo: TipoIncidencia | null = null;
   descripcion = '';
   cargando = true;

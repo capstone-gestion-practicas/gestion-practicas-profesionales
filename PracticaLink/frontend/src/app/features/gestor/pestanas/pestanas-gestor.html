@@ -1,0 +1,16 @@
+@if (visibles().length > 0) {
+  <nav class="pg-pestanas" [attr.aria-label]="etiqueta()">
+    <ul class="pg-lista">
+      @for (pestana of visibles(); track pestana.ruta) {
+        <li>
+          <button
+            type="button"
+            class="pg-pestana"
+            [class.pg-pestana--activa]="pestana.ruta === activa()"
+            [attr.aria-current]="pestana.ruta === activa() ? 'page' : null"
+            (click)="ir(pestana)">{{ pestana.etiqueta }}</button>
+        </li>
+      }
+    </ul>
+  </nav>
+}

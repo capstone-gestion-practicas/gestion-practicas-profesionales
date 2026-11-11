@@ -11,6 +11,7 @@ import { RevisionService } from '../../core/services/revision.service';
 import { SolicitudesPendientesService } from '../../core/services/solicitudes-pendientes.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
+import { PESTANAS_PRACTICAS, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 import {
   EstadoSolicitud,
   ESTADOS_SOLICITUD,
@@ -38,7 +39,7 @@ import {
   selector: 'app-revisiones',
   standalone: true,
   imports: [
-    IonButton, IonCard, IonCardContent, IonContent, IonGrid, IonCol, IonRow, IonSpinner, EstadoBadge
+    IonButton, IonCard, IonCardContent, IonContent, IonGrid, IonCol, IonRow, IonSpinner, EstadoBadge, PestanasGestor
   ],
   templateUrl: './revisiones.html',
   styleUrl: './revisiones.scss'
@@ -60,6 +61,7 @@ export class Revisiones implements OnInit {
   private readonly paginaSolicitada = signal(1);
 
   readonly opcionesOrden = ORDENES_SOLICITUDES;
+  readonly pestanas = PESTANAS_PRACTICAS;
   readonly opcionesEstado: ReadonlyArray<{ estado: EstadoSolicitud; etiqueta: string }> = [
     { estado: 'REGISTRADA', etiqueta: 'Registradas' },
     { estado: 'EN_REVISION', etiqueta: 'En revisión' },
