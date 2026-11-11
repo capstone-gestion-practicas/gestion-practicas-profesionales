@@ -1,8 +1,15 @@
 <section class="teacher-assignment" aria-labelledby="teacher-assignment-title">
   <h2 id="teacher-assignment-title">Asignación docente</h2>
   <p>Selecciona una cuenta DOCENTE activa. Al reemplazar o retirar, registra el motivo.</p>
-  @if (cargando) { <p>Consultando asignación…</p> }
-  @else if (asignacion) {
+  @if (cargando) { <p role="status">Consultando asignación…</p> }
+  @else if (!asignacion) {
+    <!-- Carga fallida: el error se muestra aquí (antes quedaba dentro del bloque de asignación, oculto). -->
+    @if (error) { <p role="alert">{{ error }}</p> }
+    @if (puedeReintentarCarga) {
+      <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
+    }
+  }
+  @else {
   <p>Asignado actualmente: <strong>{{ asignacion.docente_actual?.nombre || 'Sin docente' }}</strong></p>
   <form (ngSubmit)="guardar()">
     <ion-item><ion-label position="stacked">Docente</ion-label><select name="idDocente" [(ngModel)]="idDocente" [disabled]="enviando"><option value="">Selecciona una acción</option>@for (docente of asignacion.docentes_disponibles; track docente.id_usuario) { <option [value]="docente.id_usuario" [disabled]="docente.id_usuario === asignacion.docente_actual?.id_usuario">{{ docente.nombre }} · {{ docente.correo }}</option> }<option value="__RETIRAR__" [disabled]="!asignacion.docente_actual">Retirar docente asignado</option></select></ion-item>

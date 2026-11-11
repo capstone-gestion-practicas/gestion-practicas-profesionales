@@ -86,6 +86,16 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   }
 
   /**
+   * Asignación DOCENTE (etapa 3e): mismas restricciones de rol y espacio que antes
+   * (puedeAsignarDocente) y solo en APROBADA o EN_CURSO, los estados en que el servidor la
+   * admite (ESTADO_NO_PERMITIDO en los demás). Es visibilidad: el servidor sigue autorizando.
+   */
+  get muestraAsignacionDocente(): boolean {
+    const estado = this.detalle?.estado.nombre;
+    return this.puedeAsignarDocente && (estado === 'APROBADA' || estado === 'EN_CURSO');
+  }
+
+  /**
    * Espacio GESTOR efectivo (misma regla que GestorLayout): oculta la barra propia del detalle,
    * que la cabecera persistente sustituye. Getter, como puedeAsignarDocente, porque la elección
    * de espacio vive en sessionStorage y no es una señal.
