@@ -1,6 +1,7 @@
 :host { display: block; }
 
-.teacher-page { --ion-background-color: var(--color-bg); }
+/* El layout contiene el scroll; esta página debe conservar su altura natural. */
+.teacher-page { background: var(--color-bg); }
 
 .teacher-main {
   max-width: 1100px;

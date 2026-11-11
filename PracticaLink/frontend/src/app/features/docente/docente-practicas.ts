@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { IonButton, IonContent, IonSpinner } from '@ionic/angular';
+import { IonButton, IonSpinner } from '@ionic/angular';
 import { DocenteService, PracticaDocente } from './docente.service';
 
 /** Insignia visible del estado del informe, derivada de la evaluación vigente. */
@@ -14,7 +14,7 @@ export interface InsigniaInforme {
 
 @Component({
   standalone: true, selector: 'app-docente-practicas',
-  imports: [CommonModule, RouterLink, IonContent, IonButton, IonSpinner, InformeFinal],
+  imports: [CommonModule, RouterLink, IonButton, IonSpinner, InformeFinal],
   templateUrl: './docente-practicas.html', styleUrl: './docente-practicas.scss'
 })
 export class DocentePracticas implements OnInit {
