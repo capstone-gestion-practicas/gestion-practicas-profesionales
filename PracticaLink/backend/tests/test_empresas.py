@@ -96,7 +96,7 @@ class EmpresasServiceTests(EmpresasAisladasTests):
 
         self.db.execute.assert_called_once()
         sql, params = self.db.execute.call_args.args
-        self.assertEqual(str(sql), "SELECT fn_obtener_empresa_cache(:rut)")
+        self.assertEqual(" ".join(str(sql).split()), "SELECT public.fn_obtener_empresa_cache(:rut)")
         self.assertEqual(params, {"rut": RUT})
         self.http_mock.assert_not_called()
         self.assert_no_writes()
@@ -122,11 +122,11 @@ class EmpresasServiceTests(EmpresasAisladasTests):
 
         self.assertEqual(self.db.execute.call_count, 2)
         lectura, escritura = self.db.execute.call_args_list
-        self.assertEqual(str(lectura.args[0]), "SELECT fn_obtener_empresa_cache(:rut)")
+        self.assertEqual(" ".join(str(lectura.args[0]).split()), "SELECT public.fn_obtener_empresa_cache(:rut)")
         self.assertEqual(lectura.args[1], {"rut": RUT})
         self.assertEqual(
-            str(escritura.args[0]),
-            "SELECT fn_guardar_empresa_cache(CAST(:datos AS JSONB))",
+            " ".join(str(escritura.args[0]).split()),
+            "SELECT public.fn_guardar_empresa_cache(CAST(:datos AS JSONB))",
         )
         self.assertEqual(set(escritura.args[1]), {"datos"})
         esperado = {**datos_proveedor(), "rut": RUT, "fuente": "Chile RUT Empresa"}

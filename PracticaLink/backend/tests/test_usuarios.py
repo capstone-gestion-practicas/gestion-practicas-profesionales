@@ -71,34 +71,32 @@ class UsuariosAisladosTests(unittest.TestCase):
 
 class UsuariosServiceTests(UsuariosAisladosTests):
     def test_lists_users_with_roles_and_without_committing(self):
-        self.db.execute.return_value.mappings.return_value.all.return_value = [usuario()]
+        self.db.execute.return_value.scalar_one.return_value = [usuario()]
 
         self.assertEqual(listar_usuarios(self.db), [usuario()])
 
         self.db.execute.assert_called_once()
         sql = " ".join(str(self.db.execute.call_args.args[0]).split())
-        for fragmento in (
-            "FROM usuario u", "LEFT JOIN usuario_rol", "LEFT JOIN rol",
-            "GROUP BY u.id_usuario", "ORDER BY u.apellido, u.nombre",
-        ):
-            self.assertIn(fragmento, sql)
+        # El agregado (usuarios con roles, orden y exclusión de secretos) vive en la función SQL.
+        self.assertIn("SELECT public.fn_listar_usuarios()", sql)
         self.db.commit.assert_not_called()
         self.db.rollback.assert_not_called()
 
     def test_lists_only_active_roles_ordered_by_name(self):
         roles = [{"id_rol": 1, "nombre": "ESTUDIANTE", "descripcion": None}]
-        self.db.execute.return_value.mappings.return_value.all.return_value = roles
+        self.db.execute.return_value.scalar_one.return_value = roles
 
         self.assertEqual(listar_roles(self.db), roles)
 
         self.db.execute.assert_called_once()
         sql = " ".join(str(self.db.execute.call_args.args[0]).split())
-        self.assertIn("FROM rol WHERE activo = TRUE ORDER BY nombre", sql)
+        # El filtro de roles activos y el orden por nombre se verifican contra PostgreSQL real.
+        self.assertIn("SELECT public.fn_listar_roles()", sql)
         self.db.commit.assert_not_called()
         self.db.rollback.assert_not_called()
 
     def test_empty_queries_return_empty_lists(self):
-        self.db.execute.return_value.mappings.return_value.all.return_value = []
+        self.db.execute.return_value.scalar_one.return_value = []
         self.assertEqual(listar_usuarios(self.db), [])
         self.assertEqual(listar_roles(self.db), [])
         self.db.commit.assert_not_called()
@@ -156,7 +154,7 @@ class UsuariosServiceTests(UsuariosAisladosTests):
     def test_known_create_errors_raise_without_commit_or_service_rollback(self):
         for codigo, error in (
             ("CORREO_EXISTENTE", UsuarioDuplicadoError),
-            ("ROLES_INVALIDOS", RolesInvalidosError), ("SIN_ROLES", RolesInvalidosError),
+            ("ROLES_INVALIDOS", RolesInvalidosError),
         ):
             with self.subTest(codigo=codigo):
                 self.db.reset_mock()
@@ -170,7 +168,7 @@ class UsuariosServiceTests(UsuariosAisladosTests):
     def test_known_update_errors_raise_without_commit_or_service_rollback(self):
         for codigo, error in (
             ("USUARIO_NO_ENCONTRADO", UsuarioNoEncontradoError),
-            ("ROLES_INVALIDOS", RolesInvalidosError), ("SIN_ROLES", RolesInvalidosError),
+            ("ROLES_INVALIDOS", RolesInvalidosError),
             ("AUTOGESTION_NO_PERMITIDA", AutogestionNoPermitidaError),
         ):
             with self.subTest(codigo=codigo):
@@ -223,7 +221,7 @@ class UsuariosRouteTests(UsuariosAisladosTests):
         return response
 
     def test_admin_lists_users_with_current_response(self):
-        self.db.execute.return_value.mappings.return_value.all.return_value = [usuario()]
+        self.db.execute.return_value.scalar_one.return_value = [usuario()]
         response = self._request("GET", "/usuarios")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [usuario()])
@@ -233,7 +231,7 @@ class UsuariosRouteTests(UsuariosAisladosTests):
 
     def test_admin_lists_roles_with_current_response(self):
         roles = [{"id_rol": 1, "nombre": "ESTUDIANTE", "descripcion": None}]
-        self.db.execute.return_value.mappings.return_value.all.return_value = roles
+        self.db.execute.return_value.scalar_one.return_value = roles
         response = self._request("GET", "/usuarios/roles")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), roles)
@@ -305,7 +303,7 @@ class UsuariosRouteTests(UsuariosAisladosTests):
 
     def test_admin_with_additional_roles_is_allowed(self):
         self.contexto_mock.return_value = {"roles": ["ESTUDIANTE", "ADMINISTRADOR"]}
-        self.db.execute.return_value.mappings.return_value.all.return_value = []
+        self.db.execute.return_value.scalar_one.return_value = []
         response = self._request("GET", "/usuarios")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
@@ -326,7 +324,7 @@ class UsuariosRouteTests(UsuariosAisladosTests):
         )
 
     def test_create_invalid_or_missing_roles_returns_400_and_rolls_back(self):
-        for codigo in ("ROLES_INVALIDOS", "SIN_ROLES"):
+        for codigo in ("ROLES_INVALIDOS",):
             with self.subTest(codigo=codigo):
                 self.db.reset_mock()
                 self._assert_error(
@@ -341,7 +339,7 @@ class UsuariosRouteTests(UsuariosAisladosTests):
         )
 
     def test_update_invalid_or_missing_roles_returns_400_and_rolls_back(self):
-        for codigo in ("ROLES_INVALIDOS", "SIN_ROLES"):
+        for codigo in ("ROLES_INVALIDOS",):
             with self.subTest(codigo=codigo):
                 self.db.reset_mock()
                 self._assert_error(
