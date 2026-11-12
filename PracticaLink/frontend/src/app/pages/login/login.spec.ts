@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { ContextoUsuarioResponse, LoginResponse, RegistroResponse } from '../../core/models/auth.models';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthStore } from '../../core/store/auth.store';
@@ -103,6 +103,7 @@ describe('Login', () => {
       const boton = fixture.debugElement.query(By.css('.login-submit')).nativeElement as HTMLElement & { disabled: boolean };
       expect(boton.textContent).toContain('Iniciando sesión…');
       expect(boton.disabled).toBeTrue();
+      expect(boton.classList.contains('login-submit--cargando')).toBeTrue();
       expect(fixture.debugElement.query(By.css('form')).nativeElement.getAttribute('aria-busy')).toBe('true');
     });
 
@@ -169,6 +170,55 @@ describe('Login', () => {
       const mensaje = fixture.debugElement.query(By.css('#login-correo-error'));
       expect(mensaje.nativeElement.textContent).toContain('Ingresa un correo válido');
     });
+
+    it('L9: la confirmación muestra su error tras salir del campo y lo asocia al input', () => {
+      component.modoRegistro = true;
+      component.password = '123456.abc';
+      component.confirmarPassword = 'otra-clave';
+      component.confirmarTocado = true;
+      fixture.detectChanges();
+      const mensaje = fixture.debugElement.query(By.css('#login-confirmar-error'));
+      const campo = fixture.debugElement.query(By.css('ion-input[name="confirmarPassword"]')).nativeElement as HTMLElement;
+      expect(mensaje.nativeElement.textContent).toContain('Las contraseñas no coinciden.');
+      expect(campo.getAttribute('aria-invalid')).toBe('true');
+      expect(campo.getAttribute('aria-describedby')).toBe('login-confirmar-error');
+    });
+
+    it('L10: la contraseña corta muestra su error tras salir del campo solo en registro', () => {
+      component.modoRegistro = true;
+      component.password = 'corta';
+      component.passwordTocado = true;
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('#login-password-error')).nativeElement.textContent)
+        .toContain('al menos 8 caracteres');
+      component.modoRegistro = false;
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('#login-password-error'))).toBeNull();
+    });
+
+    it('L11: no expone el registro público y conserva el formulario de inicio de sesión', () => {
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).not.toContain('Registrarme');
+      expect(texto).not.toContain('¿No tienes una cuenta?');
+      expect(texto).not.toContain('solo para estudiantes');
+      expect(fixture.debugElement.query(By.css('.login-alternar'))).toBeNull();
+      expect(fixture.debugElement.query(By.css('.login-submit'))).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('.login-password'))).not.toBeNull();
+    });
+
+    it('L12: no muestra una versión que no corresponde a la versión real de la aplicación', () => {
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).not.toContain('Build');
+      expect(texto).not.toContain('Versión');
+    });
+
+    it('L13: evita un segundo envío mientras la autenticación está en curso', () => {
+      authService.login.and.returnValue(new Subject<LoginResponse>().asObservable());
+      rellenarLogin('usuario@practicalink.cl', '123456.abc');
+      component.iniciarSesion();
+      component.iniciarSesion();
+      expect(authService.login).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('credenciales en memoria', () => {
@@ -202,6 +252,8 @@ describe('Login', () => {
       component.confirmarPassword = 'ClaveSintetica1';
       component.mostrarPassword = true;
       component.correoTocado = true;
+      component.passwordTocado = true;
+      component.confirmarTocado = true;
       component.error = 'Correo o contraseña incorrectos.';
       component.mensaje = 'Algún mensaje';
       component.modoRegistro = true;
@@ -215,6 +267,8 @@ describe('Login', () => {
       expect(component.confirmarPassword).toBe('');
       expect(component.mostrarPassword).toBeFalse();
       expect(component.correoTocado).toBeFalse();
+      expect(component.passwordTocado).toBeFalse();
+      expect(component.confirmarTocado).toBeFalse();
       expect(component.error).toBe('');
       expect(component.mensaje).toBe('');
       expect(component.modoRegistro).toBeFalse();

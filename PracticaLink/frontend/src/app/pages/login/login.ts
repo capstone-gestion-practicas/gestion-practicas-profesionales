@@ -43,7 +43,6 @@ const MENSAJE_CORREO_INVALIDO = 'Ingresa un correo válido de máximo 150 caract
 })
 export class Login {
   readonly appVersion = environment.appVersion;
-  readonly androidVersionCode = environment.androidVersionCode;
   readonly cambiosVersion = [
     'Recibe notificaciones push en Android cuando la app está en segundo plano.',
     'Consulta tus avisos desde el centro de notificaciones.',
@@ -62,6 +61,8 @@ export class Login {
   mensaje = '';
   mostrarPassword = false;
   correoTocado = false;
+  passwordTocado = false;
+  confirmarTocado = false;
   private destinoDespuesDeLogin = '/home';
 
   constructor(
@@ -93,30 +94,52 @@ export class Login {
       : '';
   }
 
+  /** Error de longitud solo visible tras salir del campo y solo durante el registro. */
+  get errorPassword(): string {
+    if (!this.modoRegistro || !this.passwordTocado || !this.password) return '';
+    return this.password.length < 8 ? 'La contraseña debe tener al menos 8 caracteres.' : '';
+  }
+
+  /** Error de confirmación solo visible tras salir del campo; misma regla que el correo. */
+  get errorConfirmarPassword(): string {
+    if (!this.modoRegistro || !this.confirmarTocado || !this.confirmarPassword) return '';
+    return this.confirmarPassword !== this.password ? 'Las contraseñas no coinciden.' : '';
+  }
+
   alternarModo(): void {
     this.modoRegistro = !this.modoRegistro;
     this.password = '';
     this.confirmarPassword = '';
+    this.passwordTocado = false;
+    this.confirmarTocado = false;
     this.error = '';
     this.mensaje = '';
   }
 
+  /**
+   * Lógica de registro conservada, pero sin entrada pública desde el LOGIN.
+   * El endpoint de registro sigue disponible: pendiente de bloqueo en servidor.
+   */
   registrarse(): void {
+    if (this.cargando) return;
     this.error = '';
     this.mensaje = '';
 
     if (!this.correoValido(this.correo)) {
+      this.correoTocado = true;
       this.error = MENSAJE_CORREO_INVALIDO;
       return;
     }
 
-    if (this.password !== this.confirmarPassword) {
-      this.error = 'Las contraseñas no coinciden.';
+    if (this.password.length < 8) {
+      this.passwordTocado = true;
+      this.error = 'La contraseña debe tener al menos 8 caracteres.';
       return;
     }
 
-    if (this.password.length < 8) {
-      this.error = 'La contraseña debe tener al menos 8 caracteres.';
+    if (this.password !== this.confirmarPassword) {
+      this.confirmarTocado = true;
+      this.error = 'Las contraseñas no coinciden.';
       return;
     }
 
@@ -147,10 +170,12 @@ export class Login {
   }
 
   iniciarSesion(): void {
+    if (this.cargando) return;
     this.error = '';
     this.mensaje = '';
 
     if (!this.correoValido(this.correo)) {
+      this.correoTocado = true;
       this.error = MENSAJE_CORREO_INVALIDO;
       return;
     }
@@ -211,6 +236,8 @@ export class Login {
     this.apellido = '';
     this.mostrarPassword = false;
     this.correoTocado = false;
+    this.passwordTocado = false;
+    this.confirmarTocado = false;
     this.error = '';
     this.mensaje = '';
     this.modoRegistro = false;
