@@ -8,7 +8,7 @@
   @if (informe(); as item) {
     <p>Estado: {{ item.estado }} · Versión: {{ item.version }}</p>
     @if (item.id_documento) {
-      <p>Formato: {{ item.formato }} · {{ item.nombre }} · {{ item.tamano }} bytes · {{ item.fecha }}</p>
+      <p>Formato: {{ item.formato }} · {{ item.nombre }} · {{ formatearTamano(item.tamano) }} · {{ formatearFecha(item.fecha) }}</p>
       <button type="button" (click)="descargar()" [disabled]="cargando() || enviando() || evaluando()">Descargar informe vigente</button>
     }
     @if (estudiante) {

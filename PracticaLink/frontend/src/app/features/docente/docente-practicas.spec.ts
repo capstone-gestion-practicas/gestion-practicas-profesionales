@@ -53,6 +53,18 @@ describe('Prácticas asignadas al DOCENTE', () => {
     expect(fixture.nativeElement.textContent).toContain('Sin fecha registrada');
   });
 
+  it('muestra fecha de inicio y término en dd/MM/yyyy sin desplazamiento por zona horaria', async () => {
+    api.obtener.and.returnValue(of({ ...practica, fecha_inicio: '2026-03-02', fecha_termino: '2026-06-30' }));
+    await montar('15');
+    const texto = fixture.nativeElement.textContent as string;
+    expect(texto).toContain('02/03/2026');
+    expect(texto).toContain('30/06/2026');
+    expect(texto).not.toContain('2026-03-02');
+    expect(texto).not.toContain('2026-06-30');
+    expect(fixture.componentInstance.fechaCalendario('2026-03-02')).toBe('02/03/2026');
+    expect(fixture.componentInstance.fechaCalendario(null)).toBe('Sin fecha registrada');
+  });
+
   it('muestra ausencia de asignaciones únicamente tras completar la carga', async () => {
     const respuesta = new Subject<PracticaDocente[]>();
     api.listar.and.returnValue(respuesta);

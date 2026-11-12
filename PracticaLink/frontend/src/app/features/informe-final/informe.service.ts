@@ -10,6 +10,16 @@ export const FORMATOS_INFORME = {
 export type FormatoInforme = keyof typeof FORMATOS_INFORME;
 export type MimeInforme = typeof FORMATOS_INFORME[FormatoInforme]['mime'];
 
+/** Tamaño legible en KB o MB; no altera los límites ni la validación real del archivo. */
+export function tamanoLegible(bytes: number | null): string {
+  if (bytes === null) return 'Tamaño no disponible';
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
+}
+
 export function errorArchivo(file: File): string | null {
   if (file.size === 0) return 'Selecciona un PDF o DOCX no vacío.';
   if (file.size > 10 * 1024 * 1024) return 'El máximo permitido es 10 MiB.';

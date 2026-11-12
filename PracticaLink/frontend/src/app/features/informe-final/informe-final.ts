@@ -3,7 +3,8 @@ import { ConsultaAcademica, EvaluacionService, aprobacionVigente } from '../eval
 import { ChangeDetectionStrategy, Component, Injector, Input, OnChanges, OnDestroy, inject, signal } from '@angular/core';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { Subscription, forkJoin } from 'rxjs';
-import { Informe, InformeService, errorArchivo } from './informe.service';
+import { Informe, InformeService, errorArchivo, tamanoLegible } from './informe.service';
+import { formatearFechaHoraChile } from '../../core/utils/fechas';
 
 @Component({ selector: 'app-informe-final', standalone: true,
   imports: [EvaluacionPanel], templateUrl: './informe-final.html', styleUrl: './informe-final.scss',
@@ -31,6 +32,8 @@ export class InformeFinal implements OnChanges, OnDestroy {
   readonly error = signal('');
   readonly mensaje = signal('');
   archivo: File | null = null;
+  readonly formatearFecha = formatearFechaHoraChile;
+  readonly formatearTamano = tamanoLegible;
   private key: string | null = null;
   private versionEnvio: number | null = null;
   ngOnChanges(): void {
