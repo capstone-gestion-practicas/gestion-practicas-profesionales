@@ -21,6 +21,7 @@ class Ep07PracticasTests(unittest.TestCase):
         self.addCleanup(self.restore_overrides)
         self.db = MagicMock()
         self.db.execute.return_value.scalar_one.return_value = []
+        self.db.execute.return_value.scalar_one_or_none.return_value = "EN_REVISION"
         app.dependency_overrides[get_db] = lambda: self.db
         app.dependency_overrides[get_informe_db] = lambda: self.db
         app.dependency_overrides[get_current_user_id] = lambda: 23
@@ -148,14 +149,14 @@ class Ep07PracticasTests(unittest.TestCase):
 
     def test_successful_generic_change_commits_once(self):
         self.db.execute.return_value.scalar_one.return_value = {
-            "id_practica": 9002, "id_estado": 7, "estado": "RECHAZADA",
+            "id_practica": 9002, "id_estado": 7, "estado": "EN_REVISION",
             "mensaje": "Estado actualizado y registrado en el historial",
         }
         response = self.client.patch(
             "/practicas/9002/estado/actualizacion", json={"id_estado": 7}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["estado"], "RECHAZADA")
+        self.assertEqual(response.json()["estado"], "EN_REVISION")
         self.db.commit.assert_called_once()
         self.db.rollback.assert_not_called()
 
@@ -165,6 +166,7 @@ class Ep07PracticasTests(unittest.TestCase):
             ("ESTADO_NO_DISPONIBLE", 422),
             ("CIERRE_MANUAL_REQUERIDO", 409),
             ("INICIO_RESTRINGIDO_REQUERIDO", 409),
+            ("REVISION_FORMAL_REQUERIDA", 409),
         ]
         for error, expected_status in cases:
             with self.subTest(error=error):
@@ -215,16 +217,66 @@ class Ep07PracticasTests(unittest.TestCase):
     def test_administrator_generic_change_is_allowed_and_commits_once(self):
         self.contexto.return_value = {"roles": ["ADMINISTRADOR"]}
         self.db.execute.return_value.scalar_one.return_value = {
-            "id_practica": 9202, "id_estado": 3, "estado": "OBSERVADA",
+            "id_practica": 9202, "id_estado": 3, "estado": "EN_REVISION",
             "mensaje": "Estado actualizado y registrado en el historial",
         }
         response = self.client.patch(
             "/practicas/9202/estado/actualizacion", json={"id_estado": 3}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["estado"], "OBSERVADA")
+        self.assertEqual(response.json()["estado"], "EN_REVISION")
         self.db.commit.assert_called_once()
         self.db.rollback.assert_not_called()
+
+    def test_direct_generic_request_rejects_review_destinations_for_all_management_roles(self):
+        for roles in [["GESTOR"], ["ADMINISTRADOR"], ["GESTOR", "ADMINISTRADOR"]]:
+            for destino in ["APROBADA", "OBSERVADA", "RECHAZADA"]:
+                with self.subTest(roles=roles, destino=destino):
+                    self.contexto.return_value = {"roles": roles}
+                    self.db.reset_mock()
+                    self.db.execute.return_value.scalar_one_or_none.return_value = destino
+                    response = self.client.patch(
+                        "/practicas/55/estado/actualizacion", json={"id_estado": 987}
+                    )
+                    self.assertEqual(response.status_code, 409)
+                    self.assertIn("flujo formal de revisión", response.json()["detail"])
+                    self.db.execute.assert_called_once()
+                    self.assertEqual(self.db.execute.call_args.args[1], {"id_estado": 987})
+                    self.assertNotIn("fn_actualizar_estado_practica", str(self.db.execute.call_args.args[0]))
+                    self.db.commit.assert_not_called()
+                    self.db.rollback.assert_called_once()
+
+    def test_student_and_teacher_cannot_call_generic_endpoint(self):
+        for rol in ["ESTUDIANTE", "DOCENTE"]:
+            with self.subTest(rol=rol):
+                self.contexto.return_value = {"roles": [rol]}
+                self.db.reset_mock()
+                response = self.client.patch(
+                    "/practicas/55/estado/actualizacion", json={"id_estado": 987}
+                )
+                self.assertEqual(response.status_code, 403)
+                self.db.execute.assert_not_called()
+
+    def test_generic_non_review_destinations_remain_available_for_management_roles(self):
+        for roles in [["GESTOR"], ["ADMINISTRADOR"], ["GESTOR", "ADMINISTRADOR"]]:
+            for destino in ["REGISTRADA", "EN_REVISION"]:
+                with self.subTest(roles=roles, destino=destino):
+                    self.contexto.return_value = {"roles": roles}
+                    self.db.reset_mock()
+                    self.db.execute.return_value.scalar_one_or_none.return_value = destino
+                    self.db.execute.return_value.scalar_one.return_value = {
+                        "id_practica": 55, "id_estado": 987, "estado": destino,
+                        "mensaje": "Estado actualizado y registrado en el historial",
+                    }
+                    response = self.client.patch(
+                        "/practicas/55/estado/actualizacion", json={"id_estado": 987}
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.json()["estado"], destino)
+                    self.assertIn("fn_actualizar_estado_practica", str(self.db.execute.call_args.args[0]))
+                    self.assertEqual(self.db.execute.call_args.args[1]["id_usuario"], 23)
+                    self.db.commit.assert_called_once()
+                    self.db.rollback.assert_not_called()
 
     def test_reminder_task_requires_configured_header_token(self):
         with (

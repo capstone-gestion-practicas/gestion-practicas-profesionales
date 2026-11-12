@@ -22,6 +22,8 @@ import { GestionEstados } from './gestion-estados';
  * falla tras un cambio, el cambio de comportamiento debe ser explícito y aprobado.
  * El servidor (fn_actualizar_estado_practica, fn_cerrar_practica) es la autoridad final;
  * estos mocks no acreditan SQL, bloqueos ni atomicidad.
+ * Seguridad de transiciones: la sección de cambio genérico incorpora el bloqueo
+ * autorizado de decisiones de revisión; ya no caracteriza el bypass anterior.
  */
 describe('GestionEstados · caracterización (etapa 0)', () => {
   let fixture: ComponentFixture<GestionEstados>;
@@ -193,15 +195,18 @@ describe('GestionEstados · caracterización (etapa 0)', () => {
     });
   });
 
-  describe('cambio genérico de estado: transiciones que ofrece hoy la interfaz', () => {
+  describe('cambio genérico de estado: seguridad de transiciones', () => {
     const respuestaActualizar = (idEstado: number, estado: string): ActualizarEstadoPracticaResponse =>
       ({ id_practica: 7, id_estado: idEstado, estado, mensaje: `Estado ${estado}` });
 
-    it('ofrece todos los estados activos recibidos; solo FINALIZADA queda deshabilitada en el selector', () => {
-      crear(['GESTOR'], [practica({ estado: 'APROBADA', id_estado: 4, fecha_termino: null })]);
-      // Las opciones del selector se generan desde this.estados (GET /practicas/estados) sin filtrar
-      // por estado actual: incluye REGISTRADA, EN_REVISION, OBSERVADA, APROBADA y RECHAZADA.
+    it('conserva el catálogo de consulta pero no ofrece decisiones de revisión ni cierre', () => {
+      const item = practica({ estado: 'APROBADA', id_estado: 4, fecha_termino: null });
+      crear(['GESTOR'], [item]);
+      component.abrirCambio(item);
       expect(component.estados.map(estado => estado.nombre)).toEqual(estados.map(estado => estado.nombre));
+      expect(component.estadosDisponibles().map(estado => estado.nombre))
+        .toEqual(['REGISTRADA', 'EN_REVISION', 'EN_CURSO']);
+      expect(component.idEstadoSeleccionado).toBeNull();
     });
 
     it('enruta EN_CURSO al inicio restringido (PATCH /estado) y no al cambio genérico', () => {
@@ -217,11 +222,10 @@ describe('GestionEstados · caracterización (etapa 0)', () => {
       expect(practicaService.actualizarEstado).not.toHaveBeenCalled();
     });
 
-    it('envía el resto de destinos al cambio genérico, incluidos estados de decisión de revisión', () => {
+    it('envía únicamente destinos genéricos legítimos', () => {
       const item = practica({ estado: 'EN_CURSO', id_estado: 5, fecha_termino: null });
       crear(['GESTOR'], [item]);
-      // Documenta que la interfaz NO restringe destinos propios de fn_revisar_practica.
-      for (const destino of estados.filter(estado => estado.nombre !== 'EN_CURSO')) {
+      for (const destino of estados.filter(estado => ['REGISTRADA', 'EN_REVISION'].includes(estado.nombre))) {
         practicaService.actualizarEstado.calls.reset();
         practicaService.actualizarEstado.and.returnValue(of(respuestaActualizar(destino.id_estado, destino.nombre)));
         component.abrirCambio(item);
@@ -232,10 +236,24 @@ describe('GestionEstados · caracterización (etapa 0)', () => {
           .withContext(destino.nombre)
           .toHaveBeenCalledOnceWith(7, destino.id_estado, null);
       }
-      // FINALIZADA solo está protegida por la opción deshabilitada y por el servidor
-      // (CIERRE_MANUAL_REQUERIDO); guardarCambio() no la filtra.
       expect(practicaService.iniciarPractica).not.toHaveBeenCalled();
     });
+
+    for (const roles of [['GESTOR'], ['ADMINISTRADOR'], ['GESTOR', 'ADMINISTRADOR']]) {
+      it(`rechaza selección manipulada de revisión para ${roles.join('+')}`, () => {
+        const item = practica();
+        crear(roles, [item]);
+        component.abrirCambio(item);
+        expect(component.estadosDisponibles().map(estado => estado.nombre)).toEqual(['REGISTRADA', 'EN_REVISION']);
+        for (const id of [3, 4, 7, 6, 5, 999]) {
+          component.idEstadoSeleccionado = id;
+          component.guardarCambio();
+          expect(component.error).toContain('Selecciona un estado disponible');
+        }
+        expect(practicaService.actualizarEstado).not.toHaveBeenCalled();
+        expect(practicaService.iniciarPractica).not.toHaveBeenCalled();
+      });
+    }
 
     it('ofrece «Actualizar estado» también en prácticas finales y muestra el rechazo del servidor', () => {
       const final = practica({ id_practica: 11, estado: 'RECHAZADA', id_estado: 7, es_final: true, fecha_termino: null });
@@ -258,7 +276,7 @@ describe('GestionEstados · caracterización (etapa 0)', () => {
       crear(['GESTOR'], [item]);
       practicaService.actualizarEstado.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       component.abrirCambio(item);
-      component.idEstadoSeleccionado = 3;
+      component.idEstadoSeleccionado = 2;
       component.guardarCambio();
       expect(component.error).toBe('No fue posible actualizar el estado.');
       expect(component.modalAbierto).toBeTrue();
@@ -267,12 +285,12 @@ describe('GestionEstados · caracterización (etapa 0)', () => {
     it('tras un cambio exitoso cierra el modal, informa y recarga', () => {
       const item = practica({ fecha_termino: null });
       crear(['GESTOR'], [item]);
-      practicaService.actualizarEstado.and.returnValue(of(respuestaActualizar(3, 'OBSERVADA')));
+      practicaService.actualizarEstado.and.returnValue(of(respuestaActualizar(2, 'EN_REVISION')));
       component.abrirCambio(item);
-      component.idEstadoSeleccionado = 3;
+      component.idEstadoSeleccionado = 2;
       component.guardarCambio();
       expect(component.modalAbierto).toBeFalse();
-      expect(component.mensaje).toBe('Estado OBSERVADA');
+      expect(component.mensaje).toBe('Estado EN_REVISION');
       expect(practicaService.listarPracticasParaGestion).toHaveBeenCalledTimes(2);
     });
   });

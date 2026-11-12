@@ -224,10 +224,18 @@ export class GestionEstados implements OnInit, OnDestroy {
 
   abrirCambio(practica: PracticaEstadoResumen): void {
     this.practicaSeleccionada = practica;
-    this.idEstadoSeleccionado = practica.id_estado;
+    this.idEstadoSeleccionado = this.estadosDisponibles().some(estado => estado.id_estado === practica.id_estado)
+      ? practica.id_estado : null;
     this.observacion = '';
     this.error = '';
     this.modalAbierto = true;
+  }
+
+  estadosDisponibles(): EstadoPracticaDetalle[] {
+    return this.estados.filter(estado =>
+      !['APROBADA', 'OBSERVADA', 'RECHAZADA', 'FINALIZADA'].includes(estado.nombre)
+      && (estado.nombre !== 'EN_CURSO' || this.practicaSeleccionada?.estado === 'APROBADA')
+    );
   }
 
   cerrarModal(): void {
@@ -238,6 +246,10 @@ export class GestionEstados implements OnInit, OnDestroy {
     const practica = this.practicaSeleccionada;
     const idEstado = this.idEstadoSeleccionado;
     if (!practica || idEstado === null) return;
+    if (!this.estadosDisponibles().some(estado => estado.id_estado === idEstado)) {
+      this.error = 'Selecciona un estado disponible. Aprobar, observar y rechazar requieren la revisión formal del gestor.';
+      return;
+    }
 
     this.guardando = true;
     this.error = '';

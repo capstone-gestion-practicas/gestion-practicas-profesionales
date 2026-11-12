@@ -250,10 +250,9 @@
         <ion-item class="state-select-item">
           <ion-label position="stacked">Nuevo estado</ion-label>
           <ion-select [(ngModel)]="idEstadoSeleccionado" interface="popover" placeholder="Selecciona un estado">
-            @for (estado of estados; track estado.id_estado) {
+            @for (estado of estadosDisponibles(); track estado.id_estado) {
               <ion-select-option
-                [value]="estado.id_estado"
-                [disabled]="estado.nombre === 'FINALIZADA'">
+                [value]="estado.id_estado">
                 {{ estado.nombre }}
               </ion-select-option>
             }

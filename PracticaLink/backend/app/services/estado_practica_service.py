@@ -27,6 +27,10 @@ class InicioRestringidoRequeridoError(Exception):
     pass
 
 
+class RevisionFormalRequeridaError(Exception):
+    pass
+
+
 class PracticaFinalizadaNoModificableError(Exception):
     pass
 
@@ -196,6 +200,13 @@ def actualizar_estado_practica(
     id_usuario: int,
     datos: ActualizarEstadoPracticaRequest,
 ) -> dict:
+    # Resolver por nombre en el catálogo, nunca por IDs fijos ni por el rol visual.
+    destino = db.execute(text("""
+        SELECT nombre FROM public.estado_practica
+        WHERE id_estado = :id_estado AND activo
+    """), {"id_estado": datos.id_estado}).scalar_one_or_none()
+    if destino in {"APROBADA", "OBSERVADA", "RECHAZADA"}:
+        raise RevisionFormalRequeridaError
     resultado = db.execute(text("""
         SELECT public.fn_actualizar_estado_practica(
             :id_practica, :id_usuario, :id_estado, :observacion
@@ -217,6 +228,8 @@ def actualizar_estado_practica(
         raise CierreManualRequeridoError
     if error == "INICIO_RESTRINGIDO_REQUERIDO":
         raise InicioRestringidoRequeridoError
+    if error == "REVISION_FORMAL_REQUERIDA":
+        raise RevisionFormalRequeridaError
     if error == "PRACTICA_FINALIZADA_NO_MODIFICABLE":
         raise PracticaFinalizadaNoModificableError
     if error in {"USUARIO_NO_AUTORIZADO", "GESTOR_NO_ASIGNADO_A_PRACTICA"}:
