@@ -5,7 +5,7 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { Subject, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { InformeFinal } from './informe-final';
-import { EntregaInforme, Informe, InformeService, FORMATOS_INFORME } from './informe.service';
+import { EntregaInforme, Informe, InformeService, FORMATOS_INFORME, tamanoLegible } from './informe.service';
 
 const actual: Informe = { id_practica: 7, estado: 'ENTREGADO', version: 1, id_documento: 9,
   formato: 'PDF', mime_type: 'application/pdf', nombre: 'informe.pdf', tamano: 20, fecha: '2026-11-08', habilitada: true, fecha_habilitada: '2026-11-07' };
@@ -188,6 +188,16 @@ describe('Informe final: sección académica', () => {
       expect(api.entregar.calls.mostRecent().args).toEqual(first);
     });
   }
+  it('muestra la fecha de entrega legible y el tamaño en KB/MB en lugar de bytes crudos', () => {
+    api.consultar.and.returnValue(of({ ...actual, fecha: '2026-11-08T15:30:00Z', tamano: 870_000 }));
+    fixture.componentInstance.cargar(); fixture.detectChanges();
+    const texto = fixture.nativeElement.textContent as string;
+    expect(texto).not.toContain('870000 bytes');
+    expect(texto).not.toContain('2026-11-08T15:30:00Z');
+    expect(texto).toContain(fixture.componentInstance.formatearTamano(870_000));
+    expect(texto).toContain(fixture.componentInstance.formatearFecha('2026-11-08T15:30:00Z'));
+  });
+
   it('descarta respuestas de la práctica anterior y limpia datos al cambiar identificador', () => {
     const pending = new Subject<Informe>(); api.consultar.and.returnValue(pending);
     fixture.componentInstance.cargar();
@@ -195,6 +205,15 @@ describe('Informe final: sección académica', () => {
     expect(pending.observed).toBeFalse(); pending.next(actual);
     expect(fixture.componentInstance.informe()).toBeNull();
     expect(fixture.componentInstance.archivo).toBeNull();
+  });
+});
+
+describe('tamanoLegible', () => {
+  it('muestra bytes, KB redondeados y MB con un decimal en coma chilena', () => {
+    expect(tamanoLegible(null)).toBe('Tamaño no disponible');
+    expect(tamanoLegible(512)).toBe('512 B');
+    expect(tamanoLegible(850 * 1024)).toBe('850 KB');
+    expect(tamanoLegible(Math.round(2.4 * 1024 * 1024))).toBe('2,4 MB');
   });
 });
 

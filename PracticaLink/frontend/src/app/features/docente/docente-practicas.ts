@@ -5,6 +5,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonButton, IonSpinner } from '@ionic/angular';
 import { DocenteService, PracticaDocente } from './docente.service';
+import { formatearFechaCalendario } from '../../core/utils/fechas';
 
 /** Insignia visible del estado del informe, derivada de la evaluación vigente. */
 export interface InsigniaInforme {
@@ -26,6 +27,11 @@ export class DocentePracticas implements OnInit {
   cargando = true;
   error = '';
   esDetalle = false;
+
+  /** dd/MM/yyyy sin desplazamiento de zona horaria; conserva el texto para fechas nulas. */
+  fechaCalendario(fecha: string | null): string {
+    return fecha ? formatearFechaCalendario(fecha) : 'Sin fecha registrada';
+  }
 
   ngOnInit(): void {
     this.cargar();

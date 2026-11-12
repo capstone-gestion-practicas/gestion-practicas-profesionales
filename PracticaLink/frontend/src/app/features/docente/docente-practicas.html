@@ -28,8 +28,8 @@
           <dl class="data-list">
             <div><dt>Estado</dt><dd><span class="badge badge--neutral">{{ item.estado }}</span></dd></div>
             <div><dt>Centro de práctica</dt><dd>{{ item.centro_practica }}</dd></div>
-            <div><dt>Inicio</dt><dd>{{ item.fecha_inicio || 'Sin fecha registrada' }}</dd></div>
-            <div><dt>Término</dt><dd>{{ item.fecha_termino || 'Sin fecha registrada' }}</dd></div>
+            <div><dt>Inicio</dt><dd>{{ fechaCalendario(item.fecha_inicio) }}</dd></div>
+            <div><dt>Término</dt><dd>{{ fechaCalendario(item.fecha_termino) }}</dd></div>
             <div><dt>Cargo o función</dt><dd>{{ item.cargo_funcion || 'Sin información' }}</dd></div>
           </dl>
           <h3>Descripción</h3>
