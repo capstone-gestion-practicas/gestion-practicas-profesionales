@@ -58,6 +58,29 @@ src/app/
 
 Las rutas están declaradas en `app.routes.ts`.
 
+### Cierre funcional del espacio GESTOR
+
+La navegación conserva Inicio, Prácticas, Acompañamiento y Comunicaciones.
+El acceso lateral Prácticas lleva a `/practicas` y conserva el contador de solicitudes;
+las pestañas permiten alternar con `/revisiones` sin duplicar ambos accesos laterales.
+En Acompañamiento el acceso lateral lleva a `/seguimientos`; sus pestañas permiten
+alternar con `/incidencias`. Estados y todas sus operaciones permanecen accesibles.
+En el espacio GESTOR, las altas de seguimiento e incidencia utilizan exclusivamente
+`/practicas/:id/seguimiento/nuevo` y `/practicas/:id/incidencias/nueva`.
+Los enlaces de gestión de incidencias solo se ofrecen para prácticas presentes en
+el listado autorizado ya consultado; no cambian los permisos del servidor.
+El ADMINISTRADOR fuera del espacio GESTOR conserva sus formularios en línea.
+
+Inicio conserva sus indicadores y muestra hasta cinco solicitudes e incidencias.
+El conteo de incidencias incluye ABIERTA, EN_REVISION, PENDIENTE y EN_ATENCION,
+excluyendo RESUELTA y CERRADA. No añade consultas para calcular estos indicadores.
+Los recordatorios del GESTOR se realizan en `/envio-notificaciones`, junto a los
+avisos. El componente `RecordatoriosEstudiantes` reutiliza el envío secuencial,
+la confirmación de lotes y los resultados individuales antes disponibles en Inicio.
+Al salir se detienen los envíos aún no iniciados; cancelar una petición ya enviada
+no garantiza que el servidor no la procese. No hay reintentos automáticos de envíos.
+La interfaz administrativa de recordatorios en Home se conserva.
+
 El inicio prioriza tareas según el rol: gestores ven solicitudes pendientes y
 accesos directos a revisión, estados, seguimientos, incidencias y envío de
 avisos; estudiantes ven el paso que necesitan completar y el estado de su

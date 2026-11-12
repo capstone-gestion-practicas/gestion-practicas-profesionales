@@ -70,6 +70,21 @@ ion-content {
   padding: 10px 0 18px;
 }
 
+app-cierre-practica {
+  margin-top: 18px;
+}
+
+.mensaje-cierre {
+  font-weight: 600;
+}
+
+/* Mismo patrón que «← Volver a solicitudes» en el detalle de revisión. */
+.enlace-volver {
+  --padding-start: 0;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
 .eyebrow {
   font-size: 0.76rem;
   letter-spacing: 0.08em;

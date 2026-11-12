@@ -16,7 +16,8 @@ describe('PracticasListado', () => {
       id_practica: index + 1, estudiante: { id_estudiante: 1, nombre: 'Estudiante sintético' },
       centro_practica: 'Centro sintético', fecha_registro: '2026-10-17T12:30:00Z',
       estado: { id_estado: index + 1, nombre, es_final: index > 4 },
-      fecha_ultimo_cambio_estado: index === 0 ? '2026-07-17T12:30:00Z' : null
+      fecha_ultimo_cambio_estado: index === 0 ? '2026-07-17T12:30:00Z' : null,
+      rut_estudiante: '11.111.111-1', fecha_inicio: null, fecha_termino: null, id_gestor: null, gestor: null
     })), limit: 50, offset: 0, hay_mas: true
   };
 
@@ -209,8 +210,8 @@ describe('PracticasListado', () => {
   it('opens the selected practice detail without passing search data', () => {
     component.rutBusqueda = '12345678-5';
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[];
-    const button = buttons.find(item => item.textContent?.trim() === 'Abrir seguimiento')!;
-    expect(button.getAttribute('aria-label')).toBe('Abrir seguimiento de la práctica 1');
+    const button = buttons.find(item => item.textContent?.trim() === 'Ver detalle de práctica')!;
+    expect(button.getAttribute('aria-label')).toBe('Ver detalle de práctica 1');
     button.click();
     expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas', 1]);
   });

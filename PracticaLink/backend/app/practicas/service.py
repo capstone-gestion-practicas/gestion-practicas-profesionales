@@ -179,27 +179,40 @@ def obtener_practica_del_estudiante(
 def listar_practicas(
     db: Session,
     rut: str | None = None,
+    estado: str | None = None,
     limit: int = 50,
     offset: int = 0,
     id_gestor_asignado: int | None = None,
 ) -> dict:
     # Los filtros van dentro del mismo WHERE antes de LIMIT/OFFSET: paginación y hay_mas
     # reflejan solo las prácticas autorizadas. None = sin restricción por gestor (ADMINISTRADOR).
+    # estado filtra por ep.nombre (p. ej. "EN_CURSO"); un valor bien formado pero inexistente
+    # no es un error, simplemente no coincide con ninguna fila (igual que un RUT sin prácticas).
     condiciones = []
     parametros = {"limit": limit + 1, "offset": offset}
     if rut is not None:
         condiciones.append("e.rut = :rut")
         parametros["rut"] = rut
+    if estado is not None:
+        condiciones.append("ep.nombre = :estado")
+        parametros["estado"] = estado
     if id_gestor_asignado is not None:
         condiciones.append("p.id_gestor = :id_gestor_asignado")
         parametros["id_gestor_asignado"] = id_gestor_asignado
     filtro = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
 
+    # LEFT JOIN usuario g: p.id_gestor es 1:1 opcional (no genera filas adicionales ni
+    # duplicados). CASE explícito porque CONCAT() de PostgreSQL trata NULL como cadena
+    # vacía: sin el CASE, una práctica sin gestor devolvería " " en vez de NULL.
     filas = db.execute(text(f"""
         SELECT p.id_practica, p.fecha_registro,
-               e.id_estudiante, CONCAT(u.nombre, ' ', u.apellido) AS estudiante_nombre,
+               e.id_estudiante, e.rut AS estudiante_rut,
+               CONCAT(u.nombre, ' ', u.apellido) AS estudiante_nombre,
                cp.nombre AS centro_nombre,
                ep.id_estado, ep.nombre AS estado_nombre, ep.es_final,
+               p.fecha_inicio, p.fecha_termino, p.id_gestor,
+               CASE WHEN g.id_usuario IS NULL THEN NULL
+                    ELSE CONCAT(g.nombre, ' ', g.apellido) END AS gestor_nombre,
                (
                    SELECT h.fecha_cambio
                    FROM historial_estado h
@@ -212,6 +225,7 @@ def listar_practicas(
         JOIN usuario u ON u.id_usuario = e.id_usuario
         JOIN centro_practica cp ON cp.id_centro = p.id_centro
         JOIN estado_practica ep ON ep.id_estado = p.id_estado_actual
+        LEFT JOIN usuario g ON g.id_usuario = p.id_gestor
         {filtro}
         ORDER BY p.fecha_registro DESC, p.id_practica DESC
         LIMIT :limit OFFSET :offset
@@ -233,6 +247,11 @@ def listar_practicas(
                     "es_final": fila["es_final"],
                 },
                 "fecha_ultimo_cambio_estado": fila["fecha_ultimo_cambio_estado"],
+                "rut_estudiante": fila["estudiante_rut"],
+                "fecha_inicio": fila["fecha_inicio"],
+                "fecha_termino": fila["fecha_termino"],
+                "id_gestor": fila["id_gestor"],
+                "gestor": fila["gestor_nombre"],
             }
             for fila in filas[:limit]
         ],

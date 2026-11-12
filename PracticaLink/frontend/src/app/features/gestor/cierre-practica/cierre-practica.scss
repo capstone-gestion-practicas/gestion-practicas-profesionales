@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+.cierre {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.cierre h2 {
+  margin: 0;
+  font-size: var(--font-size-section-title);
+}
+
+.cierre p {
+  margin: 0;
+}
+
+.cierre__ayuda,
+.cierre__estado {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+.cierre__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cierre__acciones ion-spinner {
+  width: 16px;
+  height: 16px;
+  margin-right: var(--space-1);
+}
+
+.cierre__error {
+  color: var(--color-danger);
+}
+
+.cierre__exito {
+  color: var(--color-success-on);
+  font-weight: 600;
+}

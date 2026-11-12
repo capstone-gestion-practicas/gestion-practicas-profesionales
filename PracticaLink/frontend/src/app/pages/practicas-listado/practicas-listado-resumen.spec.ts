@@ -22,7 +22,8 @@ function practica(id: number, nombre = 'EN_CURSO') {
     id_practica: id, estudiante: { id_estudiante: 1, nombre: 'Estudiante sintético' },
     centro_practica: 'Centro sintético', fecha_registro: '2026-10-17T12:30:00Z',
     estado: { id_estado: 1, nombre, es_final: nombre === 'FINALIZADA' },
-    fecha_ultimo_cambio_estado: null
+    fecha_ultimo_cambio_estado: null,
+    rut_estudiante: '11.111.111-1', fecha_inicio: null, fecha_termino: null, id_gestor: null, gestor: null
   };
 }
 

@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+.pg-pestanas {
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pg-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pg-pestana {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-body);
+  cursor: pointer;
+}
+
+.pg-pestana:hover {
+  color: var(--color-text);
+}
+
+.pg-pestana:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.pg-pestana--activa {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 700;
+}

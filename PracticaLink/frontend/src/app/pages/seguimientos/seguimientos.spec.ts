@@ -8,6 +8,7 @@ import { SeguimientoResponse, SeguimientosHistorialResponse } from '../../core/m
 import { PracticaService } from '../../core/services/practica.service';
 import { Seguimientos } from './seguimientos';
 import { codigosInternosVisibles } from '../../shared/testing/codigos-internos';
+import { AuthStore } from '../../core/store/auth.store';
 
 describe('Seguimientos (contrato EP05)', () => {
   let fixture: ComponentFixture<Seguimientos>;
@@ -126,5 +127,21 @@ describe('Seguimientos (contrato EP05)', () => {
   it('no muestra códigos internos y usa la etiqueta de acompañamiento', () => {
     expect(codigosInternosVisibles(fixture.nativeElement)).toEqual([]);
     expect(fixture.nativeElement.querySelector('.module-label')?.textContent?.trim()).toBe('ACOMPAÑAMIENTO');
+  });
+  it('GESTOR usa el registro existente y el detalle sin otro formulario ni consulta de historial', () => {
+    TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 21, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['GESTOR'], perfil: null, practica_actual: null });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('ion-textarea')).toBeNull();
+    component.abrirRegistro(practica);
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas', 5, 'seguimiento', 'nuevo']);
+    component.abrirDetalle(practica);
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/practicas', 5]);
+    expect(service.registrarSeguimiento).not.toHaveBeenCalled();
+    expect(service.obtenerSeguimientos).not.toHaveBeenCalled();
+  });
+  it('ADMINISTRADOR conserva formulario e historial en línea', () => {
+    TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 21, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['ADMINISTRADOR'], perfil: null, practica_actual: null });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('ion-textarea')).not.toBeNull();
   });
 });

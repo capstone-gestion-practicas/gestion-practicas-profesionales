@@ -1,5 +1,7 @@
 import { InformeFinal } from '../../features/informe-final/informe-final';
 import { SesionService } from '../../core/session/sesion.service';
+import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
+import { filtrosRetornoPracticas } from '../../core/navigation/retorno-practicas';
 import { IncidenciaEstado } from './incidencia-estado';
 import { IncidenciaHistorialItem } from '../../core/models/incidencia.models';
 import { SeguimientoHistorialItem } from '../../core/models/seguimiento.models';
@@ -10,16 +12,25 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonButton, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
-import { EventoHistorial, PracticaDetalleGestionResponse } from '../../core/models/practica.models';
+import {
+  CerrarPracticaResponse,
+  EventoHistorial,
+  PracticaDetalleGestionResponse
+} from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 
 import { AuthStore } from '../../core/store/auth.store';
+import { CierrePractica } from '../../features/gestor/cierre-practica/cierre-practica';
+import { fechaTerminoCumplida } from '../../features/gestor/cierre-practica/cierre-reglas';
 import { DocenteAsignacion } from '../../features/gestor/docente-asignacion/docente-asignacion';
 import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/utils/fechas';
 
 @Component({
   selector: 'app-practica-detalle', standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion, InformeFinal],
+  imports: [
+    CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion, InformeFinal,
+    CierrePractica
+  ],
   templateUrl: './practica-detalle.html', styleUrl: './practica-detalle.scss'
 })
 export class PracticaDetalle implements OnInit, OnDestroy {
@@ -60,6 +71,8 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   errorInicio = '';
   mensajeInicio = '';
   requiereConsultaEstado = false;
+  /** Confirmación del cierre académico; persiste tras recargar el detalle de la misma práctica. */
+  mensajeCierre = '';
   private operacionInicio?: Subscription;
   private consultaHistorial?: Subscription;
   idPractica = '';
@@ -71,6 +84,49 @@ export class PracticaDetalle implements OnInit, OnDestroy {
   get puedeAsignarDocente(): boolean {
     const roles = this.auth.contexto()?.roles ?? [];
     return roles.includes('GESTOR') && sessionStorage.getItem('practicalink-workspace') !== 'ADMINISTRADOR';
+  }
+
+  /**
+   * Asignación DOCENTE (etapa 3e): mismas restricciones de rol y espacio que antes
+   * (puedeAsignarDocente) y solo en APROBADA o EN_CURSO, los estados en que el servidor la
+   * admite (ESTADO_NO_PERMITIDO en los demás). Es visibilidad: el servidor sigue autorizando.
+   */
+  get muestraAsignacionDocente(): boolean {
+    const estado = this.detalle?.estado.nombre;
+    return this.puedeAsignarDocente && (estado === 'APROBADA' || estado === 'EN_CURSO');
+  }
+
+  /**
+   * Espacio GESTOR efectivo (misma regla que GestorLayout): oculta la barra propia del detalle,
+   * que la cabecera persistente sustituye. Getter, como puedeAsignarDocente, porque la elección
+   * de espacio vive en sessionStorage y no es una señal.
+   */
+  get espacioGestor(): boolean {
+    return muestraEspacioGestor(this.auth.contexto());
+  }
+
+  /**
+   * Visibilidad del cierre académico (etapa 3d): detalle cargado, rol GESTOR, espacio GESTOR,
+   * EN_CURSO no final y término cumplido (fechaTerminoCumplida, misma regla que GestionEstados).
+   * El detalle no expone id_gestor: no se infiere responsabilidad aquí; la consulta académica y
+   * el cierre la exigen en el servidor. Con 401/403/404 detalle es null y no se muestra.
+   */
+  get puedeCerrar(): boolean {
+    const practica = this.detalle;
+    const roles = this.auth.contexto()?.roles ?? [];
+    return practica !== null && roles.includes('GESTOR') && this.espacioGestor
+      && practica.estado.nombre === 'EN_CURSO' && !practica.estado.es_final
+      && fechaTerminoCumplida(practica.fecha_termino);
+  }
+
+  /**
+   * Cierre confirmado por el backend: conserva el mensaje (el componente de cierre desaparece
+   * al pasar a FINALIZADA) y recarga detalle y antecedentes. Ignora confirmaciones de otra práctica.
+   */
+  alCerrarPractica(respuesta: CerrarPracticaResponse): void {
+    if (String(respuesta.id_practica) !== this.idPractica) return;
+    this.mensajeCierre = respuesta.mensaje;
+    this.consultarEstado();
   }
 
   get nombreUsuario(): string {
@@ -104,6 +160,7 @@ export class PracticaDetalle implements OnInit, OnDestroy {
       this.errorInicio = '';
       this.mensajeInicio = '';
       this.requiereConsultaEstado = false;
+      this.mensajeCierre = '';
       this.consultaHistorial?.unsubscribe();
       this.eventos = [];
       this.offsetHistorial = 0;
@@ -452,5 +509,12 @@ export class PracticaDetalle implements OnInit, OnDestroy {
     }
   }
 
-  volver(): void { this.router.navigate(['/practicas']); }
+  volver(): void {
+    const filtros = filtrosRetornoPracticas(this.route.snapshot?.queryParamMap);
+    if (filtros && Object.keys(filtros).length > 0) {
+      void this.router.navigate(['/practicas'], { queryParams: filtros });
+    } else {
+      void this.router.navigate(['/practicas']);
+    }
+  }
 }

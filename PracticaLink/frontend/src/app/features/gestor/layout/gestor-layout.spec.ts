@@ -56,6 +56,9 @@ const rutas: Routes = [
       { path: 'seguimientos', component: PaginaPrueba },
       { path: 'incidencias', component: PaginaPrueba },
       { path: 'envio-notificaciones', component: PaginaPrueba },
+      { path: 'practicas', component: PaginaPrueba },
+      { path: 'practicas/:id/seguimiento/nuevo', component: PaginaPrueba },
+      { path: 'practicas/:id/incidencias/nueva', component: PaginaPrueba },
       { path: 'practicas/:id', component: PaginaPrueba },
       { path: 'notificaciones', component: PaginaPrueba }
     ]
@@ -85,6 +88,15 @@ describe('GestorLayout', () => {
 
   const seccionActiva = (): string | null =>
     elementoRuta().querySelector('.gh-nav__enlace[aria-current="page"]')?.textContent?.trim() ?? null;
+
+  /** Agrupaciones marcadas como activas (debe haber como máximo una). */
+  const gruposActivos = (): string[] =>
+    Array.from(elementoRuta().querySelectorAll('.gh-nav__grupo--activo') as NodeListOf<HTMLElement>)
+      .map(grupo => grupo.dataset['grupo'] ?? '');
+
+  const enlace = (etiqueta: string): HTMLButtonElement =>
+    Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace') as NodeListOf<HTMLButtonElement>)
+      .find(boton => boton.textContent?.trim() === etiqueta) as HTMLButtonElement;
 
   const hojaMasProfunda = (): ActivatedRouteSnapshot => {
     let nodo = router.routerState.snapshot.root;
@@ -156,13 +168,13 @@ describe('GestorLayout', () => {
 
     it('marca la sección activa según la URL, incluido el detalle de solicitud', async () => {
       await irA('/revisiones/5');
-      expect(seccionActiva()).toBe('Solicitudes');
+      expect(seccionActiva()).toBe('Prácticas');
       await irA('/gestion-estados');
       expect(seccionActiva()).toBe('Estados');
       await irA('/seguimientos');
-      expect(seccionActiva()).toBe('Seguimientos');
+      expect(seccionActiva()).toBe('Acompañamiento');
       await irA('/incidencias');
-      expect(seccionActiva()).toBe('Incidencias');
+      expect(seccionActiva()).toBe('Acompañamiento');
     });
 
     it('conserva la misma instancia de cabecera al cambiar de módulo', async () => {
@@ -201,12 +213,75 @@ describe('GestorLayout', () => {
       expect(navController.navigateRoot).toHaveBeenCalledWith(['/login']);
     });
 
-    it('muestra las seis secciones del sidebar con sus etiquetas', async () => {
+    // Sprint final: cada área tiene una entrada y sus pestañas internas. Estados se
+    // conserva dentro de Prácticas con sus operaciones, sin duplicar los accesos secundarios.
+    it('muestra las cuatro agrupaciones y todos los destinos del sidebar', async () => {
       await irA('/revisiones');
+      const grupos = Array.from(elementoRuta().querySelectorAll('.gh-nav__grupo') as NodeListOf<HTMLElement>)
+        .map(grupo => grupo.dataset['grupo']);
+      expect(grupos).toEqual(['inicio', 'practicas', 'acompanamiento', 'comunicaciones']);
+      const titulos = Array.from(elementoRuta().querySelectorAll('.gh-nav__titulo'))
+        .map(titulo => titulo.textContent?.trim());
+      expect(titulos).toEqual(['Prácticas', 'Acompañamiento', 'Comunicaciones']);
       const etiquetas = Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
         .map(boton => boton.textContent?.trim());
-      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
+      expect(etiquetas).toEqual(['Inicio', 'Prácticas', 'Estados', 'Acompañamiento', 'Avisos']);
       expect(elementoRuta().querySelector('.gh-sidebar')).not.toBeNull();
+    });
+
+    it('cada agrupación nombra accesiblemente su lista de destinos', async () => {
+      await irA('/revisiones');
+      for (const id of ['gh-grupo-practicas', 'gh-grupo-acompanamiento', 'gh-grupo-comunicaciones']) {
+        expect(elementoRuta().querySelector(`#${id}`)).withContext(id).not.toBeNull();
+        expect(elementoRuta().querySelector(`ul[aria-labelledby="${id}"]`)).withContext(id).not.toBeNull();
+      }
+    });
+
+    it('marca la agrupación y el destino activos, incluidas las rutas hijas', async () => {
+      const casos: [string, string, string][] = [
+        ['/home', 'inicio', 'Inicio'],
+        ['/revisiones', 'practicas', 'Prácticas'],
+        ['/revisiones/5?estado=OBSERVADA', 'practicas', 'Prácticas'],
+        ['/practicas', 'practicas', 'Prácticas'],
+        ['/practicas/15', 'practicas', 'Prácticas'],
+        ['/practicas/15?vista=incidencias', 'practicas', 'Prácticas'],
+        ['/practicas/15/seguimiento/nuevo', 'practicas', 'Prácticas'],
+        ['/practicas/15/incidencias/nueva', 'practicas', 'Prácticas'],
+        ['/gestion-estados?estado=EN_CURSO', 'practicas', 'Estados'],
+        ['/seguimientos', 'acompanamiento', 'Acompañamiento'],
+        ['/incidencias', 'acompanamiento', 'Acompañamiento'],
+        ['/envio-notificaciones', 'comunicaciones', 'Avisos']
+      ];
+      for (const [url, grupo, destino] of casos) {
+        await irA(url);
+        expect(gruposActivos()).withContext(url).toEqual([grupo]);
+        expect(seccionActiva()).withContext(url).toBe(destino);
+        expect(elementoRuta().querySelectorAll('.gh-nav__enlace[aria-current="page"]').length).withContext(url).toBe(1);
+      }
+    });
+
+    it('el centro de notificaciones activa la campana y ninguna agrupación', async () => {
+      await irA('/notificaciones');
+      expect(gruposActivos()).toEqual([]);
+      expect(seccionActiva()).toBeNull();
+      expect(elementoRuta().querySelector('.gh-campana')?.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('«Prácticas» navega a /practicas con el router', async () => {
+      await irA('/revisiones');
+      enlace('Prácticas').click();
+      await harness.fixture.whenStable();
+      harness.fixture.detectChanges();
+      expect(router.url).toBe('/practicas');
+      expect(seccionActiva()).toBe('Prácticas');
+      expect(gruposActivos()).toEqual(['practicas']);
+    });
+
+    it('el contador de solicitudes permanece en el acceso principal a Prácticas', async () => {
+      await irA('/seguimientos');
+      const contador = elementoRuta().querySelector('[data-grupo="practicas"] .gh-nav__contador') as HTMLElement;
+      expect(contador.textContent?.trim()).toBe('3');
+      expect(contador.closest('.gh-nav__item')?.textContent).toContain('Prácticas');
     });
 
     it('Avisos queda activo en /envio-notificaciones', async () => {
@@ -292,10 +367,23 @@ describe('GestorLayout', () => {
       boton.click();
       harness.fixture.detectChanges();
       (Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
-        .find(item => item.textContent?.trim() === 'Incidencias') as HTMLButtonElement).click();
+        .find(item => item.textContent?.trim() === 'Acompañamiento') as HTMLButtonElement).click();
       await harness.fixture.whenStable();
       harness.fixture.detectChanges();
       expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();
+    });
+
+    it('elegir «Prácticas» desde el menú móvil navega y lo cierra', async () => {
+      await irA('/revisiones');
+      const boton = elementoRuta().querySelector('.gh-menu') as HTMLButtonElement;
+      boton.click();
+      harness.fixture.detectChanges();
+      enlace('Prácticas').click();
+      await harness.fixture.whenStable();
+      harness.fixture.detectChanges();
+      expect(router.url).toBe('/practicas');
+      expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();
+      expect(boton.getAttribute('aria-expanded')).toBe('false');
     });
 
     it('la cabecera no supera el ancho de la ventana (sin scroll horizontal)', async () => {
@@ -348,6 +436,23 @@ describe('GestorLayout', () => {
       await crear(['GESTOR', 'ADMINISTRADOR']);
       await irA('/incidencias');
       expect(cabeceras().length).toBe(0);
+    });
+
+    it('GESTOR + ADMINISTRADOR con espacio GESTOR usa el sidebar agrupado; /gestion-estados queda en Prácticas', async () => {
+      sessionStorage.setItem('practicalink-workspace', 'GESTOR');
+      await crear(['GESTOR', 'ADMINISTRADOR']);
+      await irA('/gestion-estados');
+      expect(cabeceras().length).toBe(1);
+      expect(gruposActivos()).toEqual(['practicas']);
+      expect(seccionActiva()).toBe('Estados');
+    });
+
+    it('GESTOR + ADMINISTRADOR con espacio ADMINISTRADOR conserva la interfaz sin sidebar', async () => {
+      sessionStorage.setItem('practicalink-workspace', 'ADMINISTRADOR');
+      await crear(['GESTOR', 'ADMINISTRADOR']);
+      await irA('/gestion-estados');
+      expect(cabeceras().length).toBe(0);
+      expect(elementoRuta().querySelector('.gh-nav__grupo')).toBeNull();
     });
 
     it('ESTUDIANTE + GESTOR muestra el sidebar con el selector de espacio de estudiante', async () => {

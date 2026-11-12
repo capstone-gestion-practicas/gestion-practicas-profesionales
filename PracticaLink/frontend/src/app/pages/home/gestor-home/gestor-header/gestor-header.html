@@ -6,28 +6,49 @@
     <p class="gh-sidebar__etiqueta">Espacio de gestión</p>
 
     <nav aria-label="Accesos de gestión">
+      <!-- Cuatro agrupaciones; cada destino conserva su URL. aria-current="page" marca el destino
+           concreto y gh-nav__grupo--activo su agrupación (incluidas las rutas hijas). -->
       <ul class="gh-nav">
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'inicio' ? 'page' : null" (click)="irA('/home')"><ion-icon name="home-outline" aria-hidden="true"></ion-icon><span>Inicio</span></button>
+        <li class="gh-nav__grupo" data-grupo="inicio" [class.gh-nav__grupo--activo]="grupoActivo() === 'inicio'">
+          <ul class="gh-nav">
+            <li class="gh-nav__item">
+              <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'inicio' ? 'page' : null" (click)="irA('/home')"><ion-icon name="home-outline" aria-hidden="true"></ion-icon><span>Inicio</span></button>
+            </li>
+          </ul>
         </li>
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'solicitudes' ? 'page' : null" (click)="irA('/revisiones')"><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><span>Solicitudes</span></button>
-          @let porRevisar = solicitudesPorRevisar();
-          @if (porRevisar !== null && porRevisar > 0) {
-            <span class="gh-nav__contador" [attr.aria-label]="porRevisar + ' solicitudes por revisar'">{{ porRevisar }}</span>
-          }
+
+        <li class="gh-nav__grupo" data-grupo="practicas" [class.gh-nav__grupo--activo]="grupoActivo() === 'practicas'">
+          <span class="gh-nav__titulo" id="gh-grupo-practicas">Prácticas</span>
+          <ul class="gh-nav" aria-labelledby="gh-grupo-practicas">
+            <li class="gh-nav__item">
+              <button type="button" class="gh-nav__enlace" [attr.aria-current]="grupoActivo() === 'practicas' && seccionActiva() !== 'estados' ? 'page' : null" (click)="irA('/practicas')"><ion-icon name="folder-open-outline" aria-hidden="true"></ion-icon><span>Prácticas</span></button>
+              @let porRevisar = solicitudesPorRevisar();
+              @if (porRevisar !== null && porRevisar > 0) {
+                <span class="gh-nav__contador" [attr.aria-label]="porRevisar + ' solicitudes por revisar'">{{ porRevisar }}</span>
+              }
+            </li>
+            <li class="gh-nav__item">
+              <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'estados' ? 'page' : null" (click)="irA('/gestion-estados')"><ion-icon name="options-outline" aria-hidden="true"></ion-icon><span>Estados</span></button>
+            </li>
+          </ul>
         </li>
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'estados' ? 'page' : null" (click)="irA('/gestion-estados')"><ion-icon name="options-outline" aria-hidden="true"></ion-icon><span>Estados</span></button>
+
+        <li class="gh-nav__grupo" data-grupo="acompanamiento" [class.gh-nav__grupo--activo]="grupoActivo() === 'acompanamiento'">
+          <span class="gh-nav__titulo" id="gh-grupo-acompanamiento">Acompañamiento</span>
+          <ul class="gh-nav" aria-labelledby="gh-grupo-acompanamiento">
+            <li class="gh-nav__item">
+              <button type="button" class="gh-nav__enlace" [attr.aria-current]="grupoActivo() === 'acompanamiento' ? 'page' : null" (click)="irA('/seguimientos')"><ion-icon name="pulse-outline" aria-hidden="true"></ion-icon><span>Acompañamiento</span></button>
+            </li>
+          </ul>
         </li>
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'seguimientos' ? 'page' : null" (click)="irA('/seguimientos')"><ion-icon name="pulse-outline" aria-hidden="true"></ion-icon><span>Seguimientos</span></button>
-        </li>
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'incidencias' ? 'page' : null" (click)="irA('/incidencias')"><ion-icon name="warning-outline" aria-hidden="true"></ion-icon><span>Incidencias</span></button>
-        </li>
-        <li class="gh-nav__item">
-          <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'avisos' ? 'page' : null" (click)="irA('/envio-notificaciones')"><ion-icon name="paper-plane-outline" aria-hidden="true"></ion-icon><span>Avisos</span></button>
+
+        <li class="gh-nav__grupo" data-grupo="comunicaciones" [class.gh-nav__grupo--activo]="grupoActivo() === 'comunicaciones'">
+          <span class="gh-nav__titulo" id="gh-grupo-comunicaciones">Comunicaciones</span>
+          <ul class="gh-nav" aria-labelledby="gh-grupo-comunicaciones">
+            <li class="gh-nav__item">
+              <button type="button" class="gh-nav__enlace" [attr.aria-current]="seccionActiva() === 'avisos' ? 'page' : null" (click)="irA('/envio-notificaciones')"><ion-icon name="paper-plane-outline" aria-hidden="true"></ion-icon><span>Avisos</span></button>
+            </li>
+          </ul>
         </li>
       </ul>
     </nav>

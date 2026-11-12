@@ -1,7 +1,8 @@
 <ion-content>
   <main class="practicas-wrapper">
+    <app-pestanas-gestor [pestanas]="pestanas" activa="/practicas" etiqueta="Secciones de Prácticas" />
     <header>
-      <div><p class="module-label">EP04 · Seguimiento</p><h1>Seguimiento de prácticas</h1></div>
+      <div><p class="module-label">Gestión de prácticas</p><h1>Prácticas</h1></div>
       @if (mostrarVolver()) {
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
       }
@@ -12,13 +13,26 @@
       <input id="rut-busqueda" name="rutBusqueda" type="text" [(ngModel)]="rutBusqueda"
         autocomplete="off" spellcheck="false" aria-describedby="rut-ayuda" />
       <p id="rut-ayuda">Sin puntos, con guion y dígito verificador.</p>
+      <label for="estado-filtro">Estado</label>
+      <select id="estado-filtro" name="estadoBusqueda" [(ngModel)]="estadoBusqueda" (change)="aplicarEstado()">
+        <option value="">Todos los estados</option>
+        @if (estadoFueraDeCatalogo) {
+          <option [value]="estadoBusqueda">{{ estadoBusqueda }}</option>
+        }
+        @for (opcion of opcionesEstado; track opcion.valor) {
+          <option [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+        }
+      </select>
       <div class="controls">
         <ion-button type="submit">Buscar</ion-button>
-        <ion-button type="button" fill="outline" (click)="limpiar()">Limpiar filtro</ion-button>
+        <ion-button type="button" fill="outline" (click)="limpiar()">Limpiar filtros</ion-button>
       </div>
     </form>
     @if (filtroAplicado) {
       <p class="module-label" role="status">Filtro por estudiante aplicado</p>
+    }
+    @if (filtroEstadoAplicado) {
+      <p class="module-label" role="status">Filtro por estado aplicado: {{ etiquetaEstadoAplicado }}</p>
     }
     @if (puedeVerResumen && resumenEstado === 'error') {
       <div class="resumen-error">
@@ -35,16 +49,22 @@
           <ion-button fill="outline" (click)="reintentar()">Reintentar</ion-button>
         }
       } @else if (items.length === 0) {
-        <p>No se encontraron prácticas.</p>
+        <p>{{ filtroAplicado || filtroEstadoAplicado ? 'No se encontraron prácticas con los filtros aplicados.' : 'No se encontraron prácticas.' }}</p>
       } @else {
         @for (practica of items; track practica.id_practica) {
           <ion-card><ion-card-content>
             <h2>{{ practica.estudiante.nombre }}</h2>
             <dl>
+              <div><dt>RUT</dt><dd>{{ practica.rut_estudiante }}</dd></div>
               <div><dt>Centro de práctica</dt><dd>{{ practica.centro_practica }}</dd></div>
               <div><dt>Estado</dt><dd><app-estado-badge [estado]="practica.estado.nombre"></app-estado-badge></dd></div>
+              <div><dt>Fecha de inicio</dt><dd>{{ formatearFechaCalendario(practica.fecha_inicio) }}</dd></div>
+              <div><dt>Fecha de término</dt><dd>{{ formatearFechaCalendario(practica.fecha_termino) }}</dd></div>
               <div><dt>Fecha de registro</dt><dd>{{ formatearFecha(practica.fecha_registro) }}</dd></div>
               <div><dt>Último cambio de estado</dt><dd>{{ formatearFecha(practica.fecha_ultimo_cambio_estado) }}</dd></div>
+              @if (practica.gestor) {
+                <div><dt>Gestor asignado</dt><dd>{{ practica.gestor }}</dd></div>
+              }
             </dl>
             @if (puedeVerResumen) {
               <div class="resumen-incidencias" aria-live="polite">
@@ -63,8 +83,8 @@
               </div>
             }
             <ion-button expand="block" (click)="verAntecedentes(practica.id_practica)"
-              [attr.aria-label]="'Abrir seguimiento de la práctica ' + practica.id_practica">
-              Abrir seguimiento
+              [attr.aria-label]="'Ver detalle de práctica ' + practica.id_practica">
+              Ver detalle de práctica
             </ion-button>
           </ion-card-content></ion-card>
         }

@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { AuthStore } from '../../core/store/auth.store';
 
 import { environment } from '../../../environments/environment';
 import { Incidencias } from './incidencias';
@@ -43,6 +44,21 @@ describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
     const texto: string = fixture.nativeElement.textContent;
     expect(texto).toContain('Estado: PENDIENTE');
     expect(texto).not.toContain('Actualizar estado');
+  });
+  it('GESTOR centraliza el alta y solo enlaza prácticas autorizadas por el listado existente', () => {
+    TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 1, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['GESTOR'], perfil: null, practica_actual: null });
+    const fixture = TestBed.createComponent(Incidencias);
+    fixture.detectChanges(); cargarListados(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('ion-textarea')).toBeNull();
+    const navegar = spyOn(TestBed.inject(Router), 'navigate').and.returnValue(Promise.resolve(true));
+    fixture.componentInstance.abrirRegistro();
+    expect(navegar).toHaveBeenCalledWith(['/practicas', 15, 'incidencias', 'nueva']);
+    fixture.componentInstance.abrirDetalle(15);
+    expect(navegar).toHaveBeenCalledWith(['/practicas', 15], { queryParams: { vista: 'incidencias' } });
+    navegar.calls.reset();
+    fixture.componentInstance.abrirDetalle(999);
+    expect(navegar).not.toHaveBeenCalled();
+    http.expectNone(r => r.method === 'POST');
   });
 
   it('registra con POST EP06 enviando solo tipo y descripcion', () => {

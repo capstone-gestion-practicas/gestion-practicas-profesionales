@@ -1,5 +1,6 @@
 <ion-content class="incidents-content">
   <ion-grid class="incidents-wrapper"><ion-row><ion-col size="12">
+    <app-pestanas-gestor [pestanas]="pestanas" activa="/incidencias" etiqueta="Secciones de Acompañamiento" />
     <header class="page-heading">
       <div>
         <p class="module-label">ATENCIÓN</p>
@@ -34,16 +35,22 @@
                   <ion-select-option [value]="practica.id_practica">#{{ practica.id_practica }} · {{ practica.estudiante }} · {{ practica.centro_practica }}</ion-select-option>
                 }
               </ion-select>
+              @if (!espacioGestor) {
               <ion-select label="Tipo" labelPlacement="stacked" interface="popover" [(ngModel)]="tipo">
                 @for (item of tipos; track item.codigo) {
                   <ion-select-option [value]="item.codigo">{{ item.nombre }}</ion-select-option>
                 }
               </ion-select>
+              }
             </div>
+            @if (espacioGestor) {
+              <ion-button [disabled]="!puedeRegistrar()" (click)="abrirRegistro()">Registrar incidencia</ion-button>
+            } @else {
             <ion-textarea label="Descripción" labelPlacement="stacked" placeholder="Describe la situación que requiere atención" [autoGrow]="true" [(ngModel)]="descripcion"></ion-textarea>
             <div class="form-actions"><ion-button [disabled]="guardando || !puedeRegistrar()" (click)="registrar()">
               @if (guardando) { <ion-spinner name="crescent"></ion-spinner> } @else { Registrar incidencia }
             </ion-button></div>
+            }
             @if (!puedeRegistrar()) {
               <p class="hint-incidencia">Las incidencias se registran cuando la práctica está en curso.</p>
             }
@@ -75,6 +82,9 @@
                   </div>
                   <p class="incident-state">Estado: <strong>{{ incidencia.estado }}</strong></p>
                   <p class="student-email">El cambio de estado se gestiona desde la ficha de la práctica.</p>
+                  @if (espacioGestor && puedeConsultar(incidencia.id_practica)) {
+                    <ion-button fill="outline" (click)="abrirDetalle(incidencia.id_practica)">Historial y gestión de la incidencia</ion-button>
+                  }
                 </ion-card-content>
               </ion-card>
             }

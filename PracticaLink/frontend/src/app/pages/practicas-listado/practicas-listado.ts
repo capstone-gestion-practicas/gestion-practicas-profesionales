@@ -1,29 +1,39 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { IonButton, IonCard, IonCardContent, IonContent, IonSpinner } from '@ionic/angular';
 import { Subscription } from 'rxjs';
-import { formatearFechaHoraChile } from '../../core/utils/fechas';
-import { EstadoBadge } from '../../shared/components/estado-badge/estado-badge';
+import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/utils/fechas';
+import { EstadoBadge, PRESENTACION_ESTADOS_PRACTICA, presentarEstado } from '../../shared/components/estado-badge/estado-badge';
 
 import { PracticaIncidenciasPendientesItem, PracticaResumen } from '../../core/models/practica.models';
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
+import { PESTANAS_PRACTICAS, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 type EstadoResumen = 'inactivo' | 'cargando' | 'listo' | 'error';
 
 @Component({
   selector: 'app-practicas-listado',
   standalone: true,
-  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner],
+  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner, PestanasGestor],
   templateUrl: './practicas-listado.html',
   styleUrl: './practicas-listado.scss'
 })
 export class PracticasListado implements OnInit, OnDestroy {
+  readonly pestanas = PESTANAS_PRACTICAS;
   rutBusqueda = '';
+  estadoBusqueda = '';
+  private estadoActivo: string | undefined;
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private parametros?: Subscription;
+  private claveActual = '';
+  readonly opcionesEstado = Object.entries(PRESENTACION_ESTADOS_PRACTICA)
+    .map(([valor, presentacion]) => ({ valor, etiqueta: presentacion.etiqueta }));
+  readonly formatearFechaCalendario = formatearFechaCalendario;
   private rutActivo: string | undefined;
   private consulta?: Subscription;
   items: PracticaResumen[] = [];
@@ -35,6 +45,11 @@ export class PracticasListado implements OnInit, OnDestroy {
   errorConsulta = false;
 
   get filtroAplicado(): boolean { return this.rutActivo !== undefined; }
+  get filtroEstadoAplicado(): boolean { return this.estadoActivo !== undefined; }
+  get etiquetaEstadoAplicado(): string { return presentarEstado(this.estadoActivo).etiqueta; }
+  get estadoFueraDeCatalogo(): boolean {
+    return !!this.estadoBusqueda && !this.opcionesEstado.some(opcion => opcion.valor === this.estadoBusqueda);
+  }
 
   // HU017: resumen independiente del listado. Se carga completo una vez (páginas de 100)
   // y se cruza por id_practica; no se emparejan páginas porque los criterios difieren.
@@ -60,11 +75,27 @@ export class PracticasListado implements OnInit, OnDestroy {
               private readonly auth: AuthStore) {}
 
   ngOnInit(): void {
-    this.cargar(0);
+    if (this.route) {
+      this.parametros = this.route.queryParamMap.subscribe(params => {
+        const rut = params.get('rut') ?? '';
+        const estado = (params.get('estado') ?? '').toUpperCase();
+        const valorOffset = params.get('offset') ?? '0';
+        const offset = /^\d+$/.test(valorOffset) && Number.isSafeInteger(Number(valorOffset))
+          ? Math.floor(Number(valorOffset) / this.limit) * this.limit : 0;
+        const clave = JSON.stringify([rut || undefined, estado || undefined, offset]);
+        if (clave === this.claveActual) return;
+        this.rutBusqueda = rut;
+        this.estadoBusqueda = estado;
+        this.aplicarFiltros(offset, false);
+      });
+    } else {
+      this.cargar(0);
+    }
     this.cargarResumen();
   }
 
   ngOnDestroy(): void {
+    this.parametros?.unsubscribe();
     this.consulta?.unsubscribe();
     this.suscripcionResumen?.unsubscribe();
   }
@@ -131,6 +162,17 @@ export class PracticasListado implements OnInit, OnDestroy {
   }
 
   buscar(): void {
+    this.aplicarFiltros(0, true);
+  }
+
+  aplicarEstado(): void {
+    this.buscar();
+  }
+
+  private aplicarFiltros(offset: number, sincronizar: boolean): void {
+    const clave = JSON.stringify([this.rutBusqueda.trim() || undefined,
+      this.estadoBusqueda.toUpperCase() || undefined, offset]);
+    if (this.cargando && clave === this.claveActual) return;
     this.consulta?.unsubscribe();
     this.items = [];
     this.hayMas = false;
@@ -140,36 +182,57 @@ export class PracticasListado implements OnInit, OnDestroy {
     if (rut && !/^[0-9]{7,8}-[0-9Kk]$/.test(rut)) {
       this.offset = 0;
       this.rutActivo = undefined;
+      this.claveActual = '';
       this.error = 'Ingresa el RUT sin puntos, con guion y dígito verificador.';
       return;
     }
     this.rutActivo = rut || undefined;
-    this.cargar(0);
+    if (this.estadoBusqueda && !/^[A-Za-z_]{1,50}$/.test(this.estadoBusqueda)) {
+      this.claveActual = '';
+      this.error = 'El estado no es válido.';
+      return;
+    }
+    this.estadoActivo = this.estadoBusqueda.toUpperCase() || undefined;
+    this.cargar(offset);
+    if (sincronizar) this.sincronizarUrl();
   }
 
   limpiar(): void {
     this.rutBusqueda = '';
     this.rutActivo = undefined;
+    this.estadoBusqueda = '';
+    this.estadoActivo = undefined;
     this.cargar(0);
+    this.sincronizarUrl();
   }
 
   anterior(): void {
-    if (!this.cargando && this.offset > 0) this.cargar(Math.max(0, this.offset - this.limit));
+    if (!this.cargando && this.offset > 0) {
+      this.cargar(Math.max(0, this.offset - this.limit));
+      this.sincronizarUrl();
+    }
   }
 
   siguiente(): void {
-    if (!this.cargando && this.hayMas) this.cargar(this.offset + this.limit);
+    if (!this.cargando && this.hayMas) {
+      this.cargar(this.offset + this.limit);
+      this.sincronizarUrl();
+    }
   }
 
   cargar(offset = this.offset): void {
     this.consulta?.unsubscribe();
     this.offset = offset;
+    this.claveActual = JSON.stringify([this.rutActivo, this.estadoActivo, offset]);
     this.items = [];
     this.hayMas = false;
     this.error = '';
     this.errorConsulta = false;
     this.cargando = true;
-    this.consulta = this.practicas.listar(this.limit, offset, this.rutActivo).subscribe({
+    const solicitud = this.estadoActivo
+      ? this.practicas.listar(this.limit, offset, this.rutActivo, this.estadoActivo)
+      : this.practicas.listar(this.limit, offset, this.rutActivo);
+    this.consulta = solicitud.subscribe({
       next: respuesta => {
         this.items = respuesta.items;
         this.hayMas = respuesta.hay_mas;
@@ -179,7 +242,7 @@ export class PracticasListado implements OnInit, OnDestroy {
         this.cargando = false;
         this.errorConsulta = true;
         this.error = error.status === 422
-          ? 'El RUT no es válido. Revisa el formato y el dígito verificador.'
+          ? 'Los filtros no son válidos. Revisa el estado y el RUT: formato y dígito verificador.'
           : error.status === 401 || error.status === 403
             ? 'No tienes autorización para consultar las prácticas. Revisa tu sesión.'
             : 'No fue posible cargar las prácticas. Intenta nuevamente.';
@@ -191,7 +254,23 @@ export class PracticasListado implements OnInit, OnDestroy {
     return formatearFechaHoraChile(fecha);
   }
 
+  private sincronizarUrl(): void {
+    if (!this.route) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { rut: this.rutActivo, estado: this.estadoActivo, offset: this.offset || undefined }
+    });
+  }
+
   verAntecedentes(idPractica: number): void {
+    if (this.rutActivo || this.estadoActivo || this.offset) {
+      void this.router.navigate(['/practicas', idPractica], {
+        queryParams: {
+          origen: 'practicas', rut: this.rutActivo, estado: this.estadoActivo, offset: this.offset || undefined
+        }
+      });
+      return;
+    }
     this.router.navigate(['/practicas', idPractica]);
   }
 
