@@ -21,6 +21,17 @@ const MENSAJES_ESTADO: Readonly<Record<string, string>> = {
   RECHAZADA: 'Tu práctica fue rechazada. Revisa el historial para conocer las observaciones disponibles.'
 };
 
+/** Responsable real de la siguiente acción, según el estado. No inventa permisos nuevos. */
+const RESPONSABLE_ESTADO: Readonly<Record<string, string>> = {
+  REGISTRADA: 'Responsable de la siguiente acción: coordinación de prácticas.',
+  EN_REVISION: 'Responsable de la siguiente acción: coordinación de prácticas.',
+  OBSERVADA: 'Responsable de la siguiente acción: tú. Responde más abajo.',
+  APROBADA: 'Responsable de la siguiente acción: coordinación de prácticas, para iniciar formalmente tu práctica.',
+  EN_CURSO: 'Responsable de la siguiente acción: tú, cuando corresponda entregar el informe final.',
+  FINALIZADA: 'No queda una acción pendiente: la práctica concluyó.',
+  RECHAZADA: 'No hay una acción automática pendiente; consulta a coordinación si tienes dudas.'
+};
+
 @Component({
   selector: 'app-student-practice',
   standalone: true,
@@ -135,6 +146,11 @@ export class StudentPractice {
   mensajeEstado(estado: string): string {
     return MENSAJES_ESTADO[estado.toUpperCase()]
       ?? 'No pudimos identificar el estado actual de tu práctica. Consulta el historial para más información.';
+  }
+
+  responsableEstado(estado: string): string {
+    return RESPONSABLE_ESTADO[estado.toUpperCase()]
+      ?? 'Consulta el historial para conocer el detalle de este estado.';
   }
 
   ultimaObservacion(): HistorialEstadoPractica | null {

@@ -62,6 +62,53 @@ export class StudentHome {
     }
   });
 
+  /**
+   * Siguiente paso y responsable real según el estado, para los casos sin acción directa
+   * del estudiante (proximaAccion() es null). No inventa responsables ni permisos nuevos.
+   */
+  readonly siguientePasoInfo = computed(() => {
+    const nombre = this.contexto()?.practica_actual?.estado.nombre.toUpperCase();
+    switch (nombre) {
+      case 'REGISTRADA':
+        return {
+          titulo: 'En espera de revisión',
+          detalle: 'Tu solicitud fue registrada y será revisada por coordinación de prácticas.',
+          responsable: 'Responsable de la siguiente acción: coordinación de prácticas.'
+        };
+      case 'EN_REVISION':
+        return {
+          titulo: 'En revisión',
+          detalle: 'Coordinación de prácticas está evaluando tu solicitud.',
+          responsable: 'Responsable de la siguiente acción: coordinación de prácticas.'
+        };
+      case 'APROBADA':
+        return {
+          titulo: 'Aprobada, pendiente de inicio formal',
+          detalle: 'Tu práctica fue aprobada. Coordinación debe iniciarla formalmente para que quede en curso.',
+          responsable: 'Responsable de la siguiente acción: coordinación de prácticas.'
+        };
+      case 'EN_CURSO':
+        return {
+          titulo: 'Tu práctica está en curso',
+          detalle: 'Continúa tu práctica con normalidad. Cuando se habilite, deberás entregar tu informe final en Mi práctica.',
+          responsable: 'Responsable de la siguiente acción: tú, cuando se habilite la entrega del informe final.'
+        };
+      case 'FINALIZADA':
+        return {
+          titulo: 'Práctica finalizada',
+          detalle: 'Tu práctica concluyó.',
+          responsable: 'No queda una acción pendiente.'
+        };
+      case 'RECHAZADA':
+        return {
+          titulo: 'Práctica rechazada',
+          detalle: 'Tu solicitud fue rechazada. Revisa el historial en Mi práctica para conocer el detalle.',
+          responsable: 'No hay una acción automática pendiente; consulta a coordinación si tienes dudas.'
+        };
+      default: return null;
+    }
+  });
+
   /** Duración en semanas calculada solo con las fechas reales de la práctica. */
   readonly duracionSemanas = computed(() => {
     const practica = this.contexto()?.practica_actual;
