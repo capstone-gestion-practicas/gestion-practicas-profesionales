@@ -64,6 +64,7 @@ from app.services.estado_practica_service import (
     EstadoPracticaNoDisponibleError,
     EstadoPracticaOperacionError,
     InicioRestringidoRequeridoError,
+    RevisionFormalRequeridaError,
     PracticaEstadoNoEncontradaError,
     PracticaFinalizadaNoModificableError,
     PracticaNoObservadaError,
@@ -560,6 +561,12 @@ def actualizar_estado_general(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Use el flujo de inicio de práctica con un gestor asignado",
+        ) from error
+    except RevisionFormalRequeridaError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Use el flujo formal de revisión del gestor para aprobar, observar o rechazar la práctica",
         ) from error
     except PracticaFinalizadaNoModificableError as error:
         db.rollback()

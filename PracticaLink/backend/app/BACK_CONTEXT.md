@@ -6,6 +6,19 @@ Este archivo entrega contexto técnico y funcional a desarrolladores y asistente
 
 El backend de PracticaLink expone una API modular para autenticación, prácticas, revisiones, seguimientos, incidencias y notificaciones. FastAPI centraliza las rutas y los módulos organizan esquemas y servicios por responsabilidad. La persistencia usa PostgreSQL alojado en Supabase.
 
+## Seguridad del cambio genérico de estado
+
+`PATCH /practicas/{id}/estado/actualizacion` rechaza con 409 los destinos
+`APROBADA`, `OBSERVADA` y `RECHAZADA`; requieren el flujo formal de revisión
+del GESTOR (`PATCH /revisiones/solicitudes/{id}`). La misma restricción se añade
+a `fn_actualizar_estado_practica` mediante la migración
+`20261113100000_bloquear_revision_estado_generico.sql` (requiere aplicación separada).
+Se conservan los destinos genéricos `REGISTRADA`/`EN_REVISION` y las reglas
+existentes de autorización; no se redefine aquí su contrato. Inicio, evaluación,
+cierre, asignaciones y consultas mantienen sus flujos específicos.
+El escenario `tests/integration/seguridad_transiciones_revision.sql` es solo para
+laboratorio desechable; los tests con mocks no acreditan su ejecución en PostgreSQL.
+
 ## Tecnologías y reglas generales
 
 - Python 3.12.
