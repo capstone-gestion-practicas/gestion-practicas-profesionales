@@ -152,7 +152,34 @@
   --background-hover: var(--color-primary-hover);
   --background-activated: var(--color-primary-hover);
   --color: var(--color-primary-on);
+  --opacity: 1;
+  min-height: 48px;
   margin-top: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+}
+
+.login-submit.button-disabled,
+.login-submit[disabled] {
+  --background: var(--color-neutral-soft);
+  --color: var(--color-neutral-on);
+  --box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.login-submit.login-submit--cargando {
+  --background: var(--color-primary-hover);
+  --color: var(--color-primary-on);
+  --box-shadow: none;
+  opacity: 1;
+  cursor: progress;
+}
+
+.login-submit:focus-visible,
+.login-alternar:focus-visible,
+.login-toggle-password:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .login-submit ion-spinner,
@@ -179,17 +206,22 @@
   text-align: center;
 }
 
-.login-version {
-  margin: var(--space-5) 0 0;
+.login-alternar-ayuda {
+  margin: var(--space-1) 0 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-meta);
   text-align: center;
 }
 
+.login-alternar {
+  min-height: 44px;
+  margin-top: var(--space-3);
+}
+
 /* Breakpoints del proyecto: 600 / 900 / 1200 */
 @media (min-width: 900px) {
   .login-shell {
-    grid-template-columns: minmax(0, 57fr) minmax(0, 43fr);
+    grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
   }
 
   .login-identidad {
@@ -221,6 +253,33 @@
 
   .login-titulo {
     font-size: var(--font-size-section-title);
+  }
+}
+
+@media (max-width: 359px) {
+  .login-identidad {
+    min-height: 148px;
+    padding: var(--space-3);
+  }
+
+  .login-identidad__titulo {
+    font-size: 1.15rem;
+  }
+
+  .login-acceso {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .login-titulo {
+    font-size: 1.35rem;
+  }
+
+  .login-subtitulo {
+    margin-bottom: var(--space-4);
+  }
+
+  .login-alternar-bloque {
+    margin-top: var(--space-4);
   }
 }
 

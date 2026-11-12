@@ -46,7 +46,8 @@
                   name="nombre"
                   [(ngModel)]="nombre"
                   maxlength="100"
-                  autocomplete="given-name">
+                  autocomplete="given-name"
+                  aria-required="true">
                 </ion-input>
               </ion-item>
 
@@ -56,7 +57,8 @@
                   name="apellido"
                   [(ngModel)]="apellido"
                   maxlength="100"
-                  autocomplete="family-name">
+                  autocomplete="family-name"
+                  aria-required="true">
                 </ion-input>
               </ion-item>
             }
@@ -75,6 +77,7 @@
                 spellcheck="false"
                 autocomplete="email"
                 placeholder="nombre@institucion.cl"
+                aria-required="true"
                 [attr.aria-invalid]="errorCorreo ? 'true' : null"
                 [attr.aria-describedby]="errorCorreo ? 'login-correo-error' : null">
               </ion-input>
@@ -90,8 +93,13 @@
                 name="password"
                 [type]="mostrarPassword ? 'text' : 'password'"
                 [(ngModel)]="password"
+                (ionBlur)="passwordTocado = true"
                 maxlength="128"
-                [autocomplete]="modoRegistro ? 'new-password' : 'current-password'">
+                enterkeyhint="go"
+                aria-required="true"
+                [autocomplete]="modoRegistro ? 'new-password' : 'current-password'"
+                [attr.aria-invalid]="errorPassword ? 'true' : null"
+                [attr.aria-describedby]="errorPassword ? 'login-password-error' : null">
               </ion-input>
               <ion-button
                 slot="end"
@@ -99,10 +107,14 @@
                 type="button"
                 class="login-toggle-password"
                 [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="mostrarPassword ? 'true' : 'false'"
                 (click)="alternarMostrarPassword()">
                 <ion-icon slot="icon-only" [name]="mostrarPassword ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
               </ion-button>
             </ion-item>
+            @if (errorPassword) {
+              <p id="login-password-error" class="login-campo-error">{{ errorPassword }}</p>
+            }
 
             @if (modoRegistro) {
               <ion-item>
@@ -111,10 +123,18 @@
                   name="confirmarPassword"
                   type="password"
                   [(ngModel)]="confirmarPassword"
+                  (ionBlur)="confirmarTocado = true"
                   maxlength="128"
-                  autocomplete="new-password">
+                  enterkeyhint="go"
+                  aria-required="true"
+                  autocomplete="new-password"
+                  [attr.aria-invalid]="errorConfirmarPassword ? 'true' : null"
+                  [attr.aria-describedby]="errorConfirmarPassword ? 'login-confirmar-error' : null">
                 </ion-input>
               </ion-item>
+              @if (errorConfirmarPassword) {
+                <p id="login-confirmar-error" class="login-campo-error">{{ errorConfirmarPassword }}</p>
+              }
             }
 
             @if (error) {
@@ -133,6 +153,7 @@
               type="submit"
               expand="block"
               class="login-submit"
+              [class.login-submit--cargando]="cargando"
               [disabled]="cargando || !correo || !password || (modoRegistro && (!nombre || !apellido || !confirmarPassword))">
               @if (cargando) {
                 <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
@@ -143,22 +164,6 @@
             </ion-button>
           </form>
 
-          <div class="login-alternar-bloque">
-            <p class="login-alternar-texto">
-              {{ modoRegistro ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?' }}
-            </p>
-            <ion-button
-              type="button"
-              expand="block"
-              fill="outline"
-              class="login-alternar"
-              [disabled]="cargando"
-              (click)="alternarModo()">
-              {{ modoRegistro ? 'Iniciar sesión' : 'Registrarme' }}
-            </ion-button>
-          </div>
-
-          <p class="login-version">Versión {{ appVersion }} · Build {{ androidVersionCode }}</p>
         </div>
       </section>
 
@@ -172,7 +177,7 @@
   [backdropDismiss]="false">
   <ng-template>
     <section class="release-notes">
-      <p class="release-eyebrow">PracticaLink · Versión {{ appVersion }}</p>
+      <p class="release-eyebrow">PracticaLink · Novedades</p>
       <h2>Novedades de esta versión</h2>
       <p class="release-intro">Estas son las mejoras que encontrarás desde ahora:</p>
       <ul>
