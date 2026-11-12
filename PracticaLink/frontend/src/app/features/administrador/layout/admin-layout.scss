@@ -1,4 +1,5 @@
 .gh-nav__enlace, .gh-cambio { text-decoration: none; }
+.gh-herramientas a[aria-current='page'] { border-color: var(--color-primary); font-weight: 600; }
 a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
 .gh-cuenta__menu { max-width: min(90vw, 100% + 15rem); overflow-wrap: anywhere; }
 .gh-cuenta__menu p, .gh-cuenta__menu a { display: block; padding: var(--space-2) var(--space-3); margin: 0; color: var(--color-text); }

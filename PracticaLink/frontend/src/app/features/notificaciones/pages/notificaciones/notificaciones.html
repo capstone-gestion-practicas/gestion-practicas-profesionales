@@ -1,4 +1,56 @@
-@if (presentacionGestor) {
+@if (presentacionAdministrador) {
+<ion-content class="notif-admin">
+  <main class="notif-admin__cuerpo">
+    <header class="notif-admin__cabecera">
+      <div>
+        <h1>Notificaciones</h1>
+        <p>Avisos y novedades de tus prácticas y comunicaciones institucionales.</p>
+        <p role="status">{{ cargando ? 'Cargando notificaciones…' : error ? 'Cantidad sin leer no disponible.' : servicio.noLeidas() + ' sin leer' }}</p>
+      </div>
+      <button type="button" class="admin-boton" [disabled]="cargando || !!error || actualizando || lecturasAdminEnCurso.size > 0 || servicio.noLeidas() === 0" (click)="marcarTodas()">
+        {{ actualizando ? 'Marcando como leídas…' : 'Marcar todas como leídas' }}
+      </button>
+    </header>
+    <nav class="notif-admin__filtros" aria-label="Filtrar notificaciones">
+      <button type="button" class="admin-boton" [attr.aria-pressed]="filtro === 'todas'" (click)="elegirFiltro('todas')">Todas @if (!cargando && !error) { ({{ totalNotificaciones }}) }</button>
+      <button type="button" class="admin-boton" [attr.aria-pressed]="filtro === 'no_leidas'" (click)="elegirFiltro('no_leidas')">No leídas @if (!cargando && !error) { ({{ totalNoLeidas }}) }</button>
+    </nav>
+    @if (errorLectura) { <p class="notif-admin__error" role="alert">{{ errorLectura }}</p> }
+    <section aria-label="Bandeja personal" [attr.aria-busy]="cargando || actualizando">
+      @if (cargando) {
+        <div class="notif-admin__estado" role="status"><ion-spinner name="crescent" aria-hidden="true" /><p>Cargando tu bandeja…</p></div>
+      } @else if (error) {
+        <div class="notif-admin__estado"><p class="notif-admin__error" role="alert">{{ error }}</p><button type="button" class="admin-boton" (click)="cargar()">Reintentar</button></div>
+      } @else if (visiblesAdministrador.length === 0) {
+        <p class="notif-admin__estado" role="status">{{ notificaciones.length === 0 ? 'No tienes notificaciones todavía.' : 'No tienes notificaciones sin leer en la lista cargada.' }}</p>
+      } @else {
+        <ul class="notif-admin__lista">
+          @for (notificacion of visiblesAdministrador; track notificacion.id_notificacion) {
+            <li>
+              <article class="admin-aviso" [class.admin-aviso--no-leido]="!notificacion.fecha_leida">
+                <button type="button" class="admin-aviso__abrir" [disabled]="actualizando || lecturasAdminEnCurso.has(notificacion.id_notificacion)"
+                  [attr.aria-label]="notificacion.titulo + (notificacion.fecha_leida ? '. Leída. ' : '. No leída. ') + (accionDe(notificacion) ? 'Ver práctica' : 'Leer notificación')"
+                  [attr.aria-describedby]="'aviso-mensaje-' + notificacion.id_notificacion + ' aviso-fecha-' + notificacion.id_notificacion" (click)="abrir(notificacion)">
+                  <ion-icon [name]="presentacion(notificacion).icono" aria-hidden="true" />
+                  <span class="admin-aviso__texto">
+                    <strong>{{ notificacion.titulo }}</strong>
+                    <span [id]="'aviso-mensaje-' + notificacion.id_notificacion">{{ notificacion.mensaje }}</span>
+                    <span class="admin-aviso__meta">
+                      <span>{{ notificacion.fecha_leida ? 'Leída' : 'No leída' }}</span>
+                      <time [id]="'aviso-fecha-' + notificacion.id_notificacion" [attr.datetime]="notificacion.fecha_creacion" [attr.title]="fechaRelativa(notificacion)">{{ fechaExacta(notificacion) || 'Fecha no disponible' }}</time>
+                    </span>
+                    @if (accionDe(notificacion); as accion) { <span class="admin-aviso__destino">{{ accion.etiqueta }} →</span> }
+                  </span>
+                </button>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </main>
+</ion-content>
+} @else if (presentacionGestor) {
 <ion-content class="notif-gestor">
   <div class="notif-gestor__cuerpo">
     <header class="notif-cabecera">

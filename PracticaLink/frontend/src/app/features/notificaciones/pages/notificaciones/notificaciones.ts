@@ -30,6 +30,7 @@ import { Notificacion } from '../../models/notificacion.models';
 import { NotificacionService } from '../../services/notificacion.service';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
+import { muestraEspacioAdministrador } from '../../../../core/navigation/espacio-administrador';
 import { ESPACIO_PAGINA, EspacioPagina } from '../../../../core/navigation/espacio-pagina.token';
 import {
   FILTROS_SECCION,
@@ -59,7 +60,7 @@ export interface GrupoNotificaciones {
   imports: [CommonModule, IonBadge, IonButton, IonCard, IonCardContent,
     IonContent, IonGrid, IonRow, IonCol, IonIcon, IonSpinner, RouterLink],
   templateUrl: './notificaciones.html',
-  styleUrl: './notificaciones.scss'
+  styleUrls: ['./notificaciones.scss', './notificaciones-admin.scss']
 })
 export class Notificaciones implements OnInit {
   notificaciones: Notificacion[] = [];
@@ -68,6 +69,9 @@ export class Notificaciones implements OnInit {
   actualizando = false;
   mensajePush = '';
   filtro: FiltroGestor = 'todas';
+  errorLectura = '';
+  activandoPushAdmin = false;
+  readonly lecturasAdminEnCurso = new Set<number>();
   /** Clave de «Ahora no» leída una vez; localStorage puede no estar disponible. */
   private avisoPushOculto = this.leerAvisoOculto();
 
@@ -99,6 +103,28 @@ export class Notificaciones implements OnInit {
     return this.presentacionEstudiante && this.filtro === 'no_leidas'
       ? this.notificaciones.filter(item => !item.fecha_leida)
       : this.notificaciones;
+  }
+
+  get presentacionAdministrador(): boolean {
+    return !this.presentacionEstudiante && muestraEspacioAdministrador(this.authStore.obtenerContextoActual());
+  }
+
+  get visiblesAdministrador(): Notificacion[] {
+    const items = this.filtro === 'no_leidas' ? this.notificaciones.filter(item => !item.fecha_leida) : this.notificaciones;
+    return [...items].sort((a, b) => Date.parse(b.fecha_creacion) - Date.parse(a.fecha_creacion));
+  }
+
+  /** El servicio existente registra push nativo; no hay suscripción Web Push. */
+  get pushAndroidDisponible(): boolean {
+    return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+  }
+
+  async activarPushAdministrador(): Promise<void> {
+    if (!this.pushAndroidDisponible || this.activandoPushAdmin
+      || ['registrando', 'registrado'].includes(this.servicio.estadoRegistroPush())) return;
+    this.activandoPushAdmin = true;
+    try { await this.habilitarPush(); }
+    finally { this.activandoPushAdmin = false; }
   }
 
   /** Presentación V3 compartida por el espacio del estudiante y el del docente. Lo define la ruta, no la URL. */
@@ -172,6 +198,10 @@ export class Notificaciones implements OnInit {
 
   /** Acción según el tipo: comandos de ruta de la entidad, o null si no hay entidad. */
   accionDe(notificacion: Notificacion): { etiqueta: string; comandos: unknown[] } | null {
+    if (this.presentacionAdministrador) {
+      return notificacion.id_practica !== null && Number.isSafeInteger(notificacion.id_practica) && notificacion.id_practica > 0
+        ? { etiqueta: 'Ver práctica', comandos: ['/practicas', notificacion.id_practica] } : null;
+    }
     const accion = presentarNotificacion(notificacion.tipo).accion;
     if (!accion || notificacion.id_practica === null) return null;
     return { etiqueta: accion.etiqueta, comandos: this.rutaDeAccion(notificacion.id_practica, accion.ruta) };
@@ -229,6 +259,7 @@ export class Notificaciones implements OnInit {
   cargar(): void {
     this.cargando = true;
     this.error = '';
+    this.errorLectura = '';
     this.servicio.listar().subscribe({
       next: respuesta => {
         this.notificaciones = respuesta.notificaciones;
@@ -243,7 +274,9 @@ export class Notificaciones implements OnInit {
   }
 
   marcarTodas(): void {
+    if (this.presentacionAdministrador && (this.cargando || !!this.error || this.lecturasAdminEnCurso.size > 0)) return;
     if (this.actualizando || this.servicio.noLeidas() === 0) return;
+    this.errorLectura = '';
     this.actualizando = true;
     this.servicio.marcarTodasLeidas().subscribe({
       next: () => {
@@ -254,7 +287,10 @@ export class Notificaciones implements OnInit {
         this.servicio.noLeidas.set(0);
         this.actualizando = false;
       },
-      error: () => { this.actualizando = false; }
+      error: () => {
+        this.actualizando = false;
+        if (this.presentacionAdministrador) this.errorLectura = 'No fue posible marcar las notificaciones como leídas. Intenta nuevamente.';
+      }
     });
   }
 
@@ -271,6 +307,10 @@ export class Notificaciones implements OnInit {
   }
 
   abrir(notificacion: Notificacion): void {
+    if (this.presentacionAdministrador) {
+      this.abrirAdministrador(notificacion);
+      return;
+    }
     const irADestino = () => {
       if (this.espacio === 'docente') {
         if (notificacion.id_practica !== null) {
@@ -309,7 +349,31 @@ export class Notificaciones implements OnInit {
   }
 
   mostrarVolver(): boolean {
-    return !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
+    return !this.presentacionAdministrador && !esEspacioGestorDedicado(this.authStore.obtenerContextoActual());
+  }
+
+  private abrirAdministrador(notificacion: Notificacion): void {
+    if (this.actualizando || this.lecturasAdminEnCurso.has(notificacion.id_notificacion)) return;
+    const navegar = () => {
+      const accion = this.accionDe(notificacion);
+      if (accion) void this.router.navigate(accion.comandos);
+    };
+    if (notificacion.fecha_leida) { navegar(); return; }
+    this.errorLectura = '';
+    this.lecturasAdminEnCurso.add(notificacion.id_notificacion);
+    this.servicio.marcarLeida(notificacion.id_notificacion).subscribe({
+      next: () => {
+        notificacion.fecha_leida = new Date().toISOString();
+        this.servicio.noLeidas.update(actual => Math.max(0, actual - 1));
+        this.lecturasAdminEnCurso.delete(notificacion.id_notificacion);
+        navegar();
+      },
+      error: () => {
+        this.lecturasAdminEnCurso.delete(notificacion.id_notificacion);
+        this.errorLectura = 'No fue posible marcar la notificación como leída. Puedes volver a intentarlo.';
+        navegar();
+      }
+    });
   }
 
   volver(): void {

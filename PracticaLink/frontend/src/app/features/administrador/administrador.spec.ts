@@ -80,6 +80,8 @@ describe('Administración · navegación y separación de responsabilidades', ()
     auth.setContexto(contexto(['ADMINISTRADOR', 'GESTOR']));
     harness = await RouterTestingHarness.create('/home');
     const movil = nodo().querySelector('.gh-menu') as HTMLButtonElement;
+    expect(nodo().textContent).not.toContain('Cambiar espacio');
+    expect(nodo().querySelector('.gh-herramientas > a[href="/espacios"]')).toBeNull();
     movil.click(); harness.detectChanges();
     expect(movil.getAttribute('aria-expanded')).toBe('true');
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); harness.detectChanges();
@@ -92,6 +94,11 @@ describe('Administración · navegación y separación de responsabilidades', ()
     expect(bandeja.textContent).toContain('(3)');
     bandeja.click(); await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/notificaciones');
+    harness.detectChanges();
+    expect(nodo().querySelector('.gh-nav__enlace[aria-current="page"]')).toBeNull();
+    expect(nodo().querySelector('a[href="/notificaciones"]')?.getAttribute('aria-current')).toBe('page');
+    (nodo().querySelector('.gh-cuenta__alternar') as HTMLButtonElement).click(); harness.detectChanges();
+    expect(nodo().querySelectorAll('a[href="/espacios"]').length).toBe(1);
     (nodo().querySelector('a[href="/espacios"]') as HTMLAnchorElement).click(); await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/espacios');
   });
@@ -105,6 +112,11 @@ describe('Administración · navegación y separación de responsabilidades', ()
     sessionStorage.setItem('practicalink-workspace', 'GESTOR');
     expect(muestraEspacioAdministrador(contexto(['GESTOR', 'ADMINISTRADOR']))).toBeFalse();
     expect(muestraEspacioAdministrador(contexto(['ADMINISTRADOR']))).toBeTrue();
+  });
+
+  it('la bandeja personal no selecciona Comunicaciones, pero el envío institucional sí', () => {
+    expect(seccionAdmin('/notificaciones?filtro=no_leidas')).toBeNull();
+    expect(seccionAdmin('/envio-notificaciones')).toBe('Comunicaciones');
   });
 
   it('multirrol puede regresar desde GESTOR al selector sin cambiar la interfaz del gestor exclusivo', async () => {

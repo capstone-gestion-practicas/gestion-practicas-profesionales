@@ -1,0 +1,23 @@
+.notif-admin { --background: var(--color-bg); }
+.notif-admin__cuerpo { max-width: 900px; margin: auto; padding: var(--space-5); color: var(--color-text); }
+.notif-admin__cabecera { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+.notif-admin h1 { margin: 0; font-size: var(--font-size-page-title); }
+.notif-admin__cabecera p { margin-block: var(--space-2); color: var(--color-text-muted); }
+.notif-admin__filtros { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.admin-boton { min-height: 44px; padding: var(--space-2) var(--space-4); font: inherit; font-weight: 600; color: var(--color-primary); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; }
+.admin-boton[aria-pressed='true'] { background: var(--color-primary); color: var(--color-primary-on); border-color: var(--color-primary); }
+.admin-boton:hover:not(:disabled), .admin-aviso__abrir:hover:not(:disabled) { background: var(--color-surface-muted); color: var(--color-text); }
+.admin-boton:disabled, .admin-aviso__abrir:disabled { opacity: .6; cursor: wait; }
+.notif-admin button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.notif-admin__lista { display: grid; gap: var(--space-3); list-style: none; padding: 0; margin: 0; }
+.admin-aviso { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow-wrap: anywhere; }
+.admin-aviso--no-leido { background: var(--color-surface-muted); border-color: var(--color-primary); }
+.admin-aviso__abrir { display: flex; align-items: start; gap: var(--space-3); width: 100%; min-height: 44px; padding: var(--space-4); color: inherit; background: transparent; font: inherit; border: 0; border-radius: inherit; text-align: left; cursor: pointer; }
+.admin-aviso__abrir ion-icon { flex: none; font-size: var(--font-size-section-title); color: var(--color-primary); margin-top: var(--space-1); }
+.admin-aviso__texto { display: grid; min-width: 0; gap: var(--space-2); }
+.admin-aviso__meta { display: flex; flex-wrap: wrap; gap: var(--space-3); color: var(--color-text-muted); font-size: var(--font-size-small); }
+.admin-aviso--no-leido .admin-aviso__meta > span { color: var(--color-primary); font-weight: 700; }
+.admin-aviso__destino { color: var(--color-primary); font-size: var(--font-size-small); font-weight: 600; }
+.notif-admin__estado { padding: var(--space-6); text-align: center; background: var(--color-surface); border-radius: var(--radius-md); }
+.notif-admin__error { color: var(--color-danger); }
+@media (max-width: 600px) { .notif-admin__cuerpo { padding: var(--space-3); } .notif-admin__cabecera > button { width: 100%; } }
