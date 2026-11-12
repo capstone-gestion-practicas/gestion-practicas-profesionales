@@ -219,6 +219,7 @@
         <ion-card button (click)="abrir(notificacion)" [class.unread]="!notificacion.fecha_leida">
           <ion-card-content>
             <div class="notification-row">
+              <span class="notification-icon" [attr.aria-hidden]="true"><ion-icon [name]="presentacion(notificacion).icono"></ion-icon></span>
               <div>
                 <div class="notification-title">
                   <h2>{{ notificacion.titulo }}</h2>

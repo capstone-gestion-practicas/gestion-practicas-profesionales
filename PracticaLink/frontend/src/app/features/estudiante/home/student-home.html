@@ -72,12 +72,20 @@
           @case ('observacion') {
             <h2 id="next-title">Responde la observación</h2>
             <p>Revisa las observaciones recibidas y responde en el detalle de tu práctica.</p>
+            <p class="student-home__responsable">Responsable de la siguiente acción: tú.</p>
             <a class="student-home__action" routerLink="/estudiante/mi-practica">Ir a Mi práctica</a>
           }
           @default {
-            <h2 id="next-title">Por ahora, nada pendiente de tu parte</h2>
-            <p>Puedes revisar el detalle de tu práctica cuando lo necesites.</p>
-            <a class="student-home__action" routerLink="/estudiante/mi-practica">Revisar mi práctica</a>
+            @if (siguientePasoInfo(); as info) {
+              <h2 id="next-title">{{ info.titulo }}</h2>
+              <p>{{ info.detalle }}</p>
+              <p class="student-home__responsable">{{ info.responsable }}</p>
+              <a class="student-home__action" routerLink="/estudiante/mi-practica">Revisar mi práctica</a>
+            } @else {
+              <h2 id="next-title">Por ahora, nada pendiente de tu parte</h2>
+              <p>Puedes revisar el detalle de tu práctica cuando lo necesites.</p>
+              <a class="student-home__action" routerLink="/estudiante/mi-practica">Revisar mi práctica</a>
+            }
           }
         }
       </section>

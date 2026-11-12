@@ -146,6 +146,14 @@ describe('Notificaciones: presentación por espacio', () => {
       expect(texto()).toContain('Cambio de estado');
       expect(texto()).toContain('Nueva');
     });
+
+    it('muestra un icono según el tipo de evento en cada tarjeta', async () => {
+      configurar('estudiante', of({ notificaciones: [notificacion], no_leidas: 1 } as NotificacionesResumen));
+      await renderizar();
+      const icono = fixture.nativeElement.querySelector('.notification-icon ion-icon') as HTMLIonIconElement | null;
+      expect(icono).not.toBeNull();
+      expect(icono?.name).toBe('swap-horizontal-outline');
+    });
   });
 
   describe('ruta original /notificaciones (gestor y administrador)', () => {

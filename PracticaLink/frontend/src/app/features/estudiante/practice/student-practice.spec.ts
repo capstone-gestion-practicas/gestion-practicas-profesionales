@@ -232,6 +232,38 @@ describe('StudentPractice', () => {
     expect(component.errorEnvio()).toBe('');
   });
 
+  it('muestra el estado actual, su significado y el responsable real por cada estado', () => {
+    configurar();
+    const casos: ReadonlyArray<readonly [string, string]> = [
+      ['REGISTRADA', 'coordinación de prácticas'],
+      ['EN_REVISION', 'coordinación de prácticas'],
+      ['OBSERVADA', 'tú. Responde más abajo'],
+      ['APROBADA', 'coordinación de prácticas'],
+      ['EN_CURSO', 'tú, cuando corresponda entregar'],
+      ['FINALIZADA', 'No queda una acción pendiente'],
+      ['RECHAZADA', 'No hay una acción automática pendiente']
+    ];
+    for (const [estado, responsableEsperado] of casos) {
+      expect(component.responsableEstado(estado)).toContain(responsableEsperado);
+    }
+    expect(component.responsableEstado('ESTADO_NUEVO')).toContain('Consulta el historial');
+    const texto = fixture.nativeElement.textContent as string;
+    expect(texto).toContain('Estado actual y siguiente acción');
+    expect(texto).toContain(component.responsableEstado('OBSERVADA'));
+  });
+
+  it('presenta el bloque de estado antes del resumen, la empresa, el historial y el informe final', () => {
+    configurar();
+    const encabezados = Array.from(fixture.nativeElement.querySelectorAll('h2') as NodeListOf<HTMLElement>)
+      .map(h2 => h2.textContent?.trim());
+    const indice = (texto: string): number => encabezados.findIndex(item => item === texto);
+    expect(indice('Estado actual y siguiente acción')).toBeGreaterThanOrEqual(0);
+    expect(indice('Estado actual y siguiente acción')).toBeLessThan(indice('Empresa de prueba'));
+    expect(indice('Empresa de prueba')).toBeLessThan(indice('Funciones y descripción'));
+    expect(indice('Funciones y descripción')).toBeLessThan(indice('Historial de estados'));
+    expect(indice('Historial de estados')).toBeLessThan(indice('Informe final'));
+  });
+
   it('solo presenta el formulario de respuesta para OBSERVADA', () => {
     configurar({
       ...contextoBase,

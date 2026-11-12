@@ -33,7 +33,41 @@
       <button class="student-practice__action" type="button" (click)="reintentarDetalle()">Reintentar</button>
     </section>
   } @else if (detalle(); as practica) {
-    <app-informe-final [idPractica]="practica.id_practica" [estudiante]="true" />
+    <!-- 1. Estado actual y siguiente acción -->
+    <section class="student-card student-practice__estado-actual" aria-labelledby="estado-actual-title">
+      <div class="student-card__heading"><h2 id="estado-actual-title">Estado actual y siguiente acción</h2></div>
+      <div class="student-practice__body">
+        <div class="student-practice__estado">
+          <app-estado-badge [estado]="practica.estado.nombre" />
+          <p class="student-practice__status-message">{{ mensajeEstado(practica.estado.nombre) }}</p>
+          <p class="student-practice__status-message">{{ responsableEstado(practica.estado.nombre) }}</p>
+        </div>
+      </div>
+    </section>
+
+    @if (esObservada) {
+      <div class="student-card student-practice__details">
+        <section class="student-practice__response" aria-labelledby="response-title">
+          <h3 id="response-title">Respuesta a observaciones</h3>
+          @if (ultimaObservacion(); as ultima) {
+            <p class="student-practice__observation">{{ ultima.observacion }}</p>
+          } @else {
+            <p class="student-practice__muted">No hay una observación registrada en el historial. Puedes responder igualmente.</p>
+          }
+          <label for="observation-response">Indica qué corregiste o responde a lo solicitado</label>
+          <textarea id="observation-response" [(ngModel)]="respuestaObservacion" maxlength="500" rows="4" [disabled]="enviandoRespuesta()"></textarea>
+          <p class="student-practice__counter">{{ respuestaObservacion.length }}/500</p>
+          @if (errorEnvio()) { <p class="student-practice__error" role="alert">{{ errorEnvio() }}</p> }
+          @if (mensajeExito()) { <p class="student-practice__success" role="status">{{ mensajeExito() }}</p> }
+          @if (errorActualizacion()) { <p class="student-practice__error" role="alert">{{ errorActualizacion() }}</p> }
+          <button class="student-practice__action" type="button" [disabled]="enviandoRespuesta() || !respuestaObservacion.trim() || respuestaObservacion.length > 500" (click)="responderObservacion()">
+            {{ enviandoRespuesta() ? 'Enviando…' : 'Enviar respuesta y volver a revisión' }}
+          </button>
+        </section>
+      </div>
+    }
+
+    <!-- 2. Resumen -->
     <div class="student-practice__metricas">
       @if (fechaCalendario(practica.fecha_inicio); as fechaInicio) { <article class="student-card student-practice__metrica"><span>Inicio</span><strong>{{ fechaInicio }}</strong></article> }
       @if (fechaCalendario(practica.fecha_termino); as fechaTermino) { <article class="student-card student-practice__metrica"><span>Término</span><strong>{{ fechaTermino }}</strong></article> }
@@ -44,16 +78,13 @@
 
     <div class="student-practice__grid">
       <div class="student-practice__columna">
+        <!-- 3. Antecedentes de empresa -->
         <section class="student-card student-practice__company" aria-labelledby="company-title">
           <div class="student-card__heading">
             <p class="student-practice__eyebrow">Empresa</p>
             <h2 id="company-title">{{ practica.centro_practica.nombre }}</h2>
           </div>
           <div class="student-practice__body">
-            <div class="student-practice__estado">
-              <app-estado-badge [estado]="practica.estado.nombre" />
-              <p class="student-practice__status-message">{{ mensajeEstado(practica.estado.nombre) }}</p>
-            </div>
             <dl class="student-practice__facts">
               @if (practica.centro_practica.rut_empresa) { <div><dt>RUT de empresa</dt><dd>{{ practica.centro_practica.rut_empresa }}</dd></div> }
               @if (practica.centro_practica.direccion) { <div><dt>Dirección</dt><dd>{{ practica.centro_practica.direccion }}</dd></div> }
@@ -65,6 +96,7 @@
           </div>
         </section>
 
+        <!-- 4. Funciones y descripción -->
         <section class="student-card student-practice__funciones" aria-labelledby="funciones-title">
           <div class="student-card__heading"><h2 id="funciones-title">Funciones y descripción</h2></div>
           <div class="student-practice__body">
@@ -76,6 +108,7 @@
       </div>
 
       <div class="student-practice__columna">
+        <!-- 5. Historial de estados -->
     <section class="student-card student-practice__history" aria-labelledby="history-title">
       <div class="student-practice__section-heading"><div><p class="student-practice__eyebrow">Trazabilidad</p><h2 id="history-title">Historial de estados</h2></div></div>
       @if (cargandoHistorial()) {
@@ -101,26 +134,17 @@
       </div>
     </div>
 
-    @if (esObservada) {
-      <div class="student-card student-practice__details">
-        <section class="student-practice__response" aria-labelledby="response-title">
-          <h3 id="response-title">Respuesta a observaciones</h3>
-          @if (ultimaObservacion(); as ultima) {
-            <p class="student-practice__observation">{{ ultima.observacion }}</p>
-          } @else {
-            <p class="student-practice__muted">No hay una observación registrada en el historial. Puedes responder igualmente.</p>
-          }
-          <label for="observation-response">Indica qué corregiste o responde a lo solicitado</label>
-          <textarea id="observation-response" [(ngModel)]="respuestaObservacion" maxlength="500" rows="4" [disabled]="enviandoRespuesta()"></textarea>
-          <p class="student-practice__counter">{{ respuestaObservacion.length }}/500</p>
-          @if (errorEnvio()) { <p class="student-practice__error" role="alert">{{ errorEnvio() }}</p> }
-          @if (mensajeExito()) { <p class="student-practice__success" role="status">{{ mensajeExito() }}</p> }
-          @if (errorActualizacion()) { <p class="student-practice__error" role="alert">{{ errorActualizacion() }}</p> }
-          <button class="student-practice__action" type="button" [disabled]="enviandoRespuesta() || !respuestaObservacion.trim() || respuestaObservacion.length > 500" (click)="responderObservacion()">
-            {{ enviandoRespuesta() ? 'Enviando…' : 'Enviar respuesta y volver a revisión' }}
-          </button>
-        </section>
+    <!-- 6. Informe final y documentos -->
+    <section class="student-card student-practice__informe-intro" aria-labelledby="informe-intro-title">
+      <div class="student-card__heading"><h2 id="informe-intro-title">Informe final</h2></div>
+      <div class="student-practice__body">
+        <p class="student-practice__muted">
+          Entrega el informe final cuando tu práctica esté EN_CURSO, haya alcanzado su fecha de término y tengas
+          docente asignado. Mientras no corresponda, la sección siguiente lo indicará. Puedes consultar el estado
+          de la entrega, descargar el informe vigente y revisar si tiene una evaluación pendiente o realizada.
+        </p>
       </div>
-    }
+    </section>
+    <app-informe-final [idPractica]="practica.id_practica" [estudiante]="true" />
   }
 </section>

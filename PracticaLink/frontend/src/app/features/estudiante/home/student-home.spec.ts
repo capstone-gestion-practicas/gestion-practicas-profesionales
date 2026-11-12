@@ -163,4 +163,42 @@ describe('StudentHome', () => {
     expect(fixture.componentInstance.lineaDeEtapas()).toBeNull();
     expect(fixture.nativeElement.querySelector('.student-home__etapas')).toBeNull();
   });
+
+  it('indica siguiente paso y responsable real para cada estado sin acción directa del estudiante', () => {
+    crear();
+    const casos: ReadonlyArray<readonly [string, string]> = [
+      ['REGISTRADA', 'coordinación de prácticas'],
+      ['EN_REVISION', 'coordinación de prácticas'],
+      ['APROBADA', 'coordinación de prácticas'],
+      ['EN_CURSO', 'tú, cuando se habilite'],
+      ['FINALIZADA', 'No queda una acción pendiente'],
+      ['RECHAZADA', 'No hay una acción automática pendiente']
+    ];
+    for (const [nombre, responsableEsperado] of casos) {
+      store.setContexto({
+        ...contextoBase,
+        practica_actual: {
+          id_practica: 1, estado: { id_estado: 1, nombre, es_final: false },
+          centro_practica: { id_centro: 3, nombre: 'Centro' },
+          fecha_inicio: null, fecha_termino: null, horas: null, horas_semanales: null, cargo_funcion: null
+        }
+      });
+      fixture.detectChanges();
+      const info = fixture.componentInstance.siguientePasoInfo();
+      expect(info).withContext(nombre).not.toBeNull();
+      expect(info?.responsable).withContext(nombre).toContain(responsableEsperado);
+      expect(fixture.nativeElement.textContent).withContext(nombre).toContain(responsableEsperado);
+    }
+  });
+
+  it('OBSERVADA indica que el responsable de la siguiente acción es el propio estudiante', () => {
+    crear({ ...contextoBase, practica_actual: { id_practica: 1, estado: { id_estado: 2, nombre: 'OBSERVADA', es_final: false }, centro_practica: { id_centro: 3, nombre: 'Centro' }, fecha_inicio: null, fecha_termino: null, horas: null, horas_semanales: null, cargo_funcion: null } });
+    expect(fixture.nativeElement.textContent).toContain('Responsable de la siguiente acción: tú.');
+  });
+
+  it('un estado desconocido no inventa responsable ni acción', () => {
+    crear({ ...contextoBase, practica_actual: { id_practica: 1, estado: { id_estado: 99, nombre: 'ESTADO_NUEVO', es_final: false }, centro_practica: { id_centro: 3, nombre: 'Centro' }, fecha_inicio: null, fecha_termino: null, horas: null, horas_semanales: null, cargo_funcion: null } });
+    expect(fixture.componentInstance.siguientePasoInfo()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Por ahora, nada pendiente de tu parte');
+  });
 });

@@ -10,6 +10,7 @@ ion-card { margin:0 0 12px; cursor:pointer; }
 .send-success { color:var(--ion-color-primary); font-weight:700; }
 ion-card.unread { border-inline-start:4px solid var(--ion-color-primary); }
 .notification-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.notification-icon { flex:0 0 22px; color:var(--ion-color-primary); font-size:20px; }
 .notification-title { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
 .notification-title h2 { margin:0; font-size:1.05rem; }
 .notification-row p { margin:8px 0; color:var(--ink-muted); }
@@ -87,7 +88,8 @@ ion-card.unread { border-inline-start:4px solid var(--ion-color-primary); }
   --color: var(--student-navy);
 }
 
-.notifications-content--estudiante .arrow {
+.notifications-content--estudiante .arrow,
+.notifications-content--estudiante .notification-icon {
   color: var(--accent);
 }
 
