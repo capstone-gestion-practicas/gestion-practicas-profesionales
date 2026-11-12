@@ -14,7 +14,8 @@ import { PracticaDetalle } from './practica-detalle';
 /**
  * Etapa 3a: la barra propia del detalle (miga «PracticaLink · Detalle de práctica» y avatar)
  * se oculta en el espacio GESTOR, donde GestorLayout ya muestra su cabecera, y se conserva
- * para el ADMINISTRADOR. El regreso al listado queda disponible para todos.
+ * también se oculta para ADMINISTRADOR, que ahora tiene layout persistente propio.
+ * El regreso al listado queda disponible para todos.
  */
 describe('PracticaDetalle · cabecera y regreso al listado (etapa 3a)', () => {
   let fixture: ComponentFixture<PracticaDetalle>;
@@ -73,10 +74,10 @@ describe('PracticaDetalle · cabecera y regreso al listado (etapa 3a)', () => {
     ['GESTOR dedicado', ['GESTOR'], null, false],
     ['ESTUDIANTE + GESTOR', ['ESTUDIANTE', 'GESTOR'], null, false],
     ['GESTOR + ADMINISTRADOR en espacio GESTOR', ['GESTOR', 'ADMINISTRADOR'], 'GESTOR', false],
-    ['ADMINISTRADOR', ['ADMINISTRADOR'], null, true],
-    ['ADMINISTRADOR con espacio GESTOR guardado', ['ADMINISTRADOR'], 'GESTOR', true],
-    ['GESTOR + ADMINISTRADOR sin espacio elegido', ['GESTOR', 'ADMINISTRADOR'], null, true],
-    ['GESTOR + ADMINISTRADOR en espacio ADMINISTRADOR', ['GESTOR', 'ADMINISTRADOR'], 'ADMINISTRADOR', true]
+    ['ADMINISTRADOR', ['ADMINISTRADOR'], null, false],
+    ['ADMINISTRADOR con espacio GESTOR guardado', ['ADMINISTRADOR'], 'GESTOR', false],
+    ['GESTOR + ADMINISTRADOR sin espacio elegido', ['GESTOR', 'ADMINISTRADOR'], null, false],
+    ['GESTOR + ADMINISTRADOR en espacio ADMINISTRADOR', ['GESTOR', 'ADMINISTRADOR'], 'ADMINISTRADOR', false]
   ];
 
   for (const [caso, rolesCaso, espacio, conBarraPropia] of casos) {
@@ -89,10 +90,11 @@ describe('PracticaDetalle · cabecera y regreso al listado (etapa 3a)', () => {
     });
   }
 
-  it('la barra conservada del ADMINISTRADOR sigue llevando a /home', async () => {
+  it('ADMINISTRADOR no duplica la barra del layout y puede regresar a consultas', async () => {
     await crear(['ADMINISTRADOR']);
-    (raiz().querySelector('.breadcrumb button') as HTMLButtonElement).click();
-    expect(router.navigate).toHaveBeenCalledWith(['/home']);
+    expect(raiz().querySelector('.breadcrumb')).toBeNull();
+    (raiz().querySelector('app-supervision-admin button') as HTMLButtonElement).click();
+    expect(router.navigate).toHaveBeenCalledWith(['/practicas']);
   });
 
   it('«Volver a prácticas» navega al listado /practicas', async () => {

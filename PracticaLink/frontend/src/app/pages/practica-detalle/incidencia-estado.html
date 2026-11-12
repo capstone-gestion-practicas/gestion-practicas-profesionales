@@ -31,6 +31,7 @@
     </nav>
   }
   @if (transiciones.length > 0) {
+    <app-operacion-academica>
     <form (ngSubmit)="guardar()">
       <label for="estado-destino">Nuevo estado</label>
       <select id="estado-destino" name="destino" [(ngModel)]="destino" [disabled]="guardando || cargando">
@@ -42,6 +43,7 @@
       <small>Máximo 2.000 caracteres. La fecha y el responsable se registran en el servidor.</small>
       <ion-button type="submit" [disabled]="guardando || cargando || !destino">{{ guardando ? 'Guardando...' : 'Confirmar cambio' }}</ion-button>
     </form>
+    </app-operacion-academica>
   } @else if (consultado && autorizado) {
     <p>Esta incidencia se mantiene en solo lectura.</p>
   }

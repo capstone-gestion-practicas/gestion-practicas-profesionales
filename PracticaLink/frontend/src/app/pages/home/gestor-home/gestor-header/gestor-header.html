@@ -74,6 +74,9 @@
       </button>
 
       <div class="gh-herramientas">
+        @if (tieneEspacioAdministrativo()) {
+          <button type="button" class="gh-cambio" (click)="irA('/espacios')">Cambiar espacio</button>
+        }
         @if (tieneEspacioEstudiante()) {
           <button type="button" class="gh-cambio" (click)="irAEspacioEstudiante()">Mi práctica</button>
         }

@@ -40,6 +40,8 @@ import { SolicitudDetalleModal } from '../solicitud-detalle-modal/solicitud-deta
 import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
 import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
 import { GestorHome } from './gestor-home/gestor-home';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
+import { fechaTerminoCumplida } from '../../features/gestor/cierre-practica/cierre-reglas';
 
 export type EstadoCargaMetrica = 'cargando' | 'listo' | 'error';
 
@@ -111,9 +113,7 @@ export class Home implements OnInit {
   });
 
   readonly esAdministrador = computed(() => {
-    const roles = this.contexto()?.roles ?? [];
-    const seleccionado = sessionStorage.getItem('practicalink-workspace');
-    return roles.includes('ADMINISTRADOR') && seleccionado !== 'GESTOR';
+    return muestraEspacioAdministrador(this.contexto());
   });
   /** Gestor sin administración: su espacio operativo lo presenta GestorHome dentro de GestorLayout. */
   readonly espacioGestorDedicado = computed(() => {
@@ -148,7 +148,6 @@ export class Home implements OnInit {
       this.cargando = false;
       if (this.esAdministrador()) {
         this.cargarDashboardAdmin();
-        this.cargarEstudiantesSinPractica();
       }
       return;
     }
@@ -159,7 +158,6 @@ export class Home implements OnInit {
         this.cargando = false;
         if (this.esAdministrador()) {
           this.cargarDashboardAdmin();
-          this.cargarEstudiantesSinPractica();
         }
       },
       error: () => {
@@ -272,6 +270,17 @@ export class Home implements OnInit {
       .slice(0, 5);
   }
 
+  practicasVencidasAdmin(): number {
+    return this.practicasAdmin.filter(practica => !practica.es_final && fechaTerminoCumplida(practica.fecha_termino)).length;
+  }
+
+  practicasSinGestorActivo(): number {
+    const activos = new Set(this.usuariosAdmin.filter(usuario => usuario.activo && usuario.roles.includes('GESTOR')).map(usuario => usuario.id_usuario));
+    return this.practicasAdmin.filter(practica => !practica.es_final && (practica.id_gestor === null || !activos.has(practica.id_gestor))).length;
+  }
+
+  abrirPracticaAdmin(id: number): void { void this.router.navigate(['/practicas', id]); }
+
   private cargarDashboardAdmin(): void {
     if (!this.esAdministrador()) {
       return;
@@ -308,7 +317,7 @@ export class Home implements OnInit {
     });
 
     // /revisiones/* exige GESTOR en el backend: solo se consulta si el usuario tiene ese rol.
-    if (this.tieneRolGestor()) {
+    if (this.tieneRolGestor() && !this.esAdministrador()) {
       this.cargarSolicitudesAdmin();
     } else {
       this.solicitudesAdmin = [];

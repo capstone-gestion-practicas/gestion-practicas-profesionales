@@ -3,8 +3,8 @@
     <header class="page-heading">
       <div>
         <p class="module-label">CICLO DE LAS PRÁCTICAS</p>
-        <h1>Estado de prácticas</h1>
-        <p class="heading-subtitle">Consulta el avance, actualiza el estado y revisa la trazabilidad de cada práctica.</p>
+        <h1>{{ espacioAdmin ? 'Asignaciones y estado de prácticas' : 'Estado de prácticas' }}</h1>
+        <p class="heading-subtitle">{{ espacioAdmin ? 'Asigna gestores, identifica vencimientos y consulta la trazabilidad. Las decisiones académicas corresponden al espacio de gestión.' : 'Consulta el avance, actualiza el estado y revisa la trazabilidad de cada práctica.' }}</p>
       </div>
       @if (mostrarVolver()) {
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
@@ -92,6 +92,7 @@
                   }
                   <div class="practice-actions">
                     <ion-button fill="outline" (click)="verDetalle(practica)">Ver detalle</ion-button>
+                    <app-operacion-academica>
                     <ion-button (click)="abrirCambio(practica)">Revisar y actualizar estado</ion-button>
                     @if (candidataCierre(practica)) {
                       <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>
@@ -104,6 +105,7 @@
                         {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
                       </ion-button>
                     }
+                    </app-operacion-academica>
                     <ion-button fill="outline" (click)="alternarHistorial(practica)">
                       {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
                     </ion-button>
@@ -191,6 +193,7 @@
               }
               <div class="practice-actions">
                 <ion-button fill="outline" (click)="verDetalle(practica)">Ver detalle</ion-button>
+                <app-operacion-academica>
                 <ion-button (click)="abrirCambio(practica)">Actualizar estado</ion-button>
                 @if (candidataCierre(practica)) {
                       <ion-button fill="outline" (click)="consultarAprobacion(practica)" [disabled]="consultandoAcademico.has(practica.id_practica) || guardandoCierreId !== null">Consultar aprobación académica</ion-button>
@@ -203,6 +206,7 @@
                     {{ guardandoCierreId === practica.id_practica ? 'Finalizando...' : 'Finalizar práctica' }}
                   </ion-button>
                 }
+                </app-operacion-academica>
                 <ion-button fill="outline" (click)="alternarHistorial(practica)">
                   {{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Ver historial' }}
                 </ion-button>

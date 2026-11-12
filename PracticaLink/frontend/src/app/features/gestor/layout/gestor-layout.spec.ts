@@ -417,11 +417,11 @@ describe('GestorLayout', () => {
   });
 
   describe('roles múltiples y administración', () => {
-    it('ADMINISTRADOR conserva su interfaz sin cabecera de gestor', async () => {
+    it('ADMINISTRADOR usa navegación independiente sin cabecera de gestor', async () => {
       await crear(['ADMINISTRADOR']);
       await irA('/revisiones');
       expect(cabeceras().length).toBe(0);
-      expect(elementoRuta().querySelector('.gh-sidebar')).toBeNull();
+      expect(elementoRuta().querySelector('app-admin-layout .gh-sidebar')).not.toBeNull();
       expect(elementoRuta().querySelector('.pagina-prueba')).not.toBeNull();
     });
 

@@ -61,6 +61,17 @@ describe('Incidencias (pantalla HU016: sin cambio de estado legado)', () => {
     http.expectNone(r => r.method === 'POST');
   });
 
+  it('ADMINISTRADOR consulta sin escribir y conserva el registro como operación excepcional', () => {
+    TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 1, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['ADMINISTRADOR'], perfil: null, practica_actual: null });
+    const fixture = TestBed.createComponent(Incidencias);
+    fixture.detectChanges(); cargarListados(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Supervisión de incidencias');
+    expect((fixture.nativeElement.querySelector('app-operacion-academica details') as HTMLDetailsElement).open).toBeFalse();
+    expect(fixture.nativeElement.querySelector('ion-textarea')).not.toBeNull();
+    expect(fixture.componentInstance.puedeConsultar(15)).toBeTrue();
+    http.expectNone(r => r.method !== 'GET');
+  });
+
   it('registra con POST EP06 enviando solo tipo y descripcion', () => {
     const fixture = TestBed.createComponent(Incidencias);
     fixture.detectChanges();

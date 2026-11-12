@@ -83,7 +83,7 @@ describe('EnvioNotificaciones', () => {
     auth.setContexto({ usuario, roles: ['ADMINISTRADOR'], perfil: null, practica_actual: null });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('app-recordatorios-estudiantes')).toBeNull();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Enviar notificaciones');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Comunicaciones');
   });
   it('no duplica avisos mientras un envío sigue en curso', () => {
     const pendiente = new Subject<{ id_notificacion: number; dispositivos_enviados: number; mensaje: string }>();
@@ -91,6 +91,15 @@ describe('EnvioNotificaciones', () => {
     component.titulo = 'Aviso sintético'; component.mensaje = 'Mensaje sintético';
     component.enviar(); component.enviar();
     expect(servicio.enviarMensajePersonalizado).toHaveBeenCalledTimes(1);
+  });
+  it('ADMINISTRADOR conserva confirmación y envío institucional masivo sin recordatorios individuales', () => {
+    TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 1, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['ADMINISTRADOR'], perfil: null, practica_actual: null });
+    fixture.detectChanges(); component.modoEnvio = 'broadcast'; component.titulo = 'Aviso'; component.mensaje = 'Mensaje institucional';
+    const confirmar = spyOn(window, 'confirm').and.returnValue(false);
+    component.enviar(); expect(servicio.enviarBroadcastPersonalizado).not.toHaveBeenCalled();
+    confirmar.and.returnValue(true); component.enviar();
+    expect(servicio.enviarBroadcastPersonalizado).toHaveBeenCalledOnceWith({ titulo: 'Aviso', mensaje: 'Mensaje institucional' });
+    expect(fixture.nativeElement.querySelector('app-recordatorios-estudiantes')).toBeNull();
   });
   it('la cuenta multirrol solo ve recordatorios cuando elige el espacio GESTOR', () => {
     const previo = sessionStorage.getItem('practicalink-workspace');

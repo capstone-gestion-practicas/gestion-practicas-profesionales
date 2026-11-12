@@ -68,16 +68,9 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'practicas' }
     ]
   },
-  {
-    path: 'usuarios',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMINISTRADOR'] },
-    loadComponent: () =>
-      import('./pages/usuarios/usuarios').then(m => m.Usuarios)
-  },
   /*
    * Módulos de gestión. Las rutas hijas conservan sus URL exactas; el contenedor
-   * GestorLayout muestra la cabecera persistente solo al gestor sin administración.
+   * GestorLayout presenta el shell correspondiente al espacio de trabajo.
    * Cada hijo mantiene sus guards y roles originales.
    */
   {
@@ -85,6 +78,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/gestor/layout/gestor-layout').then(m => m.GestorLayout),
     children: [
+      {
+        path: 'usuarios',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMINISTRADOR'] },
+        loadComponent: () => import('./pages/usuarios/usuarios').then(m => m.Usuarios)
+      },
       {
         path: 'home',
         canActivate: [authGuard, roleGuard, studentHomeSpaceGuard],

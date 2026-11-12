@@ -1,4 +1,6 @@
-@if (mostrarCabecera()) {
+@if (mostrarAdministracion()) {
+  <app-admin-layout><div class="gl-contenido"><router-outlet /></div></app-admin-layout>
+} @else if (mostrarCabecera()) {
   <app-gestor-header>
     <div class="gl-contenido">
       <router-outlet />

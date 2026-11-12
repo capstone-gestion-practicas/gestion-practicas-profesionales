@@ -1,11 +1,12 @@
 <ion-content class="followups-content">
   <ion-grid class="followups-wrapper"><ion-row><ion-col size="12">
     <app-pestanas-gestor [pestanas]="pestanas" activa="/seguimientos" etiqueta="Secciones de Acompañamiento" />
+    <app-supervision-admin />
     <header class="page-heading">
       <div>
         <p class="module-label">ACOMPAÑAMIENTO</p>
         <h1>Seguimientos</h1>
-        <p class="heading-subtitle">Registra observaciones y consulta la evolución de cada práctica.</p>
+        <p class="heading-subtitle">{{ espacioAdmin ? 'Consulta los seguimientos y la evolución de cada práctica.' : 'Registra observaciones y consulta la evolución de cada práctica.' }}</p>
       </div>
       @if (mostrarVolver()) {
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
@@ -43,6 +44,11 @@
                   <ion-button fill="outline" (click)="abrirDetalle(practica)">Consultar seguimientos de la práctica</ion-button>
                 </div>
               } @else {
+              @if (espacioAdmin) {
+                <ion-button fill="outline" (click)="alternarHistorial(practica)">{{ historialAbiertoId === practica.id_practica ? 'Ocultar historial' : 'Consultar historial' }}</ion-button>
+                <ion-button fill="outline" (click)="abrirDetalle(practica)">Ver práctica</ion-button>
+              }
+              <app-operacion-academica>
               <section class="followup-form" aria-label="Registrar seguimiento">
                 <h2>Registrar seguimiento</h2>
                   @if (!practica.es_final) {
@@ -88,6 +94,7 @@
                     </div>
                   }
               </section>
+              </app-operacion-academica>
               }
               @if (historialAbiertoId === practica.id_practica) {
                 <section class="history-panel" aria-label="Historial de seguimientos">

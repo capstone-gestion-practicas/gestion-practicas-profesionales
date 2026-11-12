@@ -143,5 +143,9 @@ describe('Seguimientos (contrato EP05)', () => {
     TestBed.inject(AuthStore).setContexto({ usuario: { id_usuario: 21, nombre: 'Cuenta', apellido: 'Sintética', correo: 'cuenta@example.invalid' }, roles: ['ADMINISTRADOR'], perfil: null, practica_actual: null });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('ion-textarea')).not.toBeNull();
+    const operacion = fixture.nativeElement.querySelector('app-operacion-academica details') as HTMLDetailsElement;
+    expect(operacion.open).toBeFalse();
+    expect(fixture.nativeElement.querySelector('[aria-label="Consultas de supervisión"]')).not.toBeNull();
+    expect(service.registrarSeguimiento).not.toHaveBeenCalled();
   });
 });

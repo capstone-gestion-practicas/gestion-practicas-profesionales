@@ -1,4 +1,6 @@
 import { CommonModule } from '@angular/common';
+import { SupervisionAdmin } from '../../features/administrador/supervision-admin';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,11 +21,12 @@ type EstadoResumen = 'inactivo' | 'cargando' | 'listo' | 'error';
 @Component({
   selector: 'app-practicas-listado',
   standalone: true,
-  imports: [CommonModule, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner, PestanasGestor],
+  imports: [CommonModule, SupervisionAdmin, EstadoBadge, FormsModule, IonButton, IonCard, IonCardContent, IonContent, IonSpinner, PestanasGestor],
   templateUrl: './practicas-listado.html',
   styleUrl: './practicas-listado.scss'
 })
 export class PracticasListado implements OnInit, OnDestroy {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.auth.contexto()); }
   readonly pestanas = PESTANAS_PRACTICAS;
   rutBusqueda = '';
   estadoBusqueda = '';

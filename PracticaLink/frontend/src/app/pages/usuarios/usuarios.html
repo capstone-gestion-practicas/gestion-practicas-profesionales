@@ -1,7 +1,7 @@
 <ion-content class="users-content">
   <ion-grid class="users-wrapper"><ion-row><ion-col size="12">
     <header class="page-heading">
-      <div><p>EP01 · Administración</p><h1>Gestión de usuarios</h1></div>
+      <div><p>Administración del sistema</p><h1>Gestión de usuarios</h1></div>
       <div class="heading-actions">
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
         <ion-button (click)="abrirCrear()">Crear usuario</ion-button>
@@ -19,8 +19,20 @@
     } @else if (usuarios.length === 0) {
       <ion-card><ion-card-content>No hay usuarios registrados.</ion-card-content></ion-card>
     } @else {
+      <section class="user-filters" aria-label="Filtros de usuarios">
+        <label>Buscar por nombre o correo<input type="search" [(ngModel)]="busqueda" (ngModelChange)="actualizarFiltros()" /></label>
+        <label>Rol<select [(ngModel)]="filtroRol" (ngModelChange)="actualizarFiltros()">
+          <option value="">Todos los roles</option>
+          @for (rol of roles; track rol.id_rol) { <option [value]="rol.nombre">{{ rol.nombre }}</option> }
+        </select></label>
+        <label>Estado<select [(ngModel)]="filtroActivo" (ngModelChange)="actualizarFiltros()">
+          <option value="">Todos los estados</option><option value="activo">Activo</option><option value="inactivo">Inactivo</option>
+        </select></label>
+      </section>
+      <p role="status">{{ filtrados.length }} coincidencias de {{ usuarios.length }} usuarios cargados. Mostrando {{ visibles.length }} en esta página.</p>
+      @if (filtrados.length === 0) { <p>No hay usuarios que coincidan con los filtros.</p> }
       <div class="user-grid">
-        @for (usuario of usuarios; track usuario.id_usuario) {
+        @for (usuario of visibles; track usuario.id_usuario) {
           <ion-card>
             <ion-card-content>
               <div class="user-title">
@@ -42,29 +54,34 @@
                   fill="outline"
                   [disabled]="desactivando || esUsuarioActual(usuario)"
                   (click)="confirmarEliminar(usuario)">
-                  Eliminar cuenta
+                   Desactivar cuenta
                 </ion-button>
                 @if (esUsuarioActual(usuario)) {
-                  <p class="note">No puedes eliminar tu propia cuenta.</p>
+                  <p class="note">No puedes desactivar tu propia cuenta.</p>
                 }
               }
             </ion-card-content>
           </ion-card>
         }
       </div>
+      <nav class="pagination" aria-label="Paginación de usuarios">
+        <ion-button fill="outline" [disabled]="pagina === 1" (click)="cambiarPagina(pagina - 1)">Anterior</ion-button>
+        <span>Página {{ pagina }} de {{ totalPaginas }}</span>
+        <ion-button fill="outline" [disabled]="pagina === totalPaginas" (click)="cambiarPagina(pagina + 1)">Siguiente</ion-button>
+      </nav>
     }
   </ion-col></ion-row></ion-grid>
 
-  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" (didDismiss)="cerrarModal()">
+  <ion-modal [isOpen]="modalAbierto" [backdropDismiss]="!guardando" [canDismiss]="!guardando" aria-labelledby="usuario-modal-titulo" (didDismiss)="cerrarModal()">
     <ng-template>
       <div class="user-modal">
         <p class="module-label">{{ usuarioEditando ? 'Editar usuario' : 'Nuevo usuario' }}</p>
-        <h2>{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
-        <ion-item><ion-label position="stacked">Nombre *</ion-label><ion-input [(ngModel)]="nombre" maxlength="100"></ion-input></ion-item>
-        <ion-item><ion-label position="stacked">Apellido *</ion-label><ion-input [(ngModel)]="apellido" maxlength="100"></ion-input></ion-item>
-        <ion-item><ion-label position="stacked">Correo *</ion-label><ion-input type="email" maxlength="150" inputmode="email" autocapitalize="off" spellcheck="false" [(ngModel)]="correo" [disabled]="!!usuarioEditando"></ion-input></ion-item>
+        <h2 id="usuario-modal-titulo">{{ usuarioEditando ? 'Actualizar datos y permisos' : 'Crear una cuenta' }}</h2>
+        <ion-item><ion-input label="Nombre *" labelPlacement="stacked" [(ngModel)]="nombre" maxlength="100" [disabled]="guardando" required autocomplete="given-name"></ion-input></ion-item>
+        <ion-item><ion-input label="Apellido *" labelPlacement="stacked" [(ngModel)]="apellido" maxlength="100" [disabled]="guardando" required autocomplete="family-name"></ion-input></ion-item>
+        <ion-item><ion-input label="Correo *" labelPlacement="stacked" type="email" maxlength="150" inputmode="email" autocapitalize="off" spellcheck="false" [(ngModel)]="correo" [disabled]="!!usuarioEditando || guardando" required autocomplete="email"></ion-input></ion-item>
         @if (!usuarioEditando) {
-          <ion-item><ion-label position="stacked">Contraseña *</ion-label><ion-input type="password" [(ngModel)]="password" minlength="8" maxlength="128" autocomplete="new-password"></ion-input></ion-item>
+          <ion-item><ion-input label="Contraseña *" labelPlacement="stacked" type="password" [(ngModel)]="password" minlength="8" maxlength="128" autocomplete="new-password" [disabled]="guardando" required></ion-input></ion-item>
         }
         @if (usuarioEditando) {
           <ion-item><ion-toggle [(ngModel)]="activo">Usuario activo</ion-toggle></ion-item>

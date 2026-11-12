@@ -1,4 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { SupervisionAdmin } from '../../features/administrador/supervision-admin';
+import { OperacionAcademica } from '../../features/administrador/operacion-academica';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -37,6 +40,7 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   standalone: true,
   imports: [
     CommonModule,
+    SupervisionAdmin, OperacionAcademica,
     PestanasGestor,
     FormsModule,
     IonBadge,
@@ -58,6 +62,7 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   styleUrl: './incidencias.scss'
 })
 export class Incidencias implements OnInit {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.authStore.contexto()); }
   get espacioGestor(): boolean { return muestraEspacioGestor(this.authStore.contexto()); }
   private practicasConsultables = new Set<number>();
   puedeConsultar(id: number): boolean { return this.practicasConsultables.has(id); }

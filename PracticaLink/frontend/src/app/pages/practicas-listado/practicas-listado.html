@@ -1,13 +1,14 @@
 <ion-content>
   <main class="practicas-wrapper">
     <app-pestanas-gestor [pestanas]="pestanas" activa="/practicas" etiqueta="Secciones de Prácticas" />
+    <app-supervision-admin />
     <header>
-      <div><p class="module-label">Gestión de prácticas</p><h1>Prácticas</h1></div>
+      <div><p class="module-label">{{ espacioAdmin ? 'Supervisión administrativa' : 'Gestión de prácticas' }}</p><h1>Prácticas</h1></div>
       @if (mostrarVolver()) {
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
       }
     </header>
-    <p>Selecciona una práctica para revisar su historial y registrar seguimientos o incidencias.</p>
+    <p>{{ espacioAdmin ? 'Selecciona una práctica para consultar antecedentes, estados, seguimientos e incidencias.' : 'Selecciona una práctica para revisar su historial y registrar seguimientos o incidencias.' }}</p>
     <form (ngSubmit)="buscar()" autocomplete="off">
       <label for="rut-busqueda">RUT del estudiante</label>
       <input id="rut-busqueda" name="rutBusqueda" type="text" [(ngModel)]="rutBusqueda"

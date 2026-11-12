@@ -1,0 +1,37 @@
+<div class="gh-shell">
+  <aside id="admin-sidebar" class="gh-sidebar" [class.gh-sidebar--abierto]="movil()" aria-label="Navegación administrativa">
+    <a class="gh-sidebar__marca" routerLink="/home" (click)="movil.set(false)" aria-label="PracticaLink, inicio administrativo"><app-brand-mark variante="completa" tono="claro" /></a>
+    <p class="gh-sidebar__etiqueta">Administración del sistema</p>
+    <nav aria-label="Secciones administrativas">
+      <ul class="gh-nav">
+        @for (destino of destinos; track destino.ruta) {
+          <li class="gh-nav__item"><a class="gh-nav__enlace" [routerLink]="destino.ruta"
+            [attr.aria-current]="activa() === destino.nombre ? 'page' : null" (click)="movil.set(false)">{{ destino.nombre }}</a></li>
+        }
+      </ul>
+    </nav>
+  </aside>
+  @if (movil()) { <div class="gh-velo" aria-hidden="true" (click)="cerrarMenu()"></div> }
+  <div class="gh-principal">
+    <header class="gh-topbar">
+      <button #botonMovil type="button" class="gh-menu" aria-controls="admin-sidebar" [attr.aria-expanded]="movil()" (click)="movil.set(!movil())">Menú</button>
+      <div class="gh-herramientas">
+        <a class="gh-cambio" routerLink="/espacios">Cambiar espacio</a>
+        <a class="gh-cambio" routerLink="/notificaciones">Notificaciones @if (noLeidas() > 0) { <span aria-label="Sin leer">({{ noLeidas() }})</span> }</a>
+        <div class="gh-cuenta" #menuCuenta>
+          <button type="button" class="gh-cuenta__alternar" aria-controls="admin-cuenta-menu" [attr.aria-expanded]="cuenta()" (click)="cuenta.set(!cuenta())">
+            <span class="gh-avatar" aria-hidden="true">{{ nombre().charAt(0) }}</span><span class="gh-cuenta__nombre">{{ nombre() }}</span><span class="sr-only">Menú de cuenta</span>
+          </button>
+          @if (cuenta()) {
+            <div class="gh-cuenta__menu" id="admin-cuenta-menu">
+              <p>{{ correo() }}</p>
+              <a routerLink="/espacios">Espacios de trabajo</a>
+              <button type="button" (click)="salir()">Cerrar sesión</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+    <div class="gh-area"><ng-content /></div>
+  </div>
+</div>
