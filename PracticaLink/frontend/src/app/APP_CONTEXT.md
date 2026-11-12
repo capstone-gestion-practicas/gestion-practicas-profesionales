@@ -6,6 +6,28 @@ Este archivo entrega contexto técnico y funcional a desarrolladores y asistente
 
 PracticaLink es una aplicación para gestionar y seguir procesos de práctica profesional. El frontend permite autenticar usuarios y presentar información asociada a su perfil, roles y práctica actual.
 
+## Espacio administrativo
+
+Las rutas existentes `/home`, `/usuarios`, `/gestion-estados`, `/practicas`,
+`/seguimientos`, `/incidencias`, `/envio-notificaciones` y `/notificaciones`
+comparten el contenedor de rutas. Este presenta `AdminLayout` al ADMINISTRADOR
+en su espacio y conserva `GestorHeader` para GESTOR. La selección de espacio
+solo cambia presentación: guards y backend autorizan con los roles reales.
+Las cuentas multirrol pueden cambiar de espacio mediante `/espacios`.
+
+Administración reutiliza listas, detalle e historiales para supervisión. Las
+operaciones académicas existentes se conservan en secciones desplegables de
+uso excepcional (`OperacionAcademica`); esto no revoca permisos ni sustituye
+las validaciones del servidor. Los recordatorios individuales permanecen en
+GESTOR. El dashboard obtiene alertas de las listas que ya cargaba, sin nuevas
+consultas. Usuarios busca, filtra y pagina localmente la respuesta completa de
+`GET /usuarios`, no una página remota. No existe un editor de perfil administrativo.
+
+Pendiente de validación manual: tamaños móviles, teclado/lector de pantalla y
+scroll/foco de overlays Ionic. Este cambio frontend no aplica ni acredita la
+migración de seguridad de transiciones en Supabase. La supervisión no introduce
+acceso administrativo a evaluaciones/informes académicos que el servidor no autorice.
+
 ## Tecnologías y reglas generales
 
 - Angular 20.

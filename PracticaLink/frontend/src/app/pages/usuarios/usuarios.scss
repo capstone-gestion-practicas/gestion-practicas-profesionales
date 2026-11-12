@@ -14,10 +14,17 @@
 .roles span { padding: 5px 9px; border-radius: 999px; background: #e7efe2; color: #365d39; font-size: .75rem; }
 .center { display: flex; justify-content: center; padding: 48px; }
 .error { color: var(--form-error); }
-.user-modal { padding: 24px; overflow-y: auto; }
+.user-modal { padding: var(--space-5); overflow-y: auto; max-height: 90dvh; box-sizing: border-box; }
 .user-modal h2 { margin: 5px 0 16px; }
 fieldset { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 8px; }
 legend { padding: 0 7px; font-weight: 600; }
 .modal-actions { justify-content: flex-end; margin-top: 24px; }
 ion-modal { --width: min(580px, calc(100% - 24px)); --height: auto; --max-height: 90%; --border-radius: 14px; }
+.user-filters { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-block: var(--space-4); }
+.user-filters label { display: grid; gap: var(--space-2); flex: 1 1 auto; }
+.user-filters input, .user-filters select { font: inherit; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); min-width: 0; }
+.user-filters input:focus-visible, .user-filters select:focus-visible { outline: 2px solid var(--color-focus-ring); }
+.pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-3); margin-block: var(--space-4); }
+.user-title > div { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .user-grid { grid-template-columns: minmax(0, 1fr); } .users-wrapper { padding: var(--space-3); } }
 @media (max-width: 620px) { .page-heading { align-items: flex-start; flex-direction: column; } .heading-actions { width: 100%; } }

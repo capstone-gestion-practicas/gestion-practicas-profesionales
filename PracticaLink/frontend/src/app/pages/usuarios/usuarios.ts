@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   AlertController, IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonInput,
-  IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
+  IonItem, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
 } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 
@@ -18,7 +18,7 @@ import { AuthStore } from '../../core/store/auth.store';
   standalone: true,
   imports: [
     CommonModule, FormsModule, IonButton, IonCard, IonCardContent, IonCheckbox,
-    IonContent, IonInput, IonItem, IonLabel, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
+    IonContent, IonInput, IonItem, IonModal, IonSpinner, IonToggle, IonGrid, IonRow, IonCol
   ],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss'
@@ -31,6 +31,28 @@ export class Usuarios implements OnInit {
 
   usuarios: UsuarioAdministrable[] = [];
   roles: Rol[] = [];
+  busqueda = '';
+  filtroRol = '';
+  filtroActivo = '';
+  pagina = 1;
+  readonly tamanoPagina = 12;
+
+  // GET /usuarios devuelve el conjunto completo (sin limit/offset).
+  get filtrados(): UsuarioAdministrable[] {
+    const consulta = this.busqueda.trim().toLocaleLowerCase();
+    return this.usuarios.filter(usuario =>
+      (!consulta || `${usuario.nombre} ${usuario.apellido} ${usuario.correo}`.toLocaleLowerCase().includes(consulta))
+      && (!this.filtroRol || usuario.roles.includes(this.filtroRol))
+      && (!this.filtroActivo || usuario.activo === (this.filtroActivo === 'activo'))
+    );
+  }
+  get totalPaginas(): number { return Math.max(1, Math.ceil(this.filtrados.length / this.tamanoPagina)); }
+  get visibles(): UsuarioAdministrable[] {
+    const inicio = (this.pagina - 1) * this.tamanoPagina;
+    return this.filtrados.slice(inicio, inicio + this.tamanoPagina);
+  }
+  actualizarFiltros(): void { this.pagina = 1; }
+  cambiarPagina(pagina: number): void { this.pagina = Math.max(1, Math.min(pagina, this.totalPaginas)); }
   cargando = true;
   error = '';
   errorAccion = '';
@@ -58,6 +80,7 @@ export class Usuarios implements OnInit {
       next: ({ usuarios, roles }) => {
         this.usuarios = usuarios;
         this.roles = roles;
+        this.pagina = Math.min(this.pagina, this.totalPaginas);
         this.cargando = false;
       },
       error: () => {
@@ -153,12 +176,12 @@ export class Usuarios implements OnInit {
 
   async confirmarEliminar(usuario: UsuarioAdministrable): Promise<void> {
     const alerta = await this.alertController.create({
-      header: 'Eliminar cuenta',
+      header: 'Desactivar cuenta',
       message: `La cuenta de ${usuario.nombre} ${usuario.apellido} quedará inactiva y no podrá iniciar sesión. `
         + 'Sus datos se conservan y puede reactivarse desde Editar usuario.',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive', handler: () => this.desactivar(usuario) }
+        { text: 'Desactivar', role: 'destructive', handler: () => this.desactivar(usuario) }
       ]
     });
     await alerta.present();
@@ -181,7 +204,7 @@ export class Usuarios implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.desactivando = false;
         this.errorAccion = typeof error.error?.detail === 'string'
-          ? error.error.detail : 'No fue posible eliminar la cuenta.';
+          ? error.error.detail : 'No fue posible desactivar la cuenta.';
       }
     });
   }

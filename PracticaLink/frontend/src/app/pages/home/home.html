@@ -2,7 +2,7 @@
   <ion-grid class="home-wrapper">
     <ion-row>
       <ion-col size="12">
-    @if (!espacioGestorDedicado()) {
+    @if (!espacioGestorDedicado() && !esAdministrador()) {
     <header class="brand-header" aria-label="PracticaLink">
       <span class="brand-symbol" aria-hidden="true">P</span>
       <span class="brand-name">PracticaLink</span>
@@ -60,7 +60,7 @@
         <section class="admin-dashboard" aria-label="Dashboard administrativo">
           <div class="admin-heading">
             <div>
-              <p class="module-label">EP01 · Administración</p>
+              <p class="module-label">Administración del sistema</p>
               <h1>Dashboard</h1>
               <p>Resumen general de la gestión de prácticas.</p>
             </div>
@@ -78,7 +78,7 @@
                   <ion-card-content><span>Gestores activos</span><strong>{{ textoMetrica(estadoUsuarios, gestoresActivos()) }}</strong><small>con rol de revisión</small></ion-card-content>
                 </ion-card>
               </ion-col>
-              @if (tieneRolGestor()) {
+               @if (!esAdministrador() && tieneRolGestor()) {
                 <ion-col size="12" size-md="4">
                   <ion-card class="metric-card emphasis">
                     <ion-card-content>
@@ -125,77 +125,28 @@
             }
           </section>
 
-          @if (errorEstudiantesSinPractica) {
-            <p class="module-warning" role="alert">{{ errorEstudiantesSinPractica }}</p>
-          } @else if (estudiantesSinPractica.length > 0) {
-            <ion-card class="admin-table-card" role="status">
-              <ion-card-header>
-                <ion-card-title>
-                  Aviso para gestor · {{ estudiantesSinPractica.length }}
-                  {{ estudiantesSinPractica.length === 1 ? 'estudiante sin' : 'estudiantes sin' }}
-                  práctica registrada
-                </ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <ion-list lines="full">
-                  @for (estudiante of estudiantesSinPractica; track estudiante.id_usuario) {
-                    <ion-item>
-                      <ion-label>
-                        <h3>{{ estudiante.nombre }} {{ estudiante.apellido }}</h3>
-                        @if (!estudiante.tiene_perfil) {
-                          <p>Sin perfil de estudiante</p>
-                        }
-                        @if (!estudiante.tiene_practica) {
-                          <p>Sin práctica registrada</p>
-                        }
-                      </ion-label>
-                      <ion-button
-                        slot="end"
-                        size="small"
-                        fill="outline"
-                        [disabled]="
-                          estudiante.recordatorio_enviado_hoy
-                          || recordatoriosEnCurso.has(estudiante.id_usuario)
-                        "
-                        (click)="enviarRecordatorioEstudiante(estudiante.id_usuario)">
-                        @if (recordatoriosEnCurso.has(estudiante.id_usuario)) {
-                          <ion-spinner name="crescent"></ion-spinner>
-                        } @else if (estudiante.recordatorio_enviado_hoy) {
-                          Enviado hoy
-                        } @else {
-                          Enviar recordatorio
-                        }
-                      </ion-button>
-                    </ion-item>
-                    @if (resultadoRecordatorios[estudiante.id_usuario]; as resultado) {
-                      <p
-                        class="student-reminder-result"
-                        [class.student-reminder-error]="resultado.error"
-                        [attr.role]="resultado.error ? 'alert' : 'status'">
-                        {{ resultado.mensaje }}
-                      </p>
-                    }
-                  }
-                </ion-list>
-              </ion-card-content>
-            </ion-card>
-          }
+          <section aria-label="Alertas administrativas">
+            <h2>Alertas administrativas</h2>
+            <p role="status">Prácticas vencidas no finalizadas: {{ textoMetrica(estadoPracticasEstado, practicasVencidasAdmin()) }}</p>
+            <p role="status">Prácticas sin gestor activo: {{ textoMetrica(estadoUsuarios === 'listo' ? estadoPracticasEstado : estadoUsuarios, practicasSinGestorActivo()) }}</p>
+            <ion-button fill="outline" (click)="gestionarEstados()">Revisar asignaciones y vencimientos</ion-button>
+          </section>
 
           <ion-grid class="admin-panels">
             <ion-row>
               <ion-col size="12" size-lg="12">
                 <ion-card class="admin-table-card">
                   <ion-card-header>
-                    <ion-card-title>Solicitudes recientes</ion-card-title>
+                    <ion-card-title>Prácticas recientes</ion-card-title>
                   </ion-card-header>
                   <ion-card-content>
                     @if (solicitudesRecientes().length) {
                       <ion-list lines="full">
                         @for (solicitud of solicitudesRecientes(); track solicitud.id_practica) {
                           <ion-item
-                            [button]="puedeRevisarPracticas()"
-                            [detail]="puedeRevisarPracticas()"
-                            (click)="puedeRevisarPracticas() && abrirDetalleSolicitud(solicitud.id_practica)">
+                            [button]="true"
+                            [detail]="true"
+                            (click)="abrirPracticaAdmin(solicitud.id_practica)">
                             <ion-label>
                               <h3>{{ solicitud.estudiante }}</h3>
                               <p>{{ solicitud.centro_practica }} · {{ solicitud.fecha_registro }}</p>
@@ -205,7 +156,7 @@
                         }
                       </ion-list>
                     } @else {
-                      <p class="empty-state">No hay solicitudes disponibles.</p>
+                      <p class="empty-state">{{ estadoPracticasEstado === 'error' ? 'Prácticas no disponibles.' : estadoPracticasEstado === 'cargando' ? 'Cargando prácticas…' : 'No hay prácticas disponibles.' }}</p>
                     }
                   </ion-card-content>
                 </ion-card>
@@ -216,7 +167,7 @@
       } @else if (puedeRevisarPracticas()) {
         <app-gestor-home />
       }
-      @if (!espacioGestorDedicado()) {
+      @if (!espacioGestorDedicado() && !esAdministrador()) {
         <div class="secondary-action">
           <ion-button
             expand="block"

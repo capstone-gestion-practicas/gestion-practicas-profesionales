@@ -2,8 +2,8 @@
   <ion-grid class="send-notifications-wrapper"><ion-row><ion-col size="12">
     <header class="page-heading">
       <div>
-        <p class="module-label">Herramientas de gestión</p>
-        <h1>{{ espacioGestor ? 'Comunicaciones' : 'Enviar notificaciones' }}</h1>
+        <p class="module-label">{{ espacioAdmin ? 'Comunicaciones institucionales' : 'Herramientas de gestión' }}</p>
+        <h1>{{ espacioGestor || espacioAdmin ? 'Comunicaciones' : 'Enviar notificaciones' }}</h1>
         <p>Envía un aviso a un estudiante o a todos los estudiantes activos.</p>
       </div>
       @if (mostrarVolver()) {

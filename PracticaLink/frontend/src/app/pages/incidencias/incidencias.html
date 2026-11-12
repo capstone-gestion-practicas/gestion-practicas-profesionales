@@ -1,11 +1,12 @@
 <ion-content class="incidents-content">
   <ion-grid class="incidents-wrapper"><ion-row><ion-col size="12">
     <app-pestanas-gestor [pestanas]="pestanas" activa="/incidencias" etiqueta="Secciones de Acompañamiento" />
+    <app-supervision-admin />
     <header class="page-heading">
       <div>
         <p class="module-label">ATENCIÓN</p>
-        <h1>Gestión de incidencias</h1>
-        <p class="heading-subtitle">Registra situaciones que requieren atención y mantén su estado actualizado.</p>
+        <h1>{{ espacioAdmin ? 'Supervisión de incidencias' : 'Gestión de incidencias' }}</h1>
+        <p class="heading-subtitle">{{ espacioAdmin ? 'Consulta situaciones pendientes y su historial. La atención corresponde al gestor responsable.' : 'Registra situaciones que requieren atención y mantén su estado actualizado.' }}</p>
       </div>
       @if (mostrarVolver()) {
         <ion-button fill="outline" (click)="volver()">Volver</ion-button>
@@ -25,7 +26,7 @@
         </ion-button>
       </section>
 
-      <ion-card class="create-card">
+      <app-operacion-academica><ion-card class="create-card">
         <ion-card-header><ion-card-title>Registrar incidencia</ion-card-title></ion-card-header>
         <ion-card-content>
           @if (practicas.length) {
@@ -58,7 +59,7 @@
             <p>No hay prácticas activas disponibles para registrar incidencias.</p>
           }
         </ion-card-content>
-      </ion-card>
+      </ion-card></app-operacion-academica>
 
       <section class="incident-section" aria-label="Incidencias registradas">
         <div class="section-heading"><h2>{{ soloPendientes ? 'Requieren atención' : 'Todas las incidencias' }}</h2><span>{{ incidenciasVisibles().length }} registros</span></div>
@@ -82,8 +83,8 @@
                   </div>
                   <p class="incident-state">Estado: <strong>{{ incidencia.estado }}</strong></p>
                   <p class="student-email">El cambio de estado se gestiona desde la ficha de la práctica.</p>
-                  @if (espacioGestor && puedeConsultar(incidencia.id_practica)) {
-                    <ion-button fill="outline" (click)="abrirDetalle(incidencia.id_practica)">Historial y gestión de la incidencia</ion-button>
+                  @if ((espacioGestor || espacioAdmin) && puedeConsultar(incidencia.id_practica)) {
+                    <ion-button fill="outline" (click)="abrirDetalle(incidencia.id_practica)">{{ espacioAdmin ? 'Consultar práctica e incidencias' : 'Historial y gestión de la incidencia' }}</ion-button>
                   }
                 </ion-card-content>
               </ion-card>

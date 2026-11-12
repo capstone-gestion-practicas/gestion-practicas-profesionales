@@ -44,12 +44,15 @@ import {
 import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
+import { OperacionAcademica } from '../../features/administrador/operacion-academica';
 
 @Component({
   selector: 'app-gestion-estados',
   standalone: true,
   imports: [
     CommonModule,
+    OperacionAcademica,
     EstadoBadge,
     FormsModule,
     IonBadge,
@@ -75,6 +78,7 @@ import { esEspacioGestorDedicado } from '../../core/navigation/espacio-gestor';
   styleUrl: './gestion-estados.scss'
 })
 export class GestionEstados implements OnInit, OnDestroy {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.authStore.contexto()); }
   private readonly injector = inject(Injector);
   private readonly consultasAcademicas = new Subscription();
   readonly estadosAcademicos = new Map<number, EstadoAcademico>();

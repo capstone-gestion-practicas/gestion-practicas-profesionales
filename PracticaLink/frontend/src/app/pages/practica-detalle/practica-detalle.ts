@@ -1,4 +1,7 @@
 import { InformeFinal } from '../../features/informe-final/informe-final';
+import { SupervisionAdmin } from '../../features/administrador/supervision-admin';
+import { OperacionAcademica } from '../../features/administrador/operacion-academica';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
 import { SesionService } from '../../core/session/sesion.service';
 import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
 import { filtrosRetornoPracticas } from '../../core/navigation/retorno-practicas';
@@ -28,12 +31,13 @@ import { formatearFechaCalendario, formatearFechaHoraChile } from '../../core/ut
 @Component({
   selector: 'app-practica-detalle', standalone: true,
   imports: [
-    CommonModule, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion, InformeFinal,
+    CommonModule, SupervisionAdmin, OperacionAcademica, FormsModule, IonButton, IonContent, IonSpinner, IncidenciaEstado, DocenteAsignacion, InformeFinal,
     CierrePractica
   ],
   templateUrl: './practica-detalle.html', styleUrl: './practica-detalle.scss'
 })
 export class PracticaDetalle implements OnInit, OnDestroy {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.auth.contexto()); }
   detalle: PracticaDetalleGestionResponse | null = null;
   cargando = false;
   error = '';

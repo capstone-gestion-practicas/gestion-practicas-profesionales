@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
 
 import { ContextoUsuarioResponse } from '../../core/models/auth.models';
-import { EstadoPracticaDetalle } from '../../core/models/practica.models';
+import { EstadoPracticaDetalle, PracticaEstadoResumen } from '../../core/models/practica.models';
 import { UsuarioAdministrable } from '../../core/models/usuario.models';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../features/notificaciones/services/notificacion.service';
@@ -111,16 +111,17 @@ describe('Home (administración y enrutamiento de espacios)', () => {
   describe('administrador', () => {
     beforeEach(() => crear(['ADMINISTRADOR']));
 
-    it('muestra el dashboard administrativo y el encabezado compartido', () => {
+    it('muestra el dashboard y delega el encabezado al layout persistente', () => {
       expect(texto()).toContain('Dashboard');
-      expect(fixture.nativeElement.querySelector('.brand-header')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.brand-header')).toBeNull();
       expect(fixture.nativeElement.querySelector('app-gestor-home')).toBeNull();
       expect(texto()).not.toContain('Tu espacio de práctica');
     });
 
-    it('cierra sesión desde el cierre global', () => {
+    it('conserva el cierre de sesión sin duplicar el botón del layout', () => {
       sessionStorage.setItem('access_token', 'test-token');
-      fixture.nativeElement.querySelector('.secondary-action ion-button')?.click();
+      expect(fixture.nativeElement.querySelector('.secondary-action')).toBeNull();
+      component.cerrarSesion();
       expect(sessionStorage.getItem('access_token')).toBeNull();
       expect(navController.navigateRoot).toHaveBeenCalledWith(['/login']);
     });
@@ -130,8 +131,8 @@ describe('Home (administración y enrutamiento de espacios)', () => {
     it('ESTUDIANTE + ADMINISTRADOR: el selector abre el espacio V3 del estudiante', () => {
       crear(['ESTUDIANTE', 'ADMINISTRADOR']);
       expect(texto()).toContain('Dashboard');
-      const selector = fixture.nativeElement.querySelector('.workspace-switch') as HTMLButtonElement;
-      selector.click();
+      expect(fixture.nativeElement.querySelector('.workspace-switch')).toBeNull();
+      component.irAEspacioEstudiante();
       expect(router.navigate).toHaveBeenCalledWith(['/estudiante/inicio']);
     });
   });
@@ -164,27 +165,26 @@ describe('Home (administración y enrutamiento de espacios)', () => {
       practicaService.listarEstados.and.returnValue(of([estadoDemo(1, 'REGISTRADA')]));
     });
 
-    it('ADMINISTRADOR sin GESTOR ve Usuarios, sin Solicitudes, y no consulta /revisiones', () => {
+    it('ADMINISTRADOR delega accesos al layout y no consulta revisión ni recordatorios', () => {
       crear(['ADMINISTRADOR']);
-      expect(botonesBarra()).toEqual(['Usuarios', 'Estados', 'Seguimientos', 'Incidencias', 'Enviar avisos']);
+      expect(botonesBarra()).toEqual([]);
       expect(revisionService.listar).not.toHaveBeenCalled();
+      expect(practicaService.listarEstudiantesSinPractica).not.toHaveBeenCalled();
       expect(texto()).not.toContain('Solicitudes pendientes');
     });
 
     it('el botón Usuarios navega a /usuarios', () => {
       crear(['ADMINISTRADOR']);
-      const usuarios = Array.from(fixture.nativeElement.querySelectorAll('.quick-nav button') as NodeListOf<HTMLButtonElement>)
-        .find(boton => boton.textContent?.trim() === 'Usuarios');
-      usuarios?.click();
+      component.gestionarUsuarios();
       expect(router.navigate).toHaveBeenCalledWith(['/usuarios']);
     });
 
-    it('ADMINISTRADOR + GESTOR conserva Usuarios y Solicitudes y consulta solicitudes', () => {
+    it('ADMINISTRADOR + GESTOR separa revisión operativa del dashboard administrativo', () => {
       crear(['ADMINISTRADOR', 'GESTOR']);
-      expect(botonesBarra()).toContain('Usuarios');
-      expect(botonesBarra()).toContain('Solicitudes');
-      expect(revisionService.listar).toHaveBeenCalledTimes(1);
-      expect(tarjetaSolicitudes()?.textContent?.trim()).toBe('0');
+      expect(botonesBarra()).toEqual([]);
+      expect(texto()).toContain('Alertas administrativas');
+      expect(revisionService.listar).not.toHaveBeenCalled();
+      expect(tarjetaSolicitudes()).toBeNull();
     });
 
     it('GESTOR sin administración no carga la lista de usuarios', () => {
@@ -215,11 +215,37 @@ describe('Home (administración y enrutamiento de espacios)', () => {
       expect(textoMetricaUsuarios()).toBe('1');
     });
 
-    it('un fallo de solicitudes de GESTOR muestra «No disponible» sin afectar a usuarios', () => {
+    it('el dashboard multirrol no depende del endpoint de revisión', () => {
       revisionService.listar.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       crear(['ADMINISTRADOR', 'GESTOR']);
-      expect(tarjetaSolicitudes()?.textContent?.trim()).toBe('No disponible');
+      expect(tarjetaSolicitudes()).toBeNull();
+      expect(revisionService.listar).not.toHaveBeenCalled();
       expect(textoMetricaUsuarios()).toBe('1');
+    });
+
+    it('deriva alertas y prácticas recientes de los datos ya cargados, sin nuevas consultas', () => {
+      usuarioService.listar.and.returnValue(of([usuarioDemo(true, ['GESTOR'])]));
+      const practica = (id: number, gestor: number | null, final = false): PracticaEstadoResumen => ({
+        id_practica: id, id_estado: 1, estado: 'REGISTRADA', es_final: final,
+        estudiante: 'Estudiante sintético', rut_estudiante: '11111111-1', centro_practica: 'Centro',
+        id_gestor: gestor, gestor: null, fecha_registro: '2026-01-01T00:00:00Z',
+        fecha_actualizacion: '2026-01-01T00:00:00Z', fecha_inicio: null,
+        fecha_termino: '2020-01-01', horas_semanales: null, descripcion_estado: null
+      });
+      practicaService.listarPracticasParaGestion.and.returnValue(of([
+        practica(1, 9), practica(2, null), practica(3, 99), practica(4, null, true)
+      ]));
+      crear(['ADMINISTRADOR']);
+      expect(component.practicasVencidasAdmin()).toBe(3);
+      expect(component.practicasSinGestorActivo()).toBe(2);
+      expect(texto()).toContain('Prácticas recientes');
+      expect(texto()).not.toContain('Solicitudes recientes');
+      component.abrirPracticaAdmin(1);
+      expect(router.navigate).toHaveBeenCalledWith(['/practicas', 1]);
+      expect(practicaService.listarPracticasParaGestion).toHaveBeenCalledTimes(1);
+      expect(practicaService.listarEstados).toHaveBeenCalledTimes(1);
+      expect(usuarioService.listar).toHaveBeenCalledTimes(1);
+      expect(practicaService.listarEstudiantesSinPractica).not.toHaveBeenCalled();
     });
   });
 

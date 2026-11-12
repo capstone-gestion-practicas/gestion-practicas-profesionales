@@ -1,4 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { SupervisionAdmin } from '../../features/administrador/supervision-admin';
+import { OperacionAcademica } from '../../features/administrador/operacion-academica';
+import { muestraEspacioAdministrador } from '../../core/navigation/espacio-administrador';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -39,6 +42,7 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   standalone: true,
   imports: [
     CommonModule,
+    SupervisionAdmin, OperacionAcademica,
     PestanasGestor,
     FormsModule,
     IonBadge,
@@ -61,6 +65,7 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   styleUrl: './seguimientos.scss'
 })
 export class Seguimientos implements OnInit {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.authStore.contexto()); }
   get espacioGestor(): boolean { return muestraEspacioGestor(this.authStore.contexto()); }
   abrirRegistro(practica: PracticaEstadoResumen): void {
     if (practica.estado !== 'EN_CURSO') return;

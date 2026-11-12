@@ -46,7 +46,7 @@ const CASOS: Caso[] = [
   { roles: ['GESTOR', 'ADMINISTRADOR'], espacio: null, dedicado: false, cabecera: false, homeGestor: false, esAdministrador: true, puedeRevisar: true },
   { roles: ['GESTOR', 'ADMINISTRADOR'], espacio: 'GESTOR', dedicado: false, cabecera: true, homeGestor: true, esAdministrador: false, puedeRevisar: true },
   { roles: ['GESTOR', 'ADMINISTRADOR'], espacio: 'ADMINISTRADOR', dedicado: false, cabecera: false, homeGestor: false, esAdministrador: true, puedeRevisar: false },
-  { roles: ['ADMINISTRADOR'], espacio: 'GESTOR', dedicado: false, cabecera: false, homeGestor: false, esAdministrador: false, puedeRevisar: false }
+  { roles: ['ADMINISTRADOR'], espacio: 'GESTOR', dedicado: false, cabecera: false, homeGestor: false, esAdministrador: true, puedeRevisar: false }
 ];
 
 const describir = (caso: Caso): string => `${caso.roles.join('+')} · espacio ${caso.espacio ?? 'sin elegir'}`;

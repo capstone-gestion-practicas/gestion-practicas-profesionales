@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthStore } from '../../../../core/store/auth.store';
 import { esEspacioGestorDedicado, muestraEspacioGestor } from '../../../../core/navigation/espacio-gestor';
 import { RecordatoriosEstudiantes } from '../../../gestor/recordatorios/recordatorios-estudiantes';
+import { muestraEspacioAdministrador } from '../../../../core/navigation/espacio-administrador';
 import {
   IonButton,
   IonCard,
@@ -40,6 +41,7 @@ import { NotificacionService } from '../../services/notificacion.service';
   styleUrl: './envio-notificaciones.scss'
 })
 export class EnvioNotificaciones implements OnInit, AfterViewInit {
+  get espacioAdmin(): boolean { return muestraEspacioAdministrador(this.authStore.contexto()); }
   private readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly recordatorios = viewChild<ElementRef<HTMLElement>>('recordatorios');

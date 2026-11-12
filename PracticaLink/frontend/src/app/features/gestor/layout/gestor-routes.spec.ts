@@ -11,6 +11,7 @@ describe('Rutas del gestor bajo GestorLayout', () => {
 
   it('conserva exactamente las URL de gestión existentes, incluido /home', () => {
     expect(hijos.map(ruta => ruta.path)).toEqual([
+      'usuarios',
       'home',
       'notificaciones',
       'envio-notificaciones',
@@ -48,11 +49,11 @@ describe('Rutas del gestor bajo GestorLayout', () => {
     expect(roles('practicas/:id')).toEqual(['GESTOR', 'ADMINISTRADOR']);
   });
 
-  it('deja fuera del layout a usuarios, login y estudiante', () => {
+  it('integra usuarios sin cambiar su guard y deja fuera login y estudiante', () => {
     const topLevel = routes.map(ruta => ruta.path);
-    expect(topLevel).toEqual(jasmine.arrayContaining(['estudiante', 'login', 'usuarios']));
+    expect(topLevel).toEqual(jasmine.arrayContaining(['estudiante', 'login']));
     expect(topLevel).not.toContain('home');
-    expect(hijos.map(ruta => ruta.path)).not.toContain('usuarios');
+    expect(hijos.find(ruta => ruta.path === 'usuarios')?.data?.['roles']).toEqual(['ADMINISTRADOR']);
     expect(hijos.map(ruta => ruta.path)).not.toContain('estudiante');
   });
 

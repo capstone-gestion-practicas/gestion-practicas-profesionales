@@ -98,6 +98,9 @@ export class GestorHeader implements OnInit {
     const roles = this.authStore.contexto()?.roles ?? [];
     return roles.includes('ESTUDIANTE') && (roles.includes('GESTOR') || roles.includes('ADMINISTRADOR'));
   });
+  protected readonly tieneEspacioAdministrativo = computed(() =>
+    (this.authStore.contexto()?.roles ?? []).includes('ADMINISTRADOR')
+  );
   protected readonly menuCuentaAbierto = signal(false);
   /** Menú lateral plegable en pantallas de 900 px o menos. */
   protected readonly menuMovilAbierto = signal(false);

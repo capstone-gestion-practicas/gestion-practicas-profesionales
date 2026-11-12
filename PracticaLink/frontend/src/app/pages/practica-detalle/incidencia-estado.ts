@@ -9,10 +9,11 @@ import { PracticaService } from '../../core/services/practica.service';
 import { AuthStore } from '../../core/store/auth.store';
 import { SesionService } from '../../core/session/sesion.service';
 import { formatearFechaHoraChile } from '../../core/utils/fechas';
+import { OperacionAcademica } from '../../features/administrador/operacion-academica';
 
 @Component({
   selector: 'app-incidencia-estado', standalone: true,
-  imports: [FormsModule, IonButton, IonSpinner],
+  imports: [FormsModule, IonButton, IonSpinner, OperacionAcademica],
   templateUrl: './incidencia-estado.html', styleUrl: './incidencia-estado.scss'
 })
 export class IncidenciaEstado implements OnChanges, OnDestroy {
