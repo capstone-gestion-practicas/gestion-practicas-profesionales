@@ -29,6 +29,7 @@ import {
 } from '../../core/models/practica.models';
 import { TIPOS_INCIDENCIA, TipoIncidencia } from '../../core/models/incidencia.models';
 import { PracticaService } from '../../core/services/practica.service';
+import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
 import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 @Component({
@@ -57,6 +58,17 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   styleUrl: './incidencias.scss'
 })
 export class Incidencias implements OnInit {
+  get espacioGestor(): boolean { return muestraEspacioGestor(this.authStore.contexto()); }
+  private practicasConsultables = new Set<number>();
+  puedeConsultar(id: number): boolean { return this.practicasConsultables.has(id); }
+  abrirDetalle(id: number): void {
+    if (!this.puedeConsultar(id)) return;
+    void this.router.navigate(['/practicas', id], { queryParams: { vista: 'incidencias' } });
+  }
+  abrirRegistro(): void {
+    if (!this.puedeRegistrar() || this.practicaSeleccionada === null) return;
+    void this.router.navigate(['/practicas', this.practicaSeleccionada, 'incidencias', 'nueva']);
+  }
   private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   incidencias: IncidenciaPractica[] = [];
@@ -85,6 +97,7 @@ export class Incidencias implements OnInit {
       incidencias: this.practicaService.listarIncidencias()
     }).subscribe({
       next: ({ practicas, incidencias }) => {
+        this.practicasConsultables = new Set(practicas.map(p => p.id_practica));
         this.practicas = practicas.filter(practica => !practica.es_final);
         this.incidencias = incidencias;
         this.practicaSeleccionada ??= this.practicas[0]?.id_practica ?? null;

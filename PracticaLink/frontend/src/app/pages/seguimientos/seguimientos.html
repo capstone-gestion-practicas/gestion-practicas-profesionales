@@ -35,6 +35,14 @@
                 <p><span>Centro de práctica</span><strong>{{ practica.centro_practica }}</strong></p>
                 <p><span>Período</span><strong>{{ practica.fecha_inicio ? (practica.fecha_inicio | date:'dd/MM/yyyy') : 'Pendiente' }} – {{ practica.fecha_termino ? (practica.fecha_termino | date:'dd/MM/yyyy') : 'Pendiente' }}</strong></p>
               </div>
+              @if (espacioGestor) {
+                <div class="practice-actions">
+                  @if (practica.estado === 'EN_CURSO') {
+                    <ion-button (click)="abrirRegistro(practica)">Registrar seguimiento</ion-button>
+                  }
+                  <ion-button fill="outline" (click)="abrirDetalle(practica)">Consultar seguimientos de la práctica</ion-button>
+                </div>
+              } @else {
               <section class="followup-form" aria-label="Registrar seguimiento">
                 <h2>Registrar seguimiento</h2>
                   @if (!practica.es_final) {
@@ -80,6 +88,7 @@
                     </div>
                   }
               </section>
+              }
               @if (historialAbiertoId === practica.id_practica) {
                 <section class="history-panel" aria-label="Historial de seguimientos">
                   <h2>Historial de seguimientos</h2>

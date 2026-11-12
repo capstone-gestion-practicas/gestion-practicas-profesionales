@@ -168,13 +168,13 @@ describe('GestorLayout', () => {
 
     it('marca la sección activa según la URL, incluido el detalle de solicitud', async () => {
       await irA('/revisiones/5');
-      expect(seccionActiva()).toBe('Solicitudes');
+      expect(seccionActiva()).toBe('Prácticas');
       await irA('/gestion-estados');
       expect(seccionActiva()).toBe('Estados');
       await irA('/seguimientos');
-      expect(seccionActiva()).toBe('Seguimientos');
+      expect(seccionActiva()).toBe('Acompañamiento');
       await irA('/incidencias');
-      expect(seccionActiva()).toBe('Incidencias');
+      expect(seccionActiva()).toBe('Acompañamiento');
     });
 
     it('conserva la misma instancia de cabecera al cambiar de módulo', async () => {
@@ -213,9 +213,8 @@ describe('GestorLayout', () => {
       expect(navController.navigateRoot).toHaveBeenCalledWith(['/login']);
     });
 
-    // Etapa 1: el sidebar pasa de seis accesos planos a cuatro agrupaciones. Se añade
-    // «Prácticas» (/practicas, antes sin acceso lateral) y «Estados» se conserva dentro
-    // de Prácticas para no perder el cierre ni el cambio de estado hasta etapas posteriores.
+    // Sprint final: cada área tiene una entrada y sus pestañas internas. Estados se
+    // conserva dentro de Prácticas con sus operaciones, sin duplicar los accesos secundarios.
     it('muestra las cuatro agrupaciones y todos los destinos del sidebar', async () => {
       await irA('/revisiones');
       const grupos = Array.from(elementoRuta().querySelectorAll('.gh-nav__grupo') as NodeListOf<HTMLElement>)
@@ -226,7 +225,7 @@ describe('GestorLayout', () => {
       expect(titulos).toEqual(['Prácticas', 'Acompañamiento', 'Comunicaciones']);
       const etiquetas = Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
         .map(boton => boton.textContent?.trim());
-      expect(etiquetas).toEqual(['Inicio', 'Solicitudes', 'Prácticas', 'Estados', 'Seguimientos', 'Incidencias', 'Avisos']);
+      expect(etiquetas).toEqual(['Inicio', 'Prácticas', 'Estados', 'Acompañamiento', 'Avisos']);
       expect(elementoRuta().querySelector('.gh-sidebar')).not.toBeNull();
     });
 
@@ -241,16 +240,16 @@ describe('GestorLayout', () => {
     it('marca la agrupación y el destino activos, incluidas las rutas hijas', async () => {
       const casos: [string, string, string][] = [
         ['/home', 'inicio', 'Inicio'],
-        ['/revisiones', 'practicas', 'Solicitudes'],
-        ['/revisiones/5?estado=OBSERVADA', 'practicas', 'Solicitudes'],
+        ['/revisiones', 'practicas', 'Prácticas'],
+        ['/revisiones/5?estado=OBSERVADA', 'practicas', 'Prácticas'],
         ['/practicas', 'practicas', 'Prácticas'],
         ['/practicas/15', 'practicas', 'Prácticas'],
         ['/practicas/15?vista=incidencias', 'practicas', 'Prácticas'],
         ['/practicas/15/seguimiento/nuevo', 'practicas', 'Prácticas'],
         ['/practicas/15/incidencias/nueva', 'practicas', 'Prácticas'],
         ['/gestion-estados?estado=EN_CURSO', 'practicas', 'Estados'],
-        ['/seguimientos', 'acompanamiento', 'Seguimientos'],
-        ['/incidencias', 'acompanamiento', 'Incidencias'],
+        ['/seguimientos', 'acompanamiento', 'Acompañamiento'],
+        ['/incidencias', 'acompanamiento', 'Acompañamiento'],
         ['/envio-notificaciones', 'comunicaciones', 'Avisos']
       ];
       for (const [url, grupo, destino] of casos) {
@@ -278,11 +277,11 @@ describe('GestorLayout', () => {
       expect(gruposActivos()).toEqual(['practicas']);
     });
 
-    it('el contador de solicitudes permanece junto a Solicitudes dentro de Prácticas', async () => {
+    it('el contador de solicitudes permanece en el acceso principal a Prácticas', async () => {
       await irA('/seguimientos');
       const contador = elementoRuta().querySelector('[data-grupo="practicas"] .gh-nav__contador') as HTMLElement;
       expect(contador.textContent?.trim()).toBe('3');
-      expect(contador.closest('.gh-nav__item')?.textContent).toContain('Solicitudes');
+      expect(contador.closest('.gh-nav__item')?.textContent).toContain('Prácticas');
     });
 
     it('Avisos queda activo en /envio-notificaciones', async () => {
@@ -368,7 +367,7 @@ describe('GestorLayout', () => {
       boton.click();
       harness.fixture.detectChanges();
       (Array.from(elementoRuta().querySelectorAll('.gh-nav__enlace'))
-        .find(item => item.textContent?.trim() === 'Incidencias') as HTMLButtonElement).click();
+        .find(item => item.textContent?.trim() === 'Acompañamiento') as HTMLButtonElement).click();
       await harness.fixture.whenStable();
       harness.fixture.detectChanges();
       expect(elementoRuta().querySelector('.gh-sidebar--abierto')).toBeNull();

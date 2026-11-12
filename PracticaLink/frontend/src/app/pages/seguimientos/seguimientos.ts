@@ -31,6 +31,7 @@ import {
   SeguimientoHistorialItem
 } from '../../core/models/seguimiento.models';
 import { PracticaService } from '../../core/services/practica.service';
+import { muestraEspacioGestor } from '../../core/navigation/espacio-gestor';
 import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/pestanas/pestanas-gestor';
 
 @Component({
@@ -60,6 +61,14 @@ import { PESTANAS_ACOMPANAMIENTO, PestanasGestor } from '../../features/gestor/p
   styleUrl: './seguimientos.scss'
 })
 export class Seguimientos implements OnInit {
+  get espacioGestor(): boolean { return muestraEspacioGestor(this.authStore.contexto()); }
+  abrirRegistro(practica: PracticaEstadoResumen): void {
+    if (practica.estado !== 'EN_CURSO') return;
+    void this.router.navigate(['/practicas', practica.id_practica, 'seguimiento', 'nuevo']);
+  }
+  abrirDetalle(practica: PracticaEstadoResumen): void {
+    void this.router.navigate(['/practicas', practica.id_practica]);
+  }
   private readonly authStore = inject(AuthStore);
   practicas: PracticaEstadoResumen[] = [];
   readonly medios = MEDIOS_CONTACTO;

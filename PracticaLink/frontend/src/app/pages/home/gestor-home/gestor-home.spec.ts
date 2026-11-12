@@ -13,6 +13,7 @@ import { RevisionService } from '../../../core/services/revision.service';
 import { AuthStore } from '../../../core/store/auth.store';
 import { NotificacionService } from '../../../features/notificaciones/services/notificacion.service';
 import { GestorHome } from './gestor-home';
+import { RecordatoriosEstudiantes } from '../../../features/gestor/recordatorios/recordatorios-estudiantes';
 
 const hace = (dias: number): string => new Date(Date.now() - dias * 86_400_000).toISOString();
 
@@ -120,7 +121,7 @@ describe('GestorHome', () => {
     practicaService.enviarRecordatorioEstudiante.and.callFake(idUsuario => of(respuestaOk(idUsuario)));
 
     await TestBed.configureTestingModule({
-      imports: [GestorHome],
+      imports: [GestorHome, RecordatoriosEstudiantes],
       providers: [
         AuthStore,
         { provide: RevisionService, useValue: revisionService },
@@ -192,14 +193,10 @@ describe('GestorHome', () => {
       expect(nombres).toEqual(['Luis Pérez', 'Carla Díaz', 'Ana Soto']);
     });
 
-    it('filtra localmente las solicitudes por estado sin recargar datos', () => {
-      const filtroObservadas = Array.from(fixture.nativeElement.querySelectorAll('.gh-filtros button') as NodeListOf<HTMLButtonElement>)
-        .find(elemento => elemento.textContent?.includes('Observadas'));
-      filtroObservadas?.click();
-      fixture.detectChanges();
-      const filas = fixture.nativeElement.querySelectorAll('.gh-fila');
-      expect(filas.length).toBe(1);
-      expect(filas[0].textContent).toContain('Carla Díaz');
+    it('centraliza los filtros en Solicitudes y enlaza el indicador de observadas', () => {
+      expect(fixture.nativeElement.querySelector('.gh-filtros')).toBeNull();
+      indicador(1).click();
+      expect(router.navigate).toHaveBeenCalledWith(['/revisiones'], { queryParams: { estado: 'OBSERVADA' } });
       expect(revisionService.listar).toHaveBeenCalledTimes(1);
     });
 
@@ -229,6 +226,15 @@ describe('GestorHome', () => {
       (fixture.nativeElement.querySelector('.gh-fila') as HTMLButtonElement).click();
       expect(router.navigate).toHaveBeenCalledWith(['/revisiones', 7]);
     });
+    it('Inicio limita a cinco solicitudes y envía los recordatorios a Comunicaciones', () => {
+      revisionService.listar.and.returnValue(of(Array.from({ length: 12 }, (_, i) => solicitud(i + 1, 'REGISTRADA', i, `Estudiante ${i}`))));
+      crear();
+      expect(fixture.nativeElement.querySelectorAll('.gh-fila').length).toBe(5);
+      expect(fixture.nativeElement.querySelector('.gh-estudiante')).toBeNull();
+      indicador(3).click();
+      expect(router.navigate).toHaveBeenCalledWith(['/envio-notificaciones'], { fragment: 'recordatorios' });
+      expect(practicaService.enviarRecordatorioEstudiante).not.toHaveBeenCalled();
+    });
   });
 
   describe('estados de carga y error por sección', () => {
@@ -238,7 +244,7 @@ describe('GestorHome', () => {
       crear();
       expect(texto()).toContain('No fue posible cargar las solicitudes por revisar.');
       expect(indicador(0).querySelector('strong')?.textContent?.trim()).toBe('—');
-      expect(texto()).toContain('Ana Prueba');
+      expect(indicador(3).querySelector('strong')?.textContent?.trim()).toBe('1');
     });
 
     it('muestra el error de incidencias de forma independiente', () => {
@@ -248,7 +254,25 @@ describe('GestorHome', () => {
     });
   });
 
-  describe('recordatorios a estudiantes sin práctica', () => {
+  // Sprint final: las mismas aserciones del flujo de envíos protegen ahora el componente
+  // extraído a Comunicaciones, no una segunda interfaz de envío en Inicio.
+  describe('recordatorios a estudiantes sin práctica en Comunicaciones', () => {
+    let recordatorios: ComponentFixture<RecordatoriosEstudiantes>;
+    const texto = (): string => recordatorios.nativeElement.textContent as string;
+    const casillasEstudiantes = (): HTMLInputElement[] => Array.from(
+      recordatorios.nativeElement.querySelectorAll('.gh-estudiante input') as NodeListOf<HTMLInputElement>);
+    const boton = (etiqueta: string): HTMLButtonElement | undefined => Array.from(
+      recordatorios.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(b => b.textContent?.trim().includes(etiqueta));
+    // Conserva el nombre local fixture para que los pasos y aserciones de las pruebas
+    // originales sigan ejercitando exactamente el mismo flujo.
+    let fixture: ComponentFixture<RecordatoriosEstudiantes>;
+    function crear(): void {
+      recordatorios = TestBed.createComponent(RecordatoriosEstudiantes);
+      fixture = recordatorios;
+      fixture.detectChanges();
+    }
+    afterEach(() => recordatorios?.destroy());
     beforeEach(() => {
       practicaService.listarEstudiantesSinPractica.and.returnValue(of([
         estudiante(9, 'Ana', true, false),
@@ -293,6 +317,27 @@ describe('GestorHome', () => {
       boton('Cancelar')?.click();
       fixture.detectChanges();
       expect(practicaService.enviarRecordatorioEstudiante).not.toHaveBeenCalled();
+    });
+    it('salir de Comunicaciones detiene los siguientes envíos del lote', () => {
+      const respuesta = new Subject<RecordatorioEstudianteResponse>();
+      practicaService.enviarRecordatorioEstudiante.and.returnValue(respuesta);
+      recordatorios.componentInstance.seleccionados.set([9, 11]);
+      recordatorios.componentInstance.solicitar();
+      recordatorios.componentInstance.confirmar();
+      recordatorios.destroy();
+      respuesta.next(respuestaOk(9)); respuesta.complete();
+      expect(practicaService.enviarRecordatorioEstudiante.calls.allArgs()).toEqual([[9]]);
+    });
+    it('evita doble envío y bloquea éxitos locales aunque el listado aún esté desactualizado', () => {
+      const respuesta = new Subject<RecordatorioEstudianteResponse>();
+      practicaService.enviarRecordatorioEstudiante.and.returnValue(respuesta);
+      casillasEstudiantes()[0].click(); fixture.detectChanges();
+      boton('Enviar recordatorio a 1 estudiante')?.click();
+      recordatorios.componentInstance.solicitar();
+      expect(practicaService.enviarRecordatorioEstudiante).toHaveBeenCalledTimes(1);
+      respuesta.next(respuestaOk(9)); respuesta.complete(); fixture.detectChanges();
+      expect(casillasEstudiantes()[0].disabled).toBeTrue();
+      expect(recordatorios.componentInstance.seleccionables()).not.toContain(9);
     });
 
     it('reintenta solo los envíos fallidos', () => {

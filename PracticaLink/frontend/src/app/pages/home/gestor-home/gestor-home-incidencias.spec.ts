@@ -18,7 +18,7 @@ import { GestorHome } from './gestor-home';
  * Conviven dos vocabularios de estado: el legado (ABIERTA, EN_REVISION, RESUELTA, CERRADA,
  * practica.models.ts) y EP06 (PENDIENTE, EN_ATENCION, RESUELTA, incidencia.models.ts).
  * GestorHome y la página /incidencias aplican reglas distintas sobre el mismo GET /incidencias.
- * Estas pruebas fijan la discrepancia ACTUAL; no la corrigen.
+ * Sprint final: se corrige explícitamente el conteo de Inicio para incluir EP06.
  */
 const hace = (dias: number): string => new Date(Date.now() - dias * 86_400_000).toISOString();
 
@@ -86,24 +86,24 @@ describe('GestorHome · conteo de incidencias por estado (etapa 0)', () => {
 
   afterEach(() => fixture?.destroy());
 
-  it('cuenta como abiertas solo ABIERTA y EN_REVISION; PENDIENTE y EN_ATENCION quedan fuera', () => {
+  it('cuenta ABIERTA, EN_REVISION, PENDIENTE y EN_ATENCION', () => {
     crear(['GESTOR'], MEZCLA);
-    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('2');
-    expect(indicadorIncidencias().textContent).toContain('1 de prioridad alta');
-    expect(texto()).toContain('2 incidencias abiertas');
+    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('4');
+    expect(indicadorIncidencias().textContent).toContain('3 de prioridad alta');
+    expect(texto()).toContain('4 incidencias abiertas');
   });
 
-  it('la lista de recientes omite incidencias EP06 sin resolver', () => {
+  it('la lista de recientes incluye incidencias EP06 sin resolver', () => {
     crear(['GESTOR'], MEZCLA);
     const descripciones = Array.from(fixture.nativeElement.querySelectorAll('.gh-incidencia__descripcion') as NodeListOf<HTMLElement>)
       .map(item => item.textContent?.trim());
-    expect(descripciones).toEqual(['Incidencia ABIERTA', 'Incidencia EN_REVISION']);
+    expect(descripciones).toEqual(['Incidencia ABIERTA', 'Incidencia EN_REVISION', 'Incidencia PENDIENTE', 'Incidencia EN_ATENCION']);
   });
 
-  it('con solo incidencias EP06 pendientes informa «No hay incidencias abiertas»', () => {
+  it('con solo incidencias EP06 pendientes muestra su conteo real', () => {
     crear(['GESTOR'], [incidencia(3, 'PENDIENTE', 'CRITICA'), incidencia(4, 'EN_ATENCION', 'ALTA')]);
-    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('0');
-    expect(texto()).toContain('No hay incidencias abiertas.');
+    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('2');
+    expect(texto()).not.toContain('No hay incidencias abiertas.');
   });
 
   it('las incidencias recientes no son navegables hacia la práctica', () => {
@@ -116,7 +116,7 @@ describe('GestorHome · conteo de incidencias por estado (etapa 0)', () => {
     crear(['GESTOR', 'ADMINISTRADOR'], MEZCLA);
     expect(practicaService.listarIncidencias).toHaveBeenCalledTimes(1);
     expect(revisionService.listar).toHaveBeenCalledTimes(1);
-    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('2');
+    expect(indicadorIncidencias().querySelector('strong')?.textContent?.trim()).toBe('4');
   });
 });
 
@@ -156,8 +156,9 @@ describe('Incidencias (/incidencias) · conteo de pendientes con el mismo origen
       .toEqual(['ABIERTA', 'EN_REVISION', 'PENDIENTE', 'EN_ATENCION']);
   });
 
-  it('las tarjetas remiten a la ficha sin ofrecer un enlace a ella', () => {
+  it('las tarjetas enlazan la ficha cuando la práctica está en el listado autorizado', () => {
     expect((fixture.nativeElement.textContent as string)).toContain('El cambio de estado se gestiona desde la ficha de la práctica.');
-    expect(fixture.nativeElement.querySelector('.incident-card a, .incident-card ion-button')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.incident-card ion-button')?.textContent)
+      .toContain('Historial y gestión de la incidencia');
   });
 });

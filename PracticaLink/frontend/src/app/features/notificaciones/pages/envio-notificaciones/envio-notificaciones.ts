@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthStore } from '../../../../core/store/auth.store';
-import { esEspacioGestorDedicado } from '../../../../core/navigation/espacio-gestor';
+import { esEspacioGestorDedicado, muestraEspacioGestor } from '../../../../core/navigation/espacio-gestor';
+import { RecordatoriosEstudiantes } from '../../../gestor/recordatorios/recordatorios-estudiantes';
 import {
   IonButton,
   IonCard,
@@ -24,6 +25,7 @@ import { NotificacionService } from '../../services/notificacion.service';
   standalone: true,
   imports: [
     CommonModule,
+    RecordatoriosEstudiantes,
     FormsModule,
     IonButton,
     IonCard,
@@ -37,8 +39,13 @@ import { NotificacionService } from '../../services/notificacion.service';
   templateUrl: './envio-notificaciones.html',
   styleUrl: './envio-notificaciones.scss'
 })
-export class EnvioNotificaciones implements OnInit {
+export class EnvioNotificaciones implements OnInit, AfterViewInit {
   private readonly authStore = inject(AuthStore);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly recordatorios = viewChild<ElementRef<HTMLElement>>('recordatorios');
+  ngAfterViewInit(): void {
+    if (this.route?.snapshot.fragment === 'recordatorios') this.recordatorios()?.nativeElement.scrollIntoView({ block: 'start' });
+  }
   destinatarios: DestinatarioMensajePush[] = [];
   modoEnvio: 'individual' | 'broadcast' = 'individual';
   destinatarioId = '';
@@ -46,6 +53,7 @@ export class EnvioNotificaciones implements OnInit {
   mensaje = '';
   cargandoDestinatarios = true;
   enviando = false;
+  get espacioGestor(): boolean { return muestraEspacioGestor(this.authStore.contexto()); }
   estadoEnvio = '';
   error = '';
 
@@ -77,6 +85,7 @@ export class EnvioNotificaciones implements OnInit {
   }
 
   enviar(): void {
+    if (this.enviando) return;
     const titulo = this.titulo.trim();
     const mensaje = this.mensaje.trim();
     this.estadoEnvio = '';

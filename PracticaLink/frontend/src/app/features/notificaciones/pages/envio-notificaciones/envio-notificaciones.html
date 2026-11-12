@@ -3,7 +3,7 @@
     <header class="page-heading">
       <div>
         <p class="module-label">Herramientas de gestión</p>
-        <h1>Enviar notificaciones</h1>
+        <h1>{{ espacioGestor ? 'Comunicaciones' : 'Enviar notificaciones' }}</h1>
         <p>Envía un aviso a un estudiante o a todos los estudiantes activos.</p>
       </div>
       @if (mostrarVolver()) {
@@ -88,5 +88,8 @@
         }
       </ion-card-content>
     </ion-card>
+    @if (espacioGestor) {
+      <div id="recordatorios" #recordatorios><app-recordatorios-estudiantes /></div>
+    }
   </ion-col></ion-row></ion-grid>
 </ion-content>
