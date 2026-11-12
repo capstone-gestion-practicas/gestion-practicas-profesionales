@@ -246,7 +246,9 @@ describe('Notificaciones: presentación del GESTOR', () => {
       configurar([nueva(1, 'NUEVA_PRACTICA', false)], ['ADMINISTRADOR']);
       await renderizar();
       expect(fixture.nativeElement.querySelector('.notif-gestor')).toBeNull();
-      expect(texto()).toContain('Activar push en este dispositivo');
+      expect(fixture.nativeElement.querySelector('.notif-admin')).not.toBeNull();
+      expect(texto()).not.toContain('Preferencias de notificaciones');
+      expect(texto()).not.toContain('Activar push en este dispositivo');
     });
   });
 });

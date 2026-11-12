@@ -16,8 +16,7 @@
     <header class="gh-topbar">
       <button #botonMovil type="button" class="gh-menu" aria-controls="admin-sidebar" [attr.aria-expanded]="movil()" (click)="movil.set(!movil())">Menú</button>
       <div class="gh-herramientas">
-        <a class="gh-cambio" routerLink="/espacios">Cambiar espacio</a>
-        <a class="gh-cambio" routerLink="/notificaciones">Notificaciones @if (noLeidas() > 0) { <span aria-label="Sin leer">({{ noLeidas() }})</span> }</a>
+        <a class="gh-cambio" routerLink="/notificaciones" [attr.aria-current]="bandejaActiva() ? 'page' : null">Notificaciones @if (noLeidas() > 0) { <span aria-label="Sin leer">({{ noLeidas() }})</span> }</a>
         <div class="gh-cuenta" #menuCuenta>
           <button type="button" class="gh-cuenta__alternar" aria-controls="admin-cuenta-menu" [attr.aria-expanded]="cuenta()" (click)="cuenta.set(!cuenta())">
             <span class="gh-avatar" aria-hidden="true">{{ nombre().charAt(0) }}</span><span class="gh-cuenta__nombre">{{ nombre() }}</span><span class="sr-only">Menú de cuenta</span>

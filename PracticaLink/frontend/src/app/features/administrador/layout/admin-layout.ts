@@ -13,7 +13,7 @@ export function seccionAdmin(url: string): string | null {
   if (ruta === '/usuarios') return 'Usuarios';
   if (ruta === '/gestion-estados') return 'Asignaciones';
   if (/^\/(practicas|seguimientos|incidencias)(\/|$)/.test(ruta)) return 'Supervisión';
-  if (ruta === '/envio-notificaciones' || ruta === '/notificaciones') return 'Comunicaciones';
+  if (ruta === '/envio-notificaciones') return 'Comunicaciones';
   return null;
 }
 
@@ -41,6 +41,7 @@ export class AdminLayout {
     map(evento => { this.movil.set(false); this.cuenta.set(false); return evento.urlAfterRedirects; })
   ), { initialValue: this.router.url });
   readonly activa = computed(() => seccionAdmin(this.url()));
+  readonly bandejaActiva = computed(() => this.url().split(/[?#]/)[0] === '/notificaciones');
   readonly nombre = computed(() => this.auth.contexto()?.usuario.nombre ?? 'Cuenta');
   readonly correo = computed(() => this.auth.contexto()?.usuario.correo ?? '');
   private readonly botonMovil = viewChild<ElementRef<HTMLButtonElement>>('botonMovil');
