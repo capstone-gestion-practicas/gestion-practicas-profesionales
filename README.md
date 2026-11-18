@@ -60,9 +60,9 @@ La configuración de Supabase y las variables de entorno se detallan en [DOCUMEN
 
 | Integrante | Rol |
 | ---------- | --- |
-| Carlos Seaman | Por definir |
-| Freddy Neilaf | Por definir |
-| Brandon Ramirez | Por definir |
+| Carlos Seaman | Product Owner | Desarrollador
+| Freddy Neilaf | Scrum Master | Desarrollador
+| Brandon Ramirez | Desarrollador | QA
 
 Los roles específicos pueden distribuirse y actualizarse según la planificación de cada sprint.
 
